@@ -1,0 +1,495 @@
+{
+  "Metadata": {
+    "title": "2510 Scented Candle — Aromatherapy Candles",
+    "description": "Always cool and soothe your feelings with our handmade aromatherapy candles."
+  },
+  "Announcement": {
+    "freeShipping": "FREE Shipping on orders over $100 🎉"
+  },
+  "Nav": {
+    "shop": "Shop",
+    "about": "About",
+    "blog": "Blog",
+    "testimonials": "Testimonials",
+    "search": "Search",
+    "account": "Account",
+    "login": "LOG IN",
+    "openMenu": "Open menu",
+    "menu": "Menu",
+    "home": "2510 Scented Candle home",
+    "language": "Language"
+  },
+  "Hero": {
+    "tagline": "#SCANDLEXPERIENCE",
+    "always": "Always",
+    "accent": "cool and soothe",
+    "middle": "your feelings available in a variety of",
+    "script": "candle",
+    "cta": "Discover Products",
+    "imageAlt": "2510 Scented Candle jar with cork lid and green leaves"
+  },
+  "Trending": {
+    "eyebrow": "TRENDING",
+    "title": "Shop our popular candle products",
+    "showMore": "SHOW MORE",
+    "saleOff": "OFF",
+    "saleLine1": "Make the most of your",
+    "saleLine2": "#scandlexperience",
+    "saleImageAlt": "Lit candles on a wooden tray"
+  },
+  "Product": {
+    "addToCart": "ADD TO CART",
+    "added": "{name} added to cart",
+    "viewCart": "View cart",
+    "new": "NEW",
+    "taglines": {
+      "vanilla-relax": "Cake Smell",
+      "beach-sunshine": "Enjoy the afternoon",
+      "brown-relac": "Together in the afternoon",
+      "moon-morning": "The scent of the morning",
+      "moonlight-aurora": "Aurora in North Pole",
+      "woman-secret": "Woman smell"
+    }
+  },
+  "Features": {
+    "intro": "We make products with quality materials so you get a very good product",
+    "durableTitle": "Durable",
+    "durableText": "The life of the candle reaches 6 months since it is used and still feels the smell",
+    "calmTitle": "Calm",
+    "calmText": "The aroma emitted by the candles soothes the feeling and the room is of course very durable"
+  },
+  "Fragrance": {
+    "title": "Fragrance Room",
+    "cta": "FIND PRODUCT",
+    "imageAlt": "Scented candle jar and box"
+  },
+  "Faq": {
+    "title": "FAQs",
+    "groups": {
+      "product": {
+        "label": "Product & Promos",
+        "items": [
+          {
+            "q": "Are candles safe for babies to toddlers?",
+            "a": "Absolutely, because we just use organic ingredients and does not use hazardous chemicals"
+          },
+          {
+            "q": "After the smell runs out, will it pollute the environment?",
+            "a": "No. Our soy wax and cotton wicks are biodegradable, and every jar can be cleaned and reused."
+          },
+          {
+            "q": "Are the materials used for the manufacture of chemicals?",
+            "a": "We only use natural soy wax, essential oils and phthalate-free fragrance oils."
+          },
+          {
+            "q": "Can I resell wax products at a different price?",
+            "a": "Yes, please contact us for our reseller program and wholesale pricing."
+          }
+        ]
+      },
+      "delivery": {
+        "label": "Delivery",
+        "items": [
+          {
+            "q": "How long does delivery take?",
+            "a": "Orders are shipped within 1–2 business days and usually arrive in 2–5 days."
+          },
+          {
+            "q": "Is shipping free?",
+            "a": "Shipping is free for every order over $100."
+          }
+        ]
+      },
+      "refunds": {
+        "label": "Refunds",
+        "items": [
+          {
+            "q": "Can I return a candle?",
+            "a": "Unused candles can be returned within 14 days of delivery for a full refund."
+          },
+          {
+            "q": "How long does a refund take?",
+            "a": "Refunds are processed within 3–5 business days after we receive your return."
+          }
+        ]
+      }
+    }
+  },
+  "Footer": {
+    "links": {
+      "newArrivals": "New Arrivals",
+      "about": "About",
+      "influencer": "Influencer",
+      "blog": "Blog",
+      "contact": "Contact Us"
+    },
+    "newsletterLine1": "Stay in the know — we’ll",
+    "newsletterLine2": "send you offers & more.",
+    "signUp": "SIGN UP",
+    "copyright": "© {year} 2510 Scented Candle. All rights reserved.",
+    "designBy": "Design Made By"
+  },
+  "Newsletter": {
+    "title": "Join #scandlexperience",
+    "description": "Get new arrivals, offers and candle care tips in your inbox.",
+    "placeholder": "you@example.com",
+    "invalidEmail": "Please enter a valid email",
+    "submit": "SUBSCRIBE",
+    "submitting": "SUBSCRIBING...",
+    "success": "Thanks! {email} is now subscribed."
+  },
+  "Cart": {
+    "title": "Your Cart",
+    "freeShippingRemaining": "Add {amount} more for FREE shipping 🎉",
+    "freeShippingUnlocked": "You've unlocked FREE shipping 🎉",
+    "empty": "Your cart is empty.",
+    "decrease": "Decrease",
+    "increase": "Increase",
+    "remove": "Remove {name}",
+    "subtotal": "Subtotal",
+    "checkout": "CHECKOUT",
+    "label": "Cart ({count} items)"
+  },
+  "Shop": {
+    "title": "Candles",
+    "filter": "Filter",
+    "clearAll": "Clear all",
+    "showResults": "Show {count} products",
+    "sortBy": "Sort By:",
+    "sort": {
+      "featured": "Featured",
+      "newest": "Newest",
+      "price-asc": "Price: Low to High",
+      "price-desc": "Price: High to Low",
+      "rating": "Top Rated"
+    },
+    "aromaLevel": "Aroma Level",
+    "aromaType": "Aroma Type",
+    "productSize": "Product Size",
+    "rating": "Rating",
+    "price": "Price",
+    "other": "Other",
+    "levels": {
+      "soft": "Soft",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
+    "types": {
+      "fruits": "Fruits",
+      "nature": "Nature",
+      "parfum": "Parfum"
+    },
+    "sizes": {
+      "small": "Small",
+      "medium": "Medium",
+      "big": "Big"
+    },
+    "ratingAny": "Any rating",
+    "ratingUp": "{stars} & up",
+    "onSale": "On sale",
+    "newArrival": "New arrivals",
+    "results": "{count, plural, =0 {No products} one {# product} other {# products}}",
+    "emptyTitle": "No candles match your filters",
+    "emptyText": "Try removing a few filters to see more products."
+  },
+  "ProductDetail": {
+    "breadcrumbHome": "Home",
+    "breadcrumbShop": "Shop",
+    "reviewCount": "{count, plural, one {# review} other {# reviews}}",
+    "quantity": "Quantity",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "addToCart": "ADD TO CART",
+    "added": "{count} × {name} added to cart",
+    "sections": {
+      "description": {
+        "title": "Description",
+        "body": "Hand-poured with natural soy wax and a cotton wick for a clean, even burn. Each candle burns for up to 45 hours and fills a medium room with a gentle, lasting scent."
+      },
+      "ingredients": {
+        "title": "Ingredients",
+        "body": "100% soy wax, essential oils, phthalate-free fragrance oil and a lead-free cotton wick. Vegan and cruelty-free."
+      },
+      "howToUse": {
+        "title": "How To Use?",
+        "body": "On the first burn, let the wax melt to the edges (about 2 hours). Trim the wick to 5mm before each use and never leave a burning candle unattended."
+      },
+      "howToFeel": {
+        "title": "How To Feel?",
+        "body": "You are like being under a pine tree at the foot of the hill. The smell of earth mixed with rain will cool you"
+      }
+    },
+    "openImage": "Open image {index}",
+    "galleryTitle": "{name} — photo gallery",
+    "missionEyebrow": "OUR MISSION",
+    "missionText": "Made from natural ingredients and does not harm the environment",
+    "missionBadge": "Ingredients",
+    "missionImageAlt": "Dried oak leaves and acorns",
+    "reviews": "REVIEWS",
+    "basedOn": "Based on {count} Reviews",
+    "ratingFilter": "Rating",
+    "sizeFilter": "Product Size",
+    "sortBy": "Sort by:",
+    "sort": {
+      "recent": "Most Recent",
+      "highest": "Highest Rating",
+      "lowest": "Lowest Rating"
+    },
+    "quality": "Quality",
+    "size": "Size",
+    "level": "Level",
+    "qualities": {
+      "good": "Good",
+      "excellent": "Excellent"
+    },
+    "seeReply": "See Reply",
+    "hideReply": "Hide Reply",
+    "noReply": "No reply yet.",
+    "loadMore": "LOAD MORE",
+    "noReviews": "No reviews match your filters.",
+    "youMayAlsoLike": "YOU MAY ALSO LIKE",
+    "storeReply": "2510 Scented Candle"
+  },
+  "Checkout": {
+    "title": "Checkout",
+    "breadcrumbCart": "Shop",
+    "cart": "Shopping Cart",
+    "remove": "Remove {name}",
+    "emptyTitle": "Your cart is empty",
+    "emptyText": "Add a candle you love and come back to checkout.",
+    "continueShopping": "CONTINUE SHOPPING",
+    "contact": "Contact Information",
+    "edit": "Edit",
+    "save": "SAVE",
+    "cancel": "Cancel",
+    "recipient": "Recipient’s Name",
+    "address": "Address",
+    "phone": "Phone",
+    "city": "City",
+    "email": "Email",
+    "placeholders": {
+      "name": "Full name",
+      "email": "you@example.com",
+      "phone": "0901 234 567",
+      "address": "Street, ward, district",
+      "city": "City / Province"
+    },
+    "errors": {
+      "name": "Please enter the recipient’s name",
+      "email": "Please enter a valid email",
+      "phone": "Please enter a valid phone number",
+      "address": "Please enter the address",
+      "city": "Please enter the city",
+      "contactRequired": "Please save your contact information first"
+    },
+    "shippingMethod": "Shipping Method",
+    "shipping": {
+      "standard": "Standard",
+      "express": "Express"
+    },
+    "arrive": "{days, plural, one {# day} other {# days}} to arrive",
+    "free": "Free",
+    "discount": {
+      "apply": "Apply discount code",
+      "placeholder": "Enter code",
+      "button": "APPLY",
+      "invalid": "This code is not valid",
+      "applied": "Code {code} applied",
+      "remove": "Remove code"
+    },
+    "paymentMethod": "Payment Method",
+    "payments": {
+      "vnpay": "VNPay",
+      "momo": "MoMo",
+      "cod": "Cash on delivery"
+    },
+    "paymentHints": {
+      "vnpay": "ATM card, Visa/Master, QR via VNPay",
+      "momo": "Pay with your MoMo e-wallet",
+      "cod": "Pay in cash when you receive the order"
+    },
+    "summary": "Order summary",
+    "subtotal": "Subtotal",
+    "shippingFee": "Shipping",
+    "taxes": "Taxes (10%)",
+    "discountLine": "Discount",
+    "total": "Total",
+    "returnCart": "Return cart",
+    "checkout": "CHECKOUT",
+    "processing": "PROCESSING...",
+    "orderFailed": "We couldn’t place your order. Please try again.",
+    "result": {
+      "successTitle": "Thank you for your order!",
+      "successText": "Order {code} has been placed. We’ll email you the details shortly.",
+      "failedTitle": "Payment was not completed",
+      "failedText": "Your order {code} is still waiting for payment. You can try again from your cart.",
+      "backHome": "BACK TO HOME",
+      "keepShopping": "KEEP SHOPPING"
+    }
+  },
+  "Auth": {
+    "panelQuote": "Light a candle, slow down, and breathe.",
+    "panelCaption": "#scandlexperience",
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Log in to track orders and check out faster.",
+      "submit": "LOG IN",
+      "submitting": "LOGGING IN...",
+      "remember": "Remember me",
+      "forgot": "Forgot password?",
+      "forgotSoon": "Password reset is coming soon.",
+      "noAccount": "Don’t have an account?",
+      "toRegister": "Sign up",
+      "success": "Welcome back, {name}!"
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Join #scandlexperience for offers and faster checkout.",
+      "submit": "SIGN UP",
+      "submitting": "CREATING ACCOUNT...",
+      "haveAccount": "Already have an account?",
+      "toLogin": "Log in",
+      "terms": "I agree to the <link>Terms & Privacy Policy</link>",
+      "success": "Welcome, {name}! Your account is ready."
+    },
+    "fields": {
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone (optional)",
+      "password": "Password",
+      "confirmPassword": "Confirm password"
+    },
+    "placeholders": {
+      "name": "Sunny Marwah",
+      "email": "you@example.com",
+      "phone": "0901 234 567",
+      "password": "At least 8 characters",
+      "confirmPassword": "Re-enter your password"
+    },
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "strength": {
+      "label": "Password strength",
+      "weak": "Weak",
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong"
+    },
+    "errors": {
+      "name": "Please enter your name",
+      "email": "Please enter a valid email",
+      "phone": "Please enter a valid phone number",
+      "passwordRequired": "Please enter your password",
+      "passwordMin": "Password must be at least 8 characters",
+      "passwordMatch": "Passwords do not match",
+      "terms": "Please accept the terms to continue",
+      "INVALID_CREDENTIALS": "Email or password is incorrect",
+      "EMAIL_TAKEN": "This email is already registered",
+      "UNKNOWN": "Something went wrong. Please try again."
+    },
+    "demoNotice": "Demo mode: no backend connected yet, any email and password will work.",
+    "account": {
+      "menu": "Account",
+      "orders": "My orders",
+      "logout": "Log out",
+      "loggedOut": "You have been logged out",
+      "hello": "Hi, {name}"
+    }
+  },
+  "About": {
+    "metaTitle": "About us",
+    "heroTitle": "Let it cool completely to maximizing the life of your candle.",
+    "heroText": "More than 10 times experiments were carried out to find the fragrance in accordance with nature to the point of having to stay overnight in the dark.",
+    "heroAlt": {
+      "left": "Hands holding a lit candle",
+      "center": "Woman smiling at a candle",
+      "right": "Woman smelling a candle"
+    },
+    "ourProduct": "OUR PRODUCT",
+    "jarAlt": "Scented candle jar",
+    "values": {
+      "nature": {
+        "title": "Nature",
+        "text": "We are nature lovers, that's why we use environmentally friendly materials so that wax waste doesn't damage the environment"
+      },
+      "premium": {
+        "title": "Premium",
+        "text": "Affordable prices, even so we still prioritize quality so that at low prices you still get quality products that have been tested by our team"
+      },
+      "unique": {
+        "title": "Unique",
+        "text": "Different from most other candles, we present a wide variety of scents and have done field research by our team to get a realistic scent."
+      },
+      "economical": {
+        "title": "Economical",
+        "text": "Our candles have a long shelf life and last for 6 months from the moment you start using them so you can save on your budget"
+      }
+    },
+    "howToUse": "HOW TO USE",
+    "videoLine1": "Choose to place the candle in a safe spot.",
+    "videoLine2": "We want to make sure you make the most of your #scandlexperience",
+    "playVideo": "Play video",
+    "videoSoon": "The video is coming soon.",
+    "videoAlt": "Candle on a side table next to a lamp and a plant",
+    "ingredientsBadge": "Ingredients",
+    "ingredientsAlt": "Dried oak leaves and acorns",
+    "plantTitle": "Plant-based ingredients",
+    "plantText": "A scented candle made with natural ingredients is a candle that uses plant-based waxes, such as soy or beeswax, and essential oils to create its scent.",
+    "parfumeTitle": "Parfume",
+    "parfumeText": "Provides a more natural, soothing aroma compared to candles made with synthetic fragrances and chemicals.",
+    "bannerText": "Can safely enjoy your",
+    "bannerScript": "candle",
+    "testimonials": "Testimonials",
+    "goToSlide": "Go to slide {index}",
+    "quotes": [
+      {
+        "name": "Berry Syam",
+        "role": "Vice President Scandleted",
+        "text": "I love the calming lavender scent of this candle. It helps me relax and unwind after a long day. I also appreciate that it is made with natural ingredients."
+      },
+      {
+        "name": "Linh Tran",
+        "role": "Interior designer",
+        "text": "The jars look beautiful on my shelves and the scent fills the whole room without being overpowering."
+      },
+      {
+        "name": "Wing Sun",
+        "role": "Father of two",
+        "text": "Safe for my kids and the burn is so clean. We light one every evening during story time."
+      },
+      {
+        "name": "Ghandy Hari",
+        "role": "Food blogger",
+        "text": "Perfect for dinner at home. The vanilla one makes the whole apartment feel warm and cozy."
+      },
+      {
+        "name": "Minh Le",
+        "role": "Yoga teacher",
+        "text": "I use these candles in every class. My students always ask where I bought them."
+      }
+    ]
+  },
+  "Search": {
+    "open": "Search",
+    "placeholder": "Search candles, scents, pages…",
+    "products": "Products",
+    "pages": "Pages",
+    "recent": "Recent searches",
+    "suggestions": "Popular",
+    "clearRecent": "Clear",
+    "empty": "No results for “{query}”",
+    "emptyHint": "Try another scent like “vanilla” or “parfum”.",
+    "viewAll": "See all results for “{query}”",
+    "shortcut": "Open search",
+    "pageNames": {
+      "home": "Home",
+      "shop": "Shop all candles",
+      "about": "About us",
+      "newArrivals": "New arrivals",
+      "sale": "On sale",
+      "checkout": "Checkout",
+      "login": "Log in",
+      "register": "Create account"
+    }
+  }
+}

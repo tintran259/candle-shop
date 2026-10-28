@@ -1,0 +1,495 @@
+{
+  "Metadata": {
+    "title": "2510 Scented Candle — Nến thơm thư giãn",
+    "description": "Nến thơm thủ công giúp bạn luôn thư thái và xoa dịu cảm xúc."
+  },
+  "Announcement": {
+    "freeShipping": "MIỄN PHÍ vận chuyển cho đơn hàng từ $100 🎉"
+  },
+  "Nav": {
+    "shop": "Cửa hàng",
+    "about": "Giới thiệu",
+    "blog": "Blog",
+    "testimonials": "Đánh giá",
+    "search": "Tìm kiếm",
+    "account": "Tài khoản",
+    "login": "ĐĂNG NHẬP",
+    "openMenu": "Mở menu",
+    "menu": "Menu",
+    "home": "Trang chủ 2510 Scented Candle",
+    "language": "Ngôn ngữ"
+  },
+  "Hero": {
+    "tagline": "#SCANDLEXPERIENCE",
+    "always": "Luôn",
+    "accent": "thư thái và dịu êm",
+    "middle": "cho cảm xúc của bạn với đủ loại",
+    "script": "nến thơm",
+    "cta": "Khám phá sản phẩm",
+    "imageAlt": "Hũ nến 2510 Scented Candle với nắp gỗ bần và lá xanh"
+  },
+  "Trending": {
+    "eyebrow": "THỊNH HÀNH",
+    "title": "Những mẫu nến được yêu thích nhất",
+    "showMore": "XEM THÊM",
+    "saleOff": "GIẢM",
+    "saleLine1": "Tận hưởng trọn vẹn",
+    "saleLine2": "#scandlexperience",
+    "saleImageAlt": "Những ngọn nến đang cháy trên khay gỗ"
+  },
+  "Product": {
+    "addToCart": "THÊM VÀO GIỎ",
+    "added": "Đã thêm {name} vào giỏ hàng",
+    "viewCart": "Xem giỏ",
+    "new": "MỚI",
+    "taglines": {
+      "vanilla-relax": "Hương bánh ngọt",
+      "beach-sunshine": "Tận hưởng buổi chiều",
+      "brown-relac": "Bên nhau buổi chiều",
+      "moon-morning": "Hương thơm ban mai",
+      "moonlight-aurora": "Cực quang phương Bắc",
+      "woman-secret": "Hương thơm nữ tính"
+    }
+  },
+  "Features": {
+    "intro": "Chúng tôi làm nến từ nguyên liệu chất lượng để bạn nhận được sản phẩm tốt nhất",
+    "durableTitle": "Bền lâu",
+    "durableText": "Nến dùng được đến 6 tháng mà hương thơm vẫn còn lưu lại",
+    "calmTitle": "Thư thái",
+    "calmText": "Hương thơm từ nến giúp xoa dịu cảm xúc và lưu lại trong căn phòng thật lâu"
+  },
+  "Fragrance": {
+    "title": "Fragrance Room",
+    "cta": "TÌM SẢN PHẨM",
+    "imageAlt": "Hũ nến thơm và hộp đựng"
+  },
+  "Faq": {
+    "title": "Câu hỏi thường gặp",
+    "groups": {
+      "product": {
+        "label": "Sản phẩm & Khuyến mãi",
+        "items": [
+          {
+            "q": "Nến có an toàn cho trẻ nhỏ không?",
+            "a": "Hoàn toàn an toàn, vì chúng tôi chỉ dùng nguyên liệu hữu cơ và không dùng hóa chất độc hại."
+          },
+          {
+            "q": "Khi hết hương, nến có gây ô nhiễm môi trường không?",
+            "a": "Không. Sáp đậu nành và bấc cotton của chúng tôi đều phân hủy sinh học, hũ nến có thể rửa sạch và tái sử dụng."
+          },
+          {
+            "q": "Nguyên liệu làm nến có chứa hóa chất không?",
+            "a": "Chúng tôi chỉ dùng sáp đậu nành tự nhiên, tinh dầu và dầu thơm không chứa phthalate."
+          },
+          {
+            "q": "Tôi có thể bán lại sản phẩm với giá khác không?",
+            "a": "Có, hãy liên hệ với chúng tôi để biết chương trình đại lý và giá sỉ."
+          }
+        ]
+      },
+      "delivery": {
+        "label": "Giao hàng",
+        "items": [
+          {
+            "q": "Giao hàng mất bao lâu?",
+            "a": "Đơn hàng được gửi đi trong 1–2 ngày làm việc và thường đến nơi sau 2–5 ngày."
+          },
+          {
+            "q": "Có miễn phí vận chuyển không?",
+            "a": "Miễn phí vận chuyển cho mọi đơn hàng từ $100."
+          }
+        ]
+      },
+      "refunds": {
+        "label": "Hoàn tiền",
+        "items": [
+          {
+            "q": "Tôi có thể trả lại nến không?",
+            "a": "Nến chưa sử dụng có thể được trả lại trong vòng 14 ngày kể từ khi nhận hàng để hoàn tiền đầy đủ."
+          },
+          {
+            "q": "Hoàn tiền mất bao lâu?",
+            "a": "Tiền được hoàn trong 3–5 ngày làm việc sau khi chúng tôi nhận được hàng trả lại."
+          }
+        ]
+      }
+    }
+  },
+  "Footer": {
+    "links": {
+      "newArrivals": "Hàng mới về",
+      "about": "Giới thiệu",
+      "influencer": "Influencer",
+      "blog": "Blog",
+      "contact": "Liên hệ"
+    },
+    "newsletterLine1": "Đăng ký nhận tin — chúng tôi sẽ",
+    "newsletterLine2": "gửi bạn ưu đãi & nhiều hơn nữa.",
+    "signUp": "ĐĂNG KÝ",
+    "copyright": "© {year} 2510 Scented Candle. Bảo lưu mọi quyền.",
+    "designBy": "Thiết kế bởi"
+  },
+  "Newsletter": {
+    "title": "Tham gia #scandlexperience",
+    "description": "Nhận thông tin sản phẩm mới, ưu đãi và mẹo chăm sóc nến qua email.",
+    "placeholder": "ban@example.com",
+    "invalidEmail": "Vui lòng nhập email hợp lệ",
+    "submit": "ĐĂNG KÝ",
+    "submitting": "ĐANG ĐĂNG KÝ...",
+    "success": "Cảm ơn bạn! {email} đã đăng ký thành công."
+  },
+  "Cart": {
+    "title": "Giỏ hàng",
+    "freeShippingRemaining": "Mua thêm {amount} để được MIỄN PHÍ vận chuyển 🎉",
+    "freeShippingUnlocked": "Bạn đã được MIỄN PHÍ vận chuyển 🎉",
+    "empty": "Giỏ hàng đang trống.",
+    "decrease": "Giảm",
+    "increase": "Tăng",
+    "remove": "Xóa {name}",
+    "subtotal": "Tạm tính",
+    "checkout": "THANH TOÁN",
+    "label": "Giỏ hàng ({count} sản phẩm)"
+  },
+  "Shop": {
+    "title": "Nến thơm",
+    "filter": "Bộ lọc",
+    "clearAll": "Xóa tất cả",
+    "showResults": "Xem {count} sản phẩm",
+    "sortBy": "Sắp xếp:",
+    "sort": {
+      "featured": "Nổi bật",
+      "newest": "Mới nhất",
+      "price-asc": "Giá: Thấp đến cao",
+      "price-desc": "Giá: Cao đến thấp",
+      "rating": "Đánh giá cao"
+    },
+    "aromaLevel": "Độ thơm",
+    "aromaType": "Loại hương",
+    "productSize": "Kích thước",
+    "rating": "Đánh giá",
+    "price": "Giá",
+    "other": "Khác",
+    "levels": {
+      "soft": "Nhẹ",
+      "medium": "Vừa",
+      "strong": "Đậm"
+    },
+    "types": {
+      "fruits": "Trái cây",
+      "nature": "Thiên nhiên",
+      "parfum": "Nước hoa"
+    },
+    "sizes": {
+      "small": "Nhỏ",
+      "medium": "Vừa",
+      "big": "Lớn"
+    },
+    "ratingAny": "Tất cả",
+    "ratingUp": "Từ {stars} sao",
+    "onSale": "Đang giảm giá",
+    "newArrival": "Hàng mới về",
+    "results": "{count, plural, =0 {Không có sản phẩm} other {# sản phẩm}}",
+    "emptyTitle": "Không có mẫu nến nào phù hợp",
+    "emptyText": "Hãy bỏ bớt bộ lọc để xem thêm sản phẩm."
+  },
+  "ProductDetail": {
+    "breadcrumbHome": "Trang chủ",
+    "breadcrumbShop": "Cửa hàng",
+    "reviewCount": "{count} đánh giá",
+    "quantity": "Số lượng",
+    "decrease": "Giảm số lượng",
+    "increase": "Tăng số lượng",
+    "addToCart": "THÊM VÀO GIỎ",
+    "added": "Đã thêm {count} × {name} vào giỏ hàng",
+    "sections": {
+      "description": {
+        "title": "Mô tả",
+        "body": "Nến được rót thủ công từ sáp đậu nành tự nhiên với bấc cotton, cháy sạch và đều. Mỗi hũ cháy được đến 45 giờ, hương thơm dịu nhẹ lan tỏa và lưu lâu trong căn phòng."
+      },
+      "ingredients": {
+        "title": "Thành phần",
+        "body": "100% sáp đậu nành, tinh dầu, dầu thơm không phthalate và bấc cotton không chì. Thuần chay và không thử nghiệm trên động vật."
+      },
+      "howToUse": {
+        "title": "Cách sử dụng",
+        "body": "Lần đốt đầu tiên, hãy để sáp chảy đều ra sát thành hũ (khoảng 2 giờ). Cắt bấc còn 5mm trước mỗi lần dùng và không để nến cháy khi không có người."
+      },
+      "howToFeel": {
+        "title": "Cảm nhận",
+        "body": "Bạn như đang đứng dưới tán thông nơi chân đồi. Mùi đất hòa cùng hương mưa sẽ giúp bạn thật dễ chịu."
+      }
+    },
+    "openImage": "Mở ảnh {index}",
+    "galleryTitle": "{name} — thư viện ảnh",
+    "missionEyebrow": "SỨ MỆNH",
+    "missionText": "Làm từ nguyên liệu tự nhiên và thân thiện với môi trường",
+    "missionBadge": "Nguyên liệu",
+    "missionImageAlt": "Lá sồi khô và quả sồi",
+    "reviews": "ĐÁNH GIÁ",
+    "basedOn": "Dựa trên {count} đánh giá",
+    "ratingFilter": "Số sao",
+    "sizeFilter": "Kích thước",
+    "sortBy": "Sắp xếp:",
+    "sort": {
+      "recent": "Mới nhất",
+      "highest": "Đánh giá cao nhất",
+      "lowest": "Đánh giá thấp nhất"
+    },
+    "quality": "Chất lượng",
+    "size": "Kích thước",
+    "level": "Độ thơm",
+    "qualities": {
+      "good": "Tốt",
+      "excellent": "Tuyệt vời"
+    },
+    "seeReply": "Xem phản hồi",
+    "hideReply": "Ẩn phản hồi",
+    "noReply": "Chưa có phản hồi.",
+    "loadMore": "XEM THÊM",
+    "noReviews": "Không có đánh giá nào phù hợp.",
+    "youMayAlsoLike": "CÓ THỂ BẠN CŨNG THÍCH",
+    "storeReply": "2510 Scented Candle"
+  },
+  "Checkout": {
+    "title": "Thanh toán",
+    "breadcrumbCart": "Cửa hàng",
+    "cart": "Giỏ hàng",
+    "remove": "Xóa {name}",
+    "emptyTitle": "Giỏ hàng đang trống",
+    "emptyText": "Hãy chọn một mẫu nến bạn thích rồi quay lại thanh toán nhé.",
+    "continueShopping": "TIẾP TỤC MUA SẮM",
+    "contact": "Thông tin nhận hàng",
+    "edit": "Sửa",
+    "save": "LƯU",
+    "cancel": "Hủy",
+    "recipient": "Người nhận",
+    "address": "Địa chỉ",
+    "phone": "Điện thoại",
+    "city": "Tỉnh / Thành phố",
+    "email": "Email",
+    "placeholders": {
+      "name": "Họ và tên",
+      "email": "ban@example.com",
+      "phone": "0901 234 567",
+      "address": "Số nhà, đường, phường, quận",
+      "city": "Tỉnh / Thành phố"
+    },
+    "errors": {
+      "name": "Vui lòng nhập tên người nhận",
+      "email": "Vui lòng nhập email hợp lệ",
+      "phone": "Vui lòng nhập số điện thoại hợp lệ",
+      "address": "Vui lòng nhập địa chỉ",
+      "city": "Vui lòng nhập tỉnh / thành phố",
+      "contactRequired": "Vui lòng lưu thông tin nhận hàng trước"
+    },
+    "shippingMethod": "Phương thức giao hàng",
+    "shipping": {
+      "standard": "Tiêu chuẩn",
+      "express": "Hỏa tốc"
+    },
+    "arrive": "Nhận hàng sau {days} ngày",
+    "free": "Miễn phí",
+    "discount": {
+      "apply": "Nhập mã giảm giá",
+      "placeholder": "Nhập mã",
+      "button": "ÁP DỤNG",
+      "invalid": "Mã giảm giá không hợp lệ",
+      "applied": "Đã áp dụng mã {code}",
+      "remove": "Bỏ mã"
+    },
+    "paymentMethod": "Phương thức thanh toán",
+    "payments": {
+      "vnpay": "VNPay",
+      "momo": "MoMo",
+      "cod": "Thanh toán khi nhận hàng"
+    },
+    "paymentHints": {
+      "vnpay": "Thẻ ATM, Visa/Master, QR qua VNPay",
+      "momo": "Thanh toán bằng ví MoMo",
+      "cod": "Trả tiền mặt khi nhận hàng"
+    },
+    "summary": "Tóm tắt đơn hàng",
+    "subtotal": "Tạm tính",
+    "shippingFee": "Phí giao hàng",
+    "taxes": "Thuế (10%)",
+    "discountLine": "Giảm giá",
+    "total": "Tổng cộng",
+    "returnCart": "Quay lại giỏ",
+    "checkout": "THANH TOÁN",
+    "processing": "ĐANG XỬ LÝ...",
+    "orderFailed": "Không thể đặt hàng. Vui lòng thử lại.",
+    "result": {
+      "successTitle": "Cảm ơn bạn đã đặt hàng!",
+      "successText": "Đơn hàng {code} đã được ghi nhận. Chúng tôi sẽ gửi email chi tiết cho bạn.",
+      "failedTitle": "Thanh toán chưa hoàn tất",
+      "failedText": "Đơn hàng {code} đang chờ thanh toán. Bạn có thể thử lại từ giỏ hàng.",
+      "backHome": "VỀ TRANG CHỦ",
+      "keepShopping": "TIẾP TỤC MUA SẮM"
+    }
+  },
+  "Auth": {
+    "panelQuote": "Thắp một ngọn nến, chậm lại và hít thở.",
+    "panelCaption": "#scandlexperience",
+    "login": {
+      "title": "Chào mừng trở lại",
+      "subtitle": "Đăng nhập để theo dõi đơn hàng và thanh toán nhanh hơn.",
+      "submit": "ĐĂNG NHẬP",
+      "submitting": "ĐANG ĐĂNG NHẬP...",
+      "remember": "Ghi nhớ đăng nhập",
+      "forgot": "Quên mật khẩu?",
+      "forgotSoon": "Tính năng đặt lại mật khẩu sẽ sớm ra mắt.",
+      "noAccount": "Chưa có tài khoản?",
+      "toRegister": "Đăng ký",
+      "success": "Chào mừng trở lại, {name}!"
+    },
+    "register": {
+      "title": "Tạo tài khoản",
+      "subtitle": "Tham gia #scandlexperience để nhận ưu đãi và thanh toán nhanh hơn.",
+      "submit": "ĐĂNG KÝ",
+      "submitting": "ĐANG TẠO TÀI KHOẢN...",
+      "haveAccount": "Đã có tài khoản?",
+      "toLogin": "Đăng nhập",
+      "terms": "Tôi đồng ý với <link>Điều khoản & Chính sách bảo mật</link>",
+      "success": "Chào mừng {name}! Tài khoản của bạn đã sẵn sàng."
+    },
+    "fields": {
+      "name": "Họ và tên",
+      "email": "Email",
+      "phone": "Số điện thoại (không bắt buộc)",
+      "password": "Mật khẩu",
+      "confirmPassword": "Nhập lại mật khẩu"
+    },
+    "placeholders": {
+      "name": "Nguyễn Văn A",
+      "email": "ban@example.com",
+      "phone": "0901 234 567",
+      "password": "Ít nhất 8 ký tự",
+      "confirmPassword": "Nhập lại mật khẩu"
+    },
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
+    "strength": {
+      "label": "Độ mạnh mật khẩu",
+      "weak": "Yếu",
+      "fair": "Trung bình",
+      "good": "Khá",
+      "strong": "Mạnh"
+    },
+    "errors": {
+      "name": "Vui lòng nhập họ tên",
+      "email": "Vui lòng nhập email hợp lệ",
+      "phone": "Vui lòng nhập số điện thoại hợp lệ",
+      "passwordRequired": "Vui lòng nhập mật khẩu",
+      "passwordMin": "Mật khẩu cần ít nhất 8 ký tự",
+      "passwordMatch": "Mật khẩu nhập lại không khớp",
+      "terms": "Vui lòng đồng ý điều khoản để tiếp tục",
+      "INVALID_CREDENTIALS": "Email hoặc mật khẩu không đúng",
+      "EMAIL_TAKEN": "Email này đã được đăng ký",
+      "UNKNOWN": "Có lỗi xảy ra. Vui lòng thử lại."
+    },
+    "demoNotice": "Chế độ demo: chưa kết nối BE, nhập email và mật khẩu bất kỳ đều đăng nhập được.",
+    "account": {
+      "menu": "Tài khoản",
+      "orders": "Đơn hàng của tôi",
+      "logout": "Đăng xuất",
+      "loggedOut": "Bạn đã đăng xuất",
+      "hello": "Xin chào, {name}"
+    }
+  },
+  "About": {
+    "metaTitle": "Về chúng tôi",
+    "heroTitle": "Để nến nguội hẳn để kéo dài tuổi thọ của nến.",
+    "heroText": "Hơn 10 lần thử nghiệm đã được thực hiện để tìm ra mùi hương hòa hợp với thiên nhiên, có lúc phải thức trắng đêm trong bóng tối.",
+    "heroAlt": {
+      "left": "Đôi tay cầm ngọn nến đang cháy",
+      "center": "Người phụ nữ mỉm cười bên ngọn nến",
+      "right": "Người phụ nữ thưởng thức hương nến"
+    },
+    "ourProduct": "SẢN PHẨM CỦA CHÚNG TÔI",
+    "jarAlt": "Hũ nến thơm",
+    "values": {
+      "nature": {
+        "title": "Thiên nhiên",
+        "text": "Chúng tôi yêu thiên nhiên, vì vậy luôn dùng vật liệu thân thiện để sáp thừa không gây hại cho môi trường."
+      },
+      "premium": {
+        "title": "Cao cấp",
+        "text": "Giá cả phải chăng nhưng chất lượng luôn được đặt lên hàng đầu, mọi sản phẩm đều được đội ngũ kiểm định kỹ."
+      },
+      "unique": {
+        "title": "Độc đáo",
+        "text": "Khác với nhiều loại nến khác, chúng tôi mang đến nhiều mùi hương và đã khảo sát thực tế để tạo nên hương thơm chân thực."
+      },
+      "economical": {
+        "title": "Tiết kiệm",
+        "text": "Nến có thời gian sử dụng dài, đến 6 tháng kể từ lần thắp đầu tiên, giúp bạn tiết kiệm chi phí."
+      }
+    },
+    "howToUse": "CÁCH SỬ DỤNG",
+    "videoLine1": "Hãy đặt nến ở nơi an toàn.",
+    "videoLine2": "Chúng tôi muốn bạn tận hưởng trọn vẹn #scandlexperience",
+    "playVideo": "Phát video",
+    "videoSoon": "Video sẽ sớm ra mắt.",
+    "videoAlt": "Ngọn nến trên bàn cạnh đèn ngủ và chậu cây",
+    "ingredientsBadge": "Nguyên liệu",
+    "ingredientsAlt": "Lá sồi khô và quả sồi",
+    "plantTitle": "Nguyên liệu từ thực vật",
+    "plantText": "Nến thơm từ nguyên liệu tự nhiên dùng sáp thực vật như sáp đậu nành, sáp ong cùng tinh dầu để tạo hương thơm.",
+    "parfumeTitle": "Hương thơm",
+    "parfumeText": "Mang lại mùi hương tự nhiên, dịu nhẹ hơn so với nến dùng hương liệu tổng hợp và hóa chất.",
+    "bannerText": "An tâm tận hưởng",
+    "bannerScript": "ngọn nến",
+    "testimonials": "Cảm nhận của khách hàng",
+    "goToSlide": "Chuyển tới mục {index}",
+    "quotes": [
+      {
+        "name": "Berry Syam",
+        "role": "Phó chủ tịch Scandleted",
+        "text": "Tôi rất thích hương oải hương dịu nhẹ của cây nến này. Nó giúp tôi thư giãn sau một ngày dài, và tôi cũng trân trọng việc nến được làm từ nguyên liệu tự nhiên."
+      },
+      {
+        "name": "Linh Trần",
+        "role": "Nhà thiết kế nội thất",
+        "text": "Hũ nến đặt trên kệ rất đẹp, mùi hương lan khắp phòng mà không bị nồng."
+      },
+      {
+        "name": "Wing Sun",
+        "role": "Bố của hai bé",
+        "text": "An toàn cho các con và cháy rất sạch. Tối nào cả nhà cũng thắp một hũ khi kể chuyện."
+      },
+      {
+        "name": "Ghandy Hari",
+        "role": "Food blogger",
+        "text": "Hoàn hảo cho bữa tối ở nhà. Hũ hương vani làm cả căn hộ thật ấm cúng."
+      },
+      {
+        "name": "Minh Lê",
+        "role": "Giáo viên yoga",
+        "text": "Tôi dùng nến này trong mọi buổi tập. Học viên lúc nào cũng hỏi tôi mua ở đâu."
+      }
+    ]
+  },
+  "Search": {
+    "open": "Tìm kiếm",
+    "placeholder": "Tìm nến, mùi hương, trang…",
+    "products": "Sản phẩm",
+    "pages": "Trang",
+    "recent": "Tìm kiếm gần đây",
+    "suggestions": "Phổ biến",
+    "clearRecent": "Xóa",
+    "empty": "Không tìm thấy kết quả cho “{query}”",
+    "emptyHint": "Thử một mùi hương khác như “vanilla” hoặc “nước hoa”.",
+    "viewAll": "Xem tất cả kết quả cho “{query}”",
+    "shortcut": "Mở tìm kiếm",
+    "pageNames": {
+      "home": "Trang chủ",
+      "shop": "Tất cả nến thơm",
+      "about": "Về chúng tôi",
+      "newArrivals": "Hàng mới về",
+      "sale": "Đang giảm giá",
+      "checkout": "Thanh toán",
+      "login": "Đăng nhập",
+      "register": "Tạo tài khoản"
+    }
+  }
+}
