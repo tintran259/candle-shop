@@ -23,7 +23,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
       role="group"
       aria-label={t("language")}
       className={cn(
-        "relative flex items-center rounded-full border border-ink p-0.5 text-sm group-data-[tone=light]/header:border-white",
+        "relative flex items-center rounded-full border border-ink p-0.5 text-sm",
         isPending && "opacity-60",
         className,
       )}
@@ -37,8 +37,8 @@ export function LocaleSwitcher({ className }: { className?: string }) {
           className={cn(
             "cursor-pointer rounded-full px-2.5 py-1 uppercase transition-colors",
             l === locale
-              ? "bg-ink text-white group-data-[tone=light]/header:bg-white group-data-[tone=light]/header:text-ink"
-              : "text-ink hover:text-peanut group-data-[tone=light]/header:text-white",
+              ? "bg-ink text-white"
+              : "text-ink hover:text-peanut",
           )}
         >
           {l}

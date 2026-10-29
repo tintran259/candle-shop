@@ -222,17 +222,13 @@ export const trendingProducts: Product[] = [
 // key = khóa trong namespace "Nav"
 export const navLinks = [
   { key: "shop", href: "/shop" },
-  { key: "about", href: "/about" },
-  { key: "blog", href: "/blog" },
-  { key: "testimonials", href: "/#testimonials" },
+  { key: "craft", href: "/craft" },
 ] as const;
 
 // key = khóa trong namespace "Footer.links"
 export const footerLinks = [
   { key: "newArrivals", href: "/shop?sort=newest" },
-  { key: "about", href: "/about" },
   { key: "influencer", href: "/influencer" },
-  { key: "blog", href: "/blog" },
   { key: "contact", href: "/contact" },
 ] as const;
 

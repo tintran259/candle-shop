@@ -4,20 +4,18 @@
     "description": "Nến thơm thủ công giúp bạn luôn thư thái và xoa dịu cảm xúc."
   },
   "Announcement": {
-    "freeShipping": "MIỄN PHÍ vận chuyển cho đơn hàng từ $100 🎉"
+    "freeShipping": "Mỗi ngọn nến được đổ tay theo đơn · Hoàn thành trong 2–3 ngày · Miễn phí giao từ $100"
   },
   "Nav": {
     "shop": "Cửa hàng",
-    "about": "Giới thiệu",
-    "blog": "Blog",
-    "testimonials": "Đánh giá",
     "search": "Tìm kiếm",
     "account": "Tài khoản",
     "login": "ĐĂNG NHẬP",
     "openMenu": "Mở menu",
     "menu": "Menu",
     "home": "Trang chủ 2510 Scented Candle",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "craft": "Thủ công"
   },
   "Hero": {
     "tagline": "#SCANDLEXPERIENCE",
@@ -38,8 +36,8 @@
     "saleImageAlt": "Những ngọn nến đang cháy trên khay gỗ"
   },
   "Product": {
-    "addToCart": "THÊM VÀO GIỎ",
-    "added": "Đã thêm {name} vào giỏ hàng",
+    "addToCart": "ĐẶT LÀM",
+    "added": "Đã thêm {name} vào đơn đặt",
     "viewCart": "Xem giỏ",
     "new": "MỚI",
     "taglines": {
@@ -118,9 +116,7 @@
   "Footer": {
     "links": {
       "newArrivals": "Hàng mới về",
-      "about": "Giới thiệu",
       "influencer": "Influencer",
-      "blog": "Blog",
       "contact": "Liên hệ"
     },
     "newsletterLine1": "Đăng ký nhận tin — chúng tôi sẽ",
@@ -148,7 +144,8 @@
     "remove": "Xóa {name}",
     "subtotal": "Tạm tính",
     "checkout": "THANH TOÁN",
-    "label": "Giỏ hàng ({count} sản phẩm)"
+    "label": "Giỏ hàng ({count} sản phẩm)",
+    "madeToOrder": "Nến được đổ mới theo đơn — bạn chọn ngày nhận ở bước thanh toán."
   },
   "Shop": {
     "title": "Nến thơm",
@@ -199,8 +196,8 @@
     "quantity": "Số lượng",
     "decrease": "Giảm số lượng",
     "increase": "Tăng số lượng",
-    "addToCart": "THÊM VÀO GIỎ",
-    "added": "Đã thêm {count} × {name} vào giỏ hàng",
+    "addToCart": "ĐẶT LÀM",
+    "added": "Đã thêm {count} × {name} vào đơn đặt",
     "sections": {
       "description": {
         "title": "Mô tả",
@@ -280,14 +277,15 @@
       "phone": "Vui lòng nhập số điện thoại hợp lệ",
       "address": "Vui lòng nhập địa chỉ",
       "city": "Vui lòng nhập tỉnh / thành phố",
-      "contactRequired": "Vui lòng lưu thông tin nhận hàng trước"
+      "contactRequired": "Vui lòng lưu thông tin nhận hàng trước",
+      "dateRequired": "Vui lòng chọn ngày nhận hàng"
     },
     "shippingMethod": "Phương thức giao hàng",
     "shipping": {
       "standard": "Tiêu chuẩn",
       "express": "Hỏa tốc"
     },
-    "arrive": "Nhận hàng sau {days} ngày",
+    "arrive": "Giao trong {days} ngày sau khi nến hoàn thành",
     "free": "Miễn phí",
     "discount": {
       "apply": "Nhập mã giảm giá",
@@ -300,13 +298,11 @@
     "paymentMethod": "Phương thức thanh toán",
     "payments": {
       "vnpay": "VNPay",
-      "momo": "MoMo",
-      "cod": "Thanh toán khi nhận hàng"
+      "momo": "MoMo"
     },
     "paymentHints": {
       "vnpay": "Thẻ ATM, Visa/Master, QR qua VNPay",
-      "momo": "Thanh toán bằng ví MoMo",
-      "cod": "Trả tiền mặt khi nhận hàng"
+      "momo": "Thanh toán bằng ví MoMo"
     },
     "summary": "Tóm tắt đơn hàng",
     "subtotal": "Tạm tính",
@@ -325,6 +321,24 @@
       "failedText": "Đơn hàng {code} đang chờ thanh toán. Bạn có thể thử lại từ giỏ hàng.",
       "backHome": "VỀ TRANG CHỦ",
       "keepShopping": "TIẾP TỤC MUA SẮM"
+    },
+    "payAmount": "THANH TOÁN {amount}",
+    "plan": {
+      "title": "Hình thức thanh toán",
+      "deposit": "Đặt cọc {percent}%",
+      "depositHint": "Phần còn lại trả khi nhận hàng",
+      "full": "Thanh toán toàn bộ",
+      "fullHint": "Trả trước 100%, nhận hàng không cần trả thêm",
+      "payNow": "Thanh toán bây giờ",
+      "payLater": "Trả khi nhận hàng"
+    },
+    "schedule": {
+      "title": "Ngày nhận hàng",
+      "hint": "Mỗi đơn được đổ tay và ủ hương {min}–{max} ngày. Lịch bên dưới đã tính sẵn số nến xưởng còn nhận được cho {quantity} hũ của bạn.",
+      "arrive": "Nhận",
+      "slots": "Còn {count} suất",
+      "full": "Kín lịch",
+      "summary": "Xưởng hoàn thành {ready} · bạn nhận hàng khoảng {arrive}."
     }
   },
   "Auth": {
@@ -396,79 +410,6 @@
       "hello": "Xin chào, {name}"
     }
   },
-  "About": {
-    "metaTitle": "Về chúng tôi",
-    "heroTitle": "Để nến nguội hẳn để kéo dài tuổi thọ của nến.",
-    "heroText": "Hơn 10 lần thử nghiệm đã được thực hiện để tìm ra mùi hương hòa hợp với thiên nhiên, có lúc phải thức trắng đêm trong bóng tối.",
-    "heroAlt": {
-      "left": "Đôi tay cầm ngọn nến đang cháy",
-      "center": "Người phụ nữ mỉm cười bên ngọn nến",
-      "right": "Người phụ nữ thưởng thức hương nến"
-    },
-    "ourProduct": "SẢN PHẨM CỦA CHÚNG TÔI",
-    "jarAlt": "Hũ nến thơm",
-    "values": {
-      "nature": {
-        "title": "Thiên nhiên",
-        "text": "Chúng tôi yêu thiên nhiên, vì vậy luôn dùng vật liệu thân thiện để sáp thừa không gây hại cho môi trường."
-      },
-      "premium": {
-        "title": "Cao cấp",
-        "text": "Giá cả phải chăng nhưng chất lượng luôn được đặt lên hàng đầu, mọi sản phẩm đều được đội ngũ kiểm định kỹ."
-      },
-      "unique": {
-        "title": "Độc đáo",
-        "text": "Khác với nhiều loại nến khác, chúng tôi mang đến nhiều mùi hương và đã khảo sát thực tế để tạo nên hương thơm chân thực."
-      },
-      "economical": {
-        "title": "Tiết kiệm",
-        "text": "Nến có thời gian sử dụng dài, đến 6 tháng kể từ lần thắp đầu tiên, giúp bạn tiết kiệm chi phí."
-      }
-    },
-    "howToUse": "CÁCH SỬ DỤNG",
-    "videoLine1": "Hãy đặt nến ở nơi an toàn.",
-    "videoLine2": "Chúng tôi muốn bạn tận hưởng trọn vẹn #scandlexperience",
-    "playVideo": "Phát video",
-    "videoSoon": "Video sẽ sớm ra mắt.",
-    "videoAlt": "Ngọn nến trên bàn cạnh đèn ngủ và chậu cây",
-    "ingredientsBadge": "Nguyên liệu",
-    "ingredientsAlt": "Lá sồi khô và quả sồi",
-    "plantTitle": "Nguyên liệu từ thực vật",
-    "plantText": "Nến thơm từ nguyên liệu tự nhiên dùng sáp thực vật như sáp đậu nành, sáp ong cùng tinh dầu để tạo hương thơm.",
-    "parfumeTitle": "Hương thơm",
-    "parfumeText": "Mang lại mùi hương tự nhiên, dịu nhẹ hơn so với nến dùng hương liệu tổng hợp và hóa chất.",
-    "bannerText": "An tâm tận hưởng",
-    "bannerScript": "ngọn nến",
-    "testimonials": "Cảm nhận của khách hàng",
-    "goToSlide": "Chuyển tới mục {index}",
-    "quotes": [
-      {
-        "name": "Berry Syam",
-        "role": "Phó chủ tịch Scandleted",
-        "text": "Tôi rất thích hương oải hương dịu nhẹ của cây nến này. Nó giúp tôi thư giãn sau một ngày dài, và tôi cũng trân trọng việc nến được làm từ nguyên liệu tự nhiên."
-      },
-      {
-        "name": "Linh Trần",
-        "role": "Nhà thiết kế nội thất",
-        "text": "Hũ nến đặt trên kệ rất đẹp, mùi hương lan khắp phòng mà không bị nồng."
-      },
-      {
-        "name": "Wing Sun",
-        "role": "Bố của hai bé",
-        "text": "An toàn cho các con và cháy rất sạch. Tối nào cả nhà cũng thắp một hũ khi kể chuyện."
-      },
-      {
-        "name": "Ghandy Hari",
-        "role": "Food blogger",
-        "text": "Hoàn hảo cho bữa tối ở nhà. Hũ hương vani làm cả căn hộ thật ấm cúng."
-      },
-      {
-        "name": "Minh Lê",
-        "role": "Giáo viên yoga",
-        "text": "Tôi dùng nến này trong mọi buổi tập. Học viên lúc nào cũng hỏi tôi mua ở đâu."
-      }
-    ]
-  },
   "Search": {
     "open": "Tìm kiếm",
     "placeholder": "Tìm nến, mùi hương, trang…",
@@ -484,12 +425,153 @@
     "pageNames": {
       "home": "Trang chủ",
       "shop": "Tất cả nến thơm",
-      "about": "Về chúng tôi",
       "newArrivals": "Hàng mới về",
       "sale": "Đang giảm giá",
       "checkout": "Thanh toán",
       "login": "Đăng nhập",
       "register": "Tạo tài khoản"
+    }
+  },
+  "MadeToOrder": {
+    "badge": "Đổ tay theo đơn · hoàn thành trong {min}–{max} ngày",
+    "badgeShort": "Đổ tay theo đơn",
+    "earliest": "Đặt hôm nay, nhận sớm nhất {date}",
+    "craftCta": "Muốn tự phối hương, chọn hũ? Thử trang Thủ công"
+  },
+  "Contact": {
+    "button": "Liên hệ shop",
+    "title": "Nói chuyện với 2510",
+    "subtitle": "Tư vấn mùi hương, đơn số lượng lớn hay đổi lịch nhận — shop trả lời trong vài phút.",
+    "hours": "Giờ làm việc",
+    "helpTitle": "Cần shop hỗ trợ?",
+    "helpText": "Chưa chắc chọn gì, cần cọc ít hơn hay muốn nhận gấp? Nhắn shop nhé.",
+    "channels": {
+      "zalo": "Zalo",
+      "messenger": "Messenger",
+      "phone": "Gọi hotline",
+      "email": "Email"
+    }
+  },
+  "Customizer": {
+    "metaTitle": "Thủ công — Tự thiết kế nến thơm",
+    "eyebrow": "Handmade & Personalized",
+    "title": "Create Your Candle",
+    "intro": "Tự tay thiết kế cây nến mang dấu ấn riêng của bạn. Chọn từng thành phần, tạo nên hương thơm và phong cách phù hợp với sở thích của bạn.",
+    "heroAlt": "Nến đá thủ công đang cháy trên kệ gỗ",
+    "itemName": "Nến Thủ công",
+    "progressLabel": "Các bước tùy chỉnh",
+    "groups": {
+      "container": "Hũ nến",
+      "wax": "Loại sáp",
+      "fragrance": "Mùi hương",
+      "wick": "Bấc nến",
+      "color": "Màu sắc",
+      "decoration": "Trang trí",
+      "personalization": "Cá nhân hóa"
+    },
+    "hints": {
+      "container": "Chọn kiểu dáng, chất liệu và kích thước phù hợp.",
+      "wax": "Ảnh hưởng đến đặc tính cháy, bề mặt và giá thành.",
+      "fragrance": "Chọn mùi hương yêu thích và cường độ hương.",
+      "fragranceBlend": "Chọn 1 mùi, hoặc phối tối đa {max} mùi và chỉnh tỉ lệ.",
+      "wick": "Chỉ hiện bấc phù hợp với hũ, sáp và kích thước đã chọn.",
+      "color": "Chọn màu sắc cho lớp sáp nến.",
+      "decoration": "Chỉ gồm các trang trí xưởng đã kiểm tra an toàn khi đốt.",
+      "personalization": "Không bắt buộc — thêm dấu ấn riêng cho người nhận."
+    },
+    "lid": {
+      "title": "Có nắp",
+      "none": "Không nắp",
+      "with": "Có nắp"
+    },
+    "size": {
+      "title": "Kích thước",
+      "note": "Dung tích",
+      "hint": "Chọn dung tích phù hợp với nhu cầu sử dụng.",
+      "burn": "~{hours} giờ cháy"
+    },
+    "intensity": {
+      "title": "Cường độ hương",
+      "light": "Nhẹ",
+      "medium": "Vừa",
+      "strong": "Đậm"
+    },
+    "blend": {
+      "title": "Tỉ lệ phối hương",
+      "ratioFor": "Tỉ lệ {name}",
+      "remove": "Bỏ {name}"
+    },
+    "personal": {
+      "labelText": "Chữ trên nhãn",
+      "labelTextPlaceholder": "Vd: Good Things Take Time",
+      "recipientName": "Tên người nhận",
+      "recipientNamePlaceholder": "Vd: Minh Anh",
+      "giftMessage": "Lời nhắn kèm quà",
+      "giftMessagePlaceholder": "Lời nhắn sẽ được viết tay trên thiệp",
+      "giftBox": "Hộp quà",
+      "giftBoxHint": "Hộp giấy kraft kèm nơ"
+    },
+    "option": {
+      "included": "Đã gồm",
+      "soldOut": "Tạm hết",
+      "notEnough": "Không đủ nguyên liệu",
+      "onlyLeft": "Còn đủ {count} hũ",
+      "unsupported": "Không hợp với lựa chọn hiện tại"
+    },
+    "issues": {
+      "required": "Vui lòng chọn mục này.",
+      "unavailable": "Lựa chọn này vừa tạm hết — vui lòng chọn lựa chọn khác.",
+      "incompatible_size": "Hũ đã chọn không có cỡ {grams}g — vui lòng chọn kích thước khác.",
+      "incompatible_lid": "Hũ đã chọn không có nắp.",
+      "incompatible_wick": "Bấc đã chọn không hợp với hũ, sáp hoặc kích thước hiện tại — vui lòng chọn bấc khác.",
+      "tooLong": "Tối đa {max} ký tự.",
+      "tooMany": "Chỉ phối tối đa {max} mùi.",
+      "outOfStock": "Không đủ nguyên liệu cho lựa chọn này."
+    },
+    "summary": {
+      "title": "Tóm tắt tùy chỉnh",
+      "edit": "Chỉnh sửa",
+      "none": "Không có",
+      "message": "Có lời nhắn",
+      "view": "Xem tóm tắt",
+      "previewNote": "Hình minh họa theo lựa chọn — nến thật được đổ tay nên có thể khác đôi chút."
+    },
+    "price": {
+      "base": "Giá gốc",
+      "baseWithSize": "Giá gốc ({grams}g)",
+      "total": "Tổng giá",
+      "totalFor": "Tổng giá ({count} hũ)",
+      "estimate": "Giá tạm tính — được xác nhận lại khi thanh toán.",
+      "lines": {
+        "container": "Hũ nến",
+        "lid": "Nắp",
+        "wax": "Loại sáp",
+        "fragrance": "Mùi hương",
+        "intensity": "Hương đậm",
+        "wick": "Bấc nến",
+        "color": "Màu sắc",
+        "decoration": "Trang trí",
+        "labelText": "In chữ nhãn",
+        "recipientName": "Tên người nhận",
+        "giftBox": "Hộp quà"
+      }
+    },
+    "quantity": "Số lượng",
+    "decrease": "Giảm số lượng",
+    "increase": "Tăng số lượng",
+    "maxQty": "Nguyên liệu hiện đủ cho tối đa {count} hũ.",
+    "fixFirst": "Còn {count} mục cần chỉnh trước khi thêm vào giỏ.",
+    "addToCart": "Thêm vào giỏ hàng",
+    "added": "Đã thêm {count} nến Thủ công vào giỏ hàng",
+    "save": "Lưu cấu hình",
+    "saved": "Đã sao chép link cấu hình — mở link này để quay lại thiết kế của bạn.",
+    "savedNoClipboard": "Link cấu hình đã nằm trên thanh địa chỉ — hãy lưu lại link này.",
+    "restored": "Đã mở lại cấu hình bạn đã lưu.",
+    "leadTime": "Sản phẩm được làm thủ công, hoàn thành trong {min}–{max} ngày trước khi giao.",
+    "retry": "Thử lại",
+    "errors": {
+      "stock": "Nguyên liệu cho lựa chọn này vừa hết — thử đổi hũ, hương hoặc liên hệ shop.",
+      "loadFailed": "Không tải được danh sách nguyên liệu. Vui lòng thử lại."
     }
   }
 }

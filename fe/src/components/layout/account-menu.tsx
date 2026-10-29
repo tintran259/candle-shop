@@ -48,7 +48,7 @@ export function AccountMenu({ user }: { user: User }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t("menu")}
-        className="flex cursor-pointer items-center gap-3 rounded-full border border-ink py-1 pr-4 pl-1 text-sm text-ink transition-colors hover:bg-ink hover:text-white data-popup-open:bg-ink data-popup-open:text-white group-data-[tone=light]/header:border-white group-data-[tone=light]/header:text-white"
+        className="flex cursor-pointer items-center gap-3 rounded-full border border-ink py-1 pr-4 pl-1 text-sm text-ink transition-colors hover:bg-ink hover:text-white data-popup-open:bg-ink data-popup-open:text-white"
       >
         <span className="flex size-9 items-center justify-center rounded-full bg-peanut text-sm font-semibold text-white">
           {initials(user.name)}

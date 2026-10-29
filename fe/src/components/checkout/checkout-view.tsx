@@ -3,13 +3,16 @@
 import { ChevronRightIcon, MinusIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
-import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ContactCard } from "@/components/checkout/contact-card";
 import { OrderSummary } from "@/components/checkout/order-summary";
+import { ReadyDatePicker } from "@/components/checkout/ready-date-picker";
+import { CartThumb } from "@/components/customizer/cart-thumb";
+import { ContactHelp } from "@/components/layout/contact-shop";
 import { buttonVariants } from "@/components/ui/button";
 import { useCartHydrated } from "@/hooks/use-cart-hydrated";
+import { useShopConfig } from "@/hooks/use-shop-config";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   calcTotals,
@@ -18,6 +21,7 @@ import {
   shippingMethods,
 } from "@/lib/checkout";
 import { formatPrice } from "@/lib/data";
+import { pick } from "@/lib/shop-config";
 import { cn } from "@/lib/utils";
 import { selectCount, unitPrice, useCartStore } from "@/stores/cart-store";
 import { useCheckoutStore } from "@/stores/checkout-store";
@@ -30,11 +34,15 @@ export function CheckoutView() {
   const hydrated = useCartHydrated();
   const { items, updateQuantity, remove } = useCartStore();
   const count = useCartStore(selectCount);
-  const { contact, shipping, setShipping, payment, discountCode } = useCheckoutStore();
+  const { contact, shipping, setShipping, payment, paymentPlan, readyDate, setReadyDate, discountCode } =
+    useCheckoutStore();
+  const { data: config } = useShopConfig();
   const [submitting, setSubmitting] = useState(false);
   const [needContact, setNeedContact] = useState(false);
+  const [needDate, setNeedDate] = useState(false);
 
-  const totals = calcTotals(items, shipping, discountCode);
+  const totals = calcTotals(items, shipping, discountCode, paymentPlan, config?.payment.depositRate);
+  const shippingDays = shippingMethods.find((m) => m.id === shipping)!.days;
 
   const handleSubmit = async () => {
     if (!contact) {
@@ -43,17 +51,25 @@ export function CheckoutView() {
       document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    if (!readyDate) {
+      setNeedDate(true);
+      toast.error(t("errors.dateRequired"));
+      document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     setSubmitting(true);
     try {
       const order = await createOrder({
-        items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
+        items: items.map((i) => ({ productId: i.id, quantity: i.quantity, configuration: i.craft?.configuration })),
         contact,
         shipping,
         payment,
+        paymentPlan,
+        readyDate,
         discountCode,
         locale,
       });
-      // VNPay / MoMo: chuyển sang cổng thanh toán; COD: tới trang kết quả
+      // Chuyển sang cổng VNPay / MoMo để trả cọc hoặc toàn bộ; chưa có BE thì tới trang kết quả
       if (order.payUrl) {
         window.location.href = order.payUrl;
         return;
@@ -97,8 +113,8 @@ export function CheckoutView() {
         </ol>
       </nav>
 
-      <div className="mt-10 grid gap-10 lg:mt-14 lg:grid-cols-[1fr_516px] lg:gap-20">
-        <div className="flex flex-col gap-14">
+      <div className="mt-10 grid grid-cols-1 gap-10 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_516px] lg:gap-20">
+        <div className="flex min-w-0 flex-col gap-14">
           {/* Giỏ hàng */}
           <section>
             <h1 className="flex items-center gap-3 text-2xl font-semibold text-ink">
@@ -121,12 +137,15 @@ export function CheckoutView() {
                     exit={{ opacity: 0, x: -30 }}
                     className="flex items-center gap-8"
                   >
-                    <div className="relative size-[120px] shrink-0 overflow-hidden rounded-xl">
-                      <Image src={item.image} alt={item.name} fill sizes="120px" className="object-cover" />
-                    </div>
+                    <CartThumb item={item} sizes="120px" className="size-[120px] rounded-xl" />
                     <div className="flex min-w-0 flex-1 flex-col gap-4">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-2xl font-semibold text-ink md:text-[28px]">{item.name}</p>
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <p className="text-2xl font-semibold text-ink md:text-[28px]">{item.name}</p>
+                          {item.craft && (
+                            <p className="text-sm text-dark-300">{pick(item.craft.details, locale)}</p>
+                          )}
+                        </div>
                         <button
                           type="button"
                           aria-label={t("remove", { name: item.name })}
@@ -209,6 +228,25 @@ export function CheckoutView() {
               })}
             </div>
           </section>
+
+          {/* Ngày nhận — theo lịch làm nến của xưởng */}
+          <div id="schedule" className="scroll-mt-40">
+            {config ? (
+              <ReadyDatePicker
+                config={config}
+                quantity={count}
+                shippingDays={shippingDays}
+                value={readyDate}
+                onChange={(d) => {
+                  setReadyDate(d);
+                  if (d) setNeedDate(false);
+                }}
+                highlight={needDate}
+              />
+            ) : (
+              <div className="h-40 animate-pulse rounded-2xl bg-brand-50" />
+            )}
+          </div>
         </div>
 
         <aside className="lg:sticky lg:top-[151px] lg:self-start">
@@ -218,6 +256,7 @@ export function CheckoutView() {
             disabled={items.length === 0}
             onSubmit={handleSubmit}
           />
+          <ContactHelp className="mt-6" />
         </aside>
       </div>
     </div>

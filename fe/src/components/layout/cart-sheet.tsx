@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { MinusIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { CartThumb } from "@/components/customizer/cart-thumb";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/data";
+import { pick } from "@/lib/shop-config";
 import { cn } from "@/lib/utils";
 import {
   selectSubtotal,
@@ -25,6 +26,7 @@ const FREE_SHIPPING = 100;
 
 export function CartSheet() {
   const t = useTranslations("Cart");
+  const locale = useLocale();
   const { items, isOpen, setOpen, updateQuantity, remove } = useCartStore();
   const subtotal = useCartStore(selectSubtotal);
   const remaining = Math.max(FREE_SHIPPING - subtotal, 0);
@@ -63,12 +65,15 @@ export function CartSheet() {
                     exit={{ opacity: 0, x: 40 }}
                     className="flex gap-4"
                   >
-                    <div className="relative size-20 shrink-0 overflow-hidden">
-                      <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
-                    </div>
-                    <div className="flex flex-1 flex-col justify-between">
+                    <CartThumb item={item} sizes="80px" className="size-20" />
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
                       <div className="flex justify-between gap-2">
-                        <p className="text-lg font-semibold">{item.name}</p>
+                        <div className="flex min-w-0 flex-col">
+                          <p className="text-lg font-semibold">{item.name}</p>
+                          {item.craft && (
+                            <p className="line-clamp-2 text-xs text-dark-300">{pick(item.craft.details, locale)}</p>
+                          )}
+                        </div>
                         <p className="text-lg">{formatPrice(unitPrice(item) * item.quantity)}</p>
                       </div>
                       <div className="flex items-center justify-between">
@@ -99,6 +104,7 @@ export function CartSheet() {
         </div>
 
         <SheetFooter className="border-t border-brand-100 p-6">
+          <p className="mb-3 text-sm text-dark-300">{t("madeToOrder")}</p>
           <div className="flex justify-between text-xl">
             <span>{t("subtotal")}</span>
             <span className="font-semibold">{formatPrice(subtotal)}</span>

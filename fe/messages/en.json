@@ -4,20 +4,18 @@
     "description": "Always cool and soothe your feelings with our handmade aromatherapy candles."
   },
   "Announcement": {
-    "freeShipping": "FREE Shipping on orders over $100 🎉"
+    "freeShipping": "Every candle is hand-poured to order · Ready in 2–3 days · Free shipping over $100"
   },
   "Nav": {
     "shop": "Shop",
-    "about": "About",
-    "blog": "Blog",
-    "testimonials": "Testimonials",
     "search": "Search",
     "account": "Account",
     "login": "LOG IN",
     "openMenu": "Open menu",
     "menu": "Menu",
     "home": "2510 Scented Candle home",
-    "language": "Language"
+    "language": "Language",
+    "craft": "Craft"
   },
   "Hero": {
     "tagline": "#SCANDLEXPERIENCE",
@@ -38,8 +36,8 @@
     "saleImageAlt": "Lit candles on a wooden tray"
   },
   "Product": {
-    "addToCart": "ADD TO CART",
-    "added": "{name} added to cart",
+    "addToCart": "ORDER",
+    "added": "{name} added to your order",
     "viewCart": "View cart",
     "new": "NEW",
     "taglines": {
@@ -118,9 +116,7 @@
   "Footer": {
     "links": {
       "newArrivals": "New Arrivals",
-      "about": "About",
       "influencer": "Influencer",
-      "blog": "Blog",
       "contact": "Contact Us"
     },
     "newsletterLine1": "Stay in the know — we’ll",
@@ -148,7 +144,8 @@
     "remove": "Remove {name}",
     "subtotal": "Subtotal",
     "checkout": "CHECKOUT",
-    "label": "Cart ({count} items)"
+    "label": "Cart ({count} items)",
+    "madeToOrder": "Candles are freshly poured to order — pick your delivery date at checkout."
   },
   "Shop": {
     "title": "Candles",
@@ -199,8 +196,8 @@
     "quantity": "Quantity",
     "decrease": "Decrease quantity",
     "increase": "Increase quantity",
-    "addToCart": "ADD TO CART",
-    "added": "{count} × {name} added to cart",
+    "addToCart": "ORDER NOW",
+    "added": "Added {count} × {name} to your order",
     "sections": {
       "description": {
         "title": "Description",
@@ -280,14 +277,15 @@
       "phone": "Please enter a valid phone number",
       "address": "Please enter the address",
       "city": "Please enter the city",
-      "contactRequired": "Please save your contact information first"
+      "contactRequired": "Please save your contact information first",
+      "dateRequired": "Please choose a delivery date"
     },
     "shippingMethod": "Shipping Method",
     "shipping": {
       "standard": "Standard",
       "express": "Express"
     },
-    "arrive": "{days, plural, one {# day} other {# days}} to arrive",
+    "arrive": "Delivered {days} day(s) after your candles are ready",
     "free": "Free",
     "discount": {
       "apply": "Apply discount code",
@@ -300,13 +298,11 @@
     "paymentMethod": "Payment Method",
     "payments": {
       "vnpay": "VNPay",
-      "momo": "MoMo",
-      "cod": "Cash on delivery"
+      "momo": "MoMo"
     },
     "paymentHints": {
-      "vnpay": "ATM card, Visa/Master, QR via VNPay",
-      "momo": "Pay with your MoMo e-wallet",
-      "cod": "Pay in cash when you receive the order"
+      "vnpay": "ATM, Visa/Master, QR via VNPay",
+      "momo": "Pay with MoMo wallet"
     },
     "summary": "Order summary",
     "subtotal": "Subtotal",
@@ -325,6 +321,24 @@
       "failedText": "Your order {code} is still waiting for payment. You can try again from your cart.",
       "backHome": "BACK TO HOME",
       "keepShopping": "KEEP SHOPPING"
+    },
+    "payAmount": "PAY {amount}",
+    "plan": {
+      "title": "Payment option",
+      "deposit": "{percent}% deposit",
+      "depositHint": "Pay the rest on delivery",
+      "full": "Pay in full",
+      "fullHint": "Prepay 100%, nothing due on delivery",
+      "payNow": "Due now",
+      "payLater": "Due on delivery"
+    },
+    "schedule": {
+      "title": "Delivery date",
+      "hint": "Each order is hand-poured and cured for {min}–{max} days. The dates below already account for how many of your {quantity} candle(s) the workshop can still take.",
+      "arrive": "Arrives",
+      "slots": "{count} slots left",
+      "full": "Fully booked",
+      "summary": "Ready at the workshop {ready} · arrives around {arrive}."
     }
   },
   "Auth": {
@@ -396,79 +410,6 @@
       "hello": "Hi, {name}"
     }
   },
-  "About": {
-    "metaTitle": "About us",
-    "heroTitle": "Let it cool completely to maximizing the life of your candle.",
-    "heroText": "More than 10 times experiments were carried out to find the fragrance in accordance with nature to the point of having to stay overnight in the dark.",
-    "heroAlt": {
-      "left": "Hands holding a lit candle",
-      "center": "Woman smiling at a candle",
-      "right": "Woman smelling a candle"
-    },
-    "ourProduct": "OUR PRODUCT",
-    "jarAlt": "Scented candle jar",
-    "values": {
-      "nature": {
-        "title": "Nature",
-        "text": "We are nature lovers, that's why we use environmentally friendly materials so that wax waste doesn't damage the environment"
-      },
-      "premium": {
-        "title": "Premium",
-        "text": "Affordable prices, even so we still prioritize quality so that at low prices you still get quality products that have been tested by our team"
-      },
-      "unique": {
-        "title": "Unique",
-        "text": "Different from most other candles, we present a wide variety of scents and have done field research by our team to get a realistic scent."
-      },
-      "economical": {
-        "title": "Economical",
-        "text": "Our candles have a long shelf life and last for 6 months from the moment you start using them so you can save on your budget"
-      }
-    },
-    "howToUse": "HOW TO USE",
-    "videoLine1": "Choose to place the candle in a safe spot.",
-    "videoLine2": "We want to make sure you make the most of your #scandlexperience",
-    "playVideo": "Play video",
-    "videoSoon": "The video is coming soon.",
-    "videoAlt": "Candle on a side table next to a lamp and a plant",
-    "ingredientsBadge": "Ingredients",
-    "ingredientsAlt": "Dried oak leaves and acorns",
-    "plantTitle": "Plant-based ingredients",
-    "plantText": "A scented candle made with natural ingredients is a candle that uses plant-based waxes, such as soy or beeswax, and essential oils to create its scent.",
-    "parfumeTitle": "Parfume",
-    "parfumeText": "Provides a more natural, soothing aroma compared to candles made with synthetic fragrances and chemicals.",
-    "bannerText": "Can safely enjoy your",
-    "bannerScript": "candle",
-    "testimonials": "Testimonials",
-    "goToSlide": "Go to slide {index}",
-    "quotes": [
-      {
-        "name": "Berry Syam",
-        "role": "Vice President Scandleted",
-        "text": "I love the calming lavender scent of this candle. It helps me relax and unwind after a long day. I also appreciate that it is made with natural ingredients."
-      },
-      {
-        "name": "Linh Tran",
-        "role": "Interior designer",
-        "text": "The jars look beautiful on my shelves and the scent fills the whole room without being overpowering."
-      },
-      {
-        "name": "Wing Sun",
-        "role": "Father of two",
-        "text": "Safe for my kids and the burn is so clean. We light one every evening during story time."
-      },
-      {
-        "name": "Ghandy Hari",
-        "role": "Food blogger",
-        "text": "Perfect for dinner at home. The vanilla one makes the whole apartment feel warm and cozy."
-      },
-      {
-        "name": "Minh Le",
-        "role": "Yoga teacher",
-        "text": "I use these candles in every class. My students always ask where I bought them."
-      }
-    ]
-  },
   "Search": {
     "open": "Search",
     "placeholder": "Search candles, scents, pages…",
@@ -484,12 +425,153 @@
     "pageNames": {
       "home": "Home",
       "shop": "Shop all candles",
-      "about": "About us",
       "newArrivals": "New arrivals",
       "sale": "On sale",
       "checkout": "Checkout",
       "login": "Log in",
       "register": "Create account"
+    }
+  },
+  "MadeToOrder": {
+    "badge": "Hand-poured to order · ready in {min}–{max} days",
+    "badgeShort": "Hand-poured to order",
+    "earliest": "Order today, arrives as early as {date}",
+    "craftCta": "Want your own scent blend or vessel? Try Craft"
+  },
+  "Contact": {
+    "button": "Contact us",
+    "title": "Talk to 2510",
+    "subtitle": "Scent advice, large orders or rescheduling — we reply within minutes.",
+    "hours": "Hours",
+    "helpTitle": "Need a hand?",
+    "helpText": "Not sure what to pick, need a smaller deposit or a rush order? Message us.",
+    "channels": {
+      "zalo": "Zalo",
+      "messenger": "Messenger",
+      "phone": "Call us",
+      "email": "Email"
+    }
+  },
+  "Customizer": {
+    "metaTitle": "Craft — Design your own candle",
+    "eyebrow": "Handmade & Personalized",
+    "title": "Create Your Candle",
+    "intro": "Design a candle that carries your own touch. Pick every component and shape a scent and style that suits you.",
+    "heroAlt": "A handmade stone candle burning on a wooden shelf",
+    "itemName": "Craft candle",
+    "progressLabel": "Customization steps",
+    "groups": {
+      "container": "Vessel",
+      "wax": "Wax",
+      "fragrance": "Fragrance",
+      "wick": "Wick",
+      "color": "Color",
+      "decoration": "Decoration",
+      "personalization": "Personalization"
+    },
+    "hints": {
+      "container": "Choose a shape, material and size.",
+      "wax": "Affects how it burns, the surface and the price.",
+      "fragrance": "Pick your favorite scent and its strength.",
+      "fragranceBlend": "Pick one scent, or blend up to {max} and set the ratio.",
+      "wick": "Only wicks suited to your vessel, wax and size are available.",
+      "color": "Choose a color for the wax.",
+      "decoration": "Only decorations our workshop has tested as burn-safe.",
+      "personalization": "Optional — add a personal touch for the recipient."
+    },
+    "lid": {
+      "title": "Lid",
+      "none": "No lid",
+      "with": "With lid"
+    },
+    "size": {
+      "title": "Size",
+      "note": "Capacity",
+      "hint": "Choose the capacity that fits how you'll use it.",
+      "burn": "~{hours}h burn"
+    },
+    "intensity": {
+      "title": "Scent strength",
+      "light": "Light",
+      "medium": "Medium",
+      "strong": "Strong"
+    },
+    "blend": {
+      "title": "Scent blend",
+      "ratioFor": "{name} ratio",
+      "remove": "Remove {name}"
+    },
+    "personal": {
+      "labelText": "Label text",
+      "labelTextPlaceholder": "e.g. Good Things Take Time",
+      "recipientName": "Recipient name",
+      "recipientNamePlaceholder": "e.g. Minh Anh",
+      "giftMessage": "Gift message",
+      "giftMessagePlaceholder": "Handwritten on a card",
+      "giftBox": "Gift box",
+      "giftBoxHint": "Kraft box with ribbon"
+    },
+    "option": {
+      "included": "Included",
+      "soldOut": "Out of stock",
+      "notEnough": "Not enough materials",
+      "onlyLeft": "Enough for {count}",
+      "unsupported": "Not compatible with your choices"
+    },
+    "issues": {
+      "required": "Please choose an option.",
+      "unavailable": "This option just ran out — please pick another.",
+      "incompatible_size": "The selected vessel doesn't come in {grams}g — please choose another size.",
+      "incompatible_lid": "The selected vessel has no lid.",
+      "incompatible_wick": "This wick doesn't suit your vessel, wax or size — please choose another.",
+      "tooLong": "Maximum {max} characters.",
+      "tooMany": "Blend up to {max} scents.",
+      "outOfStock": "Not enough materials for this selection."
+    },
+    "summary": {
+      "title": "Your configuration",
+      "edit": "Edit",
+      "none": "None",
+      "message": "With message",
+      "view": "View summary",
+      "previewNote": "Illustration of your selection — hand-poured candles may vary slightly."
+    },
+    "price": {
+      "base": "Base price",
+      "baseWithSize": "Base price ({grams}g)",
+      "total": "Total",
+      "totalFor": "Total ({count} candles)",
+      "estimate": "Estimated price — confirmed again at checkout.",
+      "lines": {
+        "container": "Vessel",
+        "lid": "Lid",
+        "wax": "Wax",
+        "fragrance": "Fragrance",
+        "intensity": "Strong scent",
+        "wick": "Wick",
+        "color": "Color",
+        "decoration": "Decoration",
+        "labelText": "Label printing",
+        "recipientName": "Recipient name",
+        "giftBox": "Gift box"
+      }
+    },
+    "quantity": "Quantity",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "maxQty": "Current materials cover up to {count} candle(s).",
+    "fixFirst": "{count} item(s) need attention before adding to cart.",
+    "addToCart": "Add to cart",
+    "added": "Added {count} craft candle(s) to your cart",
+    "save": "Save configuration",
+    "saved": "Configuration link copied — open it to come back to your design.",
+    "savedNoClipboard": "Your configuration link is in the address bar — bookmark it to come back.",
+    "restored": "Your saved configuration has been restored.",
+    "leadTime": "Handmade to order — ready in {min}–{max} days before shipping.",
+    "retry": "Try again",
+    "errors": {
+      "stock": "We just ran out of materials for this selection — try another vessel or scent, or contact us.",
+      "loadFailed": "Couldn't load materials. Please try again."
     }
   }
 }

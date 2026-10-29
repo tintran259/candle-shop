@@ -24,7 +24,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ReactLenis root options={{ lerp: 0.1, anchors: true }}>
           {children}
         </ReactLenis>
-        <Toaster position="bottom-right" theme="light" />
+        {/* Chừa chỗ cho nút "Liên hệ shop" ở góc dưới */}
+        <Toaster position="bottom-right" theme="light" offset={{ bottom: 88, right: 24 }} mobileOffset={{ bottom: 80 }} />
       </MotionConfig>
     </QueryClientProvider>
   );

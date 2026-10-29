@@ -25,7 +25,6 @@ const pages = [
   { key: "shop", href: "/shop" },
   { key: "newArrivals", href: "/shop?sort=newest" },
   { key: "sale", href: "/shop?sale=1" },
-  { key: "about", href: "/about" },
   { key: "checkout", href: "/checkout" },
   { key: "login", href: "/login" },
   { key: "register", href: "/register" },

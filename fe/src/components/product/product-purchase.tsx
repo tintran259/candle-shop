@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MadeToOrderNote } from "@/components/product/made-to-order-note";
 import { StarRating } from "@/components/product/star-rating";
 import {
   Accordion,
@@ -67,6 +68,8 @@ export function ProductPurchase({
       </a>
 
       <p className="mt-10 text-lg text-ink">{tProduct(`taglines.${product.id}`)}</p>
+
+      <MadeToOrderNote className="mt-6" />
 
       <div className="mt-6 flex gap-4">
         <div

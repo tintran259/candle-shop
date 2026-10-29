@@ -10,6 +10,7 @@ import {
 import { notFound } from "next/navigation";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { CartSheet } from "@/components/layout/cart-sheet";
+import { ContactShopButton } from "@/components/layout/contact-shop";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SpotlightSearch } from "@/components/layout/spotlight-search";
@@ -65,9 +66,9 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${zilla.variable} ${belle.variable} ${bitter.variable} ${dancing.variable} h-full antialiased`}
+      className={`${zilla.variable} ${belle.variable} ${bitter.variable} ${dancing.variable} antialiased`}
     >
-      <body className="flex min-h-full flex-col tracking-brand">
+      <body className="flex min-h-dvh flex-col tracking-brand">
         <NextIntlClientProvider>
           <Providers>
             <AnnouncementBar />
@@ -76,6 +77,7 @@ export default async function LocaleLayout({
             <SiteFooter />
             <CartSheet />
             <SpotlightSearch />
+            <ContactShopButton />
           </Providers>
         </NextIntlClientProvider>
       </body>

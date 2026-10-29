@@ -21,9 +21,6 @@ import { selectCount, useCartStore } from "@/stores/cart-store";
 import { useSearchStore } from "@/stores/search-store";
 import { AccountMenu, initials, useLogout } from "@/components/layout/account-menu";
 
-const lightHeaderPaths = ["/about"];
-const iconTone = "transition-[filter] group-data-[tone=light]/header:brightness-0 group-data-[tone=light]/header:invert";
-
 export function SiteHeader() {
   const t = useTranslations("Nav");
   const pathname = usePathname();
@@ -31,14 +28,11 @@ export function SiteHeader() {
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
-  // Trang có hero nền tối (About): chữ trắng cho tới khi cuộn
-  const light = lightHeaderPaths.includes(pathname) && !scrolled;
 
   return (
     <header
-      data-tone={light ? "light" : "dark"}
       className={cn(
-        "group/header sticky top-0 z-50 text-ink data-[tone=light]:text-white h-[72px] transition-[background-color,box-shadow,backdrop-filter] duration-300 lg:h-[131px]",
+        "sticky top-0 z-50 text-ink h-[72px] transition-[background-color,box-shadow,backdrop-filter] duration-300 lg:h-[131px]",
         scrolled && "bg-cream/85 shadow-[0_1px_0_var(--color-brand-100)] backdrop-blur-md",
       )}
     >
@@ -46,7 +40,7 @@ export function SiteHeader() {
         {/* Trái: menu */}
         <nav className="flex items-center">
           <MobileMenu />
-          <ul className="hidden items-center gap-8 lg:flex">
+          <ul className="hidden items-center gap-5 lg:flex xl:gap-8">
             {navLinks.map((link) => {
               const active = pathname.startsWith(link.href);
               return (
@@ -54,7 +48,7 @@ export function SiteHeader() {
                   <Link
                     href={link.href}
                     aria-current={active ? "page" : undefined}
-                    className={cn("group relative text-xl uppercase", active && "font-semibold")}
+                    className={cn("group relative text-lg whitespace-nowrap uppercase xl:text-xl", active && "font-semibold")}
                   >
                     {t(link.key)}
                     {active ? (
@@ -75,7 +69,7 @@ export function SiteHeader() {
         {/* Giữa: logo */}
         <Link href="/" aria-label={t("home")}>
           <Image
-            src={light ? "/brand/logo-2510-vertical-light.png" : "/brand/logo-2510-vertical.png"}
+            src="/brand/logo-2510-vertical.png"
             alt="2510 Scented Candle"
             width={534}
             height={622}
@@ -101,7 +95,7 @@ export function SiteHeader() {
               href="/login"
               className={cn(
                 buttonVariants({ variant: "outline-ink", size: "pill" }),
-                "hidden min-w-[115px] xl:inline-flex group-data-[tone=light]/header:border-white group-data-[tone=light]/header:text-white group-data-[tone=light]/header:hover:bg-white group-data-[tone=light]/header:hover:text-ink",
+                "hidden min-w-[115px] xl:inline-flex",
               )}
             >
               {t("login")}
@@ -130,7 +124,7 @@ function IconLink({
       aria-label={label}
       className={cn("inline-flex transition-transform hover:scale-110", className)}
     >
-      <Image src={icon} alt="" width={24} height={24} className={iconTone} />
+      <Image src={icon} alt="" width={24} height={24} />
     </Link>
   );
 }
@@ -145,7 +139,7 @@ function SearchButton({ label }: { label: string }) {
       onClick={() => setOpen(true)}
       className="inline-flex cursor-pointer transition-transform hover:scale-110"
     >
-      <Image src="/figma/search.svg" alt="" width={24} height={24} className={iconTone} />
+      <Image src="/figma/search.svg" alt="" width={24} height={24} />
     </button>
   );
 }
@@ -162,7 +156,7 @@ function CartButton() {
       onClick={() => setOpen(true)}
       className="relative inline-flex cursor-pointer transition-transform hover:scale-110"
     >
-      <Image src="/figma/bag.svg" alt="" width={24} height={24} className={iconTone} />
+      <Image src="/figma/bag.svg" alt="" width={24} height={24} />
       <AnimatePresence>
         {count > 0 && (
           <motion.span

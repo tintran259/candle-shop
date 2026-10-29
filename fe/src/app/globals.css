@@ -26,6 +26,11 @@
   --color-cream-light: #fbf8f0;
   --color-sand: #fbedd3;
   --color-rose: #e97171;
+  /* Tông nâu đất cho trang Thủ công */
+  --color-bark: #3b2a1a;
+  --color-umber: #806749;
+  --color-linen: #e6e0d7;
+  --color-parchment: #faf8f4;
 
   --tracking-brand: 0.03em;
   --tracking-caption: 0.24em;
@@ -196,5 +201,12 @@ html:lang(vi) {
   }
   .scrollbar-soft::-webkit-scrollbar-button {
     display: none;
+  }
+}
+
+/* Trang có thanh đặt hàng dính đáy (mobile): đẩy nút "Liên hệ shop" lên trên */
+@media (max-width: 63.999rem) {
+  body:has([data-mobile-order-bar]) [data-contact-fab] {
+    bottom: 5.5rem;
   }
 }

@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { findDiscount, type calcTotals } from "@/lib/checkout";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
-import { useCheckoutStore, type PaymentMethod } from "@/stores/checkout-store";
+import { useCheckoutStore, type PaymentMethod, type PaymentPlan } from "@/stores/checkout-store";
 
-const payments: PaymentMethod[] = ["vnpay", "momo", "cod"];
+const payments: PaymentMethod[] = ["vnpay", "momo"];
+const plans: PaymentPlan[] = ["deposit", "full"];
 
 const usd = (n: number) => `$${n.toFixed(2)}`;
 
@@ -29,7 +30,8 @@ export function OrderSummary({
 }) {
   const t = useTranslations("Checkout");
   const setCartOpen = useCartStore((s) => s.setOpen);
-  const { payment, setPayment } = useCheckoutStore();
+  const { payment, setPayment, paymentPlan, setPaymentPlan } = useCheckoutStore();
+  const depositPercent = totals.total > 0 ? Math.round((totals.dueNow / totals.total) * 100) : 50;
 
   const rows = [
     { label: t("subtotal"), value: usd(totals.subtotal) },
@@ -41,6 +43,35 @@ export function OrderSummary({
   return (
     <div className="flex flex-col rounded-2xl border border-brand-100 bg-[#fdfbf7] p-6">
       <DiscountCode />
+
+      <div className="mt-10">
+        <h2 className="text-2xl font-semibold text-ink">{t("plan.title")}</h2>
+        <div role="radiogroup" className="mt-6 grid gap-3 sm:grid-cols-2">
+          {plans.map((p) => {
+            const active = paymentPlan === p;
+            return (
+              <button
+                key={p}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setPaymentPlan(p)}
+                className={cn(
+                  "flex cursor-pointer flex-col gap-1 rounded-2xl border px-5 py-4 text-left transition-colors",
+                  active ? "border-ink bg-ink text-white" : "border-brand-200 bg-white text-ink hover:border-peanut",
+                )}
+              >
+                <span className="text-base font-semibold">
+                  {p === "deposit" ? t("plan.deposit", { percent: depositPercent }) : t("plan.full")}
+                </span>
+                <span className={cn("text-xs", active ? "text-brand-50" : "text-dark-300")}>
+                  {t(p === "deposit" ? "plan.depositHint" : "plan.fullHint")}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="mt-10 border-b border-brand-100 pb-10">
         <h2 className="text-2xl font-semibold text-ink">{t("paymentMethod")}</h2>
@@ -59,7 +90,7 @@ export function OrderSummary({
                   active ? "border-ink bg-ink text-white" : "border-brand-200 bg-white text-ink hover:border-peanut",
                 )}
               >
-                <PaymentMark method={p} active={active} />
+                <PaymentMark method={p} />
                 <span className="flex flex-col">
                   <span className="text-base font-semibold">{t(`payments.${p}`)}</span>
                   <span className={cn("text-xs", active ? "text-brand-50" : "text-dark-300")}>
@@ -92,6 +123,18 @@ export function OrderSummary({
           {usd(totals.total)}
         </motion.span>
       </div>
+      {paymentPlan === "deposit" && (
+        <dl className="flex flex-col gap-3 border-b border-brand-100 py-6 text-lg">
+          <div className="flex justify-between">
+            <dt className="font-semibold text-ink">{t("plan.payNow")}</dt>
+            <dd className="font-semibold text-ink">{usd(totals.dueNow)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-dark-300">{t("plan.payLater")}</dt>
+            <dd className="text-dark-300">{usd(totals.dueLater)}</dd>
+          </div>
+        </dl>
+      )}
 
       <div className="mt-8 flex items-center justify-between gap-4">
         <button
@@ -109,20 +152,19 @@ export function OrderSummary({
           onClick={onSubmit}
           className="min-w-[200px] text-base"
         >
-          {submitting ? t("processing") : t("checkout")}
+          {submitting ? t("processing") : t("payAmount", { amount: usd(totals.dueNow) })}
         </Button>
       </div>
     </div>
   );
 }
 
-function PaymentMark({ method, active }: { method: PaymentMethod; active: boolean }) {
+function PaymentMark({ method }: { method: PaymentMethod }) {
   const styles: Record<PaymentMethod, string> = {
     vnpay: "bg-[#005baa] text-white",
     momo: "bg-[#a50064] text-white",
-    cod: active ? "bg-white text-ink" : "bg-ink text-white",
   };
-  const label: Record<PaymentMethod, string> = { vnpay: "VN", momo: "Mo", cod: "$" };
+  const label: Record<PaymentMethod, string> = { vnpay: "VN", momo: "Mo" };
   return (
     <span
       aria-hidden
