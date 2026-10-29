@@ -22,6 +22,8 @@ export type BaseOption = Stock & {
   // Shop tắt tạm thời trong BO dù còn hàng
   available: boolean;
   swatch?: string;
+  // Ảnh thật của nguyên liệu, ảnh đầu tiên là ảnh chính (URL do BE trả về)
+  images?: string[];
 };
 
 export type ContainerOption = BaseOption & {
