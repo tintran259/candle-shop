@@ -4,7 +4,7 @@ import { ArrowUpIcon } from "lucide-react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { cn } from "cn";
+import { cn } from "@/lib/cn";
 import { btnInk } from "@/lib/ui";
 
 // Nút lên đầu trang: hiện sau khi cuộn qua hero, viền chạy theo tiến độ cuộn

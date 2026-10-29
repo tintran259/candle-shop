@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { cn } from "cn";
+import { cn } from "@/lib/cn";
 import { Reveal } from "@/components/reveal";
 import { btnInk, PREFILL_EVENT } from "@/lib/ui";
 
@@ -43,7 +43,7 @@ function Field({
         {label}
       </label>
       {children(id, errorId)}
-      <p id={errorId} className="min-h-5 px-2.5 pt-1 text-sm text-red-700" aria-live="polite">
+      <p id={errorId} className="min-h-5 px-2.5 pt-1 text-caption text-red-700 sm:text-sm" aria-live="polite">
         {error}
       </p>
     </div>
@@ -99,10 +99,10 @@ export function LargeOrders() {
 
         <div className="relative mt-10 flex flex-col items-center lg:mt-0">
           <Reveal className="flex flex-col items-center gap-3 text-center lg:mt-[66px] lg:ml-[44%] lg:w-[48%]">
-            <h2 className="font-display text-5xl tracking-tightish uppercase lg:text-[70px] lg:leading-none">
+            <h2 className="font-display text-display-lg tracking-tightish uppercase sm:text-5xl lg:text-[70px] lg:leading-none">
               {t("title")}
             </h2>
-            <p className="max-w-[613px] text-lg tracking-tightish lg:text-[22px]">
+            <p className="max-w-[613px] text-body tracking-tightish text-ink-text sm:text-lg lg:text-[22px]">
               {t("text")}
             </p>
           </Reveal>
@@ -124,7 +124,7 @@ export function LargeOrders() {
                   <span className="flex size-14 items-center justify-center bg-ink text-on-ink">
                     <CheckIcon className="size-7" aria-hidden />
                   </span>
-                  <p className="font-display text-4xl tracking-tightish uppercase">{t("thanks")}</p>
+                  <p className="font-display text-display-md tracking-tightish uppercase sm:text-4xl">{t("thanks")}</p>
                   <p className="max-w-sm text-base">{t("thanksText")}</p>
                   <button type="button" onClick={() => setSent(false)} className="cursor-pointer text-sm underline decoration-ink/30 underline-offset-4 transition-colors duration-300 hover:decoration-ink">
                     {t("again")}

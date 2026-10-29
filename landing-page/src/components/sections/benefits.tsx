@@ -12,8 +12,8 @@ export function Benefits() {
           <li key={b.key}>
             <Reveal delay={i * 0.1} className="flex flex-col items-center gap-4 p-4 text-center lg:gap-5 lg:p-[30px]">
               <Image src={b.icon} alt="" width={80} height={80} className="size-14 lg:size-20" />
-              <h2 className="font-display text-2xl tracking-tightish uppercase lg:text-[clamp(1.5rem,1.9vw,1.875rem)]">{t(`${b.key}.title`)}</h2>
-              <p className="max-w-[296px] text-sm tracking-tightish uppercase lg:text-lg">{t(`${b.key}.text`)}</p>
+              <h2 className="font-display text-display-sm tracking-tightish uppercase sm:text-2xl lg:text-[clamp(1.5rem,1.9vw,1.875rem)]">{t(`${b.key}.title`)}</h2>
+              <p className="max-w-[296px] text-caption tracking-wide text-ink-text uppercase sm:text-sm lg:text-lg">{t(`${b.key}.text`)}</p>
             </Reveal>
           </li>
         ))}

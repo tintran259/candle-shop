@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { cn } from "cn";
+import { cn } from "@/lib/cn";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { navLinks } from "@/lib/content";
 import { btnPaper } from "@/lib/ui";
@@ -103,7 +103,7 @@ export function SiteHeader() {
                   <a
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className="block py-5 font-display text-4xl uppercase transition-[padding] duration-300 hover:pl-2"
+                    className="block py-5 font-display text-display-lg uppercase sm:text-4xl transition-[padding] duration-300 hover:pl-2"
                   >
                     {t(l.key)}
                   </a>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { cn } from "cn";
+import { cn } from "@/lib/cn";
 import { Reveal } from "@/components/reveal";
 import { collections } from "@/lib/content";
 import { btnInk } from "@/lib/ui";
@@ -13,7 +13,7 @@ function CollectionLabel({ title, size }: { title: string; size: "lg" | "sm" }) 
       <p
         className={cn(
           "bg-paper text-center font-display tracking-tightish text-ink uppercase",
-          size === "lg" ? "w-[84%] py-5 text-[clamp(1.5rem,2.4vw,2.5rem)]" : "w-full py-2 text-base sm:py-3 sm:text-xl lg:text-[25px]",
+          size === "lg" ? "w-[84%] py-3 text-display-sm sm:py-5 sm:text-[clamp(1.5rem,2.4vw,2.5rem)]" : "w-full px-1 py-2 text-sm sm:py-3 sm:text-xl lg:text-[25px]",
         )}
       >
         {title}
@@ -21,7 +21,7 @@ function CollectionLabel({ title, size }: { title: string; size: "lg" | "sm" }) 
       <a
         href="#best-sellers"
         aria-label={t("shopAria", { title })}
-        className={cn(btnInk, size === "lg" ? "h-[60px] w-[60%] text-3xl xl:h-[76px] xl:text-[40px]" : "h-9 w-[71%] text-lg sm:h-[50px] sm:text-[26px]")}
+        className={cn(btnInk, size === "lg" ? "h-12 w-[60%] text-display-md sm:h-[60px] sm:text-3xl xl:h-[76px] xl:text-[40px]" : "h-11 w-[71%] text-base sm:h-[50px] sm:text-[26px]")}
       >
         {t("shop")}
       </a>
@@ -51,7 +51,7 @@ export function Collection() {
 
         <div className="order-1 flex flex-col items-center gap-12 lg:order-2 lg:gap-[162px]">
           <Reveal className="flex items-end justify-center lg:min-h-[398px]">
-            <h2 className="max-w-[852px] text-center font-display text-[clamp(2.75rem,5.2vw,5.625rem)] leading-none tracking-tightish uppercase">
+            <h2 className="max-w-[852px] text-center font-display text-display-lg sm:text-[clamp(2.75rem,5.2vw,5.625rem)] sm:leading-none tracking-tightish uppercase">
               {t("title")}
             </h2>
           </Reveal>

@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
-import { cn } from "cn";
+import { cn } from "@/lib/cn";
 import { btnPaper } from "@/lib/ui";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -24,8 +24,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease }}
-            className="font-display text-[clamp(3.25rem,7.5vw,6.94rem)] leading-[0.95] tracking-tightish uppercase [:lang(vi)_&]:text-[clamp(2.4rem,5.6vw,5.5rem)] [:lang(vi)_&]:leading-[1.08]"
+            className="font-display text-display-xl leading-[0.95] tracking-tightish uppercase sm:text-[clamp(3.25rem,7.5vw,6.94rem)] [:lang(vi)_&]:text-[2.125rem] [:lang(vi)_&]:leading-[1.12] sm:[:lang(vi)_&]:text-[clamp(2.4rem,5.6vw,5.5rem)] sm:[:lang(vi)_&]:leading-[1.08]"
           >
+            <span className="mb-4 block font-sans text-caption font-normal tracking-[0.16em] sm:text-sm sm:tracking-[0.24em] text-ink-text normal-case lg:mb-7 lg:text-base [:lang(vi)_&]:leading-normal">
+              {t("eyebrow")}
+            </span>
             {t("line1")}
             <br />
             {t("line2")}
@@ -34,7 +37,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease, delay: 0.15 }}
-            className="mt-5 max-w-[620px] text-lg text-ink-text tracking-tightish lg:text-[21px]"
+            className="mt-5 max-w-[620px] text-body text-ink-text tracking-tightish sm:text-lg lg:text-[21px]"
           >
             {t("text")}
           </motion.p>
@@ -49,7 +52,7 @@ export function Hero() {
               href="#collection"
               className={cn(
                 btnPaper,
-                "h-20 w-full border border-ink text-[clamp(1.75rem,8vw,2.25rem)] shadow-float sm:h-24 lg:h-[167px] lg:border-0 lg:text-[60px] lg:shadow-float-lg",
+                "h-16 w-full border border-ink text-display-md shadow-float sm:h-24 sm:text-4xl lg:h-[167px] lg:border-0 lg:text-[60px] lg:shadow-float-lg",
               )}
             >
               {t("cta")}
@@ -76,7 +79,7 @@ export function Hero() {
         >
           <motion.div style={{ y: imageY }} className="absolute inset-[-6%_0]">
             <Image
-              src="/images/hero-candle.png"
+              src="/images/hero-candle.jpg"
               alt={t("imageAlt")}
               fill
               priority

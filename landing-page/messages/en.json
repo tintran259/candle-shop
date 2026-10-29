@@ -1,7 +1,22 @@
 {
   "Metadata": {
-    "title": "2510 Scented Candle — Clean Burn. Deep Calm.",
-    "description": "Sustainable soy candles with phthalate-free oils and a slow, intentional flicker. Shop the new collection or request a large order."
+    "title": "Hand-poured Soy Scented Candles | 2510 Scented Candle",
+    "description": "Hand-poured soy scented candles with phthalate-free oils and a clean, slow burn. Shop candles as gifts or request large orders for weddings, events and corporate gifting.",
+    "keywords": [
+      "scented candles",
+      "soy candles",
+      "hand-poured candles",
+      "candle gifts",
+      "bulk candles",
+      "wedding candles",
+      "corporate gifts",
+      "2510 Scented Candle"
+    ],
+    "ogAlt": "2510 Scented Candle — Hand-poured soy scented candles",
+    "ogTagline": "Clean Burn. Deep Calm.",
+    "ogSub": "Hand-poured soy scented candles",
+    "siteName": "2510 Scented Candle",
+    "shortName": "2510 Candle"
   },
   "Nav": {
     "collection": "Collection",
@@ -23,13 +38,23 @@
     "text": "Sustainable soy, phthalate-free oils, and a slow, intentional flicker. Welcome to a better way to light your space.",
     "cta": "Shop collection",
     "event": "Planning an event? Request a large order →",
-    "imageAlt": "A lit candle beside dried hydrangeas on a stone shelf"
+    "imageAlt": "A lit candle beside dried hydrangeas on a stone shelf",
+    "eyebrow": "Hand-poured soy scented candles"
   },
   "Benefits": {
     "label": "Why shop with us",
-    "delivery": { "title": "Fast Delivery", "text": "Most orders shipped within 24 hours" },
-    "secure": { "title": "Secure Payments", "text": "VNPay, MoMo and all major cards" },
-    "loyalty": { "title": "Loyalty Program", "text": "Earn points when you shop with us" }
+    "delivery": {
+      "title": "Fast Delivery",
+      "text": "Most orders shipped within 24 hours"
+    },
+    "secure": {
+      "title": "Secure Payments",
+      "text": "VNPay, MoMo and all major cards"
+    },
+    "loyalty": {
+      "title": "Loyalty Program",
+      "text": "Earn points when you shop with us"
+    }
   },
   "Collection": {
     "title": "Discover the new collection",
@@ -44,10 +69,22 @@
     "title": "Best sellers",
     "order": "Order now",
     "products": {
-      "wood": { "name": "Wood Candle", "description": "Cedarwood & pear soy candle in a hand-poured ceramic vessel, 2.1kg" },
-      "sage": { "name": "Sage Garden", "description": "Green sage & bergamot soy candle, 60-hour clean burn" },
-      "amber": { "name": "Amber Noir", "description": "Smoked amber & vanilla in amber glass, cotton wick" },
-      "linen": { "name": "Linen Bloom", "description": "Fresh linen & white tea soy candle, phthalate-free oils" }
+      "wood": {
+        "name": "Wood Candle",
+        "description": "Cedarwood & pear soy candle in a hand-poured ceramic vessel, 2.1kg"
+      },
+      "sage": {
+        "name": "Sage Garden",
+        "description": "Green sage & bergamot soy candle, 60-hour clean burn"
+      },
+      "amber": {
+        "name": "Amber Noir",
+        "description": "Smoked amber & vanilla in amber glass, cotton wick"
+      },
+      "linen": {
+        "name": "Linen Bloom",
+        "description": "Fresh linen & white tea soy candle, phthalate-free oils"
+      }
     }
   },
   "LargeOrders": {

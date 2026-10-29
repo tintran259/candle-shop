@@ -41,6 +41,21 @@
 }
 
 @theme {
+  /* Thang chữ cho mobile (< 640px); màn lớn hơn dùng sm:/lg: trong từng component.
+     Body tối thiểu 16px, chú thích ≥ 13px, tiêu đề 20–40px */
+  --text-display-xl: 2.5rem;
+  --text-display-xl--line-height: 1.05;
+  --text-display-lg: 2rem;
+  --text-display-lg--line-height: 1.1;
+  --text-display-md: 1.5rem;
+  --text-display-md--line-height: 1.2;
+  --text-display-sm: 1.25rem;
+  --text-display-sm--line-height: 1.25;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.5;
+
   --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
@@ -78,6 +93,24 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Trình duyệt tự điền: bỏ nền xanh mặc định, giữ màu của form */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--paper) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+input:autofill,
+textarea:autofill {
+  background-color: var(--paper);
+  color: var(--ink);
 }
 
 @layer base {

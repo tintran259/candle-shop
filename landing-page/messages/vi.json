@@ -1,7 +1,22 @@
 {
   "Metadata": {
-    "title": "2510 Scented Candle — Cháy sạch. Bình yên sâu lắng.",
-    "description": "Nến sáp đậu nành bền vững, tinh dầu không phthalate và ngọn lửa cháy chậm rãi. Khám phá bộ sưu tập mới hoặc đặt hàng số lượng lớn."
+    "title": "Nến thơm sáp đậu nành thủ công | 2510 Scented Candle",
+    "description": "Nến thơm sáp đậu nành đổ tay, tinh dầu không phthalate, cháy sạch và lâu. Mua nến thơm làm quà, đặt nến số lượng lớn cho tiệc cưới, sự kiện và quà tặng doanh nghiệp.",
+    "keywords": [
+      "nến thơm",
+      "nến thơm sáp đậu nành",
+      "nến thơm thủ công",
+      "nến thơm quà tặng",
+      "nến thơm số lượng lớn",
+      "nến thơm tiệc cưới",
+      "quà tặng doanh nghiệp",
+      "2510 Scented Candle"
+    ],
+    "ogAlt": "2510 Scented Candle — Nến thơm sáp đậu nành thủ công",
+    "ogTagline": "Cháy sạch. Lòng an yên.",
+    "ogSub": "Nến thơm sáp đậu nành đổ tay",
+    "siteName": "2510 Scented Candle",
+    "shortName": "2510 Candle"
   },
   "Nav": {
     "collection": "Bộ sưu tập",
@@ -23,13 +38,23 @@
     "text": "Sáp đậu nành bền vững, tinh dầu không phthalate và ngọn lửa cháy chậm rãi. Một cách tốt hơn để thắp sáng không gian của bạn.",
     "cta": "Xem bộ sưu tập",
     "event": "Bạn đang lên kế hoạch sự kiện? Đặt hàng số lượng lớn →",
-    "imageAlt": "Ngọn nến đang cháy bên cành cẩm tú cầu khô trên kệ đá"
+    "imageAlt": "Ngọn nến đang cháy bên cành cẩm tú cầu khô trên kệ đá",
+    "eyebrow": "Nến thơm sáp đậu nành thủ công"
   },
   "Benefits": {
     "label": "Vì sao chọn chúng tôi",
-    "delivery": { "title": "Giao hàng nhanh", "text": "Phần lớn đơn được gửi đi trong 24 giờ" },
-    "secure": { "title": "Thanh toán an toàn", "text": "VNPay, MoMo và các loại thẻ phổ biến" },
-    "loyalty": { "title": "Tích điểm thành viên", "text": "Nhận điểm thưởng với mỗi đơn hàng" }
+    "delivery": {
+      "title": "Giao hàng nhanh",
+      "text": "Phần lớn đơn được gửi đi trong 24 giờ"
+    },
+    "secure": {
+      "title": "Thanh toán an toàn",
+      "text": "VNPay, MoMo và các loại thẻ phổ biến"
+    },
+    "loyalty": {
+      "title": "Tích điểm thành viên",
+      "text": "Nhận điểm thưởng với mỗi đơn hàng"
+    }
   },
   "Collection": {
     "title": "Khám phá bộ sưu tập mới",
@@ -44,10 +69,22 @@
     "title": "Bán chạy nhất",
     "order": "Đặt ngay",
     "products": {
-      "wood": { "name": "Nến Gỗ", "description": "Nến sáp đậu nành hương tuyết tùng & lê trong cốc gốm đổ tay, 2,1kg" },
-      "sage": { "name": "Vườn Xô Thơm", "description": "Nến hương xô thơm & cam bergamot, cháy sạch 60 giờ" },
-      "amber": { "name": "Hổ Phách Đêm", "description": "Hổ phách hun khói & vani trong lọ thủy tinh, bấc cotton" },
-      "linen": { "name": "Lụa Trắng", "description": "Nến hương vải lanh & trà trắng, tinh dầu không phthalate" }
+      "wood": {
+        "name": "Nến Gỗ",
+        "description": "Nến sáp đậu nành hương tuyết tùng & lê trong cốc gốm đổ tay, 2,1kg"
+      },
+      "sage": {
+        "name": "Vườn Xô Thơm",
+        "description": "Nến hương xô thơm & cam bergamot, cháy sạch 60 giờ"
+      },
+      "amber": {
+        "name": "Hổ Phách Đêm",
+        "description": "Hổ phách hun khói & vani trong lọ thủy tinh, bấc cotton"
+      },
+      "linen": {
+        "name": "Lụa Trắng",
+        "description": "Nến hương vải lanh & trà trắng, tinh dầu không phthalate"
+      }
     }
   },
   "LargeOrders": {

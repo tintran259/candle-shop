@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { cn } from "cn";
+import { cn } from "@/lib/cn";
 import { Reveal } from "@/components/reveal";
 import { formatPrice, products } from "@/lib/content";
 import { btnInk, PREFILL_EVENT } from "@/lib/ui";
@@ -20,7 +20,7 @@ export function BestSellers() {
     <section id="best-sellers" className="py-16 lg:py-[60px]">
       <div className="mx-auto max-w-[1728px] px-4 sm:px-8 lg:px-[100px]">
         <Reveal>
-          <h2 className="text-center font-display text-[clamp(2.75rem,5.2vw,5.625rem)] leading-none tracking-tightish uppercase">
+          <h2 className="text-center font-display text-display-lg sm:text-[clamp(2.75rem,5.2vw,5.625rem)] sm:leading-none tracking-tightish uppercase">
             {t("title")}
           </h2>
         </Reveal>
@@ -40,13 +40,13 @@ export function BestSellers() {
                       className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.05]"
                     />
                   </div>
-                  <h3 className="font-display text-2xl tracking-tightish uppercase sm:text-3xl lg:text-[40px]">{name}</h3>
-                  <p className="text-sm tracking-tightish sm:text-base lg:text-[22px] lg:leading-snug">{t(`products.${p.id}.description`)}</p>
-                  <p className="mt-auto text-2xl tracking-tightish lg:text-[40px]">{formatPrice(p.price, locale)}</p>
+                  <h3 className="font-display text-display-sm tracking-tightish uppercase sm:text-3xl lg:text-[40px]">{name}</h3>
+                  <p className="text-sm leading-relaxed tracking-tightish text-ink-text sm:text-base lg:text-[22px] lg:leading-snug">{t(`products.${p.id}.description`)}</p>
+                  <p className="mt-auto text-xl font-medium tracking-tightish sm:text-2xl lg:text-[40px] lg:font-normal">{formatPrice(p.price, locale)}</p>
                   <button
                     type="button"
                     onClick={() => orderProduct(name)}
-                    className={cn(btnInk, "h-14 w-full text-xl sm:text-2xl lg:h-[85px] lg:text-[30px]")}
+                    className={cn(btnInk, "h-12 w-full text-lg sm:h-14 sm:text-2xl lg:h-[85px] lg:text-[30px]")}
                   >
                     {t("order")}
                   </button>

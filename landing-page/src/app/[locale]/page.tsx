@@ -9,6 +9,8 @@ import { Hero } from "@/components/sections/hero";
 import { LargeOrders } from "@/components/sections/large-orders";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { StructuredData } from "@/components/structured-data";
+import type { Locale } from "@/i18n/routing";
 
 export default function LandingPage({ params }: PageProps<"/[locale]">) {
   const { locale } = use(params);
@@ -33,6 +35,7 @@ export default function LandingPage({ params }: PageProps<"/[locale]">) {
       </main>
       <SiteFooter />
       <BackToTop />
+      <StructuredData locale={locale as Locale} />
     </>
   );
 }
