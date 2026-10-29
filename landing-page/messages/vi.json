@@ -1,0 +1,81 @@
+{
+  "Metadata": {
+    "title": "2510 Scented Candle — Cháy sạch. Bình yên sâu lắng.",
+    "description": "Nến sáp đậu nành bền vững, tinh dầu không phthalate và ngọn lửa cháy chậm rãi. Khám phá bộ sưu tập mới hoặc đặt hàng số lượng lớn."
+  },
+  "Nav": {
+    "collection": "Bộ sưu tập",
+    "bestSellers": "Bán chạy",
+    "largeOrders": "Đặt số lượng lớn",
+    "about": "Về chúng tôi",
+    "shopNow": "Mua ngay",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu",
+    "home": "2510 Scented Candle — về đầu trang",
+    "sections": "Các mục",
+    "language": "Ngôn ngữ",
+    "skip": "Bỏ qua tới nội dung",
+    "backToTop": "Lên đầu trang"
+  },
+  "Hero": {
+    "line1": "Cháy sạch.",
+    "line2": "Lòng an yên.",
+    "text": "Sáp đậu nành bền vững, tinh dầu không phthalate và ngọn lửa cháy chậm rãi. Một cách tốt hơn để thắp sáng không gian của bạn.",
+    "cta": "Xem bộ sưu tập",
+    "event": "Bạn đang lên kế hoạch sự kiện? Đặt hàng số lượng lớn →",
+    "imageAlt": "Ngọn nến đang cháy bên cành cẩm tú cầu khô trên kệ đá"
+  },
+  "Benefits": {
+    "label": "Vì sao chọn chúng tôi",
+    "delivery": { "title": "Giao hàng nhanh", "text": "Phần lớn đơn được gửi đi trong 24 giờ" },
+    "secure": { "title": "Thanh toán an toàn", "text": "VNPay, MoMo và các loại thẻ phổ biến" },
+    "loyalty": { "title": "Tích điểm thành viên", "text": "Nhận điểm thưởng với mỗi đơn hàng" }
+  },
+  "Collection": {
+    "title": "Khám phá bộ sưu tập mới",
+    "shop": "Mua",
+    "shopAria": "Mua {title}",
+    "featuredAlt": "Nến gốm tối màu giữa cành thông và hoa khô",
+    "morning": "Nghi thức buổi sáng",
+    "midnight": "Nửa đêm tĩnh lặng",
+    "seasonal": "Ánh sáng mùa"
+  },
+  "BestSellers": {
+    "title": "Bán chạy nhất",
+    "order": "Đặt ngay",
+    "products": {
+      "wood": { "name": "Nến Gỗ", "description": "Nến sáp đậu nành hương tuyết tùng & lê trong cốc gốm đổ tay, 2,1kg" },
+      "sage": { "name": "Vườn Xô Thơm", "description": "Nến hương xô thơm & cam bergamot, cháy sạch 60 giờ" },
+      "amber": { "name": "Hổ Phách Đêm", "description": "Hổ phách hun khói & vani trong lọ thủy tinh, bấc cotton" },
+      "linen": { "name": "Lụa Trắng", "description": "Nến hương vải lanh & trà trắng, tinh dầu không phthalate" }
+    }
+  },
+  "LargeOrders": {
+    "title": "Đơn số lượng lớn",
+    "text": "Nâng tầm sự kiện của bạn với những mùi hương đặc trưng. Chúng tôi nhận làm theo yêu cầu cho tiệc cưới, quà tặng doanh nghiệp và đơn số lượng lớn.",
+    "imageAlt": "Ngọn nến đang cháy bên bông hồng phấn",
+    "name": "Họ tên",
+    "email": "Email",
+    "message": "Lời nhắn",
+    "send": "Gửi",
+    "sending": "Đang gửi…",
+    "thanks": "Cảm ơn bạn",
+    "thanksText": "Chúng tôi đã nhận được yêu cầu và sẽ phản hồi trong vòng một ngày làm việc.",
+    "again": "Gửi yêu cầu khác",
+    "prefill": "Mình muốn đặt {product}. Số lượng: ",
+    "errors": {
+      "name": "Vui lòng nhập họ tên",
+      "email": "Email chưa hợp lệ",
+      "message": "Vui lòng cho chúng tôi biết thêm (ít nhất 10 ký tự)"
+    }
+  },
+  "Footer": {
+    "aboutTitle": "Về chúng tôi",
+    "aboutText": "Mỗi ngọn nến đều được đổ tay theo từng mẻ nhỏ với sáp đậu nành tự nhiên, bấc cotton và tinh dầu không phthalate — để nến cháy sạch, chậm và êm dịu.",
+    "information": "Thông tin",
+    "explore": "Khám phá",
+    "ourStory": "Câu chuyện",
+    "contact": "Liên hệ",
+    "rights": "© {year} 2510 Scented Candle"
+  }
+}

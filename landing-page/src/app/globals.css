@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/* Màu lấy từ bảng màu đang chọn (data-palette trên <html>) */
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-text: var(--ink-text);
+  --color-on-ink: var(--on-ink);
+  --color-paper: var(--paper);
+  --color-page: var(--page);
+  --color-band: var(--band);
+  --color-mist: var(--mist);
+  --color-accent: var(--accent);
+}
+
+/* mono: đen trắng theo Figma "Minimalist Candle Shop" */
+:root,
+[data-palette="mono"] {
+  --ink: #060606;
+  --ink-soft: #151515;
+  --ink-text: #0e0e0e;
+  --on-ink: #ffffff;
+  --paper: #ffffff;
+  --page: #ffffff;
+  --band: #ffffff;
+  --mist: #f4f2ef;
+  --accent: #ffffff;
+}
+
+/* brand: màu chủ đạo của web candle-shop (fe) */
+[data-palette="brand"] {
+  --ink: #0c0d12;
+  --ink-soft: #0c0d12;
+  --ink-text: #24252a;
+  --on-ink: #f9f5ea;
+  --paper: #fbf8f0;
+  --page: #f9f5ea;
+  --band: #efe4dc;
+  --mist: #e9dbd0;
+  --accent: #c9a489;
+}
+
+@theme {
+  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --tracking-tightish: -0.01em;
+  --tracking-label: 0.1em;
+
+  --shadow-float: 30px 40px 50px 0 rgb(0 0 0 / 0.4);
+  --shadow-float-lg: 69px 55px 55px 0 rgb(0 0 0 / 0.4);
+}
+
+html {
+  scroll-behavior: smooth;
+  --font-display-face: var(--font-gruppo);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Bản tiếng Việt: Gruppo thiếu dấu nên dùng Lexend Exa nét mảnh */
+html:lang(vi) {
+  --font-display-face: var(--font-lexend-exa);
+}
+
+html:lang(vi) .font-display {
+  font-weight: 200;
+  letter-spacing: -0.03em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"],
+  label[for],
+  select {
+    cursor: pointer;
+  }
+}
+
+/* Section được nhảy tới từ header sticky */
+[id] {
+  scroll-margin-top: 96px;
+}
+
+@media (min-width: 1024px) {
+  [id] {
+    scroll-margin-top: 182px;
+  }
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+/* Đặt trong layer components để class tiện ích (fixed, translate…) vẫn ghi đè được */
+@layer components {
+  /* Nút: lớp màu quét từ trái sang khi hover */
+  .btn-sweep {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    transition:
+      color 0.5s var(--ease-out-soft),
+      box-shadow 0.5s var(--ease-out-soft),
+      translate 0.5s var(--ease-out-soft),
+      scale 0.2s ease;
+  }
+
+  .btn-sweep::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--sweep);
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.6s var(--ease-out-soft);
+  }
+
+  .btn-sweep:hover::before,
+  .btn-sweep:focus-visible::before {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+
+  .btn-sweep:hover {
+    translate: 0 -2px;
+  }
+
+  .btn-sweep:active {
+    scale: 0.98;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-sweep,
+    .btn-sweep::before {
+      transition-duration: 0.01ms;
+    }
+
+    .btn-sweep:hover {
+      translate: none;
+    }
+  }
+}

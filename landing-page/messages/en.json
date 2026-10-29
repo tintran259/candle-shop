@@ -1,0 +1,81 @@
+{
+  "Metadata": {
+    "title": "2510 Scented Candle — Clean Burn. Deep Calm.",
+    "description": "Sustainable soy candles with phthalate-free oils and a slow, intentional flicker. Shop the new collection or request a large order."
+  },
+  "Nav": {
+    "collection": "Collection",
+    "bestSellers": "Best Sellers",
+    "largeOrders": "Large Orders",
+    "about": "About",
+    "shopNow": "Shop now",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "home": "2510 Scented Candle — back to top",
+    "sections": "Sections",
+    "language": "Language",
+    "skip": "Skip to content",
+    "backToTop": "Back to top"
+  },
+  "Hero": {
+    "line1": "Clean Burn.",
+    "line2": "Deep Calm.",
+    "text": "Sustainable soy, phthalate-free oils, and a slow, intentional flicker. Welcome to a better way to light your space.",
+    "cta": "Shop collection",
+    "event": "Planning an event? Request a large order →",
+    "imageAlt": "A lit candle beside dried hydrangeas on a stone shelf"
+  },
+  "Benefits": {
+    "label": "Why shop with us",
+    "delivery": { "title": "Fast Delivery", "text": "Most orders shipped within 24 hours" },
+    "secure": { "title": "Secure Payments", "text": "VNPay, MoMo and all major cards" },
+    "loyalty": { "title": "Loyalty Program", "text": "Earn points when you shop with us" }
+  },
+  "Collection": {
+    "title": "Discover the new collection",
+    "shop": "Shop",
+    "shopAria": "Shop {title}",
+    "featuredAlt": "Dark ceramic candle among pine and dried flowers",
+    "morning": "The Morning Ritual",
+    "midnight": "Midnight Calm",
+    "seasonal": "Seasonal Glow"
+  },
+  "BestSellers": {
+    "title": "Best sellers",
+    "order": "Order now",
+    "products": {
+      "wood": { "name": "Wood Candle", "description": "Cedarwood & pear soy candle in a hand-poured ceramic vessel, 2.1kg" },
+      "sage": { "name": "Sage Garden", "description": "Green sage & bergamot soy candle, 60-hour clean burn" },
+      "amber": { "name": "Amber Noir", "description": "Smoked amber & vanilla in amber glass, cotton wick" },
+      "linen": { "name": "Linen Bloom", "description": "Fresh linen & white tea soy candle, phthalate-free oils" }
+    }
+  },
+  "LargeOrders": {
+    "title": "Large orders",
+    "text": "Elevate your event with our signature scents. We offer custom batching for weddings, corporate gifts and bulk inquiries.",
+    "imageAlt": "A lit candle beside a pale pink rose",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send",
+    "sending": "Sending…",
+    "thanks": "Thank you",
+    "thanksText": "We've received your request and will reply within one business day.",
+    "again": "Send another request",
+    "prefill": "I'd like to order {product}. Quantity: ",
+    "errors": {
+      "name": "Please enter your name",
+      "email": "Please enter a valid email",
+      "message": "Tell us a little more (at least 10 characters)"
+    }
+  },
+  "Footer": {
+    "aboutTitle": "About us",
+    "aboutText": "We hand-pour every candle in small batches using natural soy wax, cotton wicks and phthalate-free fragrance oils — so each one burns clean, slow and calm.",
+    "information": "Information",
+    "explore": "Explore",
+    "ourStory": "Our Story",
+    "contact": "Contact",
+    "rights": "© {year} 2510 Scented Candle"
+  }
+}
