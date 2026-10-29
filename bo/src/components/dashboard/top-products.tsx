@@ -1,41 +1,49 @@
-import { TriangleAlertIcon } from "lucide-react";
-import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatMoney, formatNumber } from "@/lib/format";
+import { WarningOutlined } from "@ant-design/icons";
+import { Avatar, Card, Flex, Tag, Typography } from "antd";
+import { MoreLink } from "@/components/more-link";
+import { formatMoneyShort, formatNumber } from "@/lib/format";
 import { topProducts } from "@/lib/mock";
 
 const LOW_STOCK = 10;
 
 export function TopProducts() {
   return (
-    <Card className="gap-4">
-      <CardHeader>
-        <CardTitle className="font-heading text-lg">Sản phẩm bán chạy</CardTitle>
-        <CardDescription>Theo số lượng bán, 30 ngày qua</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ol className="flex flex-col gap-4">
-          {topProducts.map((p, i) => (
-            <li key={p.id} className="flex items-center gap-3">
-              <span className="w-4 text-sm font-semibold text-muted-foreground tabular-nums">{i + 1}</span>
-              <Image src={p.image} alt="" width={44} height={44} className="size-11 rounded-lg object-cover" />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-medium">{p.name}</span>
-                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+    <Card
+      title="Sản phẩm bán chạy"
+      extra={<Typography.Text type="secondary">30 ngày qua</Typography.Text>}
+      style={{ height: "100%" }}
+    >
+      <Flex vertical gap={2} style={{ margin: "-8px -12px 0" }}>
+        {topProducts.map((p, i) => (
+          <Flex key={p.id} align="center" gap={12} className="list-row">
+            <Typography.Text type="secondary" strong className="tabular" style={{ width: 16 }}>
+              {i + 1}
+            </Typography.Text>
+            <Avatar shape="square" size={44} src={p.image} alt="" style={{ borderRadius: 12 }} />
+            <Flex vertical style={{ flex: 1, minWidth: 0 }}>
+              <Typography.Text strong ellipsis>
+                {p.name}
+              </Typography.Text>
+              <Flex gap={6} align="center" wrap>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {formatNumber(p.sold)} đã bán
-                  {p.stock < LOW_STOCK && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 font-medium text-amber-800">
-                      <TriangleAlertIcon className="size-3" aria-hidden />
-                      Còn {p.stock}
-                    </span>
-                  )}
-                </span>
-              </div>
-              <span className="font-semibold tabular-nums">{formatMoney(p.revenue)}</span>
-            </li>
-          ))}
-        </ol>
-      </CardContent>
+                </Typography.Text>
+                {p.stock < LOW_STOCK && (
+                  <Tag color="warning" icon={<WarningOutlined />}>
+                    Còn {p.stock}
+                  </Tag>
+                )}
+              </Flex>
+            </Flex>
+            <Typography.Text strong className="tabular">
+              {formatMoneyShort(p.revenue)}
+            </Typography.Text>
+          </Flex>
+        ))}
+      </Flex>
+      <div style={{ marginTop: 16 }}>
+        <MoreLink to="/products">Tất cả sản phẩm</MoreLink>
+      </div>
     </Card>
   );
 }

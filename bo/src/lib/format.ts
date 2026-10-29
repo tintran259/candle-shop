@@ -1,12 +1,22 @@
-// Định dạng thống nhất cho toàn bộ back office (tiền đang là USD giống fe)
-const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-const currencyExact = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+// Định dạng thống nhất cho toàn bộ back office. Tiền là VNĐ, lưu số nguyên (đồng).
+const currency = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 const number = new Intl.NumberFormat("vi-VN");
-const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+const short = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 });
 
-export const formatMoney = (n: number) => currency.format(n);
-export const formatMoneyExact = (n: number) => currencyExact.format(n);
-export const formatMoneyCompact = (n: number) => `$${compact.format(n)}`;
+export const formatMoney = (n: number) => currency.format(Math.round(n));
+// Rút gọn cho số lớn trên thẻ: 643,2 tr ₫ · 1,2 tỷ ₫
+export const formatMoneyShort = (n: number) => {
+  if (Math.abs(n) >= 1e9) return `${short.format(n / 1e9)} tỷ ₫`;
+  if (Math.abs(n) >= 1e6) return `${short.format(n / 1e6)} tr ₫`;
+  return formatMoney(n);
+};
+// Nhãn trục biểu đồ: 25tr, 800k
+export const formatMoneyAxis = (n: number) => {
+  if (n >= 1e9) return `${short.format(n / 1e9)}tỷ`;
+  if (n >= 1e6) return `${short.format(n / 1e6)}tr`;
+  if (n >= 1e3) return `${short.format(n / 1e3)}k`;
+  return String(n);
+};
 export const formatNumber = (n: number) => number.format(n);
 export const formatPercent = (n: number) => `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}%`;
 

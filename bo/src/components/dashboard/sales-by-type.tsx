@@ -1,61 +1,36 @@
-"use client";
-
-import { Bar, BarChart, LabelList, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { formatMoney } from "@/lib/format";
+import { Card, Flex, Typography } from "antd";
+import { formatMoneyShort } from "@/lib/format";
 import { salesByType } from "@/lib/mock";
+import { brand } from "@/theme";
 
-const config = {
-  revenue: { label: "Doanh thu", color: "var(--chart-1)" },
-} satisfies ChartConfig;
-
+// Thanh ngang màu chuyển, nhãn và số nằm ngay trong thanh (độ dài theo tỉ lệ với loại cao nhất)
 export function SalesByType() {
+  const max = Math.max(...salesByType.map((r) => r.revenue));
   return (
-    <Card className="gap-4">
-      <CardHeader>
-        <CardTitle className="font-heading text-lg">Doanh thu theo loại hương</CardTitle>
-        <CardDescription>30 ngày qua</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} className="aspect-auto h-[240px] w-full" aria-label="Doanh thu theo loại hương">
-          <BarChart data={salesByType} layout="vertical" margin={{ left: 0, right: 64 }} barCategoryGap={10}>
-            <YAxis dataKey="type" type="category" tickLine={false} axisLine={false} width={100} />
-            <XAxis type="number" hide />
-            <ChartTooltip
-              cursor={{ fill: "var(--muted)", opacity: 0.6 }}
-              content={<ChartTooltipContent hideLabel formatter={(v, _n, item) => (
-                <span className="flex w-full justify-between gap-6">
-                  <span className="text-muted-foreground">{item.payload.type}</span>
-                  <span className="font-semibold tabular-nums">{formatMoney(Number(v))}</span>
-                </span>
-              )} />}
-            />
-            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[0, 4, 4, 0]} maxBarSize={30} animationDuration={600}>
-              {/* Nhãn trực tiếp ở cuối cột, màu chữ chứ không dùng màu dữ liệu */}
-              <LabelList
-                dataKey="revenue"
-                position="right"
-                offset={10}
-                className="fill-foreground text-xs font-semibold tabular-nums"
-                formatter={(v) => formatMoney(Number(v))}
-              />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
-        {/* Bảng dữ liệu cho trình đọc màn hình */}
-        <table className="sr-only">
-          <caption>Doanh thu theo loại hương, 30 ngày qua</caption>
-          <tbody>
-            {salesByType.map((r) => (
-              <tr key={r.type}>
-                <th scope="row">{r.type}</th>
-                <td>{formatMoney(r.revenue)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent>
+    <Card title="Theo loại hương" extra={<Typography.Text type="secondary">30 ngày qua</Typography.Text>} style={{ height: "100%" }}>
+      <Flex vertical gap={10} component="ul" style={{ margin: 0, padding: 0, listStyle: "none" }}>
+        {salesByType.map((r) => (
+          <Flex
+            key={r.type}
+            component="li"
+            justify="space-between"
+            align="center"
+            style={{
+              // Tối thiểu 55% để chữ luôn nằm vừa trong thanh
+              width: `${Math.max(55, (r.revenue / max) * 100)}%`,
+              height: 40,
+              padding: "0 12px",
+              borderRadius: 10,
+              background: `linear-gradient(90deg, ${brand.emberMid}, ${brand.emberLight})`,
+            }}
+          >
+            <Typography.Text strong>{r.type}</Typography.Text>
+            <Typography.Text strong className="tabular" style={{ fontSize: 13 }}>
+              {formatMoneyShort(r.revenue)}
+            </Typography.Text>
+          </Flex>
+        ))}
+      </Flex>
     </Card>
   );
 }
