@@ -1,6 +1,8 @@
-import { ReloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Popconfirm, Row, Statistic, Tabs, Typography } from "antd";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
+import { OrderCreateDrawer } from "@/components/orders/order-create-drawer";
 import { OrderDrawer } from "@/components/orders/order-drawer";
 import { OrderTable } from "@/components/orders/order-table";
 import { OrderToolbar } from "@/components/orders/order-toolbar";
@@ -32,16 +34,25 @@ export function OrdersPage() {
     setFiltersState(f);
     pager.resetPage();
   };
-  // Đơn đang mở nằm trên URL (?order=id) — Dashboard, tìm kiếm, thông báo link thẳng tới
+  // Đơn đang mở nằm trên URL (?order=id; ?order=new = tạo đơn) — Dashboard, tìm kiếm, thông báo link thẳng tới
   const [openId, setOpenId] = useOpenParam("order");
+  const creating = openId === "new";
   // Đóng drawer thì URL bỏ ?order= ngay — giữ đơn vừa xem để drawer trượt ra vẫn đúng nội dung
-  const { shown: shownId } = useDrawerTarget(openId);
+  const { shown: shownId } = useDrawerTarget(creating ? null : openId);
+  // Mỗi lần mở "Tạo đơn" là form mới; ?customer=id (từ hồ sơ khách) điền sẵn khách
+  const { key: createKey } = useDrawerTarget(creating ? "new" : null);
+  const [params] = useSearchParams();
 
   const count = (s: OrderStatus | "all") => (s === "all" ? orders.length : orders.filter((o) => o.status === s).length);
   const late = orders.filter((o) => deadline(o)?.tone === "danger").length;
   const toCollect = orders.filter((o) => !["pending", "cancelled"].includes(o.status)).reduce((s, o) => s + remaining(o), 0);
 
-  const drawer = <OrderDrawer open={!!openId} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} />;
+  const drawer = (
+    <>
+      <OrderDrawer open={!!openId && !creating} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} />
+      <OrderCreateDrawer key={createKey} open={creating} customerId={params.get("customer") ?? undefined} onClose={() => setOpenId(null)} onCreated={setOpenId} />
+    </>
+  );
 
   if (api.loading)
     return (
@@ -67,9 +78,14 @@ export function OrdersPage() {
           </Typography.Title>
           <Typography.Text type="secondary">Theo dõi từ lúc khách thanh toán, xưởng làm (2–3 ngày) tới khi giao xong.</Typography.Text>
         </div>
-        <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
-          <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
-        </Popconfirm>
+        <Flex gap={8} wrap>
+          <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
+            <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
+          </Popconfirm>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpenId("new")}>
+            Tạo đơn hàng
+          </Button>
+        </Flex>
       </Flex>
 
       <Row gutter={[16, 16]}>

@@ -17,8 +17,9 @@ const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
 
 // Tên khoản thu dễ hiểu thay vì chỉ ghi cổng thanh toán
 function paymentTitle(order: Order, p: Payment, index: number) {
-  if (p.provider === "cod") return "Thu nốt khi giao";
+  // Khoản đầu luôn là cọc / trả đủ lúc đặt — kể cả đơn tạo tại BO trả tiền mặt
   if (index === 0) return order.paymentPlan === "deposit" ? "Tiền cọc 50%" : "Thanh toán đủ";
+  if (p.provider === "cod") return "Thu nốt khi giao";
   return "Thanh toán thêm";
 }
 

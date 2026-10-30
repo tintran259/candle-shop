@@ -46,12 +46,15 @@ const reschedule = (id: string, readyDate: string) =>
 
 const setInternalNote = (id: string, internalNote: string) => patch(id, (o) => ({ ...o, internalNote: internalNote.trim() || undefined }));
 
+// Đơn tạo tại BO — thêm lên đầu danh sách
+const create = (order: Order) => store.set([order, ...store.get()]);
+
 const reset = () => store.set(null);
 
 export function useOrders() {
   const { data: orders, loading } = useLocalStore(store);
   return useMemo(
-    () => ({ orders, loading, advance, cancel, collectRemaining, reschedule, setInternalNote, reset }),
+    () => ({ orders, loading, create, advance, cancel, collectRemaining, reschedule, setInternalNote, reset }),
     [orders, loading],
   );
 }

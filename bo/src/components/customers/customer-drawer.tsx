@@ -4,6 +4,7 @@ import {
   MailOutlined,
   MessageOutlined,
   PhoneOutlined,
+  PlusOutlined,
   RightOutlined,
   StopOutlined,
   UnlockOutlined,
@@ -196,6 +197,10 @@ function OrdersSection({ row }: { row: CustomerRow }) {
   const { orders } = row.stats;
   return (
     <FormSection title={`Đơn hàng (${orders.length})`} description={orders.length ? "Bấm một đơn để mở chi tiết." : undefined}>
+      {/* Khách gọi / nhắn đặt thêm → tạo đơn với thông tin khách điền sẵn */}
+      <Button icon={<PlusOutlined />} onClick={() => navigate(`/orders?order=new&customer=${row.customer.id}`)} style={{ marginBottom: 12 }}>
+        Tạo đơn cho khách này
+      </Button>
       {orders.length === 0 ? (
         <Typography.Text type="secondary">Khách chưa đặt đơn nào.</Typography.Text>
       ) : (

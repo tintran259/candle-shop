@@ -2,10 +2,9 @@
 // Bản thật lấy từ BE: GET /api/orders.
 import dayjs from "dayjs";
 import { orderFlow, type Order, type OrderEvent, type OrderItem, type OrderStatus, type PaymentPlan, type ShippingMethod } from "@/lib/orders/types";
+import { DEPOSIT_RATE, SHIPPING_FEE } from "@/lib/orders/labels";
 import { mockProducts } from "@/lib/products/mock";
 
-const DEPOSIT_RATE = 0.5;
-const SHIPPING_FEE: Record<ShippingMethod, number> = { standard: 0, express: 50_000 };
 const DISCOUNTS: Record<string, number> = { WELCOME10: 0.1, CANDLE2510: 0.15 };
 
 const custom = (desc: string, price: number): Omit<OrderItem, "id" | "quantity"> => ({ name: "Nến tự phối", price, custom: desc });

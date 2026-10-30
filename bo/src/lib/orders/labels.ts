@@ -39,7 +39,11 @@ export const nextStatus = (s: OrderStatus): OrderStatus | undefined => {
 // Chỉ hủy được trước khi giao
 export const canCancel = (s: OrderStatus) => ["pending", "paid", "producing", "ready"].includes(s);
 
-export const providerLabels: Record<PaymentProvider, string> = { vnpay: "VNPay", momo: "MoMo", cod: "Tiền mặt / COD" };
+export const providerLabels: Record<PaymentProvider, string> = { vnpay: "VNPay", momo: "MoMo", cod: "Tiền mặt / chuyển khoản" };
+
+// Cọc khi đặt (khách chọn "Cọc 50%") và phí giao theo phương thức — web và đơn tạo tại BO dùng chung
+export const DEPOSIT_RATE = 0.5;
+export const SHIPPING_FEE: Record<ShippingMethod, number> = { standard: 0, express: 50_000 };
 export const shippingLabels: Record<ShippingMethod, string> = { standard: "Tiêu chuẩn (3 ngày)", express: "Nhanh (1 ngày)" };
 
 export const paidAmount = (o: Order) =>

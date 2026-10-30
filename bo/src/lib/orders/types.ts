@@ -1,3 +1,5 @@
+import type { CraftSelection } from "@/lib/craft/selection";
+
 // Đơn hàng — dựa theo bảng Order/OrderItem/Payment bên BE (Prisma) và luồng đặt hàng của web
 // (làm theo đơn 2–3 ngày, khách chọn cọc 50% hoặc trả đủ qua VNPay/MoMo).
 // Tiền là VNĐ, số nguyên.
@@ -22,6 +24,8 @@ export type OrderItem = {
   quantity: number;
   // Mô tả cấu hình nến tự phối, vd "Hũ gốm · 150g · Sáp đậu nành · Vanilla 70% + Lavender 30%"
   custom?: string;
+  // Lựa chọn từng bước của nến tự phối (bản chụp CraftSelection) — để xưởng làm đúng & BE trừ kho
+  craft?: CraftSelection;
 };
 
 export type Payment = {
@@ -59,7 +63,8 @@ export type Order = {
   shippingFee: number;
   total: number;
   paymentPlan: PaymentPlan;
-  paymentMethod: Exclude<PaymentProvider, "cod">;
+  // Đơn trên web: VNPay / MoMo. Đơn tạo tại BO có thể là tiền mặt / chuyển khoản (cod)
+  paymentMethod: PaymentProvider;
   payments: Payment[];
   // Ngày xưởng làm xong khách đã chọn (YYYY-MM-DD)
   readyDate: string;

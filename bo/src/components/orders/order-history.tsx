@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 import { FormSection } from "@/components/form/form-section";
 import { formatMoney } from "@/lib/format";
 import { itemCount, providerLabels } from "@/lib/orders/labels";
+import { boChannel } from "@/lib/orders/create";
 import type { Order, OrderEvent } from "@/lib/orders/types";
 
 type Look = { title: string; detail?: string; icon: ReactNode; fg: string; bg: string };
@@ -27,14 +28,17 @@ function present(e: OrderEvent, order: Order): Look {
   if (e.kind === "schedule") return { title: "Đổi ngày làm xong", detail: e.note, icon: <CalendarOutlined />, fg: "#0958d9", bg: "#e6f4ff" };
 
   switch (e.status) {
-    case "pending":
+    case "pending": {
+      // Đơn shop tạo hộ (khách đặt qua điện thoại / Zalo…) khác đơn khách tự đặt trên web
+      const channel = boChannel(e.note);
       return {
-        title: "Khách đặt hàng",
-        detail: `${itemCount(order)} sản phẩm · ${formatMoney(order.total)} · ${order.paymentPlan === "deposit" ? "chọn cọc 50%" : "chọn trả đủ"}`,
+        title: channel !== undefined ? "Shop tạo đơn" : "Khách đặt hàng",
+        detail: `${channel ? `Khách đặt qua ${channel} · ` : ""}${itemCount(order)} sản phẩm · ${formatMoney(order.total)} · ${order.paymentPlan === "deposit" ? "chọn cọc 50%" : "chọn trả đủ"}`,
         icon: <ShoppingCartOutlined />,
         fg: "#7a3f17",
         bg: "#fbf1e8",
       };
+    }
     case "paid": {
       const first = order.payments[0];
       return {

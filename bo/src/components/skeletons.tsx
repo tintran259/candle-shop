@@ -203,16 +203,19 @@ export function ListPageSkeleton({
   statNote,
   toolbar,
   subLines = 2,
+  actions,
 }: {
   label: string;
   statNote?: number | "all";
   toolbar: ReactNode;
   subLines?: 1 | 2;
+  // Bề ngang các nút trên header (bỏ trống = một nút)
+  actions?: number[];
 }) {
   return (
     <Busy label={label}>
       <Flex vertical gap={16}>
-        <PageHeaderSkeleton subLines={subLines} />
+        <PageHeaderSkeleton subLines={subLines} actions={actions} />
         <StatsSkeleton note={statNote} />
         {toolbar}
         <TableSkeleton />
@@ -380,6 +383,7 @@ export const OrdersSkeleton = () => (
   <ListPageSkeleton
     label="Đang tải đơn hàng…"
     statNote={1}
+    actions={[124, 140]}
     toolbar={
       <ToolbarSkeleton
         tabs
