@@ -1,5 +1,5 @@
 import { Avatar, Flex, Form, Tag, Typography } from "antd";
-import type { MaterialFormValues } from "@/components/craft/material-form";
+import type { OptionFormValues } from "@/components/craft/option-form";
 import { formatDelta, stockLevel, unitLabel } from "@/lib/craft/groups";
 import type { Stock } from "@/lib/craft/types";
 import { formatNumber } from "@/lib/format";
@@ -14,8 +14,8 @@ const levelTag = {
 
 // Thẻ xem trước đầu drawer — cập nhật theo từng thay đổi trong form
 export function MaterialPreview({ unit, swatch, groupLabel }: { unit: Stock["unit"]; swatch: boolean; groupLabel: string }) {
-  const form = Form.useFormInstance<MaterialFormValues>();
-  const v = Form.useWatch([], { form, preserve: true }) as MaterialFormValues | undefined;
+  const form = Form.useFormInstance<OptionFormValues>();
+  const v = Form.useWatch([], { form, preserve: true }) as OptionFormValues | undefined;
   if (!v) return null;
 
   const stock: Stock = { stock: v.unlimited ? Infinity : (v.stock ?? 0), unit };
@@ -33,7 +33,7 @@ export function MaterialPreview({ unit, swatch, groupLabel }: { unit: Stock["uni
           style={{
             borderRadius: 16,
             flexShrink: 0,
-            background: image ? undefined : swatch && v.swatch ? v.swatch : brand.emberLight,
+            background: image ? undefined : swatch && v.hasSwatch && v.swatch ? v.swatch : brand.emberLight,
             border: "1px solid #f1f1f1",
           }}
         />
@@ -42,7 +42,7 @@ export function MaterialPreview({ unit, swatch, groupLabel }: { unit: Stock["uni
             {groupLabel}
           </Typography.Text>
           <Typography.Title level={4} ellipsis style={{ margin: 0 }}>
-            {v.nameVi?.trim() || "Nguyên liệu mới"}
+            {v.nameVi?.trim() || "Lựa chọn mới"}
           </Typography.Title>
           <Flex gap={6} wrap style={{ marginTop: 6 }}>
             <Tag color={v.available ? "success" : "default"}>{v.available ? "Đang bán" : "Tạm ẩn"}</Tag>

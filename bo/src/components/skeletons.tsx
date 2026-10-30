@@ -212,9 +212,10 @@ export function ListPageSkeleton({
   );
 }
 
+// Trình dựng Thủ công: đầu trang + thông báo + thống kê + cần nhập thêm, rồi 2 cột (danh sách bước | trình sửa bước)
 export function CraftSkeleton() {
   return (
-    <Busy label="Đang tải nguyên liệu…">
+    <Busy label="Đang tải trình dựng Thủ công…">
       <Flex vertical gap={16}>
         <PageHeaderSkeleton />
         {/* Thông báo tĩnh — hiện luôn nội dung thật, cao đúng như khi tải xong */}
@@ -244,13 +245,33 @@ export function CraftSkeleton() {
             ))}
           </Row>
         </Card>
-        {/* Thanh tab cao 48 như Tabs thật */}
-        <Flex gap={24} align="center" style={{ height: 48 }}>
-          {Array.from({ length: 5 }, (_, i) => (
-            <Bar key={i} width={80} />
-          ))}
-        </Flex>
-        <TableSkeleton rows={5} />
+        <Row gutter={[16, 16]} align="top">
+          <Col xs={24} lg={9} xl={7}>
+            <Card title={<Bar width={90} height={16} />} extra={<Skeleton.Button active style={{ width: 120 }} />} styles={{ body: { padding: 12 } }}>
+              <Flex vertical gap={6}>
+                {Array.from({ length: 7 }, (_, i) => (
+                  <Flex key={i} align="center" gap={10} style={{ height: 60, padding: "0 8px" }}>
+                    <Skeleton.Avatar active size={24} />
+                    <Flex vertical gap={6} style={{ flex: 1 }}>
+                      <Bar width="55%" />
+                      <Bar width="75%" height={10} />
+                    </Flex>
+                  </Flex>
+                ))}
+              </Flex>
+            </Card>
+          </Col>
+          <Col xs={24} lg={15} xl={17}>
+            <Card title={<Bar width={160} height={16} />} styles={{ body: { paddingTop: 4 } }}>
+              <Flex gap={32} align="center" style={{ height: 46, marginBottom: 16 }}>
+                {[60, 70, 70].map((w, i) => (
+                  <Bar key={i} width={w} />
+                ))}
+              </Flex>
+              <TableSkeleton rows={5} />
+            </Card>
+          </Col>
+        </Row>
       </Flex>
     </Busy>
   );

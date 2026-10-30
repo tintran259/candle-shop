@@ -8,7 +8,7 @@ import { fromFormValues, toFormValues, type ProductFormValues } from "@/componen
 import { ProductPreview } from "@/components/products/product-preview";
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
-import { useCraftCatalog } from "@/hooks/use-craft-catalog";
+import { useCraftConfig } from "@/hooks/use-craft-config";
 import type { ProductsApi } from "@/hooks/use-products";
 import { slugify } from "@/lib/craft/groups";
 import { formatNumber } from "@/lib/format";
@@ -22,7 +22,9 @@ type Props = { open: boolean; product?: Product; api: ProductsApi; onClose: () =
 export function ProductDrawer({ open, product, api, onClose }: Props) {
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
-  const { catalog } = useCraftCatalog();
+  // Loại sáp lấy từ bước "wax" của trang Thủ công (nếu admin còn giữ bước này)
+  const waxStep = useCraftConfig().config.steps.find((st) => st.id === "wax");
+  const waxes = waxStep && waxStep.kind !== "inputs" ? waxStep.options : [];
   // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
   const ready = useDeferredValue(true, false);
   const [form] = Form.useForm<ProductFormValues>();
@@ -185,7 +187,7 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
                 </Col>
                 <Col xs={24} sm={12}>
                   <Form.Item name="waxType" label="Loại sáp" extra="Lấy từ danh sách sáp ở trang Thủ công.">
-                    <Select allowClear placeholder="Chọn loại sáp" options={catalog.waxes.map((w) => ({ value: w.name.vi, label: w.name.vi }))} />
+                    <Select allowClear placeholder="Chọn loại sáp" options={waxes.map((w) => ({ value: w.name.vi, label: w.name.vi }))} />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>

@@ -1,7 +1,8 @@
 // Tìm kiếm toàn cục trên header: gom đơn hàng, khách hàng, sản phẩm, mã giảm giá, nguyên liệu và các trang.
 // Chưa có API nên lọc ngay trên dữ liệu đã tải. Khi có BE thay bằng GET /api/search?q=.
-import { optionGroupKeys, optionGroups, stockLevel } from "@/lib/craft/groups";
-import type { BaseOption, CustomizerCatalog } from "@/lib/craft/types";
+import { stockLevel } from "@/lib/craft/groups";
+import { optionRows } from "@/lib/craft/steps";
+import type { CraftConfig } from "@/lib/craft/types";
 import type { Customer } from "@/lib/customers/types";
 import { discountStatus, statusMeta as discountStatusMeta, valueText } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
@@ -61,7 +62,7 @@ export type SearchSources = {
   customers: Customer[];
   products: Product[];
   discounts: Discount[];
-  catalog: CustomizerCatalog;
+  craft: CraftConfig;
 };
 
 export function search(raw: string, src: SearchSources): SearchResult[] {
@@ -126,23 +127,27 @@ export function search(raw: string, src: SearchSources): SearchResult[] {
       };
     });
 
-  const materials: SearchResult[] = optionGroupKeys.flatMap((g) =>
-    (src.catalog[g] as BaseOption[])
-      .filter((m) => matches(q, m.name.vi, m.name.en))
-      .map((m) => {
+  // Nguyên liệu: tìm theo tên lựa chọn hoặc tên bước (mở thẳng bước trên trang Thủ công)
+  const materials: SearchResult[] = [
+    ...src.craft.steps
+      .filter((st) => matches(q, st.title.vi, st.title.en))
+      .map((st) => ({ key: `step:${st.id}`, group: "materials" as const, title: st.title.vi, subtitle: "Bước trên trang Thủ công", to: `/craft?step=${st.id}` })),
+    ...optionRows(src.craft)
+      .filter(({ option: m }) => matches(q, m.name.vi, m.name.en))
+      .map(({ step, option: m }) => {
         const level = stockLevel(m);
         return {
-          key: `material:${g}:${m.id}`,
+          key: `material:${step.id}:${m.id}`,
           group: "materials" as const,
           title: m.name.vi,
-          subtitle: `${optionGroups[g].label} · ${m.name.en}`,
+          subtitle: `${step.title.vi} · ${m.name.en}`,
           tag: level === "out" ? { label: "Hết hàng", color: "red" } : level === "low" ? { label: "Sắp hết", color: "orange" } : undefined,
           image: m.images?.[0],
           swatch: m.swatch,
-          to: `/craft?tab=${g}&edit=${m.id}`,
+          to: `/craft?step=${step.id}&edit=${m.id}`,
         };
       }),
-  );
+  ];
 
   // Khách trước đơn: gõ tên người thì hồ sơ khách hữu ích hơn từng đơn lẻ
   return [pages, customers, orders, products, discounts, materials].flatMap((list) => list.slice(0, PER_GROUP));

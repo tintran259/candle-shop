@@ -1,10 +1,10 @@
 import { Avatar, Badge, Flex, Tag, Typography } from "antd";
 import { stockLevel, unitLabel } from "@/lib/craft/groups";
-import type { BaseOption, Stock } from "@/lib/craft/types";
+import type { Stock, StepOption } from "@/lib/craft/types";
 import { formatNumber } from "@/lib/format";
 
 // Ảnh chính nếu có, không thì ô màu (hoặc sọc khi không có màu)
-export function MaterialAvatar({ item, swatch }: { item: BaseOption; swatch: boolean }) {
+export function MaterialAvatar({ item, swatch = true }: { item: StepOption; swatch?: boolean }) {
   const count = item.images?.length ?? 0;
   if (count) {
     return (

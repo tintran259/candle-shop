@@ -13,7 +13,7 @@ import {
 import { Button, Empty, Flex, Input, Modal, Spin, Tag, Typography, type InputRef } from "antd";
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { useCraftCatalog } from "@/hooks/use-craft-catalog";
+import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useCustomers } from "@/hooks/use-customers";
 import { useDiscounts } from "@/hooks/use-discounts";
 import { useOrders } from "@/hooks/use-orders";
@@ -120,12 +120,12 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   const { orders, loading: l1 } = useOrders();
   const { products, loading: l2 } = useProducts();
   const { discounts, loading: l3 } = useDiscounts();
-  const { catalog, loading: l4 } = useCraftCatalog();
+  const { config: craft, loading: l4 } = useCraftConfig();
   const { customers, loading: l5 } = useCustomers();
   const loading = l1 || l2 || l3 || l4 || l5;
 
   const query = q.trim();
-  const results = query ? search(query, { pages, orders, customers, products, discounts, catalog }) : [];
+  const results = query ? search(query, { pages, orders, customers, products, discounts, craft }) : [];
   // Chưa gõ: mở gần đây + thao tác nhanh + các trang
   const idle = [
     ...recent.map((r) => ({ ...r, key: `recent:${r.key}` })),

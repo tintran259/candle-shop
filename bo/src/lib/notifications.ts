@@ -1,8 +1,9 @@
 // Thông báo trên header — chưa có API nên tự suy ra từ dữ liệu đơn hàng, nguyên liệu, mã giảm giá.
 // Khi có BE: thay bằng GET /api/notifications (+ websocket/SSE cho đơn mới), trạng thái đã đọc lưu theo tài khoản.
 import dayjs from "dayjs";
-import { optionGroupKeys, stockLevel } from "@/lib/craft/groups";
-import type { BaseOption, CustomizerCatalog } from "@/lib/craft/types";
+import { stockLevel } from "@/lib/craft/groups";
+import { optionRows } from "@/lib/craft/steps";
+import type { CraftConfig, StepOption } from "@/lib/craft/types";
 import { discountStatus, periodHint } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
@@ -28,12 +29,12 @@ export type AppNotification = {
 const lastEventAt = (o: Order, status: Order["status"]) =>
   [...o.history].reverse().find((e) => e.status === status && (e.kind ?? "status") === "status")?.at ?? o.updatedAt;
 
-const names = (items: BaseOption[]) => {
+const names = (items: StepOption[]) => {
   const list = items.map((i) => i.name.vi);
   return list.length > 3 ? `${list.slice(0, 3).join(", ")} và ${list.length - 3} mục khác` : list.join(", ");
 };
 
-export function buildNotifications(src: { orders: Order[]; catalog: CustomizerCatalog; discounts: Discount[] }, today = dayjs()) {
+export function buildNotifications(src: { orders: Order[]; craft: CraftConfig; discounts: Discount[] }, today = dayjs()) {
   const list: AppNotification[] = [];
 
   for (const o of src.orders) {
@@ -83,10 +84,13 @@ export function buildNotifications(src: { orders: Order[]; catalog: CustomizerCa
   }
 
   // Tồn kho: gộp một thông báo cho mỗi mức để không tràn danh sách
-  const materials = optionGroupKeys.flatMap((g) => (src.catalog[g] as BaseOption[]).filter((m) => m.available));
+  // Chỉ xét bước đang hiện trên web và lựa chọn đang bán
+  const materials = optionRows(src.craft)
+    .filter(({ step, option }) => step.enabled && option.available)
+    .map(({ step, option }) => ({ ...option, id: `${step.id}/${option.id}` }));
   const out = materials.filter((m) => stockLevel(m) === "out");
   const low = materials.filter((m) => stockLevel(m) === "low");
-  const ids = (items: BaseOption[]) => items.map((i) => i.id).sort().join(",");
+  const ids = (items: StepOption[]) => items.map((i) => i.id).sort().join(",");
   if (out.length)
     list.push({
       id: `stock-out:${ids(out)}`,

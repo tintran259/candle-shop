@@ -343,3 +343,189 @@ body {
     display: none !important;
   }
 }
+
+/* Trình dựng Thủ công — dòng bước trong danh sách */
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.step-row:hover {
+  background: rgba(181, 101, 46, 0.06);
+}
+.step-row:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: -2px;
+}
+.step-row-index {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #ebe3dc;
+  font-size: 12px;
+  font-weight: 600;
+  color: #454545;
+}
+/* Danh sách bước dính khi cuộn trình sửa dài (desktop) */
+@media (min-width: 992px) {
+  .craft-steps-col {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* Thẻ chọn component khi thêm bước */
+.kind-card {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid #ebe3dc;
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease-out;
+}
+.kind-card:hover:not(:disabled) {
+  border-color: #e8b48a;
+}
+.kind-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.kind-card:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: 2px;
+}
+
+/* Xem trước kiểu trang Thủ công của web (tông giấy kem, viền mảnh) */
+.sf-preview {
+  padding: 20px;
+  border: 1px solid #eadfd3;
+  border-radius: 14px;
+  background: #fdfaf5;
+  color: #3b2a1a;
+}
+.sf-grid {
+  display: grid;
+  gap: 10px;
+}
+.sf-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 10px;
+  border: 1px solid #eadfd3;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  text-align: center;
+  font: inherit;
+  cursor: pointer;
+}
+.sf-card[aria-checked="true"] {
+  border-color: #7a3f17;
+  box-shadow: 0 0 0 1px #7a3f17;
+  background: #fbf6ef;
+}
+.sf-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.sf-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+}
+.sf-card[aria-checked="true"] .sf-check {
+  background: #7a3f17;
+}
+.sf-media {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border: 1px solid #eadfd3;
+  border-radius: 10px;
+}
+.sf-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 84px;
+  padding: 10px 4px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.sf-swatch[aria-checked="true"] {
+  border-color: #7a3f17;
+  background: #fbf6ef;
+}
+.sf-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.sf-dot {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #eadfd3;
+  border-radius: 50%;
+}
+.sf-chip {
+  padding: 6px 12px;
+  border: 1px solid #eadfd3;
+  border-radius: 999px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sf-chip[data-on="true"] {
+  border-color: #7a3f17;
+  background: #fbf6ef;
+  font-weight: 600;
+}
+.sf-box {
+  padding: 12px 14px;
+  border: 1px solid #eadfd3;
+  border-radius: 10px;
+  background: #fff;
+}
+
+/* Thẻ con bên trong thẻ trắng (bento không viền) — nền ngà + viền mảnh để tách từng mục */
+.ant-card.inner-card {
+  background: #fbfaf7;
+  border: 1px solid #efe9e2;
+}
+.ant-card.inner-card .ant-card-head {
+  border-bottom-color: #efe9e2;
+}

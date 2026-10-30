@@ -1,11 +1,9 @@
 import { CloseCircleFilled, ExclamationCircleFilled, RightOutlined, WarningOutlined } from "@ant-design/icons";
 import { Card, Col, Flex, Row, Typography } from "antd";
 import { MaterialAvatar } from "@/components/craft/material-view";
-import { LOW_STOCK, optionGroups, unitLabel, type OptionGroup } from "@/lib/craft/groups";
-import type { BaseOption } from "@/lib/craft/types";
+import { LOW_STOCK, unitLabel } from "@/lib/craft/groups";
+import type { OptionRow } from "@/lib/craft/steps";
 import { formatNumber } from "@/lib/format";
-
-export type RestockRow = { group: OptionGroup; item: BaseOption };
 
 // Màu trạng thái luôn đi kèm icon + chữ, không chỉ dựa vào màu
 const status = {
@@ -13,13 +11,13 @@ const status = {
   low: { label: "Sắp hết", color: "#ad4e00", bg: "#fff7e6", bar: "#ffc069", icon: <ExclamationCircleFilled /> },
 } as const;
 
-// Thẻ "Cần nhập thêm": mỗi nguyên liệu một ô, bấm để mở đúng tab nhóm của nó
-export function RestockPanel({ out, low, onOpen }: { out: RestockRow[]; low: RestockRow[]; onOpen: (group: OptionGroup) => void }) {
+// Thẻ "Cần nhập thêm": mỗi lựa chọn một ô, bấm để mở thẳng lựa chọn đó trong bước của nó
+export function RestockPanel({ out, low, onOpen }: { out: OptionRow[]; low: OptionRow[]; onOpen: (stepId: string, optionId: string) => void }) {
   // Hết hàng trước, rồi tới mục còn ít nhất so với ngưỡng
   const rows = [
     ...out.map((r) => ({ ...r, level: "out" as const, ratio: 0 })),
     ...low
-      .map((r) => ({ ...r, level: "low" as const, ratio: r.item.stock / LOW_STOCK[r.item.unit] }))
+      .map((r) => ({ ...r, level: "low" as const, ratio: r.option.stock / LOW_STOCK[r.option.unit] }))
       .sort((a, b) => a.ratio - b.ratio),
   ];
 
@@ -53,24 +51,24 @@ export function RestockPanel({ out, low, onOpen }: { out: RestockRow[]; low: Res
       </Flex>
 
       <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
-        {rows.map(({ group, item, level, ratio }) => {
+        {rows.map(({ step, option: item, level, ratio }) => {
           const s = status[level];
           return (
-            <Col key={`${group}-${item.id}`} xs={24} sm={12} lg={8} xxl={6}>
+            <Col key={`${step.id}-${item.id}`} xs={24} sm={12} lg={8} xxl={6}>
               <button
                 type="button"
-                onClick={() => onOpen(group)}
-                aria-label={`${item.name.vi}: ${s.label}, mở tab ${optionGroups[group].label}`}
+                onClick={() => onOpen(step.id, item.id)}
+                aria-label={`${item.name.vi}: ${s.label}, mở trong bước ${step.title.vi}`}
                 className="restock-tile"
               >
                 <Flex align="center" gap={12}>
-                  <MaterialAvatar item={item} swatch />
+                  <MaterialAvatar item={item} />
                   <Flex vertical style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                     <Typography.Text strong ellipsis>
                       {item.name.vi}
                     </Typography.Text>
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      {optionGroups[group].label}
+                      {step.title.vi}
                     </Typography.Text>
                   </Flex>
                   <RightOutlined className="restock-tile-arrow" style={{ fontSize: 11, color: "#6b6b6b" }} aria-hidden />

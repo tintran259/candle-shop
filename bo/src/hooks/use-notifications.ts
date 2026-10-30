@@ -1,4 +1,4 @@
-import { useCraftCatalog } from "@/hooks/use-craft-catalog";
+import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useDiscounts } from "@/hooks/use-discounts";
 import { useOrders } from "@/hooks/use-orders";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
@@ -10,11 +10,11 @@ const readStore = createLocalStore<string[]>("bo-notifications-read-v1", []);
 // Thông báo suy ra từ dữ liệu + trạng thái đã đọc
 export function useNotifications() {
   const { orders, loading: l1 } = useOrders();
-  const { catalog, loading: l2 } = useCraftCatalog();
+  const { config: craft, loading: l2 } = useCraftConfig();
   const { discounts, loading: l3 } = useDiscounts();
   const { data: read, loading: l4 } = useLocalStore(readStore);
   const loading = l1 || l2 || l3 || l4;
-  const items = loading ? [] : buildNotifications({ orders, catalog, discounts });
+  const items = loading ? [] : buildNotifications({ orders, craft, discounts });
   const readSet = new Set(read);
   const unread = items.filter((n) => !readSet.has(n.id));
 

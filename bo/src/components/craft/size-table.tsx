@@ -1,27 +1,27 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Card, InputNumber, Popconfirm, Switch, Table, Typography, type TableProps } from "antd";
+import { Button, Flex, InputNumber, Popconfirm, Switch, Table, Typography, type TableProps } from "antd";
 import { MoneyInput } from "@/components/money-input";
-import type { CraftCatalogApi } from "@/hooks/use-craft-catalog";
-import type { SizeOption } from "@/lib/craft/types";
+import type { CraftConfigApi } from "@/hooks/use-craft-config";
+import type { CraftStep, SizeOption, VesselStep } from "@/lib/craft/types";
 
-// Kích thước nến và giá gốc — sửa trực tiếp trên bảng
-export function SizeTable({ api }: { api: CraftCatalogApi }) {
-  const patch = (id: string, p: Partial<SizeOption>) =>
-    api.update((c) => ({ ...c, sizes: c.sizes.map((s) => (s.id === id ? { ...s, ...p } : s)) }));
+// Kích thước nến và giá gốc của bước hũ — sửa trực tiếp trên bảng
+export function SizeTable({ step, api }: { step: VesselStep; api: CraftConfigApi }) {
+  const update = (fn: (s: VesselStep) => VesselStep) => api.updateStep(step.id, (s) => (s.kind === "vessel" ? fn(s) : s) as CraftStep);
+  const patch = (id: string, p: Partial<SizeOption>) => update((s) => ({ ...s, sizes: s.sizes.map((x) => (x.id === id ? { ...x, ...p } : x)) }));
 
   const add = () =>
-    api.update((c) => {
-      const grams = Math.max(0, ...c.sizes.map((s) => s.grams)) + 50;
+    update((s) => {
+      const grams = Math.max(0, ...s.sizes.map((x) => x.grams)) + 50;
       const size: SizeOption = { id: `s${grams}-${Date.now().toString(36)}`, grams, basePrice: 0, available: false };
-      return { ...c, sizes: [...c.sizes, size] };
+      return { ...s, sizes: [...s.sizes, size] };
     });
 
   // Gỡ luôn kích thước khỏi các hũ đang hỗ trợ nó
-  const remove = (s: SizeOption) =>
-    api.update((c) => ({
-      ...c,
-      sizes: c.sizes.filter((x) => x.id !== s.id),
-      containers: c.containers.map((ct) => ({ ...ct, supportedSizeIds: ct.supportedSizeIds.filter((id) => id !== s.id) })),
+  const remove = (size: SizeOption) =>
+    update((s) => ({
+      ...s,
+      sizes: s.sizes.filter((x) => x.id !== size.id),
+      options: s.options.map((o) => ({ ...o, supportedSizeIds: o.supportedSizeIds.filter((id) => id !== size.id) })),
     }));
 
   const columns: TableProps<SizeOption>["columns"] = [
@@ -73,19 +73,16 @@ export function SizeTable({ api }: { api: CraftCatalogApi }) {
   ];
 
   return (
-    <Card
-      title="Kích thước & giá gốc"
-      extra={
+    <Flex vertical gap={12}>
+      <Flex justify="space-between" align="center" gap={12} wrap>
+        <Typography.Text type="secondary" style={{ flex: 1, minWidth: 240 }}>
+          Giá một hũ = giá gốc theo kích thước + phụ thu các lựa chọn khách chọn. Để trống thời gian cháy nếu xưởng chưa đo thực tế.
+        </Typography.Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={add}>
-          Thêm
+          Thêm kích thước
         </Button>
-      }
-      styles={{ body: { padding: 0 } }}
-    >
-      <Typography.Paragraph type="secondary" style={{ margin: 0, padding: "12px 24px 0" }}>
-        Giá một hũ = giá gốc theo kích thước + phụ thu các nguyên liệu khách chọn. Để trống thời gian cháy nếu xưởng chưa đo thực tế.
-      </Typography.Paragraph>
-      <Table rowKey="id" columns={columns} dataSource={api.catalog.sizes} pagination={false} scroll={{ x: "max-content" }} />
-    </Card>
+      </Flex>
+      <Table rowKey="id" columns={columns} dataSource={step.sizes} pagination={false} scroll={{ x: "max-content" }} locale={{ emptyText: "Chưa có kích thước nào." }} />
+    </Flex>
   );
 }

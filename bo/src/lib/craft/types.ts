@@ -1,86 +1,143 @@
-// Kiểu dữ liệu cho trang tự phối nến (Thủ công).
-// Tiền là VNĐ, luôn là số nguyên (đồng).
+// Cấu hình trình dựng nến Thủ công: admin tự tạo các BƯỚC, mỗi bước dùng một COMPONENT có sẵn.
+// Đây là hợp đồng dữ liệu giữa BO → BE → web — đặc tả đầy đủ ở docs/craft-builder.md.
+// Tiền là VNĐ, số nguyên (đồng).
 
 export type Localized = { vi: string; en: string };
-
 export type Money = number;
 
-export const groupIds = ["container", "wax", "fragrance", "wick", "color", "decoration", "personalization"] as const;
-export type GroupId = (typeof groupIds)[number];
+// Các component admin chọn cho một bước (web dựng giao diện theo kiểu này)
+export const stepKinds = ["vessel", "cards", "swatches", "blend", "inputs"] as const;
+export type StepKind = (typeof stepKinds)[number];
 
-export const intensities = ["light", "medium", "strong"] as const;
-export type Intensity = (typeof intensities)[number];
+// Bước này điều khiển phần nào của ảnh minh họa cây nến trên web
+export const previewRoles = ["waxColor", "wick", "decoration"] as const;
+export type PreviewRole = (typeof previewRoles)[number];
 
-// Lượng tồn kho: "g" cho sáp/hương, "pcs" cho hũ/bấc/phụ kiện
-export type Stock = { stock: number; unit: "g" | "pcs" };
+// Icon có sẵn — BO và web tự ánh xạ sang bộ icon của mình
+export const stepIcons = ["vessel", "layers", "flower", "flame", "palette", "sparkles", "pen", "gift", "tag", "box"] as const;
+export type StepIcon = (typeof stepIcons)[number];
 
-export type BaseOption = Stock & {
+export type Unit = "g" | "pcs";
+// Tồn kho của một lựa chọn, theo đơn vị của bước. Số rất lớn (UNLIMITED) = không theo dõi
+export type Stock = { stock: number; unit: Unit };
+
+// Một lựa chọn trong bước (dùng chung cho vessel / cards / swatches / blend)
+export type StepOption = Stock & {
+  // Duy nhất trong bước; dùng trong cấu hình khách đã chọn nên không đổi sau khi tạo
   id: string;
   name: Localized;
   description?: Localized;
+  // Phụ thu mỗi hũ
   priceDelta: Money;
-  // Shop tắt tạm thời trong BO dù còn hàng
+  // Shop tạm ẩn dù còn hàng
   available: boolean;
+  // Màu hiển thị khi chưa có ảnh; swatches không có màu = "không pha màu" (ô sọc)
   swatch?: string;
-  // Ảnh thật của nguyên liệu, ảnh đầu tiên là ảnh chính (URL do BE trả về)
+  // Ảnh thật, ảnh đầu tiên là ảnh chính
   images?: string[];
+  // Kiểu hiển thị trên ảnh minh họa khi bước có previewRole (wick: cotton|wood, decoration: flowers|pattern|topper)
+  look?: string;
+  // Chỉ chọn được khi bước khác đang chọn một trong các mục này: { [stepId]: optionId[] }. Bỏ trống = không giới hạn
+  onlyWith?: Record<string, string[]>;
+  // Không dùng được cho nến nặng hơn (gram)
+  maxGrams?: number;
+  // blend: chọn mục này thì không phối thêm mục khác (vd "Không mùi")
+  exclusive?: boolean;
 };
 
-export type ContainerOption = BaseOption & {
-  shape: "tumbler" | "jar" | "tin" | "bowl";
-  supportedSizeIds: string[];
-  // null = hũ này không có nắp
-  lid: (Stock & { priceDelta: Money }) | null;
+export type VesselShape = "tumbler" | "jar" | "tin" | "bowl";
+
+export type VesselOption = StepOption & {
+  shape: VesselShape;
   translucent?: boolean;
+  // Kích thước đổ được (id trong sizes của bước)
+  supportedSizeIds: string[];
+  // null = không có nắp
+  lid: (Stock & { priceDelta: Money }) | null;
 };
 
 export type SizeOption = {
   id: string;
   grams: number;
-  // Chỉ hiển thị khi xưởng đã đo thực tế
+  // Chỉ hiện khi xưởng đã đo thực tế
   burnHours?: number;
+  // Giá gốc của cây nến — mọi phụ thu cộng thêm vào đây
   basePrice: Money;
   available: boolean;
 };
 
-export type FragranceOption = BaseOption & { unscented?: boolean };
-
-export type WickOption = BaseOption & {
-  // Bỏ trống = dùng được với mọi lựa chọn
-  containerIds?: string[];
-  waxIds?: string[];
-  maxGrams?: number;
+export type TextFieldDef = {
+  id: string;
+  label: Localized;
+  placeholder?: Localized;
+  maxLength: number;
+  // Tính phí khi khách có nhập
+  priceDelta: Money;
+  enabled: boolean;
+  multiline?: boolean;
+  // In chữ này lên nhãn trong ảnh minh họa
+  onLabel?: boolean;
 };
 
-export type ColorOption = BaseOption & { natural?: boolean };
-
-export type DecorationOption = BaseOption & {
-  // Xưởng đã duyệt an toàn khi đốt — chỉ hiện các mục true
-  approved: boolean;
-  look?: "flowers" | "pattern" | "topper";
+export type AddonDef = Stock & {
+  id: string;
+  name: Localized;
+  description?: Localized;
+  priceDelta: Money;
+  available: boolean;
+  enabled: boolean;
 };
 
-export type TextField = { enabled: boolean; maxLength: number; priceDelta: Money };
-
-export type PersonalizationConfig = {
-  labelText: TextField;
-  recipientName: TextField;
-  giftMessage: TextField;
-  giftBox: (Stock & { enabled: boolean; priceDelta: Money; available: boolean }) | null;
+type StepBase = {
+  // Duy nhất trong cấu hình, chữ thường không dấu (vd "wax") — web dùng làm anchor & khóa lựa chọn
+  id: string;
+  title: Localized;
+  hint?: Localized;
+  icon: StepIcon;
+  // Tắt = ẩn bước khỏi web (giữ dữ liệu)
+  enabled: boolean;
+  // Bắt buộc chọn trước khi thêm vào giỏ
+  required: boolean;
 };
 
-export type CustomizerCatalog = {
-  containers: ContainerOption[];
-  sizes: SizeOption[];
-  waxes: BaseOption[];
-  fragrances: FragranceOption[];
-  wicks: WickOption[];
-  colors: ColorOption[];
-  decorations: DecorationOption[];
-  personalization: PersonalizationConfig;
-  // Số mùi được phối trong 1 hũ (1 = chọn 1 mùi)
-  maxFragrances: number;
-  // null = không cho chọn độ đậm
-  intensity: { priceDelta: Record<Intensity, Money>; load: Record<Intensity, number> } | null;
+export type VesselStep = StepBase & { kind: "vessel"; options: VesselOption[]; sizes: SizeOption[] };
+
+export type CardsStep = StepBase & {
+  kind: "cards";
+  options: StepOption[];
+  // Chọn nhiều (checkbox) hay một (radio)
+  multiple: boolean;
+  // Chọn nhiều tối đa (bỏ trống = không giới hạn)
+  maxSelect?: number;
+  previewRole?: PreviewRole;
+  // Đơn vị tồn kho; "g" thì mỗi hũ tiêu hao gramsPerGram × khối lượng nến
+  unit: Unit;
+  gramsPerGram?: number;
 };
 
+export type SwatchesStep = StepBase & { kind: "swatches"; options: StepOption[]; previewRole?: PreviewRole; unit: Unit; gramsPerGram?: number };
+
+export type IntensityLevel = "light" | "medium" | "strong";
+export type BlendStep = StepBase & {
+  kind: "blend";
+  options: StepOption[];
+  // Số mục phối tối đa trong 1 hũ (1 = chọn một)
+  maxBlend: number;
+  // null = không cho chọn độ đậm. load = tỉ lệ (gram tinh dầu / gram sáp)
+  intensity: { priceDelta: Record<IntensityLevel, Money>; load: Record<IntensityLevel, number> } | null;
+  unit: Unit;
+};
+
+export type InputsStep = StepBase & { kind: "inputs"; fields: TextFieldDef[]; addons: AddonDef[] };
+
+export type CraftStep = VesselStep | CardsStep | SwatchesStep | BlendStep | InputsStep;
+export type OptionStep = Exclude<CraftStep, InputsStep>;
+
+export type CraftConfig = {
+  // Tăng khi đổi cấu trúc — BE/web từ chối phiên bản không hiểu
+  version: 1;
+  currency: "VND";
+  // Thứ tự hiển thị trên web
+  steps: CraftStep[];
+  updatedAt?: string;
+};
