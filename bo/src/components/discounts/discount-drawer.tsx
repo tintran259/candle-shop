@@ -1,12 +1,13 @@
 import { DeleteOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import { App, Button, Col, DatePicker, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Segmented, Typography } from "antd";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { Link } from "react-router";
 import { fromFormValues, toFormValues, type DiscountFormValues } from "@/components/discounts/discount-form";
 import { DiscountTicket } from "@/components/discounts/discount-ticket";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { MoneyInput } from "@/components/money-input";
+import { DrawerFormSkeleton } from "@/components/skeletons";
 import type { DiscountsApi } from "@/hooks/use-discounts";
 import { useOrders } from "@/hooks/use-orders";
 import { normalizeCode, randomCode, scopeLabels, typeLabels } from "@/lib/discounts/labels";
@@ -21,6 +22,8 @@ const options = <K extends string>(labels: Record<K, string>) => (Object.keys(la
 export function DiscountDrawer({ open, discount, api, onClose }: Props) {
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
+  // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
+  const ready = useDeferredValue(true, false);
   const [form] = Form.useForm<DiscountFormValues>();
   const [dirty, setDirty] = useState(false);
   const values = Form.useWatch([], { form, preserve: true }) as DiscountFormValues | undefined;
@@ -91,146 +94,150 @@ export function DiscountDrawer({ open, discount, api, onClose }: Props) {
         </Flex>
       }
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={toFormValues(discount)}
-        onFinish={finish}
-        onValuesChange={() => setDirty(true)}
-        scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
-      >
-        <Flex vertical gap={16}>
-          {preview && <DiscountTicket discount={preview} />}
+      {ready ? (
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={toFormValues(discount)}
+          onFinish={finish}
+          onValuesChange={() => setDirty(true)}
+          scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
+        >
+          <Flex vertical gap={16}>
+            {preview && <DiscountTicket discount={preview} />}
 
-          <FormSection title="Mã & mô tả" description="Khách gõ mã ở bước thanh toán — không phân biệt chữ hoa, thường.">
-            <Form.Item
-              name="code"
-              label="Mã giảm giá"
-              getValueFromEvent={(e) => normalizeCode(e.target.value)}
-              extra="Chỉ chữ in hoa không dấu và số, 4–20 ký tự."
-              rules={[
-                { required: true, message: "Nhập mã giảm giá." },
-                { min: 4, max: 20, message: "Mã dài 4–20 ký tự." },
-              ]}
-            >
-              <Input
-                autoFocus={!discount}
-                maxLength={20}
-                className="tabular"
-                style={{ letterSpacing: "0.06em", fontWeight: 600 }}
-                placeholder="VD: CANDLE2510"
-                suffix={
-                  <Button
-                    type="link"
-                    size="small"
-                    icon={<ThunderboltOutlined />}
-                    onClick={() => {
-                      form.setFieldValue("code", randomCode());
-                      setDirty(true);
-                    }}
-                    style={{ paddingInline: 0 }}
-                  >
-                    Tạo ngẫu nhiên
-                  </Button>
-                }
-              />
-            </Form.Item>
-            <Form.Item name="description" label="Mô tả" extra="Hiện cho khách khi áp mã." style={{ marginBottom: 0 }}>
-              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} maxLength={120} showCount placeholder="VD: Giảm 15% cho đơn từ 1 triệu" />
-            </Form.Item>
-          </FormSection>
+            <FormSection title="Mã & mô tả" description="Khách gõ mã ở bước thanh toán — không phân biệt chữ hoa, thường.">
+              <Form.Item
+                name="code"
+                label="Mã giảm giá"
+                getValueFromEvent={(e) => normalizeCode(e.target.value)}
+                extra="Chỉ chữ in hoa không dấu và số, 4–20 ký tự."
+                rules={[
+                  { required: true, message: "Nhập mã giảm giá." },
+                  { min: 4, max: 20, message: "Mã dài 4–20 ký tự." },
+                ]}
+              >
+                <Input
+                  autoFocus={!discount}
+                  maxLength={20}
+                  className="tabular"
+                  style={{ letterSpacing: "0.06em", fontWeight: 600 }}
+                  placeholder="VD: CANDLE2510"
+                  suffix={
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<ThunderboltOutlined />}
+                      onClick={() => {
+                        form.setFieldValue("code", randomCode());
+                        setDirty(true);
+                      }}
+                      style={{ paddingInline: 0 }}
+                    >
+                      Tạo ngẫu nhiên
+                    </Button>
+                  }
+                />
+              </Form.Item>
+              <Form.Item name="description" label="Mô tả" extra="Hiện cho khách khi áp mã." style={{ marginBottom: 0 }}>
+                <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} maxLength={120} showCount placeholder="VD: Giảm 15% cho đơn từ 1 triệu" />
+              </Form.Item>
+            </FormSection>
 
-          <FormSection title="Ưu đãi">
-            <Form.Item name="type" style={{ marginBottom: 16 }}>
-              <Segmented<DiscountType> block options={options(typeLabels)} />
-            </Form.Item>
-            {type === "percent" && (
+            <FormSection title="Ưu đãi">
+              <Form.Item name="type" style={{ marginBottom: 16 }}>
+                <Segmented<DiscountType> block options={options(typeLabels)} />
+              </Form.Item>
+              {type === "percent" && (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="percent" label="Mức giảm" rules={[{ required: true, type: "number", min: 1, max: 100, message: "Từ 1 đến 100%." }]} style={{ marginBottom: 0 }}>
+                      <InputNumber min={1} max={100} precision={0} suffix="%" style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="maxDiscount" label="Giảm tối đa" extra="Để trống nếu không giới hạn" style={{ marginBottom: 0 }}>
+                      <MoneyInput placeholder="Không giới hạn" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              )}
+              {type === "fixed" && (
+                <Form.Item name="amount" label="Số tiền giảm" rules={[{ required: true, type: "number", min: 1000, message: "Nhập số tiền giảm." }]} style={{ marginBottom: 0 }}>
+                  <MoneyInput />
+                </Form.Item>
+              )}
+              {type === "freeship" && <Typography.Text type="secondary">Phí giao hàng (kể cả giao nhanh) được miễn khi đơn đủ điều kiện.</Typography.Text>}
+            </FormSection>
+
+            <FormSection title="Điều kiện áp dụng">
+              <Form.Item
+                name="minOrder"
+                label="Giá trị đơn tối thiểu"
+                dependencies={["type", "amount"]}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator: (_, v?: number | null) =>
+                      getFieldValue("type") === "fixed" && v && getFieldValue("amount") >= v
+                        ? Promise.reject(new Error("Đơn tối thiểu phải lớn hơn số tiền giảm."))
+                        : Promise.resolve(),
+                  }),
+                ]}
+              >
+                <MoneyInput placeholder="Không yêu cầu" />
+              </Form.Item>
+              <Form.Item name="scope" label="Áp dụng cho">
+                <Radio.Group optionType="button" options={options(scopeLabels)} />
+              </Form.Item>
+              <SwitchField name="firstOrderOnly" label="Chỉ cho khách đặt lần đầu" description="Kiểm tra theo số điện thoại / email." last />
+            </FormSection>
+
+            <FormSection title="Thời gian & giới hạn">
               <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item name="percent" label="Mức giảm" rules={[{ required: true, type: "number", min: 1, max: 100, message: "Từ 1 đến 100%." }]} style={{ marginBottom: 0 }}>
-                    <InputNumber min={1} max={100} precision={0} suffix="%" style={{ width: "100%" }} />
+                <Col xs={24} sm={12}>
+                  <Form.Item name="startsAt" label="Bắt đầu" rules={[{ required: true, message: "Chọn ngày bắt đầu." }]}>
+                    <DatePicker format="DD/MM/YYYY" allowClear={false} style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
-                  <Form.Item name="maxDiscount" label="Giảm tối đa" extra="Để trống nếu không giới hạn" style={{ marginBottom: 0 }}>
-                    <MoneyInput placeholder="Không giới hạn" />
+                <Col xs={24} sm={12}>
+                  <Form.Item
+                    name="endsAt"
+                    label="Kết thúc"
+                    dependencies={["startsAt"]}
+                    extra="Để trống = không hết hạn"
+                    rules={[
+                      ({ getFieldValue }) => ({
+                        validator: (_, v?: dayjs.Dayjs | null) =>
+                          !v || !v.isBefore(getFieldValue("startsAt"), "day") ? Promise.resolve() : Promise.reject(new Error("Phải sau ngày bắt đầu.")),
+                      }),
+                    ]}
+                  >
+                    <DatePicker format="DD/MM/YYYY" placeholder="Không hết hạn" style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="usageLimit" label="Tổng lượt dùng" extra={discount ? `Đã dùng ${discount.used} lượt` : "Để trống = không giới hạn"} style={{ marginBottom: 0 }}>
+                    <InputNumber min={1} precision={0} placeholder="Không giới hạn" style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="perCustomerLimit" label="Mỗi khách dùng tối đa" style={{ marginBottom: 0 }}>
+                    <InputNumber min={1} precision={0} suffix="lần" placeholder="Không giới hạn" style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
               </Row>
-            )}
-            {type === "fixed" && (
-              <Form.Item name="amount" label="Số tiền giảm" rules={[{ required: true, type: "number", min: 1000, message: "Nhập số tiền giảm." }]} style={{ marginBottom: 0 }}>
-                <MoneyInput />
-              </Form.Item>
-            )}
-            {type === "freeship" && <Typography.Text type="secondary">Phí giao hàng (kể cả giao nhanh) được miễn khi đơn đủ điều kiện.</Typography.Text>}
-          </FormSection>
+            </FormSection>
 
-          <FormSection title="Điều kiện áp dụng">
-            <Form.Item
-              name="minOrder"
-              label="Giá trị đơn tối thiểu"
-              dependencies={["type", "amount"]}
-              rules={[
-                ({ getFieldValue }) => ({
-                  validator: (_, v?: number | null) =>
-                    getFieldValue("type") === "fixed" && v && getFieldValue("amount") >= v
-                      ? Promise.reject(new Error("Đơn tối thiểu phải lớn hơn số tiền giảm."))
-                      : Promise.resolve(),
-                }),
-              ]}
-            >
-              <MoneyInput placeholder="Không yêu cầu" />
-            </Form.Item>
-            <Form.Item name="scope" label="Áp dụng cho">
-              <Radio.Group optionType="button" options={options(scopeLabels)} />
-            </Form.Item>
-            <SwitchField name="firstOrderOnly" label="Chỉ cho khách đặt lần đầu" description="Kiểm tra theo số điện thoại / email." last />
-          </FormSection>
+            <FormSection title="Trạng thái">
+              <SwitchField name="active" label="Đang bật" description="Tắt để tạm dừng mã ngay, không cần sửa ngày." last />
+            </FormSection>
 
-          <FormSection title="Thời gian & giới hạn">
-            <Row gutter={16}>
-              <Col xs={24} sm={12}>
-                <Form.Item name="startsAt" label="Bắt đầu" rules={[{ required: true, message: "Chọn ngày bắt đầu." }]}>
-                  <DatePicker format="DD/MM/YYYY" allowClear={false} style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item
-                  name="endsAt"
-                  label="Kết thúc"
-                  dependencies={["startsAt"]}
-                  extra="Để trống = không hết hạn"
-                  rules={[
-                    ({ getFieldValue }) => ({
-                      validator: (_, v?: dayjs.Dayjs | null) =>
-                        !v || !v.isBefore(getFieldValue("startsAt"), "day") ? Promise.resolve() : Promise.reject(new Error("Phải sau ngày bắt đầu.")),
-                    }),
-                  ]}
-                >
-                  <DatePicker format="DD/MM/YYYY" placeholder="Không hết hạn" style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item name="usageLimit" label="Tổng lượt dùng" extra={discount ? `Đã dùng ${discount.used} lượt` : "Để trống = không giới hạn"} style={{ marginBottom: 0 }}>
-                  <InputNumber min={1} precision={0} placeholder="Không giới hạn" style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item name="perCustomerLimit" label="Mỗi khách dùng tối đa" style={{ marginBottom: 0 }}>
-                  <InputNumber min={1} precision={0} suffix="lần" placeholder="Không giới hạn" style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-            </Row>
-          </FormSection>
-
-          <FormSection title="Trạng thái">
-            <SwitchField name="active" label="Đang bật" description="Tắt để tạm dừng mã ngay, không cần sửa ngày." last />
-          </FormSection>
-
-          {discount && <Performance code={discount.code} />}
-        </Flex>
-      </Form>
+            {discount && <Performance code={discount.code} />}
+          </Flex>
+        </Form>
+      ) : (
+        <DrawerFormSkeleton />
+      )}
     </Drawer>
   );
 }

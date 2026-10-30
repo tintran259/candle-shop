@@ -1,12 +1,13 @@
 import { DeleteOutlined } from "@ant-design/icons";
 import { App, Button, Col, ColorPicker, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Row, Typography } from "antd";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
 import { ExtraFields } from "@/components/craft/material-extra-fields";
 import { fromFormValues, toFormValues, type MaterialFormValues } from "@/components/craft/material-form";
 import { MaterialPreview } from "@/components/craft/material-preview";
+import { DrawerFormSkeleton } from "@/components/skeletons";
 import type { CraftCatalogApi } from "@/hooks/use-craft-catalog";
 import { optionGroups, unitLabel, type OptionGroup } from "@/lib/craft/groups";
 import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
@@ -30,6 +31,8 @@ export function MaterialDrawer({
   const meta = optionGroups[group];
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
+  // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
+  const ready = useDeferredValue(true, false);
   const [form] = Form.useForm<MaterialFormValues>();
   const unlimited = Form.useWatch("unlimited", form);
   const [dirty, setDirty] = useState(false);
@@ -105,84 +108,88 @@ export function MaterialDrawer({
         </Flex>
       }
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={toFormValues(group, item)}
-        onFinish={finish}
-        onValuesChange={() => setDirty(true)}
-        scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
-      >
-        <Flex vertical gap={16}>
-          <MaterialPreview unit={meta.unit} swatch={meta.swatch} groupLabel={meta.label} />
+      {ready ? (
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={toFormValues(group, item)}
+          onFinish={finish}
+          onValuesChange={() => setDirty(true)}
+          scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
+        >
+          <Flex vertical gap={16}>
+            <MaterialPreview unit={meta.unit} swatch={meta.swatch} groupLabel={meta.label} />
 
-          <FormSection title="Thông tin cơ bản" description="Tên và mô tả hiển thị cho khách trên trang Thủ công.">
-            <Row gutter={16}>
-              <Col xs={24} sm={12}>
-                <Form.Item name="nameVi" label="Tên (Tiếng Việt)" rules={[{ required: true, whitespace: true, message: "Nhập tên tiếng Việt." }]}>
-                  <Input autoFocus placeholder="VD: Sáp đậu nành" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item name="nameEn" label="Tên (English)" extra="Để trống sẽ dùng tên tiếng Việt.">
-                  <Input placeholder="VD: Soy wax" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item name="descVi" label="Mô tả ngắn (VI)" style={{ marginBottom: screens.sm === false ? undefined : 0 }}>
-                  <Input placeholder="VD: Cháy sạch, ít khói" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} sm={12}>
-                <Form.Item name="descEn" label="Mô tả ngắn (EN)" style={{ marginBottom: 0 }}>
-                  <Input placeholder="VD: Clean, low-soot burn" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </FormSection>
+            <FormSection title="Thông tin cơ bản" description="Tên và mô tả hiển thị cho khách trên trang Thủ công.">
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="nameVi" label="Tên (Tiếng Việt)" rules={[{ required: true, whitespace: true, message: "Nhập tên tiếng Việt." }]}>
+                    <Input autoFocus placeholder="VD: Sáp đậu nành" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="nameEn" label="Tên (English)" extra="Để trống sẽ dùng tên tiếng Việt.">
+                    <Input placeholder="VD: Soy wax" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="descVi" label="Mô tả ngắn (VI)" style={{ marginBottom: screens.sm === false ? undefined : 0 }}>
+                    <Input placeholder="VD: Cháy sạch, ít khói" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="descEn" label="Mô tả ngắn (EN)" style={{ marginBottom: 0 }}>
+                    <Input placeholder="VD: Clean, low-soot burn" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </FormSection>
 
-          <FormSection title="Giá & tồn kho" description="Phụ thu được cộng vào giá gốc theo kích thước.">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name="price" label="Phụ thu mỗi hũ">
-                  <MoneyInput />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="stock" label={`Tồn kho (${unitLabel[meta.unit]})`}>
-                  <InputNumber min={0} precision={0} disabled={unlimited} placeholder={unlimited ? "Không theo dõi" : undefined} style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
-            </Row>
-            <SwitchField name="unlimited" label="Không theo dõi tồn kho" description="Dùng cho lựa chọn kiểu “Không mùi”, “Không màu”." last />
-          </FormSection>
+            <FormSection title="Giá & tồn kho" description="Phụ thu được cộng vào giá gốc theo kích thước.">
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="price" label="Phụ thu mỗi hũ">
+                    <MoneyInput />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="stock" label={`Tồn kho (${unitLabel[meta.unit]})`}>
+                    <InputNumber min={0} precision={0} disabled={unlimited} placeholder={unlimited ? "Không theo dõi" : undefined} style={{ width: "100%" }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <SwitchField name="unlimited" label="Không theo dõi tồn kho" description="Dùng cho lựa chọn kiểu “Không mùi”, “Không màu”." last />
+            </FormSection>
 
-          <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ★ để đổi.`}>
-            <Form.Item name="images" noStyle>
-              <ImageUpload />
-            </Form.Item>
-          </FormSection>
+            <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ★ để đổi.`}>
+              <Form.Item name="images" noStyle>
+                <ImageUpload />
+              </Form.Item>
+            </FormSection>
 
-          <FormSection title="Hiển thị">
-            <SwitchField name="available" label="Đang bán" description="Tắt để tạm ẩn với khách dù vẫn còn hàng." last={!meta.swatch} />
-            {meta.swatch && (
-              <Flex justify="space-between" align="center" gap={16} style={{ paddingTop: 10 }}>
-                <Flex vertical>
-                  <Typography.Text strong>Màu hiển thị</Typography.Text>
-                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                    Dùng khi nguyên liệu chưa có ảnh.
-                  </Typography.Text>
+            <FormSection title="Hiển thị">
+              <SwitchField name="available" label="Đang bán" description="Tắt để tạm ẩn với khách dù vẫn còn hàng." last={!meta.swatch} />
+              {meta.swatch && (
+                <Flex justify="space-between" align="center" gap={16} style={{ paddingTop: 10 }}>
+                  <Flex vertical>
+                    <Typography.Text strong>Màu hiển thị</Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                      Dùng khi nguyên liệu chưa có ảnh.
+                    </Typography.Text>
+                  </Flex>
+                  <Form.Item name="swatch" noStyle getValueFromEvent={(color) => color.toHexString()}>
+                    <ColorPicker showText disabledAlpha aria-label="Màu hiển thị" />
+                  </Form.Item>
                 </Flex>
-                <Form.Item name="swatch" noStyle getValueFromEvent={(color) => color.toHexString()}>
-                  <ColorPicker showText disabledAlpha aria-label="Màu hiển thị" />
-                </Form.Item>
-              </Flex>
-            )}
-          </FormSection>
+              )}
+            </FormSection>
 
-          <ExtraFields group={group} catalog={api.catalog} />
-        </Flex>
-      </Form>
+            <ExtraFields group={group} catalog={api.catalog} />
+          </Flex>
+        </Form>
+      ) : (
+        <DrawerFormSkeleton />
+      )}
     </Drawer>
   );
 }

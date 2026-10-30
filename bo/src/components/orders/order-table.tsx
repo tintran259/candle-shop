@@ -1,4 +1,5 @@
 import { Flex, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { memo } from "react";
 import dayjs from "dayjs";
 import { ItemStack, PaymentTag, ReadyDate, StatusTag } from "@/components/orders/order-view";
 import { formatMoney } from "@/lib/format";
@@ -6,7 +7,7 @@ import { itemCount, providerLabels } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 
 // Bảng đơn hàng — bấm cả dòng để mở chi tiết
-export function OrderTable({ items, onOpen, pagination }: { items: Order[]; onOpen: (id: string) => void; pagination: TablePaginationConfig }) {
+function OrderTableView({ items, onOpen, pagination }: { items: Order[]; onOpen: (id: string) => void; pagination: TablePaginationConfig }) {
   const columns: TableProps<Order>["columns"] = [
     {
       title: "Mã đơn",
@@ -90,3 +91,6 @@ export function OrderTable({ items, onOpen, pagination }: { items: Order[]; onOp
     />
   );
 }
+
+// memo: mở/đóng drawer chỉ đổi ?order= / ?edit= trên URL — bảng giữ nguyên, không render lại
+export const OrderTable = memo(OrderTableView);

@@ -16,6 +16,10 @@ export const optionGroups: Record<
   decorations: { label: "Trang trí", description: "Chỉ mục đã duyệt an toàn mới hiện cho khách.", unit: "pcs", swatch: false },
 };
 
+// Thông báo đầu trang Thủ công (dùng cả trong skeleton để khung không đổi chiều cao)
+export const CRAFT_PREVIEW_NOTICE =
+  "Bản xem trước: thay đổi được lưu trên trình duyệt này và chưa đồng bộ lên website. Khi có API sẽ lưu về BE.";
+
 export const optionGroupKeys = Object.keys(optionGroups) as OptionGroup[];
 
 export const unitLabel: Record<Stock["unit"], string> = { g: "g", pcs: "cái" };

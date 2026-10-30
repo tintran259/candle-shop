@@ -1,5 +1,6 @@
 import { EditOutlined } from "@ant-design/icons";
 import { Button, Flex, Progress, Switch, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { memo } from "react";
 import dayjs from "dayjs";
 import type { DiscountsApi } from "@/hooks/use-discounts";
 import { conditionText, discountStatus, periodHint, periodText, statusMeta, valueText } from "@/lib/discounts/labels";
@@ -9,7 +10,7 @@ import { brand } from "@/theme";
 
 type Props = { items: Discount[]; api: DiscountsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig };
 
-export function DiscountTable({ items, api, onEdit, pagination }: Props) {
+function DiscountTableView({ items, api, onEdit, pagination }: Props) {
   const columns: TableProps<Discount>["columns"] = [
     {
       title: "Mã",
@@ -136,3 +137,6 @@ export function DiscountTable({ items, api, onEdit, pagination }: Props) {
     />
   );
 }
+
+// memo: mở/đóng drawer chỉ đổi ?order= / ?edit= trên URL — bảng giữ nguyên, không render lại
+export const DiscountTable = memo(DiscountTableView);

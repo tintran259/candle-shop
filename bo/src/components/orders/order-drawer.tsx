@@ -1,5 +1,5 @@
 import { Alert, App, Button, Col, Drawer, Flex, Form, Grid, Input, Modal, Result, Row, Typography } from "antd";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { OrderProcess } from "@/components/orders/order-process";
 import { CustomerSection } from "@/components/orders/order-customer";
 import { PaymentSection } from "@/components/orders/order-payment";
@@ -19,6 +19,10 @@ export function OrderDrawer({ open, order, api, onClose }: Props) {
   const screens = Grid.useBreakpoint();
   const [cancelOpen, setCancelOpen] = useState(false);
   const width = screens.xl ? 1080 : screens.lg ? 920 : "100%";
+  // Mở đơn mới: drawer trượt ra ngay với khung xương, nội dung chi tiết (nặng) render sau ở chế độ
+  // ưu tiên thấp — React chia nhỏ việc render nên không chặn hiệu ứng trượt. Mở lại đúng đơn cũ thì hiện ngay.
+  const readyId = useDeferredValue(order?.id, undefined);
+  const ready = !!order && readyId === order.id;
 
   return (
     <Drawer
@@ -40,7 +44,7 @@ export function OrderDrawer({ open, order, api, onClose }: Props) {
       size={width}
       styles={{ header: { background: "#fff" }, body: { padding: screens.md ? 24 : 16 } }}
     >
-      {api.loading && <OrderDetailSkeleton />}
+      {(api.loading || (order && !ready)) && <OrderDetailSkeleton />}
       {!api.loading && !order && (
         <Result
           status="404"
@@ -49,7 +53,7 @@ export function OrderDrawer({ open, order, api, onClose }: Props) {
           extra={<Button onClick={onClose}>Về danh sách đơn</Button>}
         />
       )}
-      {!api.loading && order && (
+      {!api.loading && order && ready && (
         <Flex vertical gap={16}>
           <OrderProcess order={order} api={api} onCancel={() => setCancelOpen(true)} />
           <Row gutter={[16, 16]}>

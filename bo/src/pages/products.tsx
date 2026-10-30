@@ -1,14 +1,15 @@
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Grid, Pagination, Popconfirm, Row, Statistic, Typography } from "antd";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ProductDrawer } from "@/components/products/product-drawer";
 import { ProductGrid } from "@/components/products/product-grid";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductToolbar } from "@/components/products/product-toolbar";
-import { ListPageSkeleton } from "@/components/skeletons";
+import { ProductsSkeleton } from "@/components/skeletons";
 import { useProducts } from "@/hooks/use-products";
 import { applyFilters, defaultFilters, type ProductFilters, type ViewMode } from "@/lib/products/filters";
 import { discountPercent } from "@/lib/products/labels";
+import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
 
@@ -18,25 +19,30 @@ export function ProductsPage() {
   const api = useProducts();
   const screens = Grid.useBreakpoint();
   const [filters, setFiltersState] = useState<ProductFilters>(defaultFilters);
-  const items = applyFilters(api.products, filters);
+  // Memo để bảng/lưới (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
+  const items = useMemo(() => applyFilters(api.products, filters), [api.products, filters]);
   const pager = usePageQuery(api.loading ? undefined : items.length);
+  const { paginationProps, paginate } = pager;
+  const pagination = useMemo(() => paginationProps(items.length, "sản phẩm"), [paginationProps, items.length]);
+  const pageItems = useMemo(() => paginate(items).pageItems, [paginate, items]);
   // Đổi bộ lọc thì quay về trang 1
   const setFilters = (f: ProductFilters) => {
     setFiltersState(f);
     pager.resetPage();
   };
   const [view, setView] = useState<ViewMode | null>(null);
-  // null = đóng, "new" = thêm mới, còn lại là id đang sửa
-  const [editing, setEditing] = useState<string | null>(null);
+  // Trên URL (?edit=): null = đóng, "new" = thêm mới, còn lại là id đang sửa
+  const [editing, setEditing] = useOpenParam("edit");
 
   const { products } = api;
   // Mobile mặc định xem dạng lưới cho dễ bấm
   const mode: ViewMode = view ?? (screens.md === false ? "grid" : "table");
-  const current = editing && editing !== "new" ? products.find((p) => p.id === editing) : undefined;
+  // Đóng drawer thì URL bỏ ?edit= ngay — giữ mục cũ (cùng key) để drawer trượt ra có hiệu ứng
+  const { shown, key: drawerKey } = useDrawerTarget(editing);
+  const current = shown && shown !== "new" ? products.find((p) => p.id === shown) : undefined;
 
-  if (api.loading) return <ListPageSkeleton label="Đang tải sản phẩm…" />;
+  if (api.loading) return <ProductsSkeleton />;
 
-  const pagination = pager.paginationProps(items.length, "sản phẩm");
   const stats = [
     { label: "Sản phẩm", value: products.length },
     { label: "Đang bán", value: products.filter((p) => p.status === "active").length },
@@ -108,7 +114,7 @@ export function ProductsPage() {
         </Card>
       ) : (
         <Flex vertical gap={16}>
-          <ProductGrid items={pager.paginate(items).pageItems} api={api} onEdit={setEditing} />
+          <ProductGrid items={pageItems} api={api} onEdit={setEditing} />
           <Card styles={{ body: { padding: "12px 16px" } }}>
             <Flex justify="flex-end">
               <Pagination {...pagination} />
@@ -117,7 +123,7 @@ export function ProductsPage() {
         </Flex>
       )}
 
-      <ProductDrawer key={editing ?? "closed"} open={editing !== null} product={current} api={api} onClose={() => setEditing(null)} />
+      <ProductDrawer key={drawerKey} open={editing !== null && (editing === "new" || !!current)} product={current} api={api} onClose={() => setEditing(null)} />
     </Flex>
   );
 }

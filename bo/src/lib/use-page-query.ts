@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router";
+import { useUpdateSearch } from "@/lib/use-update-search";
 
 export const PAGE_SIZES = [10, 20, 50] as const;
 const DEFAULT_LIMIT = 10;
@@ -12,8 +13,10 @@ const toInt = (v: string | null) => {
 // Phân trang lưu trên URL (?page=2&limit=20): tải lại trang, gửi link hay bấm Back đều giữ đúng trang.
 // Các tham số khác trên URL (vd ?order=, ?tab=) được giữ nguyên.
 // total: tổng số dòng (khi dữ liệu đã tải xong) — để sửa URL khi page vượt quá trang cuối.
+// Các hàm trả về chỉ đổi khi page/limit đổi, để bảng memo không render lại vì tham số khác trên URL.
 export function usePageQuery(total?: number) {
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
+  const update = useUpdateSearch();
   const rawLimit = toInt(params.get("limit"));
   const limit = (PAGE_SIZES as readonly number[]).includes(rawLimit) ? rawLimit : DEFAULT_LIMIT;
   const requested = Math.max(1, toInt(params.get("page")) || 1);
@@ -23,49 +26,52 @@ export function usePageQuery(total?: number) {
   const normalized = params.get("page") === String(page) && params.get("limit") === String(limit);
   useEffect(() => {
     if (normalized) return;
-    setParams(
-      (p) => {
-        p.set("page", String(page));
-        p.set("limit", String(limit));
-        return p;
-      },
-      { replace: true },
-    );
-  }, [normalized, page, limit, setParams]);
+    update((p) => {
+      p.set("page", String(page));
+      p.set("limit", String(limit));
+    }, true);
+  }, [normalized, page, limit, update]);
 
   // extra: các tham số khác cần đổi cùng lúc (vd đổi tab thì về trang 1) — gộp vào một lần cập nhật URL
-  const go = (nextPage: number, nextLimit = limit, extra?: Record<string, string | null>) =>
-    setParams(
-      (p) => {
+  const go = useCallback(
+    (nextPage: number, nextLimit = limit, extra?: Record<string, string | null>) =>
+      update((p) => {
         p.set("page", String(nextPage));
         p.set("limit", String(nextLimit));
         for (const [k, v] of Object.entries(extra ?? {})) {
           if (v === null) p.delete(k);
           else p.set(k, v);
         }
-        return p;
-      },
-      { replace: true },
-    );
+      }, true),
+    [update, limit],
+  );
 
   // Cắt danh sách theo trang; trang vượt quá thì lùi về trang cuối
-  const paginate = <T,>(items: T[]) => {
-    const pages = Math.max(1, Math.ceil(items.length / limit));
-    const current = Math.min(page, pages);
-    return { current, pageItems: items.slice((current - 1) * limit, current * limit) };
-  };
+  const paginate = useCallback(
+    <T,>(items: T[]) => {
+      const pages = Math.max(1, Math.ceil(items.length / limit));
+      const current = Math.min(page, pages);
+      return { current, pageItems: items.slice((current - 1) * limit, current * limit) };
+    },
+    [page, limit],
+  );
 
   // Props cho Table/Pagination của antd. Đổi số dòng mỗi trang thì quay về trang 1
-  const paginationProps = (total: number, unit = "mục") => ({
-    current: Math.min(page, Math.max(1, Math.ceil(total / limit))),
-    pageSize: limit,
-    total,
-    showSizeChanger: true,
-    pageSizeOptions: PAGE_SIZES.map(String),
-    hideOnSinglePage: false,
-    showTotal: (t: number, [from, to]: [number, number]) => `${from}–${to} / ${t} ${unit}`,
-    onChange: (p: number, size: number) => go(size !== limit ? 1 : p, size),
-  });
+  const paginationProps = useCallback(
+    (total: number, unit = "mục") => ({
+      current: Math.min(page, Math.max(1, Math.ceil(total / limit))),
+      pageSize: limit,
+      total,
+      showSizeChanger: true,
+      pageSizeOptions: PAGE_SIZES.map(String),
+      hideOnSinglePage: false,
+      showTotal: (t: number, [from, to]: [number, number]) => `${from}–${to} / ${t} ${unit}`,
+      onChange: (p: number, size: number) => go(size !== limit ? 1 : p, size),
+    }),
+    [page, limit, go],
+  );
 
-  return { page, limit, go, paginate, paginationProps, resetPage: () => go(1) };
+  const resetPage = useCallback(() => go(1), [go]);
+
+  return { page, limit, go, paginate, paginationProps, resetPage };
 }

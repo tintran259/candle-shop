@@ -1,14 +1,15 @@
 import { PlusOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Input, Popconfirm, Row, Segmented, Select, Statistic, Typography } from "antd";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DiscountDrawer } from "@/components/discounts/discount-drawer";
 import { DiscountTable } from "@/components/discounts/discount-table";
-import { ListPageSkeleton } from "@/components/skeletons";
+import { DiscountsSkeleton } from "@/components/skeletons";
 import { useDiscounts } from "@/hooks/use-discounts";
 import { useOrders } from "@/hooks/use-orders";
 import { discountStatus, normalizeCode, periodHint, statusMeta, type DiscountStatus } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoneyShort, formatNumber } from "@/lib/format";
+import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
 
@@ -35,22 +36,27 @@ export function DiscountsPage() {
   const api = useDiscounts();
   const { orders, loading: ordersLoading } = useOrders();
   const [filters, setFiltersState] = useState<Filters>(defaultFilters);
-  // null = đóng, "new" = tạo mới, còn lại là id đang sửa
-  const [editing, setEditing] = useState<string | null>(null);
-  const items = applyFilters(api.discounts, filters);
+  // Trên URL (?edit=): null = đóng, "new" = tạo mới, còn lại là id đang sửa
+  const [editing, setEditing] = useOpenParam("edit");
+  // Đóng drawer thì URL bỏ ?edit= ngay — giữ mục cũ (cùng key) để drawer trượt ra có hiệu ứng
+  const { shown, key: drawerKey } = useDrawerTarget(editing);
+  // Memo để bảng (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
+  const items = useMemo(() => applyFilters(api.discounts, filters), [api.discounts, filters]);
   const pager = usePageQuery(api.loading ? undefined : items.length);
+  const { paginationProps } = pager;
+  const pagination = useMemo(() => paginationProps(items.length, "mã"), [paginationProps, items.length]);
   const setFilters = (f: Filters) => {
     setFiltersState(f);
     pager.resetPage();
   };
 
-  if (api.loading || ordersLoading) return <ListPageSkeleton label="Đang tải mã giảm giá…" />;
+  if (api.loading || ordersLoading) return <DiscountsSkeleton />;
 
   const { discounts } = api;
   const count = (s: DiscountStatus | "all") => (s === "all" ? discounts.length : discounts.filter((d) => discountStatus(d) === s).length);
   const endingSoon = discounts.filter((d) => periodHint(d)?.urgent).length;
   const saved = orders.filter((o) => o.discountCode && o.status !== "cancelled").reduce((s, o) => s + o.discount, 0);
-  const current = editing && editing !== "new" ? discounts.find((d) => d.id === editing) : undefined;
+  const current = shown && shown !== "new" ? discounts.find((d) => d.id === shown) : undefined;
 
   const stats = [
     { label: "Đang chạy", value: formatNumber(count("running")), note: endingSoon ? `${endingSoon} mã sắp hết hạn` : undefined },
@@ -127,7 +133,7 @@ export function DiscountsPage() {
 
       <Card styles={{ body: { padding: 12 } }}>
         {items.length ? (
-          <DiscountTable items={items} api={api} onEdit={setEditing} pagination={pager.paginationProps(items.length, "mã")} />
+          <DiscountTable items={items} api={api} onEdit={setEditing} pagination={pagination} />
         ) : (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={discounts.length ? "Không có mã khớp bộ lọc." : "Chưa có mã giảm giá nào."}>
             {discounts.length ? (
@@ -141,7 +147,7 @@ export function DiscountsPage() {
         )}
       </Card>
 
-      <DiscountDrawer key={editing ?? "closed"} open={editing !== null} discount={current} api={api} onClose={() => setEditing(null)} />
+      <DiscountDrawer key={drawerKey} open={editing !== null && (editing === "new" || !!current)} discount={current} api={api} onClose={() => setEditing(null)} />
     </Flex>
   );
 }

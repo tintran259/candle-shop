@@ -8,7 +8,7 @@ import { RulesPanel } from "@/components/craft/rules-panel";
 import { SizeTable } from "@/components/craft/size-table";
 import { CraftSkeleton } from "@/components/skeletons";
 import { useCraftCatalog } from "@/hooks/use-craft-catalog";
-import { optionGroupKeys, optionGroups, stockLevel, type OptionGroup } from "@/lib/craft/groups";
+import { CRAFT_PREVIEW_NOTICE, optionGroupKeys, optionGroups, stockLevel, type OptionGroup } from "@/lib/craft/groups";
 import type { BaseOption, CustomizerCatalog } from "@/lib/craft/types";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
@@ -37,7 +37,7 @@ export function CraftPage() {
   const pager = usePageQuery();
   const tabKeys = [...optionGroupKeys, "rules"] as string[];
   const tab = tabKeys.includes(params.get("tab") ?? "") ? params.get("tab")! : "containers";
-  const setTab = (next: string) => pager.go(1, pager.limit, { tab: next });
+  const setTab = (next: string) => pager.go(1, pager.limit, { tab: next, edit: null });
 
   // Bấm một ô "Cần nhập thêm" → mở tab nhóm đó và cuộn tới bảng
   const openGroup = (group: OptionGroup) => {
@@ -77,7 +77,7 @@ export function CraftPage() {
       <Alert
         type="info"
         showIcon
-        title="Bản xem trước: thay đổi được lưu trên trình duyệt này và chưa đồng bộ lên website. Khi có API sẽ lưu về BE."
+        title={CRAFT_PREVIEW_NOTICE}
       />
 
       <Row gutter={[16, 16]}>
@@ -108,11 +108,11 @@ export function CraftPage() {
             children:
               g === "containers" ? (
                 <Flex vertical gap={16}>
-                  <MaterialTable group={g} api={api} />
+                  <MaterialTable group={g} api={api} active={tab === g} />
                   <SizeTable api={api} />
                 </Flex>
               ) : (
-                <MaterialTable group={g} api={api} />
+                <MaterialTable group={g} api={api} active={tab === g} />
               ),
           })),
           { key: "rules", label: "Quy tắc & cá nhân hóa", children: <RulesPanel api={api} /> },

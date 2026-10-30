@@ -1,7 +1,9 @@
-import { BellOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined } from "@ant-design/icons";
-import { Avatar, Badge, Button, Flex, Grid, Input, Layout, Menu, Tag, Tooltip, Typography, type MenuProps } from "antd";
+import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { Avatar, Badge, Button, Flex, Grid, Layout, Menu, Tag, Tooltip, Typography, type MenuProps } from "antd";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useNavigation } from "react-router";
+import { GlobalSearch } from "@/components/header/global-search";
+import { NotificationBell } from "@/components/header/notification-bell";
 import { RouteSkeleton } from "@/components/skeletons";
 import { useOrders } from "@/hooks/use-orders";
 import { findNavItem, navGroups, type NavItem } from "@/layouts/nav";
@@ -147,18 +149,8 @@ export function AppLayout() {
           <Typography.Text type="secondary">{current?.label ?? "Không tìm thấy"}</Typography.Text>
 
           <Flex align="center" gap={8} style={{ marginLeft: "auto" }}>
-            {!mobile && (
-              <Input
-                prefix={<SearchOutlined style={{ color: "#6b6b6b" }} />}
-                placeholder="Tìm đơn hàng, sản phẩm…"
-                aria-label="Tìm kiếm"
-                allowClear
-                style={{ width: 280, borderRadius: 999, background: "#fff", borderColor: "transparent" }}
-              />
-            )}
-            <Badge dot offset={[-6, 6]}>
-              <Button shape="circle" aria-label="Thông báo" icon={<BellOutlined />} style={{ borderColor: "transparent" }} />
-            </Badge>
+            <GlobalSearch compact={mobile} />
+            <NotificationBell compact={mobile} />
           </Flex>
         </Header>
 

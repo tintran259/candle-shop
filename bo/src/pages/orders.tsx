@@ -1,16 +1,16 @@
 import { ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Popconfirm, Row, Statistic, Tabs, Typography } from "antd";
-import { useState } from "react";
-import { useSearchParams } from "react-router";
+import { useMemo, useState } from "react";
 import { OrderDrawer } from "@/components/orders/order-drawer";
 import { OrderTable } from "@/components/orders/order-table";
 import { OrderToolbar } from "@/components/orders/order-toolbar";
-import { ListPageSkeleton } from "@/components/skeletons";
+import { OrdersSkeleton } from "@/components/skeletons";
 import { useOrders } from "@/hooks/use-orders";
 import { formatMoneyShort } from "@/lib/format";
 import { applyOrderFilters, defaultOrderFilters, type OrderFilters } from "@/lib/orders/filters";
 import { deadline, remaining, statusMeta } from "@/lib/orders/labels";
 import { orderFlow, type OrderStatus } from "@/lib/orders/types";
+import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
 
@@ -22,36 +22,31 @@ export function OrdersPage() {
   const api = useOrders();
   const { orders } = api;
   const [filters, setFiltersState] = useState<OrderFilters>(defaultOrderFilters);
-  const items = applyOrderFilters(orders, filters);
+  // Memo để bảng (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
+  const items = useMemo(() => applyOrderFilters(orders, filters), [orders, filters]);
   const pager = usePageQuery(api.loading ? undefined : items.length);
+  const { paginationProps } = pager;
+  const pagination = useMemo(() => paginationProps(items.length, "đơn"), [paginationProps, items.length]);
   // Đổi bộ lọc thì quay về trang 1
   const setFilters = (f: OrderFilters) => {
     setFiltersState(f);
     pager.resetPage();
   };
-  // Đơn đang mở nằm trên URL (?order=id) — Dashboard link thẳng tới, gửi link được, nút Back đóng drawer
-  const [params, setParams] = useSearchParams();
-  const openId = params.get("order");
-  const setOpenId = (id: string | null) =>
-    setParams(
-      (p) => {
-        if (id) p.set("order", id);
-        else p.delete("order");
-        return p;
-      },
-      { replace: !id },
-    );
+  // Đơn đang mở nằm trên URL (?order=id) — Dashboard, tìm kiếm, thông báo link thẳng tới
+  const [openId, setOpenId] = useOpenParam("order");
+  // Đóng drawer thì URL bỏ ?order= ngay — giữ đơn vừa xem để drawer trượt ra vẫn đúng nội dung
+  const { shown: shownId } = useDrawerTarget(openId);
 
   const count = (s: OrderStatus | "all") => (s === "all" ? orders.length : orders.filter((o) => o.status === s).length);
   const late = orders.filter((o) => deadline(o)?.tone === "danger").length;
   const toCollect = orders.filter((o) => !["pending", "cancelled"].includes(o.status)).reduce((s, o) => s + remaining(o), 0);
 
-  const drawer = <OrderDrawer open={!!openId} order={orders.find((o) => o.id === openId)} api={api} onClose={() => setOpenId(null)} />;
+  const drawer = <OrderDrawer open={!!openId} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} />;
 
   if (api.loading)
     return (
       <>
-        <ListPageSkeleton label="Đang tải đơn hàng…" />
+        <OrdersSkeleton />
         {drawer}
       </>
     );
@@ -106,7 +101,7 @@ export function OrdersPage() {
 
       <Card styles={{ body: { padding: 12 } }}>
         {items.length ? (
-          <OrderTable items={items} onOpen={setOpenId} pagination={pager.paginationProps(items.length, "đơn")} />
+          <OrderTable items={items} onOpen={setOpenId} pagination={pagination} />
         ) : (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đơn hàng khớp bộ lọc.">
             <Button onClick={() => setFilters(defaultOrderFilters)}>Xóa bộ lọc</Button>

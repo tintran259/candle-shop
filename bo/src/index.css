@@ -6,6 +6,16 @@ body,
   min-height: 100%;
 }
 
+/* Luôn chừa chỗ thanh cuộn: trang ngắn (skeleton) → trang dài không làm nội dung co lại ~15px */
+html {
+  scrollbar-gutter: stable;
+}
+/* Mở drawer/modal: antd khoá cuộn và tự trừ bề rộng thanh cuộn khỏi body. Chỗ thanh cuộn đã được chừa
+   sẵn ở trên nên trừ thêm sẽ làm nội dung phía sau co lại ~15px — giữ nguyên bề rộng */
+html body {
+  width: auto !important;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   background: #f6f6f3;
@@ -24,10 +34,48 @@ body {
   border: 0;
 }
 
-/* Khung sidebar giả trong skeleton lần đầu — ẩn trên mobile như sidebar thật */
+/* Thanh skeleton đặt trong dòng chữ thật (xem Bar trong skeletons.tsx) */
+.skel-bar {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06) 25%, rgba(0, 0, 0, 0.12) 37%, rgba(0, 0, 0, 0.06) 63%);
+  background-size: 400% 100%;
+  animation: skel-shimmer 1.4s ease infinite;
+}
+@keyframes skel-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0 50%;
+  }
+}
+/* Dòng mô tả thứ 2 chỉ có trên mobile (mô tả thật xuống dòng) */
+.skel-mobile-line {
+  display: none;
+}
+@media (max-width: 575px) {
+  .skel-mobile-line {
+    display: block;
+  }
+}
+
+/* Khung giả lần đầu mở app — cùng kích thước với layout thật (app-layout.tsx) để không nhảy khi tải xong */
+.shell-sider {
+  width: 256px;
+  margin: 16px 0 16px 16px;
+}
+.shell-content {
+  padding: 88px 24px 24px;
+}
 @media (max-width: 767px) {
   .shell-sider {
     display: none;
+  }
+  .shell-content {
+    padding: 88px 16px 16px;
   }
 }
 
@@ -48,6 +96,10 @@ body {
   .ant-statistic-content {
     font-size: 28px !important;
     overflow-wrap: anywhere;
+  }
+  /* Thẻ thống kê nửa màn hình: bớt padding để số tiền (vd "765.000 ₫") không rơi xuống 2 dòng */
+  .ant-card-body:has(> .ant-statistic) {
+    padding: 16px;
   }
 }
 
@@ -156,5 +208,113 @@ body {
   .restock-tile-arrow,
   .product-cover img {
     transition: none;
+  }
+  .skel-bar {
+    animation: none;
+  }
+}
+
+/* Ô tìm kiếm trên header — trông như input, bấm mở bảng tìm nhanh */
+.search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  height: 36px;
+  padding: 0 6px 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b6b6b;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease-out;
+}
+.search-trigger:hover {
+  border-color: #e8b48a;
+}
+.search-trigger:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: 2px;
+}
+.kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #f6f6f3;
+  border: 1px solid #ebebe6;
+  color: #454545;
+  font: 500 11px/18px Inter, sans-serif;
+  text-align: center;
+}
+.search-hints {
+  color: #6b6b6b;
+  font-size: 12px;
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.search-row[aria-selected="true"] {
+  background: #fbf1e8;
+}
+.search-row-enter {
+  color: #7a3f17;
+  visibility: hidden;
+}
+.search-row[aria-selected="true"] .search-row-enter {
+  visibility: visible;
+}
+.search-mark {
+  padding: 0;
+  background: #f6dcc5;
+  color: inherit;
+  border-radius: 2px;
+}
+
+/* Dòng thông báo: chưa đọc có nền nhạt + chấm */
+.notif-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+.notif-row.is-unread {
+  background: #fcf8f4;
+}
+.notif-row:hover {
+  background: #fbf1e8;
+}
+.notif-row:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: -2px;
+}
+.notif-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #b5652e;
+}
+
+/* Màn hình cảm ứng không có bàn phím — ẩn gợi ý phím tắt */
+@media (hover: none) {
+  .search-hints {
+    display: none !important;
   }
 }

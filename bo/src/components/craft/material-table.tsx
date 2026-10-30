@@ -1,21 +1,25 @@
 import { EditOutlined, PlusOutlined, SafetyCertificateOutlined, WarningOutlined } from "@ant-design/icons";
 import { Button, Card, Flex, Switch, Table, Typography, type TableProps } from "antd";
-import { useState } from "react";
 import { MaterialDrawer } from "@/components/craft/material-drawer";
 import { MaterialAvatar, StockText } from "@/components/craft/material-view";
 import type { CraftCatalogApi } from "@/hooks/use-craft-catalog";
+import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { formatDelta, lookLabels, optionGroups, shapeLabels, type OptionGroup } from "@/lib/craft/groups";
 import type { BaseOption, ContainerOption, CustomizerCatalog, DecorationOption, WickOption } from "@/lib/craft/types";
 
 // Bảng nguyên liệu của một nhóm: bật/tắt bán ngay trên bảng, sửa chi tiết trong drawer
-export function MaterialTable({ group, api }: { group: OptionGroup; api: CraftCatalogApi }) {
+// active: tab đang xem — chỉ tab này mở drawer theo ?edit= trên URL (các tab đã xem vẫn còn mount)
+export function MaterialTable({ group, api, active }: { group: OptionGroup; api: CraftCatalogApi; active: boolean }) {
   const items = api.catalog[group] as BaseOption[];
   const pager = usePageQuery(items.length);
   const meta = optionGroups[group];
-  // null = đóng, "new" = thêm mới, còn lại là id đang sửa
-  const [editing, setEditing] = useState<string | null>(null);
-  const current = editing && editing !== "new" ? items.find((o) => o.id === editing) : undefined;
+  // Trên URL (?tab=waxes&edit=id): null = đóng, "new" = thêm mới, còn lại là id đang sửa
+  const [param, setEditing] = useOpenParam("edit");
+  const editing = active ? param : null;
+  // Giữ mục cũ lúc drawer trượt ra; key đổi mỗi lần mở để form luôn bắt đầu mới
+  const { shown, key: drawerKey } = useDrawerTarget(editing);
+  const current = shown && shown !== "new" ? items.find((o) => o.id === shown) : undefined;
 
   const columns: TableProps<BaseOption>["columns"] = [
     {
@@ -72,7 +76,7 @@ export function MaterialTable({ group, api }: { group: OptionGroup; api: CraftCa
         scroll={{ x: "max-content" }}
         locale={{ emptyText: "Chưa có nguyên liệu nào — bấm “Thêm” để tạo." }}
       />
-      <MaterialDrawer key={editing ?? "closed"} open={editing !== null} group={group} item={current} api={api} onClose={() => setEditing(null)} />
+      <MaterialDrawer key={drawerKey} open={editing !== null && (editing === "new" || !!current)} group={group} item={current} api={api} onClose={() => setEditing(null)} />
     </Card>
   );
 }

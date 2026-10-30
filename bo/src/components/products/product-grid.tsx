@@ -1,5 +1,6 @@
 import { EditOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Row, Switch, Tag, Typography } from "antd";
+import { memo } from "react";
 import { PriceText, ProductBadges, RatingText } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
 import { aromaTypeColors, aromaTypeLabels, sizeLabels } from "@/lib/products/labels";
@@ -9,7 +10,7 @@ import { brand, radius } from "@/theme";
 type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void };
 
 // Lưới thẻ sản phẩm — nhìn ảnh để rà nhanh; bấm ảnh hoặc tên để sửa
-export function ProductGrid({ items, api, onEdit }: Props) {
+function ProductGridView({ items, api, onEdit }: Props) {
   return (
     <Row gutter={[16, 16]}>
       {items.map((p) => (
@@ -70,3 +71,6 @@ export function ProductGrid({ items, api, onEdit }: Props) {
     </Row>
   );
 }
+
+// memo: mở/đóng drawer chỉ đổi ?order= / ?edit= trên URL — bảng giữ nguyên, không render lại
+export const ProductGrid = memo(ProductGridView);

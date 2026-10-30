@@ -1,6 +1,6 @@
 import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import { Button, Flex, Popconfirm, Switch, Table, Tag, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { PriceText, ProductBadges, ProductThumb, RatingText } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
 import { formatNumber } from "@/lib/format";
@@ -11,7 +11,7 @@ import { brand } from "@/theme";
 type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig };
 
 // Bảng sản phẩm: chọn nhiều để ẩn/hiện/xóa hàng loạt; bật/tắt bán và nổi bật ngay trên dòng
-export function ProductTable({ items, api, onEdit, pagination }: Props) {
+function ProductTableView({ items, api, onEdit, pagination }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   // Bỏ các id không còn trong danh sách đang lọc
   const picked = selected.filter((id) => items.some((p) => p.id === id));
@@ -145,3 +145,6 @@ export function ProductTable({ items, api, onEdit, pagination }: Props) {
     </>
   );
 }
+
+// memo: mở/đóng drawer chỉ đổi ?order= / ?edit= trên URL — bảng giữ nguyên, không render lại
+export const ProductTable = memo(ProductTableView);
