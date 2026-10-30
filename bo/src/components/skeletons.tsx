@@ -42,15 +42,15 @@ export function PageHeaderSkeleton({ action = true, subLines = 2 }: { action?: b
   );
 }
 
-// Giống hàng thẻ Statistic; note = vị trí thẻ có dòng ghi chú bên dưới (vd "2 đơn trễ hạn")
-export function StatsSkeleton({ count = 4, note }: { count?: number; note?: number }) {
+// Giống hàng thẻ Statistic; note = vị trí thẻ có dòng ghi chú bên dưới (vd "2 đơn trễ hạn"), "all" = mọi thẻ
+export function StatsSkeleton({ count = 4, note }: { count?: number; note?: number | "all" }) {
   return (
     <Row gutter={[16, 16]}>
       {Array.from({ length: count }, (_, i) => (
         <Col key={i} xs={12} lg={24 / count}>
           <Card style={{ height: "100%" }}>
             <Statistic title={<Bar width={90} />} valueRender={() => <Bar width={72} height={28} />} />
-            {note === i && (
+            {(note === i || note === "all") && (
               <Typography.Text style={{ fontSize: 13 }}>
                 <Bar width={110} height={12} />
               </Typography.Text>
@@ -196,7 +196,7 @@ export function ListPageSkeleton({
   subLines = 2,
 }: {
   label: string;
-  statNote?: number;
+  statNote?: number | "all";
   toolbar: ReactNode;
   subLines?: 1 | 2;
 }) {
@@ -267,6 +267,51 @@ export function DrawerFormSkeleton() {
             <Skeleton active title={{ width: 160 }} paragraph={{ rows }} />
           </Card>
         ))}
+      </Flex>
+    </Busy>
+  );
+}
+
+// Hồ sơ khách (trong drawer): thẻ tổng quan + 4 ô số liệu, rồi 2 cột thẻ
+export function CustomerDetailSkeleton() {
+  const card = (rows: number) => (
+    <Card>
+      <Skeleton active title={{ width: 140 }} paragraph={{ rows }} />
+    </Card>
+  );
+  return (
+    <Busy label="Đang tải hồ sơ khách…">
+      <Flex vertical gap={16}>
+        <Card styles={{ body: { padding: 20 } }}>
+          <Flex gap={16} align="center">
+            <Skeleton.Avatar active size={64} />
+            <Flex vertical gap={8} style={{ flex: 1 }}>
+              <Skeleton.Input active style={{ width: 200, height: 28 }} />
+              <Skeleton.Input active size="small" style={{ width: 260, maxWidth: "60vw" }} />
+            </Flex>
+          </Flex>
+          <Row gutter={[12, 12]} style={{ marginTop: 20 }}>
+            {Array.from({ length: 4 }, (_, i) => (
+              <Col key={i} xs={12} md={6}>
+                <Skeleton.Input active block style={{ height: 72, borderRadius: radius.inner }} />
+              </Col>
+            ))}
+          </Row>
+        </Card>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={15}>
+            <Flex vertical gap={16}>
+              {card(6)}
+              {card(3)}
+            </Flex>
+          </Col>
+          <Col xs={24} lg={9}>
+            <Flex vertical gap={16}>
+              {card(4)}
+              {card(3)}
+            </Flex>
+          </Col>
+        </Row>
       </Flex>
     </Busy>
   );
@@ -371,12 +416,35 @@ export const DiscountsSkeleton = () => (
   />
 );
 
+export const CustomersSkeleton = () => (
+  <ListPageSkeleton
+    label="Đang tải khách hàng…"
+    statNote="all"
+    toolbar={
+      <ToolbarSkeleton
+        rows={[
+          { fields: [{ width: 640, maxWidth: "100%" }] },
+          {
+            fields: [
+              { flex: "1 1 260px" },
+              { flex: "0 1 160px", minWidth: 140 },
+              { flex: "0 1 170px", minWidth: 130 },
+              { flex: "0 1 160px", minWidth: 140 },
+            ],
+          },
+        ]}
+      />
+    }
+  />
+);
+
 export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname === "/") return <DashboardSkeleton />;
   if (pathname.startsWith("/craft")) return <CraftSkeleton />;
   if (pathname.startsWith("/orders")) return <OrdersSkeleton />;
   if (pathname.startsWith("/products")) return <ProductsSkeleton />;
   if (pathname.startsWith("/discounts")) return <DiscountsSkeleton />;
+  if (pathname.startsWith("/customers")) return <CustomersSkeleton />;
   return <ListPageSkeleton label="Đang tải trang…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 150 }] }]} />} />;
 }
 

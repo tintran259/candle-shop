@@ -47,6 +47,17 @@ const seeds: Seed[] = [
   { name: "Mai Phương Thảo", phone: "0911 990 011", address: "3 Hàng Bài, Hoàn Kiếm, Hà Nội", items: [[product("beach-sunshine"), 1]], status: "cancelled", placed: -3, readyAfter: 3, plan: "full", method: "vnpay", cancelReason: "Khách đổi ý, đã hoàn tiền." },
   { name: "Đặng Minh Khoa", phone: "0923 445 667", address: "18 Lê Duẩn, Q.1, TP.HCM", items: [[product("citrus-bloom"), 1]], status: "pending", placed: -2, readyAfter: 2, plan: "full", method: "momo" },
   { name: "Trịnh Hải Yến", phone: "0936 778 112", address: "41 Kim Mã, Ba Đình, Hà Nội", items: [[custom("Hũ gốm · 200g · Sáp ong · Rose + White Tea · Topping sáp", 1_045_000), 1]], status: "paid", placed: -1, readyAfter: 3, plan: "deposit", method: "vnpay" },
+  // Đơn cũ đã hoàn tất — để trang Khách hàng có khách VIP, khách quen và khách lâu chưa quay lại
+  { name: "Ngô Thanh Vy", phone: "0944 889 900", address: "14 Nguyễn Trãi, Q.5, TP.HCM", items: [[product("brown-relac"), 2], [product("moonlight-aurora"), 1]], status: "completed", placed: -24, readyAfter: 2, plan: "full", method: "vnpay" },
+  { name: "Ngô Thanh Vy", phone: "0944 889 900", address: "14 Nguyễn Trãi, Q.5, TP.HCM", items: [[product("woman-secret"), 3]], status: "completed", placed: -52, readyAfter: 3, plan: "full", method: "momo", code: "WELCOME10" },
+  { name: "Ngô Thanh Vy", phone: "0944 889 900", address: "Công ty Lumière, 2 Thi Sách, Q.1, TP.HCM", items: [[product("beach-sunshine"), 4]], status: "completed", placed: -80, readyAfter: 3, plan: "deposit", method: "vnpay", note: "Quà tặng khách hàng công ty, xuất hoá đơn." },
+  { name: "Wing Sun", phone: "0977 001 122", address: "120 Hai Bà Trưng, Q.1, TP.HCM", items: [[product("moon-morning"), 2]], status: "completed", placed: -35, readyAfter: 2, plan: "full", method: "vnpay" },
+  { name: "Hoàng Anh Tuấn", phone: "0932 556 677", address: "77 Lê Lợi, Huế", items: [[product("vanilla-relax"), 1]], status: "completed", placed: -46, readyAfter: 3, plan: "full", method: "momo" },
+  { name: "Lý Thu Trang", phone: "0908 121 343", address: "56 Điện Biên Phủ, Bình Thạnh, TP.HCM", items: [[product("moon-morning"), 1], [product("citrus-bloom"), 1]], status: "completed", placed: -96, readyAfter: 2, plan: "full", method: "vnpay" },
+  { name: "Bùi Quốc Bảo", phone: "0948 565 787", address: "10 Trần Phú, Nha Trang", items: [[product("brown-relac"), 1]], status: "completed", placed: -121, readyAfter: 3, plan: "full", method: "momo" },
+  { name: "Bùi Quốc Bảo", phone: "0948 565 787", address: "10 Trần Phú, Nha Trang", items: [[product("moonlight-aurora"), 1]], status: "completed", placed: -150, readyAfter: 3, plan: "deposit", method: "vnpay" },
+  { name: "Châu Ngọc Hân", phone: "0915 343 565", address: "27 Lý Thường Kiệt, Hoàn Kiếm, Hà Nội", items: [[product("woman-secret"), 1]], status: "completed", placed: -38, readyAfter: 2, plan: "full", method: "vnpay" },
+  { name: "Trương Văn Lực", phone: "0973 787 909", address: "88 Quang Trung, Gò Vấp, TP.HCM", items: [[product("beach-sunshine"), 2]], status: "cancelled", placed: -20, readyAfter: 3, plan: "deposit", method: "momo", cancelReason: "Khách không nghe máy khi giao, trả hàng về." },
 ];
 
 const slugEmail = (name: string) =>

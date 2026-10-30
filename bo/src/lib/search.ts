@@ -1,7 +1,8 @@
-// Tìm kiếm toàn cục trên header: gom đơn hàng, sản phẩm, mã giảm giá, nguyên liệu và các trang.
+// Tìm kiếm toàn cục trên header: gom đơn hàng, khách hàng, sản phẩm, mã giảm giá, nguyên liệu và các trang.
 // Chưa có API nên lọc ngay trên dữ liệu đã tải. Khi có BE thay bằng GET /api/search?q=.
 import { optionGroupKeys, optionGroups, stockLevel } from "@/lib/craft/groups";
 import type { BaseOption, CustomizerCatalog } from "@/lib/craft/types";
+import type { Customer } from "@/lib/customers/types";
 import { discountStatus, statusMeta as discountStatusMeta, valueText } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
@@ -9,11 +10,12 @@ import { statusMeta as orderStatusMeta } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 import type { Product } from "@/lib/products/types";
 
-export type SearchGroup = "pages" | "orders" | "products" | "discounts" | "materials";
+export type SearchGroup = "pages" | "orders" | "customers" | "products" | "discounts" | "materials";
 
 export const searchGroupLabels: Record<SearchGroup, string> = {
   pages: "Trang & thao tác",
   orders: "Đơn hàng",
+  customers: "Khách hàng",
   products: "Sản phẩm",
   discounts: "Mã giảm giá",
   materials: "Nguyên liệu",
@@ -56,6 +58,7 @@ const PER_GROUP = 5;
 export type SearchSources = {
   pages: { label: string; path: string; keywords?: string }[];
   orders: Order[];
+  customers: Customer[];
   products: Product[];
   discounts: Discount[];
   catalog: CustomizerCatalog;
@@ -84,6 +87,17 @@ export function search(raw: string, src: SearchSources): SearchResult[] {
       tag: { label: orderStatusMeta[o.status].label, color: orderStatusMeta[o.status].color },
       image: o.items[0]?.image,
       to: `/orders?order=${o.id}`,
+    }));
+
+  const customers: SearchResult[] = src.customers
+    .filter((c) => matches(q, c.name, c.email) || (qDigits.length >= 3 && digits(c.phone).includes(qDigits)))
+    .map((c) => ({
+      key: `customer:${c.id}`,
+      group: "customers",
+      title: c.name,
+      subtitle: `${c.phone} · ${c.email}`,
+      tag: c.blocked ? { label: "Đã chặn", color: "red" } : undefined,
+      to: `/customers?customer=${c.id}`,
     }));
 
   const products: SearchResult[] = src.products
@@ -130,5 +144,6 @@ export function search(raw: string, src: SearchSources): SearchResult[] {
       }),
   );
 
-  return [pages, orders, products, discounts, materials].flatMap((list) => list.slice(0, PER_GROUP));
+  // Khách trước đơn: gõ tên người thì hồ sơ khách hữu ích hơn từng đơn lẻ
+  return [pages, customers, orders, products, discounts, materials].flatMap((list) => list.slice(0, PER_GROUP));
 }

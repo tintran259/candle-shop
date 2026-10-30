@@ -18,6 +18,7 @@ const router = createBrowserRouter([
       { path: "orders", lazy: async () => ({ Component: (await import("@/pages/orders")).OrdersPage }) },
       { path: "discounts", lazy: async () => ({ Component: (await import("@/pages/discounts")).DiscountsPage }) },
       { path: "products", lazy: async () => ({ Component: (await import("@/pages/products")).ProductsPage }) },
+      { path: "customers", lazy: async () => ({ Component: (await import("@/pages/customers")).CustomersPage }) },
       { path: ":section", element: <PlaceholderPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],

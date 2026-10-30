@@ -279,6 +279,31 @@ body {
   border-radius: 2px;
 }
 
+/* Dòng bấm được trong danh sách (vd đơn hàng trong hồ sơ khách) */
+.list-row-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 12px;
+  /* Nền hover tràn ra lề trong thẻ, chữ vẫn thẳng hàng tiêu đề */
+  margin: 0 -12px;
+  width: calc(100% + 24px);
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+.list-row-button:hover {
+  background: #fbf1e8;
+}
+.list-row-button:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: -2px;
+}
+
 /* Dòng thông báo: chưa đọc có nền nhạt + chấm */
 .notif-row {
   display: flex;

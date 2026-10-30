@@ -24,3 +24,13 @@ export const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
 export const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+// Chữ viết tắt cho avatar: 2 chữ cuối của tên Việt ("Trần Bảo Ngọc" → "BN")
+export const initials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(-2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();

@@ -5,8 +5,8 @@ import { mockOrders } from "@/lib/orders/mock";
 import type { Order, OrderEvent, OrderStatus } from "@/lib/orders/types";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/orders (GET, PATCH status/payment/note).
-// v2: lịch sử có thêm loại sự kiện (kind) — bỏ dữ liệu v1
-const store = createLocalStore<Order[]>("bo-orders-v2", mockOrders);
+// v3: thêm đơn cũ cho trang Khách hàng — bỏ dữ liệu mẫu v2
+const store = createLocalStore<Order[]>("bo-orders-v3", mockOrders);
 
 const STAFF = "Admin 2510";
 const now = () => new Date().toISOString();
