@@ -1,18 +1,18 @@
 import { CheckOutlined } from "@ant-design/icons";
 import { Checkbox, Flex, Input, Slider, Tag, Typography } from "antd";
 import { useState } from "react";
-import { stockLevel } from "@/lib/craft/groups";
 import { intensityLabels } from "@/lib/craft/steps";
-import type { CraftStep, IntensityLevel, StepOption } from "@/lib/craft/types";
+import { sizeLabel } from "@/lib/craft/groups";
+import type { CraftStep, IntensityLevel, StepOption, VesselOption, VesselStep } from "@/lib/craft/types";
 import { formatMoney } from "@/lib/format";
+import { lidLevel, optionLevel, sellable as canSell, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import { brand } from "@/theme";
 
 const price = (n: number) => (n ? `+${formatMoney(n)}` : "Đã gồm");
-const sellable = (o: StepOption) => o.available && stockLevel(o) !== "out";
 const striped = "repeating-linear-gradient(45deg,#fff 0 4px,#eee8de 4px 8px)";
 
 // Mô phỏng gần đúng cách web hiển thị bước (bố cục, chữ, trạng thái hết hàng) — bấm thử được, không lưu
-export function StepPreview({ step, index }: { step: CraftStep; index: number }) {
+export function StepPreview({ step, index, map }: { step: CraftStep; index: number; map: MaterialMap }) {
   return (
     <div className="sf-preview">
       <Typography.Title level={4} style={{ margin: 0, color: "#3b2a1a" }}>
@@ -25,13 +25,14 @@ export function StepPreview({ step, index }: { step: CraftStep; index: number })
         </Typography.Text>
       )}
       <div style={{ marginTop: 16 }}>
-        <Body step={step} />
+        <Body step={step} map={map} />
       </div>
     </div>
   );
 }
 
-function Body({ step }: { step: CraftStep }) {
+function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
+  const sellable = (o: StepOption) => canSell(o, map);
   const options = step.kind === "inputs" ? [] : (step.options as StepOption[]).filter((o) => o.available);
   const [picked, setPicked] = useState<string[]>(() => {
     const first = options.find(sellable)?.id;
@@ -40,7 +41,7 @@ function Body({ step }: { step: CraftStep }) {
   const toggle = (id: string, multi: boolean, max?: number) =>
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : multi ? (max && p.length >= max ? [...p.slice(1), id] : [...p, id]) : [id]));
 
-  if (step.kind === "inputs") return <InputsBody step={step} />;
+  if (step.kind === "inputs") return <InputsBody step={step} map={map} />;
   if (!options.length) return <Typography.Text type="secondary">Chưa có lựa chọn nào đang bán — khách sẽ không thấy bước này.</Typography.Text>;
 
   if (step.kind === "swatches")
@@ -51,7 +52,8 @@ function Body({ step }: { step: CraftStep }) {
           const out = !sellable(o);
           return (
             <button key={o.id} type="button" disabled={out} className="sf-swatch" aria-checked={on} role="radio" onClick={() => toggle(o.id, false)}>
-              <span className="sf-dot" style={{ background: o.swatch ?? striped }}>
+              {/* Có ảnh thì ưu tiên ảnh, không thì màu, không màu thì ô sọc */}
+              <span className="sf-dot" style={{ background: o.images?.[0] ? `center / cover no-repeat url("${o.images[0]}")` : (o.swatch ?? striped) }}>
                 {on && <CheckOutlined style={{ fontSize: 12 }} />}
               </span>
               <span style={{ fontSize: 12 }}>{o.name.vi}</span>
@@ -97,24 +99,48 @@ function Body({ step }: { step: CraftStep }) {
         })}
       </div>
 
-      {step.kind === "vessel" && (
-        <div>
-          <Typography.Text strong style={{ color: "#3b2a1a" }}>
-            Kích thước
-          </Typography.Text>
-          <Flex gap={8} wrap style={{ marginTop: 8 }}>
-            {step.sizes
-              .filter((s) => s.available)
-              .map((s, i) => (
-                <span key={s.id} className="sf-chip" data-on={i === 0}>
-                  {s.grams}g{s.burnHours ? ` · ~${s.burnHours} giờ` : ""} · {formatMoney(s.basePrice)}
-                </span>
-              ))}
-          </Flex>
-        </div>
-      )}
+      {step.kind === "vessel" && (() => {
+        const vessel = options.find((o) => o.id === picked[0]) as VesselOption | undefined;
+        return vessel && <VesselSizes key={vessel.id} step={step} vessel={vessel} map={map} />;
+      })()}
 
       {step.kind === "blend" && <BlendBody step={step} picked={picked.filter((id) => options.some((o) => o.id === id))} options={options} />}
+    </Flex>
+  );
+}
+
+// Cỡ của hũ đang chọn: cỡ hết mã hũ trong Kho thì khóa riêng cỡ đó; nắp cũng tính theo cỡ
+function VesselSizes({ step, vessel, map }: { step: VesselStep; vessel: VesselOption; map: MaterialMap }) {
+  const sizes = step.sizes.filter((s) => s.available && vessel.supportedSizeIds.includes(s.id));
+  const open = (id: string) => vesselSizeLevel(vessel, id, map) !== "out";
+  const [size, setSize] = useState(() => sizes.find((s) => open(s.id))?.id);
+  const [lid, setLid] = useState(false);
+  const lidOut = !size || lidLevel(vessel, size, map) === "out";
+  return (
+    <Flex vertical gap={12}>
+      <div>
+        <Typography.Text strong style={{ color: "#3b2a1a" }}>
+          Kích thước
+        </Typography.Text>
+        <Flex gap={8} wrap style={{ marginTop: 8 }} role="radiogroup">
+          {sizes.map((s) => {
+            const out = !open(s.id);
+            return (
+              <button key={s.id} type="button" role="radio" aria-checked={s.id === size} disabled={out} className="sf-chip" data-on={s.id === size} onClick={() => setSize(s.id)}>
+                {sizeLabel(s)}
+                {out ? " · Hết hàng" : `${s.burnHours ? ` · ~${s.burnHours} giờ` : ""} · ${formatMoney(s.basePrice)}`}
+              </button>
+            );
+          })}
+        </Flex>
+      </div>
+      {vessel.lid && (
+        <label className="sf-box" style={{ display: "flex", gap: 10, alignItems: "center", cursor: lidOut ? "not-allowed" : "pointer", maxWidth: 380 }}>
+          <Checkbox checked={lid && !lidOut} disabled={lidOut} onChange={(e) => setLid(e.target.checked)} />
+          <span style={{ fontSize: 13, fontWeight: 600 }}>Thêm nắp</span>
+          <span style={{ fontSize: 12, color: brand.emberDark, marginLeft: "auto" }}>{lidOut ? "Hết nắp cỡ này" : price(vessel.lid.priceDelta)}</span>
+        </label>
+      )}
     </Flex>
   );
 }
@@ -162,7 +188,7 @@ function BlendBody({ step, picked, options }: { step: Extract<CraftStep, { kind:
   );
 }
 
-function InputsBody({ step }: { step: Extract<CraftStep, { kind: "inputs" }> }) {
+function InputsBody({ step, map }: { step: Extract<CraftStep, { kind: "inputs" }>; map: MaterialMap }) {
   const fields = step.fields.filter((f) => f.enabled);
   const addons = step.addons.filter((a) => a.enabled);
   if (!fields.length && !addons.length) return <Typography.Text type="secondary">Chưa bật ô nhập hay tuỳ chọn nào.</Typography.Text>;
@@ -185,11 +211,11 @@ function InputsBody({ step }: { step: Extract<CraftStep, { kind: "inputs" }> }) 
       </div>
       {addons.map((a) => (
         <label key={a.id} className="sf-box" style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", maxWidth: 380 }}>
-          <Checkbox disabled={!a.available || a.stock <= 0} />
+          <Checkbox disabled={!a.available || optionLevel(a.materialId, map) === "out"} />
           <Flex vertical>
             <span style={{ fontWeight: 600, fontSize: 13 }}>{a.name.vi}</span>
             {a.description?.vi && <span style={{ fontSize: 12, color: "#7a6a5c" }}>{a.description.vi}</span>}
-            <span style={{ fontSize: 12, color: brand.emberDark }}>{!a.available || a.stock <= 0 ? "Tạm hết" : price(a.priceDelta)}</span>
+            <span style={{ fontSize: 12, color: brand.emberDark }}>{!a.available || optionLevel(a.materialId, map) === "out" ? "Tạm hết" : price(a.priceDelta)}</span>
           </Flex>
         </label>
       ))}

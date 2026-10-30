@@ -1,5 +1,5 @@
 import { ArrowDownOutlined, ArrowUpOutlined, EyeInvisibleOutlined, PlusOutlined, WarningFilled } from "@ant-design/icons";
-import { Button, Card, Flex, Tag, Tooltip, Typography } from "antd";
+import { Button, Card, Flex, Tooltip, Typography } from "antd";
 import { StepIconView } from "@/components/craft/step-icon";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
 import { kindMeta } from "@/lib/craft/steps";
@@ -11,6 +11,8 @@ type Props = {
   active?: string;
   // Bước có lỗi cấu hình (chấm đỏ) — không chỉ báo bằng màu, có thêm icon cảnh báo
   withIssues: Set<string>;
+  // Bước có thay đổi chưa lưu
+  changed?: Set<string>;
   api: CraftConfigApi;
   onSelect: (id: string) => void;
   onAdd: () => void;
@@ -20,7 +22,7 @@ const count = (s: CraftStep) =>
   s.kind === "inputs" ? `${s.fields.filter((f) => f.enabled).length} ô nhập · ${s.addons.filter((a) => a.enabled).length} tuỳ chọn` : `${s.options.length} lựa chọn`;
 
 // Danh sách bước theo đúng thứ tự khách thấy trên web; đổi thứ tự bằng nút lên/xuống
-export function StepList({ steps, active, withIssues, api, onSelect, onAdd }: Props) {
+export function StepList({ steps, active, withIssues, changed, api, onSelect, onAdd }: Props) {
   return (
     <Card
       title="Các bước"
@@ -31,6 +33,11 @@ export function StepList({ steps, active, withIssues, api, onSelect, onAdd }: Pr
       }
       styles={{ body: { padding: 12 } }}
     >
+      {!steps.length && (
+        <Typography.Paragraph type="secondary" style={{ margin: 4, fontSize: 13 }}>
+          Chưa có bước nào. Bắt đầu bằng bước <strong>Hũ & kích thước</strong> (bắt buộc, quyết định giá gốc), rồi thêm Sáp, Mùi hương…
+        </Typography.Paragraph>
+      )}
       <Flex vertical gap={6} role="list" aria-label="Các bước">
         {steps.map((s, i) => {
           const selected = s.id === active;
@@ -64,17 +71,24 @@ export function StepList({ steps, active, withIssues, api, onSelect, onAdd }: Pr
                     <Typography.Text strong ellipsis style={{ color: s.enabled ? undefined : "#6b6b6b" }}>
                       {s.title.vi}
                     </Typography.Text>
+                    {/* Icon thay cho tag "Ẩn" — tag chiếm chỗ làm dòng mô tả bên dưới bị cắt */}
+                    {!s.enabled && (
+                      <Tooltip title="Đang ẩn với khách">
+                        <EyeInvisibleOutlined aria-label="Đang ẩn" style={{ color: "#6b6b6b", fontSize: 13 }} />
+                      </Tooltip>
+                    )}
+                    {changed?.has(s.id) && (
+                      <Tooltip title="Có thay đổi chưa lưu">
+                        <span className="save-bar-dot" aria-label="Có thay đổi chưa lưu" role="img" style={{ width: 8, height: 8 }} />
+                      </Tooltip>
+                    )}
                     {withIssues.has(s.id) && <WarningFilled aria-label="Cần xem lại" style={{ color: "#d4380d", fontSize: 12 }} />}
                   </Flex>
                   <Typography.Text type="secondary" ellipsis style={{ fontSize: 12 }}>
-                    {kindMeta[s.kind].label} · {count(s)}
+                    {/* Bước ô nhập: chỉ ghi số lượng — tên component dài làm dòng bị cắt */}
+                    {s.kind === "inputs" ? count(s) : `${kindMeta[s.kind].label} · ${count(s)}`}
                   </Typography.Text>
                 </Flex>
-                {!s.enabled && (
-                  <Tag icon={<EyeInvisibleOutlined />} style={{ marginInlineEnd: 0 }}>
-                    Ẩn
-                  </Tag>
-                )}
               </button>
               <Flex vertical>
                 <Tooltip title="Lên trên" placement="left">

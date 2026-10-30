@@ -12,7 +12,11 @@ export function MoneyInput(props: Omit<InputNumberProps<number>, "formatter" | "
       precision={0}
       suffix="₫"
       formatter={groupDigits}
-      parser={(v) => Number((v ?? "").replace(/\D/g, ""))}
+      // Xóa trắng ô thì giữ trống (không ép về 0) — nếu ép, ô hiện "0" và số gõ tiếp bị chèn trước nó (400.000 → 4.200.000)
+      parser={(v) => {
+        const digits = (v ?? "").replace(/\D/g, "");
+        return (digits === "" ? "" : Number(digits)) as number;
+      }}
       style={{ width: "100%" }}
       {...props}
     />

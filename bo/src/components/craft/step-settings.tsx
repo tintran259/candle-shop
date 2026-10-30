@@ -5,7 +5,7 @@ import { IconPicker } from "@/components/craft/step-icon";
 import { MoneyInput } from "@/components/money-input";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
 import { DEFAULT_INTENSITY, intensityLabels, kindMeta, previewRoleMeta } from "@/lib/craft/steps";
-import type { BlendStep, CraftStep, IntensityLevel, Localized, StepOption, Unit } from "@/lib/craft/types";
+import type { BlendStep, CraftStep, IntensityLevel, Localized } from "@/lib/craft/types";
 
 const levels: IntensityLevel[] = ["light", "medium", "strong"];
 
@@ -26,7 +26,7 @@ function Setting({ label, description, children }: { label: string; description?
   );
 }
 
-// Cài đặt một bước — mọi thay đổi lưu ngay (bản nháp trên trình duyệt)
+// Cài đặt một bước — sửa trực tiếp vào bản nháp, lên web khi bấm Lưu trên trang
 export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: CraftConfigApi; onRemoved: () => void }) {
   const set = (patch: Partial<CraftStep>) => api.updateStep(step.id, (s) => ({ ...s, ...patch }) as CraftStep);
   const text = (key: "title" | "hint", lang: keyof Localized, value: string) => {
@@ -115,17 +115,20 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
                 options={[{ value: "none", label: "Không" }, ...kindMeta[step.kind].roles.map((r) => ({ value: r, label: previewRoleMeta[r].label }))]}
               />
             </Setting>
-            <UnitSetting
-              unit={step.unit}
-              gramsPerGram={step.gramsPerGram}
-              onChange={(unit, gramsPerGram) =>
-                api.updateStep(step.id, (s) =>
-                  s.kind === "cards" || s.kind === "swatches"
-                    ? { ...s, unit, gramsPerGram, options: s.options.map((o: StepOption) => ({ ...o, unit })) }
-                    : s,
-                )
-              }
-            />
+            <Setting
+              label="Lượng nguyên liệu mỗi hũ"
+              description="Với nguyên liệu tính theo gram / ml trong Kho: mỗi hũ dùng (hệ số × lượng sáp đổ của cỡ). Vd sáp hệ số 1: cỡ đổ 120g trừ 120g. Nguyên liệu tính theo cái luôn trừ 1."
+            >
+              <InputNumber
+                aria-label="Hệ số gram"
+                min={0}
+                step={0.1}
+                prefix="Hệ số"
+                value={step.gramsPerGram ?? 1}
+                onChange={(n) => n !== null && set({ gramsPerGram: n })}
+                style={{ width: 130 }}
+              />
+            </Setting>
           </>
         )}
       </Card>
@@ -159,38 +162,6 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
   );
 }
 
-function UnitSetting({ unit, gramsPerGram, onChange }: { unit: Unit; gramsPerGram?: number; onChange: (unit: Unit, gramsPerGram?: number) => void }) {
-  return (
-    <Setting
-      label="Cách trừ tồn kho"
-      description={unit === "g" ? "Mỗi hũ dùng (hệ số × khối lượng nến) gram — vd sáp hệ số 1." : "Mỗi hũ dùng 1 cái của lựa chọn đã chọn."}
-    >
-      <Flex gap={8} align="center" wrap>
-        {unit === "g" && (
-          <InputNumber
-            aria-label="Hệ số gram"
-            min={0}
-            step={0.1}
-            prefix="Hệ số"
-            value={gramsPerGram ?? 1}
-            onChange={(n) => onChange("g", n ?? 1)}
-            style={{ width: 130 }}
-          />
-        )}
-        <Radio.Group
-          optionType="button"
-          value={unit}
-          onChange={(e) => onChange(e.target.value, e.target.value === "g" ? (gramsPerGram ?? 1) : undefined)}
-          options={[
-            { value: "pcs", label: "Theo cái" },
-            { value: "g", label: "Theo gram" },
-          ]}
-        />
-      </Flex>
-    </Setting>
-  );
-}
-
 function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<BlendStep>) => void }) {
   const { intensity } = step;
   return (
@@ -219,13 +190,13 @@ function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<Bl
                       suffix="%"
                       style={{ width: "100%" }}
                       value={Math.round(intensity.load[level] * 1000) / 10}
-                      onChange={(n) => set({ intensity: { ...intensity, load: { ...intensity.load, [level]: (n ?? 0) / 100 } } })}
+                      onChange={(n) => n !== null && set({ intensity: { ...intensity, load: { ...intensity.load, [level]: n / 100 } } })}
                     />
                   </Form.Item>
                   <Form.Item label="Phụ thu" style={{ marginBottom: 0 }}>
                     <MoneyInput
                       value={intensity.priceDelta[level]}
-                      onChange={(n) => set({ intensity: { ...intensity, priceDelta: { ...intensity.priceDelta, [level]: n ?? 0 } } })}
+                      onChange={(n) => n !== null && set({ intensity: { ...intensity, priceDelta: { ...intensity.priceDelta, [level]: n } } })}
                     />
                   </Form.Item>
                 </Form>

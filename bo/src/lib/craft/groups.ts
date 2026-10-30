@@ -1,25 +1,17 @@
 // Tiện ích chung cho trình dựng Thủ công (nhãn, tồn kho, định dạng)
 import { formatMoney } from "@/lib/format";
-import type { Stock, Unit, VesselShape } from "@/lib/craft/types";
+import type { SizeOption, Unit, VesselShape } from "@/lib/craft/types";
 
 // Thông báo đầu trang Thủ công (dùng cả trong skeleton để khung không đổi chiều cao)
 export const CRAFT_PREVIEW_NOTICE =
-  "Bản xem trước: thay đổi được lưu trên trình duyệt này và chưa đồng bộ lên website. Khi có API sẽ lưu về BE (xem docs/craft-builder.md).";
+  "Sửa trên bản nháp — bấm “Lưu thay đổi” thì web mới dùng cấu hình mới. Chưa có BE nên bản đã lưu vẫn nằm trên trình duyệt này. Tồn kho quản lý ở trang Kho nguyên liệu.";
 
-export const unitLabel: Record<Unit, string> = { g: "g", pcs: "cái" };
+export const unitLabel: Record<Unit, string> = { g: "g", ml: "ml", pcs: "cái" };
+// Tên đầy đủ cho ô chọn đơn vị
+export const unitNames: Record<Unit, string> = { pcs: "Cái", g: "Gram", ml: "Mililít" };
 
-// Mục không cần đếm tồn (vd "Không mùi", "Không màu") lưu số rất lớn
-export const UNLIMITED = 99999;
-// Dưới ngưỡng này là "sắp hết"
-export const LOW_STOCK: Record<Unit, number> = { g: 500, pcs: 10 };
-
-export type StockLevel = "unlimited" | "out" | "low" | "ok";
-
-export function stockLevel({ stock, unit }: Stock): StockLevel {
-  if (stock >= UNLIMITED) return "unlimited";
-  if (stock <= 0) return "out";
-  return stock < LOW_STOCK[unit] ? "low" : "ok";
-}
+// Tên cỡ khách thấy: dung tích hũ (vd "150ml"); full = kèm lượng sáp
+export const sizeLabel = (s: Pick<SizeOption, "ml" | "grams">, full = false) => (full ? `${s.ml}ml · ${s.grams}g sáp` : `${s.ml}ml`);
 
 export const shapeLabels: Record<VesselShape, string> = {
   tumbler: "Cốc",

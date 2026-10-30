@@ -21,7 +21,8 @@ export function Bar({ width, height = 14, block }: { width: number | string; hei
 }
 
 // Giống tiêu đề các trang: Title cấp 3 + mô tả (mobile mô tả thường xuống 2 dòng)
-export function PageHeaderSkeleton({ action = true, subLines = 2 }: { action?: boolean; subLines?: 1 | 2 }) {
+// actions: bề rộng từng nút bên phải (khớp số nút thật để xuống dòng giống trên mobile)
+export function PageHeaderSkeleton({ action = true, subLines = 2, actions }: { action?: boolean; subLines?: 1 | 2; actions?: number[] }) {
   return (
     <Flex justify="space-between" align="flex-end" gap={16} wrap>
       <div style={{ minWidth: 0 }}>
@@ -37,7 +38,15 @@ export function PageHeaderSkeleton({ action = true, subLines = 2 }: { action?: b
           )}
         </Typography.Text>
       </div>
-      {action && <Skeleton.Button active style={{ width: 150 }} />}
+      {actions ? (
+        <Flex gap={8} wrap>
+          {actions.map((w, i) => (
+            <Skeleton.Button key={i} active style={{ width: w }} />
+          ))}
+        </Flex>
+      ) : (
+        action && <Skeleton.Button active style={{ width: 150 }} />
+      )}
     </Flex>
   );
 }
@@ -212,39 +221,15 @@ export function ListPageSkeleton({
   );
 }
 
-// Trình dựng Thủ công: đầu trang + thông báo + thống kê + cần nhập thêm, rồi 2 cột (danh sách bước | trình sửa bước)
+// Trình dựng Thủ công: đầu trang + thông báo + thống kê, rồi 2 cột (danh sách bước | trình sửa bước)
 export function CraftSkeleton() {
   return (
     <Busy label="Đang tải trình dựng Thủ công…">
       <Flex vertical gap={16}>
-        <PageHeaderSkeleton />
+        <PageHeaderSkeleton actions={[144, 125, 108]} />
         {/* Thông báo tĩnh — hiện luôn nội dung thật, cao đúng như khi tải xong */}
         <Alert type="info" showIcon title={CRAFT_PREVIEW_NOTICE} />
-        <StatsSkeleton />
-        {/* Thẻ "Cần nhập thêm": đầu thẻ + lưới ô cùng kích thước ô thật */}
-        <Card styles={{ body: { padding: 20 } }}>
-          <Flex align="center" gap={12}>
-            <Skeleton.Avatar active shape="square" size={40} style={{ borderRadius: 12 }} />
-            <Flex vertical>
-              <Typography.Text strong style={{ fontSize: 17 }}>
-                <Bar width={130} height={16} />
-              </Typography.Text>
-              <Typography.Text style={{ fontSize: 13 }}>
-                <Bar width={260} height={12} />
-                <span className="skel-mobile-line">
-                  <Bar width={120} height={12} />
-                </span>
-              </Typography.Text>
-            </Flex>
-          </Flex>
-          <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
-            {Array.from({ length: 6 }, (_, i) => (
-              <Col key={i} xs={24} sm={12} lg={8} xxl={6}>
-                <Skeleton.Input active block style={{ height: 118, borderRadius: 16 }} />
-              </Col>
-            ))}
-          </Row>
-        </Card>
+        <StatsSkeleton note={3} />
         <Row gutter={[16, 16]} align="top">
           <Col xs={24} lg={9} xl={7}>
             <Card title={<Bar width={90} height={16} />} extra={<Skeleton.Button active style={{ width: 120 }} />} styles={{ body: { padding: 12 } }}>
@@ -459,6 +444,52 @@ export const CustomersSkeleton = () => (
   />
 );
 
+// Thẻ "Cần nhập thêm" (trang Kho): đầu thẻ + lưới ô cùng kích thước ô thật
+function RestockSkeleton() {
+  return (
+    <Card styles={{ body: { padding: 20 } }}>
+      <Flex align="center" gap={12}>
+        <Skeleton.Avatar active shape="square" size={40} style={{ borderRadius: 12 }} />
+        <Flex vertical>
+          <Typography.Text strong style={{ fontSize: 17 }}>
+            <Bar width={130} height={16} />
+          </Typography.Text>
+          <Typography.Text style={{ fontSize: 13 }}>
+            <Bar width={260} height={12} />
+            <span className="skel-mobile-line">
+              <Bar width={120} height={12} />
+            </span>
+          </Typography.Text>
+        </Flex>
+      </Flex>
+      <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
+        {Array.from({ length: 6 }, (_, i) => (
+          <Col key={i} xs={24} sm={12} lg={8} xxl={6}>
+            <Skeleton.Input active block style={{ height: 118, borderRadius: 16 }} />
+          </Col>
+        ))}
+      </Row>
+    </Card>
+  );
+}
+
+export const InventorySkeleton = () => (
+  <Busy label="Đang tải kho nguyên liệu…">
+    <Flex vertical gap={16}>
+      <PageHeaderSkeleton subLines={2} actions={[124, 112, 176]} />
+      <StatsSkeleton />
+      <RestockSkeleton />
+      <ToolbarSkeleton
+        rows={[
+          { fields: [{ width: 720, maxWidth: "100%" }] },
+          { fields: [{ flex: "1 1 260px" }, { flex: "0 1 180px", minWidth: 140 }, { flex: "0 1 180px", minWidth: 150 }] },
+        ]}
+      />
+      <TableSkeleton />
+    </Flex>
+  </Busy>
+);
+
 export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname === "/") return <DashboardSkeleton />;
   if (pathname.startsWith("/craft")) return <CraftSkeleton />;
@@ -466,6 +497,7 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname.startsWith("/products")) return <ProductsSkeleton />;
   if (pathname.startsWith("/discounts")) return <DiscountsSkeleton />;
   if (pathname.startsWith("/customers")) return <CustomersSkeleton />;
+  if (pathname.startsWith("/inventory")) return <InventorySkeleton />;
   return <ListPageSkeleton label="Đang tải trang…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 150 }] }]} />} />;
 }
 

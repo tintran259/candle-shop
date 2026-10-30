@@ -1,7 +1,13 @@
 // Chuyển qua lại giữa lựa chọn (cấu trúc lồng) và giá trị phẳng của antd Form. Tiền là VNĐ.
-import { UNLIMITED } from "@/lib/craft/groups";
 import { uniqueId } from "@/lib/craft/steps";
-import type { OptionStep, StepOption, VesselOption } from "@/lib/craft/types";
+import type { OptionStep, StepOption, Unit, VesselOption, VesselSizeStock } from "@/lib/craft/types";
+
+// Giá trị đặc biệt của ô chọn nguyên liệu
+export const NO_MATERIAL = "";
+export const NEW_MATERIAL = "__new";
+
+// Một dòng trong bảng "Kích cỡ & tồn kho" của hũ — jar/lid giống ô chọn nguyên liệu (id | NO_ | NEW_)
+export type SizeStockValues = { jar: string; jarStock?: number; lid: string; lidStock?: number };
 
 export type OptionFormValues = {
   nameVi: string;
@@ -9,9 +15,12 @@ export type OptionFormValues = {
   descVi?: string;
   descEn?: string;
   price: number;
-  stock: number;
-  unlimited: boolean;
   available: boolean;
+  // Nguyên liệu trong Kho: id có sẵn, NO_MATERIAL = không theo dõi, NEW_MATERIAL = tạo mới trong Kho
+  materialId: string;
+  // Khi tạo nguyên liệu mới
+  newUnit?: Unit;
+  newStock?: number;
   // Không có màu = ô sọc (swatches: "không pha màu")
   hasSwatch: boolean;
   swatch?: string;
@@ -27,8 +36,15 @@ export type OptionFormValues = {
   translucent?: boolean;
   hasLid?: boolean;
   lidPrice?: number;
-  lidStock?: number;
+  // { [sizeId]: mã hũ / nắp trong Kho của cỡ đó }
+  sizeStock?: Record<string, SizeStockValues>;
 };
+
+// Nguyên liệu đã chốt sau khi drawer tạo xong các nguyên liệu mới
+export type ResolvedMaterials = { materialId?: string; sizeMaterials?: Record<string, VesselSizeStock> };
+
+// Đơn vị gợi ý khi tạo nguyên liệu mới từ một bước
+export const suggestedUnit = (step: OptionStep): Unit => (step.kind === "blend" ? "ml" : step.kind === "cards" && step.gramsPerGram ? "g" : "pcs");
 
 export function toFormValues(step: OptionStep, item?: StepOption): OptionFormValues {
   const o = (item ?? {}) as Partial<VesselOption>;
@@ -38,9 +54,11 @@ export function toFormValues(step: OptionStep, item?: StepOption): OptionFormVal
     descVi: o.description?.vi,
     descEn: o.description?.en,
     price: o.priceDelta ?? 0,
-    stock: (o.stock ?? 0) >= UNLIMITED ? 0 : (o.stock ?? 0),
-    unlimited: (o.stock ?? 0) >= UNLIMITED,
     available: o.available ?? true,
+    // Lựa chọn mới mặc định tạo luôn nguyên liệu trong Kho
+    materialId: item ? (o.materialId ?? NO_MATERIAL) : NEW_MATERIAL,
+    newUnit: suggestedUnit(step),
+    newStock: 0,
     hasSwatch: item ? !!o.swatch : true,
     swatch: o.swatch ?? "#e8dccb",
     images: o.images ?? [],
@@ -54,15 +72,22 @@ export function toFormValues(step: OptionStep, item?: StepOption): OptionFormVal
       translucent: !!o.translucent,
       hasLid: !!o.lid,
       lidPrice: o.lid?.priceDelta ?? 0,
-      lidStock: o.lid?.stock ?? 0,
+      // Hũ mới: mặc định tạo luôn mã hũ cho từng cỡ trong Kho
+      sizeStock: Object.fromEntries(
+        step.sizes.map((size) => {
+          const stock = o.sizeMaterials?.[size.id];
+          const fallback = item ? NO_MATERIAL : NEW_MATERIAL;
+          return [size.id, { jar: stock?.materialId ?? fallback, jarStock: 0, lid: stock?.lidMaterialId ?? fallback, lidStock: 0 }];
+        }),
+      ),
     }),
   };
 }
 
-export function fromFormValues(step: OptionStep, v: OptionFormValues, previous?: StepOption): StepOption {
+// resolved: id nguyên liệu đã chốt (drawer tự tạo nguyên liệu mới trước khi gọi hàm này)
+export function fromFormValues(step: OptionStep, v: OptionFormValues, resolved: ResolvedMaterials, previous?: StepOption): StepOption {
   const vi = v.nameVi.trim();
   const descVi = v.descVi?.trim();
-  const unit = step.kind === "vessel" ? "pcs" : step.unit;
   const onlyWith = Object.fromEntries(Object.entries(v.onlyWith ?? {}).filter(([, ids]) => ids?.length));
   const base: StepOption = {
     // Id cố định sau khi tạo — đơn hàng và quy tắc tương thích dùng nó
@@ -70,9 +95,8 @@ export function fromFormValues(step: OptionStep, v: OptionFormValues, previous?:
     name: { vi, en: v.nameEn?.trim() || vi },
     description: descVi ? { vi: descVi, en: v.descEn?.trim() || descVi } : undefined,
     priceDelta: Math.round(v.price ?? 0),
-    stock: v.unlimited ? UNLIMITED : Math.round(v.stock ?? 0),
-    unit,
     available: v.available,
+    materialId: step.kind === "vessel" ? undefined : resolved.materialId,
     swatch: v.hasSwatch ? v.swatch : undefined,
     images: v.images?.length ? v.images : undefined,
     look: v.look || undefined,
@@ -81,11 +105,20 @@ export function fromFormValues(step: OptionStep, v: OptionFormValues, previous?:
     onlyWith: Object.keys(onlyWith).length ? onlyWith : undefined,
   };
   if (step.kind !== "vessel") return base;
+  const supported = v.supportedSizeIds ?? [];
+  // Chỉ giữ mã của các cỡ đổ được; không có nắp thì bỏ mã nắp
+  const sizeMaterials = Object.fromEntries(
+    supported.map((id) => {
+      const stock = resolved.sizeMaterials?.[id] ?? {};
+      return [id, { materialId: stock.materialId, lidMaterialId: v.hasLid ? stock.lidMaterialId : undefined }];
+    }),
+  );
   return {
     ...base,
     shape: v.shape ?? "jar",
-    supportedSizeIds: v.supportedSizeIds ?? [],
+    supportedSizeIds: supported,
+    sizeMaterials,
     translucent: v.translucent || undefined,
-    lid: v.hasLid ? { priceDelta: Math.round(v.lidPrice ?? 0), stock: Math.round(v.lidStock ?? 0), unit: "pcs" } : null,
+    lid: v.hasLid ? { priceDelta: Math.round(v.lidPrice ?? 0) } : null,
   } as VesselOption;
 }

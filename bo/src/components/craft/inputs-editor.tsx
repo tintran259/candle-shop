@@ -1,13 +1,14 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Checkbox, Col, Empty, Flex, Form, Input, InputNumber, Popconfirm, Row, Switch, Typography } from "antd";
+import { MaterialSelect } from "@/components/inventory/material-select";
 import { MoneyInput } from "@/components/money-input";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
-import { UNLIMITED } from "@/lib/craft/groups";
+import type { Material } from "@/lib/inventory/types";
 import { uniqueId } from "@/lib/craft/steps";
 import type { AddonDef, CraftStep, InputsStep, Localized, TextFieldDef } from "@/lib/craft/types";
 
-// Ô nhập chữ + tuỳ chọn bật/tắt của bước "Ô nhập & tuỳ chọn thêm" — sửa trực tiếp, lưu ngay
-export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfigApi }) {
+// Ô nhập chữ + tuỳ chọn bật/tắt của bước "Ô nhập & tuỳ chọn thêm" — sửa trực tiếp vào bản nháp (lên web khi bấm Lưu)
+export function InputsEditor({ step, api, materials }: { step: InputsStep; api: CraftConfigApi; materials: Material[] }) {
   const update = (fn: (s: InputsStep) => InputsStep) => api.updateStep(step.id, (s) => (s.kind === "inputs" ? fn(s) : s) as CraftStep);
   const patchField = (id: string, p: Partial<TextFieldDef>) => update((s) => ({ ...s, fields: s.fields.map((f) => (f.id === id ? { ...f, ...p } : f)) }));
   const patchAddon = (id: string, p: Partial<AddonDef>) => update((s) => ({ ...s, addons: s.addons.map((a) => (a.id === id ? { ...a, ...p } : a)) }));
@@ -21,7 +22,7 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
   const addAddon = () =>
     update((s) => ({
       ...s,
-      addons: [...s.addons, { id: uniqueId("addon", ids), name: { vi: "Tuỳ chọn mới", en: "New add-on" }, priceDelta: 0, available: true, enabled: true, stock: UNLIMITED, unit: "pcs" }],
+      addons: [...s.addons, { id: uniqueId("addon", ids), name: { vi: "Tuỳ chọn mới", en: "New add-on" }, priceDelta: 0, available: true, enabled: true }],
     }));
 
   return (
@@ -55,12 +56,12 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
                   />
                   <Col xs={12} md={6}>
                     <Form.Item label="Tối đa">
-                      <InputNumber min={1} max={500} precision={0} suffix="ký tự" value={f.maxLength} onChange={(n) => patchField(f.id, { maxLength: n ?? 1 })} style={{ width: "100%" }} />
+                      <InputNumber min={1} max={500} precision={0} suffix="ký tự" value={f.maxLength} onChange={(n) => n !== null && patchField(f.id, { maxLength: n })} style={{ width: "100%" }} />
                     </Form.Item>
                   </Col>
                   <Col xs={12} md={6}>
                     <Form.Item label="Phụ thu khi nhập">
-                      <MoneyInput value={f.priceDelta} onChange={(n) => patchField(f.id, { priceDelta: n ?? 0 })} />
+                      <MoneyInput value={f.priceDelta} onChange={(n) => n !== null && patchField(f.id, { priceDelta: n })} />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -77,7 +78,9 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                       Mã: <Typography.Text code>{f.id}</Typography.Text>
                     </Typography.Text>
+                    {/* Có chữ cạnh switch — trước đây switch trơn nằm cạnh checkbox, admin không rõ nó bật/tắt gì */}
                     <Switch size="small" checked={f.enabled} onChange={(enabled) => patchField(f.id, { enabled })} aria-label={`Hiện ô ${f.label.vi}`} />
+                    <Typography.Text style={{ fontSize: 13 }}>{f.enabled ? "Hiện trên web" : "Đang ẩn"}</Typography.Text>
                     <Popconfirm title={`Xóa ô “${f.label.vi}”?`} okText="Xóa" okButtonProps={{ danger: true }} cancelText="Hủy" onConfirm={() => update((s) => ({ ...s, fields: s.fields.filter((x) => x.id !== f.id) }))}>
                       <Button type="text" danger size="small" icon={<DeleteOutlined />} aria-label={`Xóa ô ${f.label.vi}`} />
                     </Popconfirm>
@@ -96,7 +99,7 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
               Tuỳ chọn thêm
             </Typography.Title>
             <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-              Mục khách tích chọn (hộp quà, thiệp…). Có tồn kho riêng.
+              Mục khách tích chọn (hộp quà, thiệp…). Gắn nguyên liệu trong Kho để tự khóa khi hết.
             </Typography.Text>
           </div>
           <Button icon={<PlusOutlined />} onClick={addAddon}>
@@ -106,7 +109,6 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
         <Flex vertical gap={12}>
           {step.addons.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có tuỳ chọn nào." />}
           {step.addons.map((a) => {
-            const unlimited = a.stock >= UNLIMITED;
             return (
               <Card key={a.id} size="small" className="inner-card" style={{ opacity: a.enabled ? 1 : 0.65 }}>
                 <Form layout="vertical" component="div">
@@ -120,31 +122,19 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
                     />
                     <Col xs={12} md={6}>
                       <Form.Item label="Phụ thu">
-                        <MoneyInput value={a.priceDelta} onChange={(n) => patchAddon(a.id, { priceDelta: n ?? 0 })} />
+                        <MoneyInput value={a.priceDelta} onChange={(n) => n !== null && patchAddon(a.id, { priceDelta: n })} />
                       </Form.Item>
                     </Col>
-                    <Col xs={12} md={6}>
-                      <Form.Item label="Tồn kho">
-                        <InputNumber
-                          min={0}
-                          precision={0}
-                          suffix="cái"
-                          disabled={unlimited}
-                          placeholder={unlimited ? "Không theo dõi" : undefined}
-                          value={unlimited ? undefined : a.stock}
-                          onChange={(n) => patchAddon(a.id, { stock: n ?? 0 })}
-                          style={{ width: "100%" }}
-                        />
+                    <Col xs={24} md={12}>
+                      <Form.Item label="Nguyên liệu trong kho">
+                        <MaterialSelect materials={materials} value={a.materialId ?? ""} onChange={(v) => patchAddon(a.id, { materialId: v || undefined })} />
                       </Form.Item>
                     </Col>
                   </Row>
                   <Flex justify="space-between" align="center" gap={12} wrap>
                     <Flex gap={16} wrap>
-                      <Checkbox checked={unlimited} onChange={(e) => patchAddon(a.id, { stock: e.target.checked ? UNLIMITED : 0 })}>
-                        Không theo dõi tồn kho
-                      </Checkbox>
                       <Checkbox checked={a.available} onChange={(e) => patchAddon(a.id, { available: e.target.checked })}>
-                        Đang bán
+                        Đang bán <Typography.Text type="secondary" style={{ fontSize: 12 }}>(tắt = hiện “Tạm hết”)</Typography.Text>
                       </Checkbox>
                     </Flex>
                     <Flex gap={8} align="center">
@@ -152,6 +142,7 @@ export function InputsEditor({ step, api }: { step: InputsStep; api: CraftConfig
                         Mã: <Typography.Text code>{a.id}</Typography.Text>
                       </Typography.Text>
                       <Switch size="small" checked={a.enabled} onChange={(enabled) => patchAddon(a.id, { enabled })} aria-label={`Hiện ${a.name.vi}`} />
+                      <Typography.Text style={{ fontSize: 13 }}>{a.enabled ? "Hiện trên web" : "Đang ẩn"}</Typography.Text>
                       <Popconfirm title={`Xóa “${a.name.vi}”?`} okText="Xóa" okButtonProps={{ danger: true }} cancelText="Hủy" onConfirm={() => update((s) => ({ ...s, addons: s.addons.filter((x) => x.id !== a.id) }))}>
                         <Button type="text" danger size="small" icon={<DeleteOutlined />} aria-label={`Xóa ${a.name.vi}`} />
                       </Popconfirm>

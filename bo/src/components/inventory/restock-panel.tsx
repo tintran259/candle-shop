@@ -1,8 +1,9 @@
 import { CloseCircleFilled, ExclamationCircleFilled, RightOutlined, WarningOutlined } from "@ant-design/icons";
 import { Card, Col, Flex, Row, Typography } from "antd";
 import { MaterialAvatar } from "@/components/craft/material-view";
-import { LOW_STOCK, unitLabel } from "@/lib/craft/groups";
-import type { OptionRow } from "@/lib/craft/steps";
+import { unitLabel } from "@/lib/craft/groups";
+import { categoryLabels, type Usage } from "@/lib/inventory/stock";
+import type { Material } from "@/lib/inventory/types";
 import { formatNumber } from "@/lib/format";
 
 // Màu trạng thái luôn đi kèm icon + chữ, không chỉ dựa vào màu
@@ -11,13 +12,15 @@ const status = {
   low: { label: "Sắp hết", color: "#ad4e00", bg: "#fff7e6", bar: "#ffc069", icon: <ExclamationCircleFilled /> },
 } as const;
 
-// Thẻ "Cần nhập thêm": mỗi lựa chọn một ô, bấm để mở thẳng lựa chọn đó trong bước của nó
-export function RestockPanel({ out, low, onOpen }: { out: OptionRow[]; low: OptionRow[]; onOpen: (stepId: string, optionId: string) => void }) {
+type Props = { out: Material[]; low: Material[]; usage: Map<string, Usage[]>; onOpen: (materialId: string) => void };
+
+// Thẻ "Cần nhập thêm": mỗi nguyên liệu một ô (kèm nơi đang dùng trên web), bấm để mở nguyên liệu
+export function RestockPanel({ out, low, usage, onOpen }: Props) {
   // Hết hàng trước, rồi tới mục còn ít nhất so với ngưỡng
   const rows = [
     ...out.map((r) => ({ ...r, level: "out" as const, ratio: 0 })),
     ...low
-      .map((r) => ({ ...r, level: "low" as const, ratio: r.option.stock / LOW_STOCK[r.option.unit] }))
+      .map((r) => ({ ...r, level: "low" as const, ratio: r.stock / r.lowStock }))
       .sort((a, b) => a.ratio - b.ratio),
   ];
 
@@ -44,31 +47,31 @@ export function RestockPanel({ out, low, onOpen }: { out: OptionRow[]; low: Opti
             Cần nhập thêm
           </Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-            {[out.length && `${out.length} hết hàng`, low.length && `${low.length} sắp hết`].filter(Boolean).join(" · ")} — khách không chọn
-            được mục hết hàng.
+            {[out.length && `${out.length} hết hàng`, low.length && `${low.length} sắp hết`].filter(Boolean).join(" · ")} — lựa chọn dùng nguyên liệu hết hàng sẽ tự khóa trên web.
           </Typography.Text>
         </Flex>
       </Flex>
 
       <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
-        {rows.map(({ step, option: item, level, ratio }) => {
+        {rows.map(({ level, ratio, ...item }) => {
+          const used = usage.get(item.id) ?? [];
           const s = status[level];
           return (
-            <Col key={`${step.id}-${item.id}`} xs={24} sm={12} lg={8} xxl={6}>
+            <Col key={item.id} xs={24} sm={12} lg={8} xxl={6}>
               <button
                 type="button"
-                onClick={() => onOpen(step.id, item.id)}
-                aria-label={`${item.name.vi}: ${s.label}, mở trong bước ${step.title.vi}`}
+                onClick={() => onOpen(item.id)}
+                aria-label={`${item.name}: ${s.label}, mở nguyên liệu`}
                 className="restock-tile"
               >
                 <Flex align="center" gap={12}>
                   <MaterialAvatar item={item} />
                   <Flex vertical style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                     <Typography.Text strong ellipsis>
-                      {item.name.vi}
+                      {item.name}
                     </Typography.Text>
                     <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                      {step.title.vi}
+                      {used.length ? `Dùng ở ${[...new Set(used.map((u) => u.step.title.vi))].join(", ")}` : categoryLabels[item.category]}
                     </Typography.Text>
                   </Flex>
                   <RightOutlined className="restock-tile-arrow" style={{ fontSize: 11, color: "#6b6b6b" }} aria-hidden />
@@ -95,7 +98,7 @@ export function RestockPanel({ out, low, onOpen }: { out: OptionRow[]; low: Opti
                     {formatNumber(item.stock)} {unitLabel[item.unit]}
                     <Typography.Text type="secondary" style={{ fontSize: 12, fontWeight: 400 }}>
                       {" "}
-                      / {formatNumber(LOW_STOCK[item.unit])}
+                      / {formatNumber(item.lowStock)}
                     </Typography.Text>
                   </Typography.Text>
                 </Flex>

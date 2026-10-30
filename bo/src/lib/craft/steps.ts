@@ -1,5 +1,5 @@
 // Danh mục component cho bước + các hàm thao tác/kiểm tra cấu hình trình dựng Thủ công
-import { slugify, stockLevel } from "@/lib/craft/groups";
+import { sizeLabel, slugify } from "@/lib/craft/groups";
 import type {
   CraftConfig,
   CraftStep,
@@ -9,12 +9,13 @@ import type {
   StepIcon,
   StepKind,
   StepOption,
-  Unit,
 } from "@/lib/craft/types";
+import { sellable, toMap, vesselMaterialIds } from "@/lib/inventory/stock";
+import type { Material } from "@/lib/inventory/types";
 
 export const kindMeta: Record<
   StepKind,
-  { label: string; description: string; example: string; icon: StepIcon; roles: PreviewRole[]; unit: Unit; single?: boolean }
+  { label: string; description: string; example: string; icon: StepIcon; roles: PreviewRole[]; single?: boolean }
 > = {
   vessel: {
     label: "Hũ & kích thước",
@@ -22,7 +23,6 @@ export const kindMeta: Record<
     example: "Hũ nến",
     icon: "vessel",
     roles: [],
-    unit: "pcs",
     single: true,
   },
   cards: {
@@ -31,7 +31,6 @@ export const kindMeta: Record<
     example: "Sáp, Bấc, Trang trí",
     icon: "layers",
     roles: ["waxColor", "wick", "decoration"],
-    unit: "pcs",
   },
   swatches: {
     label: "Bảng màu",
@@ -39,7 +38,6 @@ export const kindMeta: Record<
     example: "Màu sáp",
     icon: "palette",
     roles: ["waxColor"],
-    unit: "pcs",
   },
   blend: {
     label: "Phối tỉ lệ",
@@ -47,7 +45,6 @@ export const kindMeta: Record<
     example: "Mùi hương",
     icon: "flower",
     roles: [],
-    unit: "g",
   },
   inputs: {
     label: "Ô nhập & tuỳ chọn thêm",
@@ -55,7 +52,6 @@ export const kindMeta: Record<
     example: "Cá nhân hóa",
     icon: "pen",
     roles: [],
-    unit: "pcs",
   },
 };
 
@@ -110,11 +106,11 @@ export function newStep(kind: StepKind, title: string, takenIds: string[]): Craf
     case "vessel":
       return { ...base, kind, options: [], sizes: [] };
     case "cards":
-      return { ...base, kind, options: [], multiple: false, unit: "pcs" };
+      return { ...base, kind, options: [], multiple: false };
     case "swatches":
-      return { ...base, kind, options: [], unit: "pcs" };
+      return { ...base, kind, options: [] };
     case "blend":
-      return { ...base, kind, options: [], maxBlend: 3, intensity: null, unit: "g" };
+      return { ...base, kind, options: [], maxBlend: 3, intensity: null };
     case "inputs":
       return {
         ...base,
@@ -133,9 +129,11 @@ export const optionRows = (config: CraftConfig): OptionRow[] =>
 export type ConfigIssue = { stepId?: string; level: "error" | "warning"; message: string };
 
 // Kiểm tra cấu hình trước khi lên web. error = web không dựng được / khách không đặt được; warning = nên xem lại.
-// BE dùng cùng quy tắc khi nhận PUT (xem docs/craft-builder.md#kiểm-tra).
-export function validateConfig(config: CraftConfig): ConfigIssue[] {
+// Cần kho nguyên liệu để biết lựa chọn nào còn hàng. BE dùng cùng quy tắc khi nhận PUT (docs/craft-builder.md).
+export function validateConfig(config: CraftConfig, materials: Material[]): ConfigIssue[] {
   const issues: ConfigIssue[] = [];
+  const map = toMap(materials);
+  const missing = (materialId: string | undefined) => !!materialId && !map.has(materialId);
   const vessels = config.steps.filter((s) => s.kind === "vessel");
   if (vessels.length !== 1) issues.push({ level: "error", message: "Cần đúng 1 bước “Hũ & kích thước” để tính giá gốc." });
 
@@ -148,20 +146,32 @@ export function validateConfig(config: CraftConfig): ConfigIssue[] {
     if (step.kind === "vessel") {
       if (!step.enabled) issues.push({ stepId: step.id, level: "error", message: `${name}: bước hũ phải luôn bật.` });
       if (!step.sizes.some((s) => s.available)) issues.push({ stepId: step.id, level: "error", message: `${name}: chưa có kích thước nào đang bán.` });
-      for (const o of step.options)
+      for (const o of step.options) {
         if (o.available && !o.supportedSizeIds.length)
           issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa chọn kích thước đổ được.` });
+        if (vesselMaterialIds(o).some(missing)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” có cỡ gắn với mã hũ/nắp đã xóa khỏi kho.` });
+        // Theo dõi tồn vài cỡ nhưng quên gắn mã cho cỡ khác → cỡ đó bán không giới hạn
+        const sizes = step.sizes.filter((s) => o.supportedSizeIds.includes(s.id));
+        const untracked = sizes.filter((s) => !o.sizeMaterials?.[s.id]?.materialId);
+        if (untracked.length && untracked.length < sizes.length)
+          issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa gắn mã hũ cho cỡ ${untracked.map((s) => sizeLabel(s)).join(", ")} — cỡ này bán không giới hạn.` });
+      }
     }
     if (step.kind === "inputs") {
+      for (const a of step.addons)
+        if (missing(a.materialId)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${a.name.vi}” gắn với nguyên liệu đã xóa khỏi kho.` });
       if (step.enabled && !step.fields.some((f) => f.enabled) && !step.addons.some((a) => a.enabled))
         issues.push({ stepId: step.id, level: "warning", message: `${name}: chưa bật ô nhập hay tuỳ chọn nào.` });
       continue;
     }
-    const sellable = (step.options as StepOption[]).filter((o) => o.available && stockLevel(o) !== "out");
-    if (step.enabled && step.required && !sellable.length)
+    // Chưa có lựa chọn nào → một thông báo duy nhất (bắt buộc thì là lỗi), không báo trùng "không còn lựa chọn bán được"
+    const onSale = (step.options as StepOption[]).filter((o) => sellable(o, map));
+    if (step.enabled && !step.options.length)
+      issues.push({ stepId: step.id, level: step.required ? "error" : "warning", message: `${name}: chưa có lựa chọn nào.` });
+    else if (step.enabled && step.required && !onSale.length)
       issues.push({ stepId: step.id, level: "error", message: `${name}: bước bắt buộc nhưng không còn lựa chọn nào bán được.` });
-    if (step.enabled && !step.options.length) issues.push({ stepId: step.id, level: "warning", message: `${name}: chưa có lựa chọn nào.` });
     for (const o of step.options as StepOption[]) {
+      if (missing(o.materialId)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” gắn với nguyên liệu đã xóa khỏi kho.` });
       for (const [ref, optionIds] of Object.entries(o.onlyWith ?? {})) {
         const target = config.steps.find((s) => s.id === ref);
         if (!target || !isOptionStep(target)) {

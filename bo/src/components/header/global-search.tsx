@@ -16,6 +16,7 @@ import { useNavigate } from "react-router";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useCustomers } from "@/hooks/use-customers";
 import { useDiscounts } from "@/hooks/use-discounts";
+import { useInventory } from "@/hooks/use-inventory";
 import { useOrders } from "@/hooks/use-orders";
 import { useProducts } from "@/hooks/use-products";
 import { allNavItems } from "@/layouts/nav";
@@ -122,10 +123,11 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   const { discounts, loading: l3 } = useDiscounts();
   const { config: craft, loading: l4 } = useCraftConfig();
   const { customers, loading: l5 } = useCustomers();
-  const loading = l1 || l2 || l3 || l4 || l5;
+  const { materials: inventory, loading: l6 } = useInventory();
+  const loading = l1 || l2 || l3 || l4 || l5 || l6;
 
   const query = q.trim();
-  const results = query ? search(query, { pages, orders, customers, products, discounts, craft }) : [];
+  const results = query ? search(query, { pages, orders, customers, products, discounts, craft, inventory }) : [];
   // Chưa gõ: mở gần đây + thao tác nhanh + các trang
   const idle = [
     ...recent.map((r) => ({ ...r, key: `recent:${r.key}` })),

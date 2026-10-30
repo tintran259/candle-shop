@@ -1,9 +1,8 @@
 // Thông báo trên header — chưa có API nên tự suy ra từ dữ liệu đơn hàng, nguyên liệu, mã giảm giá.
 // Khi có BE: thay bằng GET /api/notifications (+ websocket/SSE cho đơn mới), trạng thái đã đọc lưu theo tài khoản.
 import dayjs from "dayjs";
-import { stockLevel } from "@/lib/craft/groups";
-import { optionRows } from "@/lib/craft/steps";
-import type { CraftConfig, StepOption } from "@/lib/craft/types";
+import { materialLevel } from "@/lib/inventory/stock";
+import type { Material } from "@/lib/inventory/types";
 import { discountStatus, periodHint } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
@@ -29,12 +28,12 @@ export type AppNotification = {
 const lastEventAt = (o: Order, status: Order["status"]) =>
   [...o.history].reverse().find((e) => e.status === status && (e.kind ?? "status") === "status")?.at ?? o.updatedAt;
 
-const names = (items: StepOption[]) => {
-  const list = items.map((i) => i.name.vi);
+const names = (items: Material[]) => {
+  const list = items.map((i) => i.name);
   return list.length > 3 ? `${list.slice(0, 3).join(", ")} và ${list.length - 3} mục khác` : list.join(", ");
 };
 
-export function buildNotifications(src: { orders: Order[]; craft: CraftConfig; discounts: Discount[] }, today = dayjs()) {
+export function buildNotifications(src: { orders: Order[]; materials: Material[]; discounts: Discount[] }, today = dayjs()) {
   const list: AppNotification[] = [];
 
   for (const o of src.orders) {
@@ -83,22 +82,18 @@ export function buildNotifications(src: { orders: Order[]; craft: CraftConfig; d
     }
   }
 
-  // Tồn kho: gộp một thông báo cho mỗi mức để không tràn danh sách
-  // Chỉ xét bước đang hiện trên web và lựa chọn đang bán
-  const materials = optionRows(src.craft)
-    .filter(({ step, option }) => step.enabled && option.available)
-    .map(({ step, option }) => ({ ...option, id: `${step.id}/${option.id}` }));
-  const out = materials.filter((m) => stockLevel(m) === "out");
-  const low = materials.filter((m) => stockLevel(m) === "low");
-  const ids = (items: StepOption[]) => items.map((i) => i.id).sort().join(",");
+  // Tồn kho (Kho nguyên liệu): gộp một thông báo cho mỗi mức để không tràn danh sách
+  const out = src.materials.filter((m) => materialLevel(m) === "out");
+  const low = src.materials.filter((m) => materialLevel(m) === "low");
+  const ids = (items: Material[]) => items.map((i) => i.id).sort().join(",");
   if (out.length)
     list.push({
       id: `stock-out:${ids(out)}`,
       kind: "stock-out",
       tone: "danger",
       title: `${out.length} nguyên liệu đã hết hàng`,
-      description: `${names(out)} — khách không chọn được trên trang Thủ công.`,
-      to: "/craft",
+      description: `${names(out)} — lựa chọn dùng các nguyên liệu này đang bị khóa trên web.`,
+      to: "/inventory?status=out",
     });
   if (low.length)
     list.push({
@@ -107,7 +102,7 @@ export function buildNotifications(src: { orders: Order[]; craft: CraftConfig; d
       tone: "warning",
       title: `${low.length} nguyên liệu sắp hết`,
       description: `${names(low)} — nên nhập thêm.`,
-      to: "/craft",
+      to: "/inventory?status=low",
     });
 
   for (const d of src.discounts) {

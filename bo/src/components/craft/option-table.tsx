@@ -1,16 +1,17 @@
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Flex, Switch, Table, Tag, Typography, type TableProps } from "antd";
-import { MaterialAvatar, StockText } from "@/components/craft/material-view";
+import { MaterialAvatar, OptionStock, VesselStock } from "@/components/craft/material-view";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
-import { formatDelta, shapeLabels } from "@/lib/craft/groups";
+import { formatDelta, shapeLabels, sizeLabel } from "@/lib/craft/groups";
 import { previewRoleMeta } from "@/lib/craft/steps";
 import type { CraftConfig, OptionStep, StepOption, VesselOption } from "@/lib/craft/types";
+import type { MaterialMap } from "@/lib/inventory/stock";
 import { usePageQuery } from "@/lib/use-page-query";
 
-type Props = { step: OptionStep; config: CraftConfig; api: CraftConfigApi; onEdit: (optionId: string) => void };
+type Props = { step: OptionStep; config: CraftConfig; api: CraftConfigApi; map: MaterialMap; onEdit: (optionId: string) => void };
 
 // Bảng lựa chọn của một bước: bật/tắt bán ngay trên bảng, sửa chi tiết trong drawer
-export function OptionTable({ step, config, api, onEdit }: Props) {
+export function OptionTable({ step, config, api, map, onEdit }: Props) {
   const items = step.options as StepOption[];
   const pager = usePageQuery(items.length);
   const isVessel = step.kind === "vessel";
@@ -42,7 +43,11 @@ export function OptionTable({ step, config, api, onEdit }: Props) {
         </span>
       ),
     },
-    { title: "Tồn kho", key: "stock", render: (_, o) => <StockText item={o} /> },
+    {
+      title: isVessel ? "Tồn kho theo cỡ" : "Tồn kho",
+      key: "stock",
+      render: (_, o) => (step.kind === "vessel" ? <VesselStock option={o as VesselOption} sizes={step.sizes} map={map} /> : <OptionStock materialId={o.materialId} map={map} />),
+    },
     {
       title: "Đang bán",
       dataIndex: "available",
@@ -63,7 +68,7 @@ export function OptionTable({ step, config, api, onEdit }: Props) {
     <Flex vertical gap={12}>
       <Flex justify="space-between" align="center" gap={12} wrap>
         <Typography.Text type="secondary">
-          {isVessel ? "Mỗi hũ chọn được nắp và các kích thước riêng." : "Khách chọn trong các mục đang bán và còn hàng."}
+          {isVessel ? "Mỗi cỡ của hũ là một mã riêng trong Kho — hết cỡ nào web chỉ khóa cỡ đó." : "Khách chọn trong các mục đang bán và còn hàng."}
         </Typography.Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => onEdit("new")}>
           Thêm lựa chọn
@@ -86,7 +91,7 @@ function Details({ step, option, config }: { step: OptionStep; option: StepOptio
   const parts: string[] = [];
   if (step.kind === "vessel") {
     const v = option as VesselOption;
-    const sizes = step.sizes.filter((s) => v.supportedSizeIds.includes(s.id)).map((s) => `${s.grams}g`);
+    const sizes = step.sizes.filter((s) => v.supportedSizeIds.includes(s.id)).map((s) => sizeLabel(s));
     parts.push(shapeLabels[v.shape], sizes.length ? sizes.join(" · ") : "Chưa chọn kích thước", v.lid ? "Có nắp" : "Không nắp");
   }
   if ("previewRole" in step && step.previewRole && option.look) {

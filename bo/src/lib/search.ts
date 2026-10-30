@@ -1,8 +1,9 @@
 // Tìm kiếm toàn cục trên header: gom đơn hàng, khách hàng, sản phẩm, mã giảm giá, nguyên liệu và các trang.
 // Chưa có API nên lọc ngay trên dữ liệu đã tải. Khi có BE thay bằng GET /api/search?q=.
-import { stockLevel } from "@/lib/craft/groups";
 import { optionRows } from "@/lib/craft/steps";
 import type { CraftConfig } from "@/lib/craft/types";
+import { categoryLabels, levelOf, materialLevel, toMap } from "@/lib/inventory/stock";
+import type { Material } from "@/lib/inventory/types";
 import type { Customer } from "@/lib/customers/types";
 import { discountStatus, statusMeta as discountStatusMeta, valueText } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
@@ -19,7 +20,7 @@ export const searchGroupLabels: Record<SearchGroup, string> = {
   customers: "Khách hàng",
   products: "Sản phẩm",
   discounts: "Mã giảm giá",
-  materials: "Nguyên liệu",
+  materials: "Nguyên liệu & Thủ công",
 };
 
 export type SearchResult = {
@@ -63,6 +64,7 @@ export type SearchSources = {
   products: Product[];
   discounts: Discount[];
   craft: CraftConfig;
+  inventory: Material[];
 };
 
 export function search(raw: string, src: SearchSources): SearchResult[] {
@@ -127,21 +129,34 @@ export function search(raw: string, src: SearchSources): SearchResult[] {
       };
     });
 
-  // Nguyên liệu: tìm theo tên lựa chọn hoặc tên bước (mở thẳng bước trên trang Thủ công)
+  // Nguyên liệu trong kho (mở Kho) + bước & lựa chọn trên trang Thủ công
+  const map = toMap(src.inventory);
+  const levelTag = (level: string) =>
+    level === "out" ? { label: "Hết hàng", color: "red" } : level === "low" ? { label: "Sắp hết", color: "orange" } : undefined;
   const materials: SearchResult[] = [
+    ...src.inventory
+      .filter((m) => matches(q, m.name, m.sku))
+      .map((m) => ({
+        key: `inventory:${m.id}`,
+        group: "materials" as const,
+        title: m.name,
+        subtitle: `Kho · ${categoryLabels[m.category]}${m.sku ? ` · ${m.sku}` : ""}`,
+        tag: levelTag(materialLevel(m)),
+        swatch: m.swatch,
+        to: `/inventory?material=${m.id}`,
+      })),
     ...src.craft.steps
       .filter((st) => matches(q, st.title.vi, st.title.en))
       .map((st) => ({ key: `step:${st.id}`, group: "materials" as const, title: st.title.vi, subtitle: "Bước trên trang Thủ công", to: `/craft?step=${st.id}` })),
     ...optionRows(src.craft)
       .filter(({ option: m }) => matches(q, m.name.vi, m.name.en))
       .map(({ step, option: m }) => {
-        const level = stockLevel(m);
         return {
           key: `material:${step.id}:${m.id}`,
           group: "materials" as const,
           title: m.name.vi,
           subtitle: `${step.title.vi} · ${m.name.en}`,
-          tag: level === "out" ? { label: "Hết hàng", color: "red" } : level === "low" ? { label: "Sắp hết", color: "orange" } : undefined,
+          tag: levelTag(levelOf(m, map)),
           image: m.images?.[0],
           swatch: m.swatch,
           to: `/craft?step=${step.id}&edit=${m.id}`,

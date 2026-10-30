@@ -10,7 +10,7 @@ type Props = { open: boolean; hasVessel: boolean; onCancel: () => void; onCreate
 
 // Thêm bước: chọn component (thẻ có hình minh họa) rồi đặt tên. Bước mới ẩn với khách cho tới khi bật.
 export function AddStepModal({ open, hasVessel, onCancel, onCreate }: Props) {
-  const [kind, setKind] = useState<StepKind>("cards");
+  const [kind, setKind] = useState<StepKind>(hasVessel ? "cards" : "vessel");
   const [form] = Form.useForm<{ title: string }>();
 
   return (
@@ -23,7 +23,8 @@ export function AddStepModal({ open, hasVessel, onCancel, onCreate }: Props) {
       onCancel={onCancel}
       onOk={() => form.submit()}
       destroyOnHidden
-      afterOpenChange={(o) => o && setKind("cards")}
+      // Chưa có bước hũ thì gợi ý tạo hũ trước (bước bắt buộc, quyết định giá gốc)
+      afterOpenChange={(o) => o && setKind(hasVessel ? "cards" : "vessel")}
     >
       <Typography.Paragraph type="secondary">
         Mỗi bước dùng một component. Khách đi qua các bước theo thứ tự bạn sắp xếp. Bước mới sẽ ẩn cho tới khi bạn bật lên.

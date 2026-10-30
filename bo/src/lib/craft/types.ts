@@ -17,12 +17,12 @@ export type PreviewRole = (typeof previewRoles)[number];
 export const stepIcons = ["vessel", "layers", "flower", "flame", "palette", "sparkles", "pen", "gift", "tag", "box"] as const;
 export type StepIcon = (typeof stepIcons)[number];
 
-export type Unit = "g" | "pcs";
-// Tồn kho của một lựa chọn, theo đơn vị của bước. Số rất lớn (UNLIMITED) = không theo dõi
-export type Stock = { stock: number; unit: Unit };
+// Đơn vị của nguyên liệu trong kho: "g" (sáp), "ml" (tinh dầu, màu lỏng) hoặc "pcs" (hũ, bấc, phụ kiện)
+export const units = ["pcs", "g", "ml"] as const;
+export type Unit = (typeof units)[number];
 
 // Một lựa chọn trong bước (dùng chung cho vessel / cards / swatches / blend)
-export type StepOption = Stock & {
+export type StepOption = {
   // Duy nhất trong bước; dùng trong cấu hình khách đã chọn nên không đổi sau khi tạo
   id: string;
   name: Localized;
@@ -31,6 +31,8 @@ export type StepOption = Stock & {
   priceDelta: Money;
   // Shop tạm ẩn dù còn hàng
   available: boolean;
+  // Nguyên liệu trong Kho bị trừ khi khách chọn mục này. Bỏ trống = không theo dõi tồn (vd "Không mùi")
+  materialId?: string;
   // Màu hiển thị khi chưa có ảnh; swatches không có màu = "không pha màu" (ô sọc)
   swatch?: string;
   // Ảnh thật, ảnh đầu tiên là ảnh chính
@@ -47,17 +49,27 @@ export type StepOption = Stock & {
 
 export type VesselShape = "tumbler" | "jar" | "tin" | "bowl";
 
-export type VesselOption = StepOption & {
+// Mã hũ (và nắp) trong Kho của MỘT kích cỡ — hũ 150ml và hũ 250ml là hai nguyên liệu khác nhau
+export type VesselSizeStock = { materialId?: string; lidMaterialId?: string };
+
+// Hũ không có materialId chung: tồn kho tính riêng từng cỡ qua sizeMaterials
+export type VesselOption = Omit<StepOption, "materialId"> & {
+  materialId?: never;
   shape: VesselShape;
   translucent?: boolean;
   // Kích thước đổ được (id trong sizes của bước)
   supportedSizeIds: string[];
-  // null = không có nắp
-  lid: (Stock & { priceDelta: Money }) | null;
+  // { [sizeId]: mã hũ/nắp trong Kho }. Cỡ không có mã hũ = không theo dõi tồn
+  sizeMaterials: Record<string, VesselSizeStock>;
+  // null = không có nắp (khách tự chọn thêm nắp, trừ nắp theo đúng cỡ)
+  lid: { priceDelta: Money } | null;
 };
 
 export type SizeOption = {
   id: string;
+  // Dung tích hũ — tên cỡ khách thấy (vd 150ml)
+  ml: number;
+  // Lượng sáp đổ vào (gram) — dùng tính nguyên liệu tiêu hao
   grams: number;
   // Chỉ hiện khi xưởng đã đo thực tế
   burnHours?: number;
@@ -79,8 +91,10 @@ export type TextFieldDef = {
   onLabel?: boolean;
 };
 
-export type AddonDef = Stock & {
+export type AddonDef = {
   id: string;
+  // Nguyên liệu trong Kho (vd hộp quà). Bỏ trống = không theo dõi tồn
+  materialId?: string;
   name: Localized;
   description?: Localized;
   priceDelta: Money;
@@ -110,12 +124,11 @@ export type CardsStep = StepBase & {
   // Chọn nhiều tối đa (bỏ trống = không giới hạn)
   maxSelect?: number;
   previewRole?: PreviewRole;
-  // Đơn vị tồn kho; "g" thì mỗi hũ tiêu hao gramsPerGram × khối lượng nến
-  unit: Unit;
+  // Với nguyên liệu tính theo gram: mỗi hũ dùng gramsPerGram × khối lượng nến (mặc định 1)
   gramsPerGram?: number;
 };
 
-export type SwatchesStep = StepBase & { kind: "swatches"; options: StepOption[]; previewRole?: PreviewRole; unit: Unit; gramsPerGram?: number };
+export type SwatchesStep = StepBase & { kind: "swatches"; options: StepOption[]; previewRole?: PreviewRole; gramsPerGram?: number };
 
 export type IntensityLevel = "light" | "medium" | "strong";
 export type BlendStep = StepBase & {
@@ -125,7 +138,6 @@ export type BlendStep = StepBase & {
   maxBlend: number;
   // null = không cho chọn độ đậm. load = tỉ lệ (gram tinh dầu / gram sáp)
   intensity: { priceDelta: Record<IntensityLevel, Money>; load: Record<IntensityLevel, number> } | null;
-  unit: Unit;
 };
 
 export type InputsStep = StepBase & { kind: "inputs"; fields: TextFieldDef[]; addons: AddonDef[] };

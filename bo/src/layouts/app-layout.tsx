@@ -5,6 +5,7 @@ import { Link, Outlet, useLocation, useNavigate, useNavigation } from "react-rou
 import { GlobalSearch } from "@/components/header/global-search";
 import { NotificationBell } from "@/components/header/notification-bell";
 import { RouteSkeleton } from "@/components/skeletons";
+import { useInventory } from "@/hooks/use-inventory";
 import { useOrders } from "@/hooks/use-orders";
 import { findNavItem, navGroups, type NavItem } from "@/layouts/nav";
 import { brand, radius } from "@/theme";
@@ -44,7 +45,12 @@ export function AppLayout() {
   const current = findNavItem(pathname);
   // Đơn cần xử lý: chờ thanh toán hoặc đã thanh toán nhưng xưởng chưa nhận làm
   const { orders, loading } = useOrders();
-  const menuItems = buildMenu({ orders: loading ? 0 : orders.filter((o) => o.status === "pending" || o.status === "paid").length });
+  // Nguyên liệu hết hàng — lựa chọn dùng chúng đang bị khóa trên web
+  const inventory = useInventory();
+  const menuItems = buildMenu({
+    orders: loading ? 0 : orders.filter((o) => o.status === "pending" || o.status === "paid").length,
+    inventory: inventory.loading ? 0 : inventory.materials.filter((m) => m.tracked && m.stock <= 0).length,
+  });
   // Đang tải code của trang sắp mở → hiện khung xương đúng trang đó thay vì giữ trang cũ
   const navigation = useNavigation();
   const nextPath = navigation.state === "loading" ? navigation.location.pathname : null;

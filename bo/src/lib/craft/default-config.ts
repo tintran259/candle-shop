@@ -1,10 +1,14 @@
 // ⚠️ DỮ LIỆU MẪU — cấu hình mặc định của trình dựng Thủ công (giá/tồn kho chưa phải số thật).
 // BE dùng đúng nội dung này làm bản ghi đầu tiên khi chưa có cấu hình (xem docs/craft-builder.md).
-import { UNLIMITED } from "@/lib/craft/groups";
+// materialId trỏ tới nguyên liệu trong lib/inventory/mock.ts; mục không gắn kho = không theo dõi tồn.
 import { DEFAULT_INTENSITY } from "@/lib/craft/steps";
 import type { CraftConfig } from "@/lib/craft/types";
 
-const all = ["s100", "s150", "s200"];
+const all = ["s150", "s200", "s250"];
+
+// Mã hũ (+ nắp) trong Kho cho từng cỡ: jar-ceramic-150, lid-ceramic-150…
+const perSize = (jar: string, sizes: string[], lid?: string) =>
+  Object.fromEntries(sizes.map((id) => [id, { materialId: `${jar}-${id.slice(1)}`, lidMaterialId: lid && `${lid}-${id.slice(1)}` }]));
 
 export const defaultCraftConfig: CraftConfig = {
   version: 1,
@@ -19,16 +23,16 @@ export const defaultCraftConfig: CraftConfig = {
       enabled: true,
       required: true,
       sizes: [
-        { id: "s100", grams: 100, burnHours: 20, basePrice: 400_000, available: true },
-        { id: "s150", grams: 150, burnHours: 35, basePrice: 500_000, available: true },
-        { id: "s200", grams: 200, burnHours: 50, basePrice: 650_000, available: true },
+        { id: "s150", ml: 150, grams: 120, burnHours: 25, basePrice: 400_000, available: true },
+        { id: "s200", ml: 200, grams: 160, burnHours: 35, basePrice: 500_000, available: true },
+        { id: "s250", ml: 250, grams: 200, burnHours: 45, basePrice: 650_000, available: true },
       ],
       options: [
-        { id: "ceramic", name: { vi: "Hũ gốm", en: "Ceramic" }, priceDelta: 100_000, available: true, stock: 18, unit: "pcs", swatch: "#e4dcd0", shape: "tumbler", supportedSizeIds: all, lid: { priceDelta: 25_000, stock: 10, unit: "pcs" } },
-        { id: "clear-glass", name: { vi: "Thủy tinh trong", en: "Clear glass" }, priceDelta: 25_000, available: true, stock: 40, unit: "pcs", swatch: "#dfe7e6", shape: "jar", translucent: true, supportedSizeIds: all, lid: null },
-        { id: "amber-glass", name: { vi: "Thủy tinh hổ phách", en: "Amber glass" }, priceDelta: 50_000, available: true, stock: 24, unit: "pcs", swatch: "#9a5a26", shape: "jar", translucent: true, supportedSizeIds: all, lid: { priceDelta: 25_000, stock: 24, unit: "pcs" } },
-        { id: "plaster", name: { vi: "Hũ thạch cao", en: "Plaster" }, priceDelta: 75_000, available: true, stock: 6, unit: "pcs", swatch: "#f1ece4", shape: "bowl", supportedSizeIds: ["s150", "s200"], lid: null },
-        { id: "tin", name: { vi: "Hũ thiếc", en: "Tin" }, priceDelta: 25_000, available: true, stock: 30, unit: "pcs", swatch: "#c3c6ca", shape: "tin", supportedSizeIds: ["s100", "s150"], lid: { priceDelta: 0, stock: 30, unit: "pcs" } },
+        { id: "ceramic", name: { vi: "Hũ gốm", en: "Ceramic" }, priceDelta: 100_000, available: true, swatch: "#e4dcd0", shape: "tumbler", supportedSizeIds: all, sizeMaterials: perSize("jar-ceramic", all, "lid-ceramic"), lid: { priceDelta: 25_000 } },
+        { id: "clear-glass", name: { vi: "Thủy tinh trong", en: "Clear glass" }, priceDelta: 25_000, available: true, swatch: "#dfe7e6", shape: "jar", translucent: true, supportedSizeIds: all, sizeMaterials: perSize("jar-clear-glass", all), lid: null },
+        { id: "amber-glass", name: { vi: "Thủy tinh hổ phách", en: "Amber glass" }, priceDelta: 50_000, available: true, swatch: "#9a5a26", shape: "jar", translucent: true, supportedSizeIds: all, sizeMaterials: perSize("jar-amber-glass", all, "lid-amber"), lid: { priceDelta: 25_000 } },
+        { id: "plaster", name: { vi: "Hũ thạch cao", en: "Plaster" }, priceDelta: 75_000, available: true, swatch: "#f1ece4", shape: "bowl", supportedSizeIds: ["s200", "s250"], sizeMaterials: perSize("jar-plaster", ["s200", "s250"]), lid: null },
+        { id: "tin", name: { vi: "Hũ thiếc", en: "Tin" }, priceDelta: 25_000, available: true, swatch: "#c3c6ca", shape: "tin", supportedSizeIds: ["s150", "s200"], sizeMaterials: perSize("jar-tin", ["s150", "s200"], "lid-tin"), lid: { priceDelta: 0 } },
       ],
     },
     {
@@ -41,14 +45,13 @@ export const defaultCraftConfig: CraftConfig = {
       required: true,
       multiple: false,
       previewRole: "waxColor",
-      unit: "g",
-      // Mỗi gram nến cần 1 gram sáp
+      // Sáp tính theo gram: mỗi gram nến cần 1 gram sáp
       gramsPerGram: 1,
       options: [
-        { id: "soy", name: { vi: "Sáp đậu nành", en: "Soy wax" }, description: { vi: "Tiêu chuẩn, cháy sạch", en: "Standard, clean burn" }, priceDelta: 0, available: true, stock: 9000, unit: "g", swatch: "#f6efe2" },
-        { id: "coconut", name: { vi: "Sáp dừa", en: "Coconut wax" }, description: { vi: "Tỏa hương mạnh, mặt sáp mịn", en: "Strong throw, creamy top" }, priceDelta: 25_000, available: true, stock: 2400, unit: "g", swatch: "#fbf7ef" },
-        { id: "beeswax", name: { vi: "Sáp ong", en: "Beeswax" }, description: { vi: "Mùi mật nhẹ, màu vàng tự nhiên", en: "Light honey note, natural gold" }, priceDelta: 50_000, available: true, stock: 450, unit: "g", swatch: "#f0d48a" },
-        { id: "blend", name: { vi: "Sáp pha trộn", en: "Wax blend" }, description: { vi: "Đậu nành + dừa", en: "Soy + coconut" }, priceDelta: 10_000, available: true, stock: 3000, unit: "g", swatch: "#f8f1e6" },
+        { id: "soy", name: { vi: "Sáp đậu nành", en: "Soy wax" }, description: { vi: "Tiêu chuẩn, cháy sạch", en: "Standard, clean burn" }, priceDelta: 0, available: true, materialId: "wax-soy", swatch: "#f6efe2" },
+        { id: "coconut", name: { vi: "Sáp dừa", en: "Coconut wax" }, description: { vi: "Tỏa hương mạnh, mặt sáp mịn", en: "Strong throw, creamy top" }, priceDelta: 25_000, available: true, materialId: "wax-coconut", swatch: "#fbf7ef" },
+        { id: "beeswax", name: { vi: "Sáp ong", en: "Beeswax" }, description: { vi: "Mùi mật nhẹ, màu vàng tự nhiên", en: "Light honey note, natural gold" }, priceDelta: 50_000, available: true, materialId: "wax-beeswax", swatch: "#f0d48a" },
+        { id: "blend", name: { vi: "Sáp pha trộn", en: "Wax blend" }, description: { vi: "Đậu nành + dừa", en: "Soy + coconut" }, priceDelta: 10_000, available: true, materialId: "wax-blend", swatch: "#f8f1e6" },
       ],
     },
     {
@@ -61,15 +64,14 @@ export const defaultCraftConfig: CraftConfig = {
       required: true,
       maxBlend: 3,
       intensity: DEFAULT_INTENSITY,
-      unit: "g",
       options: [
-        { id: "vanilla", name: { vi: "Vanilla", en: "Vanilla" }, priceDelta: 0, available: true, stock: 900, unit: "g", swatch: "#f3d9a4" },
-        { id: "lavender", name: { vi: "Lavender", en: "Lavender" }, priceDelta: 0, available: true, stock: 450, unit: "g", swatch: "#b9a6d6" },
-        { id: "white-tea", name: { vi: "White Tea", en: "White Tea" }, priceDelta: 10_000, available: true, stock: 300, unit: "g", swatch: "#cfd8b8" },
-        { id: "sandalwood", name: { vi: "Sandalwood", en: "Sandalwood" }, priceDelta: 25_000, available: true, stock: 600, unit: "g", swatch: "#a8794f" },
-        { id: "rose", name: { vi: "Rose", en: "Rose" }, priceDelta: 0, available: true, stock: 0, unit: "g", swatch: "#d9646d" },
-        { id: "citrus", name: { vi: "Citrus", en: "Citrus" }, priceDelta: 0, available: true, stock: 500, unit: "g", swatch: "#f2b84b" },
-        { id: "none", name: { vi: "Không mùi", en: "Unscented" }, priceDelta: 0, available: true, stock: UNLIMITED, unit: "g", exclusive: true },
+        { id: "vanilla", name: { vi: "Vanilla", en: "Vanilla" }, priceDelta: 0, available: true, materialId: "oil-vanilla", swatch: "#f3d9a4" },
+        { id: "lavender", name: { vi: "Lavender", en: "Lavender" }, priceDelta: 0, available: true, materialId: "oil-lavender", swatch: "#b9a6d6" },
+        { id: "white-tea", name: { vi: "White Tea", en: "White Tea" }, priceDelta: 10_000, available: true, materialId: "oil-white-tea", swatch: "#cfd8b8" },
+        { id: "sandalwood", name: { vi: "Sandalwood", en: "Sandalwood" }, priceDelta: 25_000, available: true, materialId: "oil-sandalwood", swatch: "#a8794f" },
+        { id: "rose", name: { vi: "Rose", en: "Rose" }, priceDelta: 0, available: true, materialId: "oil-rose", swatch: "#d9646d" },
+        { id: "citrus", name: { vi: "Citrus", en: "Citrus" }, priceDelta: 0, available: true, materialId: "oil-citrus", swatch: "#f2b84b" },
+        { id: "none", name: { vi: "Không mùi", en: "Unscented" }, priceDelta: 0, available: true, exclusive: true },
       ],
     },
     {
@@ -82,9 +84,8 @@ export const defaultCraftConfig: CraftConfig = {
       required: true,
       multiple: false,
       previewRole: "wick",
-      unit: "pcs",
       options: [
-        { id: "cotton", name: { vi: "Bấc cotton", en: "Cotton wick" }, description: { vi: "Lửa êm, ổn định", en: "Calm, steady flame" }, priceDelta: 0, available: true, stock: 500, unit: "pcs", look: "cotton" },
+        { id: "cotton", name: { vi: "Bấc cotton", en: "Cotton wick" }, description: { vi: "Lửa êm, ổn định", en: "Calm, steady flame" }, priceDelta: 0, available: true, materialId: "wick-cotton", look: "cotton" },
         // Bấc gỗ: không hợp hũ thiếc (miệng hẹp) và sáp ong (cháy không đều)
         {
           id: "wood",
@@ -92,8 +93,7 @@ export const defaultCraftConfig: CraftConfig = {
           description: { vi: "Tiếng lách tách như lò sưởi", en: "Crackles like a fireplace" },
           priceDelta: 40_000,
           available: true,
-          stock: 40,
-          unit: "pcs",
+          materialId: "wick-wood",
           look: "wood",
           onlyWith: { container: ["ceramic", "clear-glass", "amber-glass", "plaster"], wax: ["soy", "coconut", "blend"] },
         },
@@ -108,15 +108,14 @@ export const defaultCraftConfig: CraftConfig = {
       enabled: true,
       required: true,
       previewRole: "waxColor",
-      unit: "pcs",
       options: [
         // Không có màu = giữ màu tự nhiên của sáp (ảnh minh họa dùng màu của bước Sáp)
-        { id: "natural", name: { vi: "Không màu", en: "Undyed" }, priceDelta: 0, available: true, stock: UNLIMITED, unit: "pcs" },
-        { id: "cream", name: { vi: "Trắng kem", en: "Cream" }, priceDelta: 0, available: true, stock: 200, unit: "pcs", swatch: "#f3ead8" },
-        { id: "beige", name: { vi: "Be", en: "Beige" }, priceDelta: 10_000, available: true, stock: 120, unit: "pcs", swatch: "#e6cfae" },
-        { id: "sage", name: { vi: "Xanh sage", en: "Sage" }, priceDelta: 10_000, available: true, stock: 80, unit: "pcs", swatch: "#a9b59a" },
-        { id: "brown", name: { vi: "Nâu", en: "Brown" }, priceDelta: 10_000, available: true, stock: 60, unit: "pcs", swatch: "#a07c62" },
-        { id: "pastel-pink", name: { vi: "Hồng pastel", en: "Pastel pink" }, priceDelta: 10_000, available: true, stock: 0, unit: "pcs", swatch: "#f0b3a8" },
+        { id: "natural", name: { vi: "Không màu", en: "Undyed" }, priceDelta: 0, available: true },
+        { id: "cream", name: { vi: "Trắng kem", en: "Cream" }, priceDelta: 0, available: true, materialId: "dye-cream", swatch: "#f3ead8" },
+        { id: "beige", name: { vi: "Be", en: "Beige" }, priceDelta: 10_000, available: true, materialId: "dye-beige", swatch: "#e6cfae" },
+        { id: "sage", name: { vi: "Xanh sage", en: "Sage" }, priceDelta: 10_000, available: true, materialId: "dye-sage", swatch: "#a9b59a" },
+        { id: "brown", name: { vi: "Nâu", en: "Brown" }, priceDelta: 10_000, available: true, materialId: "dye-brown", swatch: "#a07c62" },
+        { id: "pastel-pink", name: { vi: "Hồng pastel", en: "Pastel pink" }, priceDelta: 10_000, available: true, materialId: "dye-pastel-pink", swatch: "#f0b3a8" },
       ],
     },
     {
@@ -129,14 +128,13 @@ export const defaultCraftConfig: CraftConfig = {
       required: false,
       multiple: false,
       previewRole: "decoration",
-      unit: "pcs",
       options: [
-        { id: "none", name: { vi: "Không trang trí", en: "No decoration" }, priceDelta: 0, available: true, stock: UNLIMITED, unit: "pcs" },
-        { id: "botanical", name: { vi: "Hoa khô quanh thành hũ", en: "Botanical rim" }, description: { vi: "Đặt sát thành, cách xa ngọn lửa", en: "Set at the rim, away from the flame" }, priceDelta: 75_000, available: true, stock: 30, unit: "pcs", look: "flowers" },
-        { id: "wax-pattern", name: { vi: "Họa tiết sáp", en: "Wax pattern" }, priceDelta: 50_000, available: true, stock: 50, unit: "pcs", look: "pattern" },
-        { id: "wax-topper", name: { vi: "Topping sáp tạo hình", en: "Sculpted wax topper" }, priceDelta: 90_000, available: true, stock: 12, unit: "pcs", look: "topper" },
+        { id: "none", name: { vi: "Không trang trí", en: "No decoration" }, priceDelta: 0, available: true },
+        { id: "botanical", name: { vi: "Hoa khô quanh thành hũ", en: "Botanical rim" }, description: { vi: "Đặt sát thành, cách xa ngọn lửa", en: "Set at the rim, away from the flame" }, priceDelta: 75_000, available: true, materialId: "decor-botanical", look: "flowers" },
+        { id: "wax-pattern", name: { vi: "Họa tiết sáp", en: "Wax pattern" }, priceDelta: 50_000, available: true, materialId: "decor-pattern", look: "pattern" },
+        { id: "wax-topper", name: { vi: "Topping sáp tạo hình", en: "Sculpted wax topper" }, priceDelta: 90_000, available: true, materialId: "decor-topper", look: "topper" },
         // Chưa được duyệt an toàn — tạm ẩn với khách
-        { id: "glitter", name: { vi: "Kim tuyến", en: "Glitter" }, priceDelta: 50_000, available: false, stock: 100, unit: "pcs" },
+        { id: "glitter", name: { vi: "Kim tuyến", en: "Glitter" }, priceDelta: 50_000, available: false, materialId: "decor-glitter" },
       ],
     },
     {
@@ -153,7 +151,7 @@ export const defaultCraftConfig: CraftConfig = {
         { id: "giftMessage", label: { vi: "Lời nhắn kèm quà", en: "Gift message" }, maxLength: 150, priceDelta: 0, enabled: true, multiline: true },
       ],
       addons: [
-        { id: "giftBox", name: { vi: "Hộp quà", en: "Gift box" }, description: { vi: "Hộp cứng kèm thiệp", en: "Rigid box with a card" }, priceDelta: 75_000, available: true, enabled: true, stock: 25, unit: "pcs" },
+        { id: "giftBox", name: { vi: "Hộp quà", en: "Gift box" }, description: { vi: "Hộp cứng kèm thiệp", en: "Rigid box with a card" }, priceDelta: 75_000, available: true, enabled: true, materialId: "box-gift" },
       ],
     },
   ],
