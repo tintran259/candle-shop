@@ -94,7 +94,7 @@ BO · Kho      ──phiếu kho─────▶ BE ◀──────POST 
 | `look` | `string?` | Kiểu vẽ trên ảnh minh họa khi bước có `previewRole` (mục 5). |
 | `onlyWith` | `{ [stepId]: optionId[] }?` | Chỉ chọn được khi bước `stepId` đang chọn một trong các mục này. Bỏ trống = không giới hạn. Vd bấc gỗ chỉ đi với một số hũ. |
 | `maxGrams` | `number?` | Không dùng được khi lượng sáp đổ (`size.grams`) lớn hơn số này. |
-| `exclusive` | `boolean?` | Chỉ ở `blend`: chọn mục này thì không phối thêm mục khác (vd "Không mùi"). |
+| `exclusive` | `boolean?` | Ở `cards`, `swatches`, `blend`: mục đứng một mình, chọn mục này thì bỏ các mục khác và ngược lại (vd "Không mùi", "Không màu", "Không trang trí"). |
 
 ## 4. Năm component
 
@@ -165,7 +165,7 @@ Mỗi cấu hình có **đúng 1** bước loại này. Bước luôn bật, lu�
 
 ### 4.3 `swatches`: Bảng màu
 
-Giống `cards` nhưng **luôn chọn đúng một**. `previewRole?` chỉ nhận `waxColor`. Có `gramsPerGram?`.
+Giống `cards`: có `multiple`, `maxSelect?`, `gramsPerGram?`. `previewRole?` chỉ nhận `waxColor`. Màu nhuộm tính theo ml, `gramsPerGram` mặc định 0.01 (1 ml cho 100 g sáp); chọn nhiều màu thì lượng chia đều và phụ thu theo tỉ lệ ml.
 
 **Web hiển thị:** ô màu tròn kèm tên và phụ thu. Lựa chọn không có `swatch` vẽ ô sọc ("không pha màu").
 
@@ -175,6 +175,7 @@ Giống `cards` nhưng **luôn chọn đúng một**. `previewRole?` chỉ nhậ
 |---|---|
 | `maxBlend` | Số mục phối tối đa trong 1 hũ, từ 1 đến 4. `1` = chọn một, không có thanh tỉ lệ. |
 | `intensity` | `null` = không cho chọn độ đậm. Nếu có: `{ priceDelta: { light, medium, strong }, load: { light, medium, strong } }`. `load` = lượng tinh dầu trên mỗi gram sáp (mặc định 0.06 / 0.08 / 0.10). |
+| `scentPrice?` | `{ basePrice, standardLoad }`: phụ thu hương và mức chuẩn, mặc định 10.000 ₫ và 0.10. `basePrice = 0` là tắt (mục 7). |
 
 **Web hiển thị:** lưới thẻ chọn nhiều. Từ 2 mục trở lên thì hiện thanh tỉ lệ cho từng mục (10–100, bước 5). Có `intensity` thì hiện 3 nút Nhẹ / Vừa / Đậm. Chọn mục `exclusive` thì bỏ các mục khác và ẩn độ đậm.
 
@@ -198,9 +199,9 @@ Web vẽ bằng SVG (`fe/src/components/customizer/candle-preview.tsx`):
 | Phần trên ảnh | Lấy từ |
 |---|---|
 | Dáng, màu, độ trong của hũ | Hũ đang chọn: `shape`, `swatch`, `translucent`. |
-| Màu sáp | Các bước có `previewRole: "waxColor"`, duyệt theo thứ tự; **bước sau ghi đè bước trước** nếu lựa chọn đang chọn có `swatch`. Không có thì `#f6efe2`. |
+| Màu sáp | Các bước có `previewRole: "waxColor"`, duyệt theo thứ tự; **bước sau ghi đè bước trước** nếu lựa chọn đang chọn có `swatch`. Chọn nhiều thì web cần quy định cách vẽ, gợi ý lấy mục chiếm tỉ lệ lớn nhất. Không có thì `#f6efe2`. |
 | Kiểu bấc | Bước đầu tiên có `previewRole: "wick"`: `look` = `cotton` hoặc `wood`. Mặc định `cotton`. |
-| Trang trí | Bước đầu tiên có `previewRole: "decoration"`: `look` = `flowers`, `pattern` hoặc `topper`. Không có thì không vẽ. |
+| Trang trí | Bước đầu tiên có `previewRole: "decoration"`: `look` = `flowers`, `pattern` hoặc `topper`. Chọn nhiều thì vẽ tất cả. Không có thì không vẽ. |
 | Chữ trên nhãn | Ô nhập đầu tiên có `onLabel: true` mà khách đã nhập. |
 
 Muốn thêm giá trị `look` mới thì phải bổ sung hình vẽ ở web trước.
@@ -218,9 +219,12 @@ type CraftSelection = {
 
 type StepSelection =
   | { kind: "vessel"; optionId: string; sizeId: string; withLid: boolean }
-  | { kind: "cards" | "swatches"; optionIds: string[] }
-  | { kind: "blend"; items: { optionId: string; weight: number }[]; intensity: "light" | "medium" | "strong" | null }
-  | { kind: "inputs"; values: Record<string, string>; addons: string[] };
+  | { kind: "cards" | "swatches"; optionIds: string[]; amounts?: Amounts }
+  | { kind: "blend"; items: { optionId: string; weight: number }[]; intensity: "light" | "medium" | "strong" | null; amounts?: Amounts }
+  | { kind: "inputs"; values: Record<string, string>; addons: string[]; amounts?: Amounts };
+
+// Lượng cho 1 hũ theo id lựa chọn, đơn vị của nguyên liệu. Chỉ BO gửi, thiếu thì dùng lượng mặc định
+type Amounts = Record<string, number>;
 ```
 
 - Bước không bắt buộc mà khách bỏ qua thì không có khóa trong `steps`.
@@ -232,6 +236,7 @@ type StepSelection =
 - `selection`;
 - mô tả đã dịch `{ vi, en }`, vd `"Hũ gốm 150ml · Sáp đậu nành · Vanilla 70% / Lavender 30%"`;
 - các dòng giá `[{ stepId, label, amount }]`;
+- công thức 1 hũ `recipe: [{ materialId, quantity }]`, gồm lượng admin tự điền. Giữ và trừ Kho theo công thức này;
 - giá đơn vị lúc đặt.
 
 ## 7. Tính giá
@@ -332,7 +337,7 @@ model ShopSettingRevision {
 - `previewRole` hợp lệ theo `kind`: `cards` nhận `waxColor`, `wick`, `decoration`; `swatches` chỉ nhận `waxColor`; các loại khác không có.
 - Id bước dạng `^[a-z0-9]+(-[a-z0-9]+)*$`; id lựa chọn, ô nhập, tuỳ chọn dạng `^[A-Za-z0-9-]+$`.
 - Không trùng id bước trong cấu hình; không trùng id lựa chọn, ô nhập, tuỳ chọn trong cùng bước.
-- Mọi số tiền là số nguyên ≥ 0. `maxLength` 1–500, `maxBlend` 1–4, `load` 0–0.3.
+- Mọi số tiền là số nguyên ≥ 0. `maxLength` 1–500, `maxBlend` 1–4, `load` 0–0.3, `scentPrice.standardLoad` 0.01–0.3, `maxSelect` ≥ 2.
 - Mỗi kích thước có `ml > 0` và `grams > 0`.
 - `supportedSizeIds` chỉ chứa id có trong `sizes`; khóa của `sizeMaterials` nằm trong `supportedSizeIds`.
 - Hũ không có `materialId` (dùng `sizeMaterials`).
@@ -370,7 +375,7 @@ Với mỗi dòng nến tự phối, BE tải cấu hình **hiện tại** rồi
    - cỡ đã chọn `available` và nằm trong `supportedSizeIds` của hũ;
    - mã hũ **của cỡ đó** đủ tồn cho số lượng đặt;
    - `withLid` chỉ hợp lệ khi hũ có `lid` và nắp **của cỡ đó** đủ tồn.
-4. **`cards`:** `multiple: false` thì tối đa 1 mục; `multiple: true` thì không vượt `maxSelect`. **`swatches`:** đúng 1 mục.
+4. **`cards`, `swatches`:** `multiple: false` thì tối đa 1 mục; `multiple: true` thì không vượt `maxSelect`; mục `exclusive` đứng một mình.
 5. **`blend`:** 1 tới `maxBlend` mục, `weight` 10–100; mục `exclusive` đứng một mình; `intensity` là `null` khi cấu hình không có độ đậm hoặc khi chọn mục `exclusive`.
 6. **`inputs`:** độ dài từng ô (sau khi trim) ≤ `maxLength`.
 7. **`onlyWith`:** với mỗi bước được nhắc tới (nếu bước đó đang bật và khách có chọn), **mọi** mục khách chọn ở bước đó nằm trong danh sách cho phép.
@@ -390,6 +395,7 @@ Mã lỗi: `required`, `unavailable`, `incompatible`, `tooLong`, `tooMany`, `out
    - `customization-progress.tsx`, `configuration-summary.tsx` theo `steps`;
    - tên và mô tả bước lấy từ cấu hình, không lấy từ file dịch.
 3. **Bước hũ:** hiển thị cỡ theo `ml`; khóa cỡ và nắp theo `sizeStock` (mục 8).
+   **Chọn nhiều:** `swatches` có `multiple`, xử lý mục `exclusive` ở `cards`, `swatches`; tính phụ thu sáp, màu theo tỉ lệ và phụ thu hương theo mục 7.
 4. **Giỏ hàng cũ** lưu theo `CandleConfiguration` cần bỏ: tăng `version` của store trong `fe/src/stores/cart-store.ts`.
 5. **Link `?config=` định dạng cũ** giải mã không được thì bỏ qua và dùng lựa chọn mặc định.
 6. **Lựa chọn mặc định khi mở trang:**
@@ -426,9 +432,9 @@ Trang **Trình dựng Thủ công** (`/craft`, URL giữ trạng thái `?step=&v
     - Cột "Tồn kho" lấy từ nguyên liệu gắn kèm; bước hũ hiện "Tồn kho theo cỡ".
     - Ô "Nguyên liệu trong kho": chọn nguyên liệu có sẵn, chọn "Không theo dõi", hoặc **tạo nguyên liệu mới** kèm tồn ban đầu (đơn vị Cái / Gram / Mililít). Nguyên liệu mới mang nhãn "Chờ lưu" và chỉ vào Kho khi bấm Lưu.
     - Riêng hũ: khối **"Kích cỡ & tồn kho"**, mỗi cỡ một dòng để tích cỡ đổ được, chọn hoặc tạo mã hũ và mã nắp ("Hũ sứ 150ml", "Nắp hũ sứ 150ml"…).
-    - Các trường khác hiện theo component: dáng hũ, nắp, kiểu minh họa, "không phối thêm", `onlyWith`, `maxGrams`.
+    - Các trường khác hiện theo component: dáng hũ, nắp, kiểu minh họa, "đứng một mình", `onlyWith`, `maxGrams`.
   - **Kích thước** (chỉ bước hũ): dung tích (ml), sáp đổ (g), giá gốc, thời gian cháy, đang bán.
   - **Ô nhập & tuỳ chọn** (chỉ bước `inputs`): tuỳ chọn thêm cũng gắn nguyên liệu.
-  - **Cài đặt:** tên, mô tả, icon, bắt buộc, chọn nhiều, vai trò minh họa, hệ số gram, phối tối đa, độ đậm, xóa bước.
+  - **Cài đặt:** tên, mô tả, icon, bắt buộc, số lựa chọn (Tối đa, Chọn 1, Chọn nhiều), vai trò minh họa, hệ số gram, phối tối đa, phụ thu hương, độ đậm, xóa bước.
   - **Xem trước:** mô phỏng giao diện web, bấm thử được, khóa đúng như mục 8.
 - **Xuất JSON** tải file đúng định dạng `CraftConfig`; **Cấu hình mẫu** khôi phục cấu hình mặc định.

@@ -18,4 +18,8 @@
 
 Các con số mẫu chưa thay đổi theo đơn hàng thật. Khi có BE cần API thống kê.
 
-**Cần duyệt:** khi có API, doanh thu nên tính theo tiền thực nhận hay theo đơn Hoàn tất? Đề xuất: tính theo tiền thực nhận, bỏ đơn đã hủy.
+**Quy tắc đã chốt cho API:** doanh thu tính theo tiền thực nhận.
+
+- Tính mọi khoản đã thu của đơn chưa hủy.
+- Đơn đã hủy chỉ tính phần shop giữ lại, tức tiền đã thu trừ tiền đã hoàn. Ví dụ tiền cọc giữ lại khi lỗi do khách.
+- Đơn đang chờ hoàn tiền tính theo số phải hoàn, để không ghi nhận khoản sắp trả lại.

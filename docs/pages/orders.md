@@ -22,8 +22,8 @@
 ## Trang danh sách
 
 - **Thẻ thống kê:** Chờ thanh toán, Cần làm (kèm số đơn trễ hạn), Chờ giao, Giao lỗi cần xử lý, Còn phải thu.
-- **Tab trạng thái:** có số đếm từng trạng thái.
-- **Bộ lọc:** tìm theo mã đơn, tên không dấu, số điện thoại; lọc tình trạng thanh toán; khoảng ngày đặt.
+- **Tab trạng thái:** có số đếm từng trạng thái, gồm cả 3 trạng thái giao hàng lỗi. Tab không đủ chỗ thì nằm trong nút **…**.
+- **Bộ lọc:** tìm theo mã đơn, tên không dấu, số điện thoại; lọc tình trạng thanh toán (Chưa thanh toán, Đã cọc, Đã thanh toán đủ, Chờ hoàn tiền, Đã hoàn tiền); khoảng ngày đặt.
 - **Sắp xếp:** mới đặt nhất, sắp tới hạn làm xong, tổng tiền cao nhất.
 - **Bảng:** mã đơn, khách, sản phẩm, ngày làm xong kèm cảnh báo hạn, thanh toán, trạng thái, tổng tiền.
 
@@ -43,7 +43,7 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 
 - **Số lựa chọn mỗi bước:** chọn 1 hoặc nhiều mục, trong giới hạn Tối đa, theo cài đặt ở Thủ công. Chọn Không màu hoặc Không trang trí thì bỏ các mục khác.
 - **Lượng cho 1 hũ:** mỗi nguyên liệu đã chọn (sáp, mùi hương, bấc, màu, trang trí, tuỳ chọn thêm) có ô nhập lượng theo đơn vị của nguyên liệu. Để trống thì theo mặc định, hiện mờ trong ô. Hũ và nắp luôn 1 cái nên không có ô này.
-- **Mặc định khi nhiều loại sáp:** chia đều khối lượng nến, ví dụ hũ 150g chọn 2 loại thì mỗi loại 75g. Tổng sáp có thể khác mặc định, hệ thống chỉ hiện để đối chiếu, không chặn.
+- **Mặc định khi chọn nhiều:** sáp và màu chia đều cho số loại, ví dụ hũ 150ml đổ 120g sáp, chọn 2 loại thì mỗi loại 60g. Tổng sáp có thể khác mặc định, hệ thống chỉ hiện để đối chiếu, không chặn.
 - **Giá:** phụ thu tính theo tỉ lệ. Sáp theo gram, làm tròn tới nghìn đồng, ví dụ Sáp dừa +25.000 ₫ chiếm 60g trong 160g thì cộng 9.000 ₫. Màu sáp theo ml tương tự. Mùi hương theo ml nếu admin điền, khi đó ô Tỉ lệ phối được ẩn, không điền thì theo tỉ lệ phối.
 - **Phụ thu hương:** lượng hương tới mức chuẩn tính phụ thu mặc định, vượt thì tăng theo tỉ lệ ml. Ví dụ chuẩn 10% với hũ 120g sáp là 12 ml, phụ thu 10.000 ₫: điền 18 ml thành 15.000 ₫. Ô lượng hiện % từng loại.
 - **Công thức:** lưu riêng cho nến đó trên đơn, hiện ở chi tiết đơn. Giữ và trừ Kho theo đúng công thức này, đổi Thủ công sau đó không ảnh hưởng.
@@ -60,7 +60,7 @@ Cọc  = Tổng × % cọc, làm tròn tới nghìn đồng
 | Khối | Nội dung | Thao tác |
 |---|---|---|
 | Tiến trình | Trạng thái, hạn, 6 bước kèm thời gian, lý do giao lỗi | Bước tiếp theo, Hủy đơn, các nút giao hàng lỗi |
-| Sản phẩm | Các dòng, cấu hình tự phối, tạm tính, giảm giá, phí, tổng | |
+| Sản phẩm | Các dòng, cấu hình tự phối, công thức 1 hũ, tạm tính, giảm giá, phí, tổng | |
 | Lịch sử | Mọi sự kiện kèm người làm và thời gian | |
 | Thanh toán | Tiến độ thu, đã thu, còn phải thu, các khoản, số phải hoàn, ảnh chứng từ | Ghi nhận đã hoàn tiền |
 | Khách hàng | Liên hệ, phân loại khách, số lần giao lỗi, link hồ sơ, hình thức giao | Đổi ngày làm xong (trước khi làm xong) |
@@ -77,6 +77,30 @@ Bấm **Khách đã nhận** đồng nghĩa đã thu đủ. Đơn còn phần ch
 ## Giao hàng lỗi
 
 Xem [Workflow mục 6](../workflow.md#6-giao-hàng-lỗi).
+
+## Việc của BE
+
+**Trạng thái mới:** `producing`, `ready`, `delivery_failed`, `returning`, `returned`. BE hiện chỉ có PENDING, PAID, SHIPPING, COMPLETED, CANCELLED.
+
+**Trường mới trên đơn:**
+
+| Trường | Ý nghĩa |
+|---|---|
+| `cancelOutcome` | `returned`: chưa làm, hoàn Kho. `stocked`: đã làm, vào Sản phẩm hủy đơn. `consumed`: đã làm, đơn toàn nến có sẵn |
+| `cancelFault` | `customer` hoặc `shop` |
+| `refundDue` | Số phải hoàn lúc hủy |
+| `refund` | `amount`, `images`, `note`, `at`, `by` |
+| `deliveryAttempts`, `deliveryIssue` | Số lần giao không thành của lượt hiện tại, lý do gần nhất. Gửi lại đơn thì đếm lại |
+| `returnCondition`, `returnNote` | `good` hoặc `damaged`, ghi chú khi nhận lại |
+| `resendFee` | Tổng phí gửi lại đã cộng vào `shippingFee` và `total` |
+| `items[].recipe` | Công thức 1 hũ của nến tự phối lúc tạo đơn |
+
+**Quy tắc phía server:**
+
+- Hủy đơn trả lại lượt mã giảm giá trong cùng transaction.
+- Bấm Khách đã nhận thì ghi khoản thu phần còn lại.
+- Ảnh chứng từ hoàn tiền upload như ảnh khác, không lưu `data:` URL.
+- Tính số giữ và trừ Kho theo [inventory.md](../inventory.md#7-số-lượng-tối-đa--trừ-kho-theo-đơn).
 
 ## Chưa có
 

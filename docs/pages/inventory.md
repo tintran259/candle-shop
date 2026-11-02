@@ -15,7 +15,7 @@
 | Số tồn | Chỉ đổi qua phiếu kho |
 | Ngưỡng sắp hết | Mặc định 500g, 500ml, 10 cái |
 
-Hũ và nắp: mỗi dung tích là một nguyên liệu riêng.
+Hũ và nắp: mỗi dung tích là một nguyên liệu riêng. Màu nhuộm tính theo ml. Sáp pha trộn không còn dùng ở Thủ công, nguyên liệu vẫn còn trong Kho để admin tự quyết định.
 
 ## Trang danh sách
 
@@ -33,8 +33,8 @@ Hũ và nắp: mỗi dung tích là một nguyên liệu riêng.
 | Nhập thêm | Admin | Cộng tồn |
 | Xuất / hao hụt | Admin | Trừ tồn, không cho xuất quá số đang có |
 | Kiểm kê | Admin | Đặt lại theo số đếm thực tế |
-| Theo đơn hàng | Tự động khi Bắt đầu làm | Trừ nguyên liệu của nến tự phối |
-| Nhập thêm "Hoàn kho do hủy đơn" | Tự động khi hủy đơn Đang làm, chọn Chưa làm | Hoàn đúng lượng đã trừ |
+| Theo đơn hàng | Tự động khi Bắt đầu làm | Trừ nguyên liệu của nến tự phối và nến có sẵn có công thức |
+| Nhập thêm "Hoàn kho do hủy đơn" | Tự động khi hủy đơn Đang làm, chọn Chưa làm | Hoàn đúng lượng đã trừ, cả nến có sẵn |
 | Nhập thêm "Tồn ban đầu" | Tự động khi tạo nguyên liệu có tồn | Ghi nhận số đầu kỳ |
 
 Không sửa, không xóa phiếu. Ghi sai thì ghi phiếu ngược lại.
@@ -47,7 +47,9 @@ Không sửa, không xóa phiếu. Ghi sai thì ghi phiếu ngược lại.
 | Sáp, màu, trang trí theo khối lượng | Lượng sáp × hệ số của bước. Màu nhuộm tính theo ml, mặc định 1 ml cho 100 g sáp |
 | Tinh dầu | Lượng sáp × độ đậm × tỉ lệ phối, mặc định độ đậm 8% |
 
-Làm tròn lên. Nhiều dòng dùng chung nguyên liệu thì cộng lại.
+Làm tròn lên. Nhiều dòng dùng chung nguyên liệu thì cộng lại. Chọn nhiều loại sáp hoặc màu thì chia đều cho số loại.
+
+Đây là lượng mặc định. Admin điền lượng khác ở popup Tự phối nến thì trừ theo số đã điền. Nến có sẵn trừ theo công thức của sản phẩm.
 
 ## Giữ nguyên liệu
 

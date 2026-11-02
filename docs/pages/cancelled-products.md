@@ -10,6 +10,7 @@ Tự tạo khi hủy đơn có nến thủ công và:
 
 - Đơn Đang làm, admin chọn "Đã làm".
 - Hoặc đơn Chờ giao.
+- Hoặc đơn Đã hoàn về, nến còn tốt.
 
 | Trường hợp | Kết quả |
 |---|---|
@@ -17,6 +18,7 @@ Tự tạo khi hủy đơn có nến thủ công và:
 | 2 cấu hình khác nhau trong đơn | 2 sản phẩm |
 | Đơn có cả nến tự phối và nến có sẵn | Chỉ nến tự phối vào đây |
 | Đơn toàn nến có sẵn | Không tạo gì, vì đã có ở Sản phẩm trưng bày |
+| Đơn Đã hoàn về, nến hỏng | Không tạo gì |
 
 ## Trạng thái
 
@@ -45,7 +47,6 @@ Màn hẹp tự ẩn cột phụ để không cuộn ngang. Dưới 992px, 2 nú
 ## Quy tắc
 
 - Không ảnh hưởng Kho: nguyên liệu đã trừ lúc bắt đầu làm.
-- Nến còn tốt khi hoàn về rồi hủy đơn cũng vào đây; nến hỏng thì không.
 - Tạo sản phẩm trưng bày thì công thức điền sẵn từ công thức lưu trên đơn.
 - Link tạo từ bản ghi đã xử lý không mở lại được, tránh tạo trùng.
 - Nến tự phối chưa có ảnh nên admin phải thêm ảnh mới tạo được sản phẩm.

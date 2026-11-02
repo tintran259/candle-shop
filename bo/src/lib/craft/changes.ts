@@ -39,7 +39,7 @@ const optionFields: { key: keyof VesselOption; label: string; show: (v: never, c
   { key: "look", label: "Kiểu minh họa", show: (v?: string) => text(v) },
   { key: "onlyWith", label: "Chỉ dùng với", show: (v?: Record<string, string[]>) => (v ? `${Object.values(v).flat().length} mục` : "tất cả") },
   { key: "maxGrams", label: "Sáp tối đa", show: (v?: number) => (v ? `${v}g` : "không giới hạn") },
-  { key: "exclusive", label: "Không phối thêm", show: (v?: boolean) => onOff(v) },
+  { key: "exclusive", label: "Đứng một mình", show: (v?: boolean) => onOff(v) },
   { key: "shape", label: "Dáng hũ", show: (v: VesselOption["shape"]) => shapeLabels[v] ?? v },
   { key: "translucent", label: "Trong suốt", show: (v?: boolean) => onOff(v) },
   {

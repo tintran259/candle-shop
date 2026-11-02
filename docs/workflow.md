@@ -64,6 +64,19 @@ Khách đang bị chặn thì hỏi lại, admin vẫn có thể tạo.
 - Mã giảm giá tăng 1 lượt dùng.
 - **Kho chưa bị trừ.**
 
+**Nến tự phối:**
+
+| Nội dung | Quy tắc |
+|---|---|
+| Số lựa chọn | Mỗi bước chọn 1 hay nhiều mục theo [Thủ công](./pages/craft.md#chọn-1-hoặc-chọn-nhiều). Sáp, Màu sáp, Trang trí mặc định chọn nhiều |
+| Lượng cho 1 hũ | Sáp (g), mùi hương (ml), màu (ml), bấc, trang trí, tuỳ chọn thêm có ô nhập. Để trống thì theo mặc định. Hũ và nắp luôn 1 cái |
+| Mặc định khi chọn nhiều | Sáp và màu chia đều cho số loại. Ví dụ hũ 150ml đổ 120g sáp, chọn 2 loại thì mỗi loại 60g |
+| Phụ thu sáp, màu | Theo tỉ lệ lượng, làm tròn tới nghìn đồng. Ví dụ Sáp dừa +25.000 ₫ chiếm 60g trong 160g thì cộng 9.000 ₫ |
+| Phụ thu mùi | Theo tỉ lệ phối, hoặc theo ml nếu admin điền |
+| Phụ thu hương | Tới mức chuẩn tính số mặc định, vượt thì tăng theo ml. Ví dụ chuẩn 10% với 120g sáp là 12 ml, phụ thu 10.000 ₫: 18 ml thành 15.000 ₫. Không mùi thì không tính |
+| Phụ thu độ đậm | Cộng riêng theo cài đặt ở Thủ công |
+| Công thức | Lưu riêng cho cây nến đó trên đơn. Đổi Thủ công sau đó không ảnh hưởng đơn đã tạo |
+
 ### Bước 2. Xác nhận thanh toán
 
 **Ai làm:** admin.
@@ -83,7 +96,7 @@ Bấm **Bắt đầu làm**. Hệ thống tính nguyên liệu của cả đơn:
 - **Đủ:** trừ Kho, mỗi nguyên liệu một phiếu "Theo đơn hàng", phần giữ được nhả, đơn sang **Đang làm**.
 - **Thiếu:** không cho bắt đầu, liệt kê nguyên liệu thiếu. Admin nhập thêm hoặc kiểm kê rồi bấm lại.
 
-Sản phẩm chưa có công thức thì không giữ và không trừ Kho, danh sách sản phẩm có nhãn "Chưa có công thức". Đơn chưa bắt đầu làm dùng công thức mới nhất của sản phẩm.
+Sản phẩm chưa có công thức thì không giữ và không trừ Kho, danh sách sản phẩm có nhãn "Chưa có công thức". Với nến có sẵn, đơn chưa bắt đầu làm dùng công thức mới nhất của sản phẩm.
 
 ### Bước 4. Làm xong
 

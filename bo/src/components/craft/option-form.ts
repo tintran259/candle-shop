@@ -101,7 +101,7 @@ export function fromFormValues(step: OptionStep, v: OptionFormValues, resolved: 
     images: v.images?.length ? v.images : undefined,
     look: v.look || undefined,
     maxGrams: v.maxGrams || undefined,
-    exclusive: step.kind === "blend" && v.exclusive ? true : undefined,
+    exclusive: step.kind !== "vessel" && v.exclusive ? true : undefined,
     onlyWith: Object.keys(onlyWith).length ? onlyWith : undefined,
   };
   if (step.kind !== "vessel") return base;

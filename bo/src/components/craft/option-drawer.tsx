@@ -242,9 +242,9 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
               </FormSection>
             )}
 
-            {step.kind === "blend" && (
+            {step.kind !== "vessel" && (
               <FormSection title="Đặc tính">
-                <SwitchField name="exclusive" label="Không phối thêm" description="Chọn mục này thì bỏ các mục khác (vd “Không mùi”)." last />
+                <SwitchField name="exclusive" label="Đứng một mình" description="Chọn mục này thì bỏ các mục khác (vd “Không mùi”, “Không màu”)." last />
               </FormSection>
             )}
 

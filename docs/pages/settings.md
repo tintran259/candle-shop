@@ -25,6 +25,7 @@ Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh"
 
 - Phải có ít nhất một phương thức đang dùng, tên không trùng nhau.
 - **Đổi cài đặt chỉ áp dụng đơn mới.** Đơn lưu lại % cọc, tên phương thức, số ngày và phí lúc tạo.
+- **Số lần giao tối đa và Phí gửi lại đơn** lấy giá trị hiện tại lúc xử lý, không lưu trên đơn.
 - Đơn tạo trước khi có Cài đặt hiển thị theo giá trị cũ: cọc 50%, Tiêu chuẩn 3 ngày, Nhanh 1 ngày.
 - **Mặc định** chỉ điền lại số, phải bấm Lưu mới có hiệu lực.
 - Rời trang khi chưa lưu sẽ được hỏi lại.

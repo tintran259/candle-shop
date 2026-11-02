@@ -5,7 +5,7 @@
 | Nhóm | Mục | Số đỏ trên menu |
 |---|---|---|
 | Tổng quan | Dashboard | |
-| Bán hàng | Đơn hàng | Đơn Chờ thanh toán và Đã thanh toán |
+| Bán hàng | Đơn hàng | Đơn Chờ thanh toán, Đã thanh toán, Giao không thành, Đã hoàn về |
 | | Sản phẩm trưng bày, Sản phẩm hủy đơn, Thủ công | |
 | | Kho nguyên liệu | Nguyên liệu đã hết hàng |
 | | Khách hàng, Đánh giá, Mã giảm giá | |

@@ -158,6 +158,7 @@ Ví dụ: hũ gốm còn 10 cái 150ml, 0 cái 200ml, 6 cái 250ml. Khách vẫn
 | `cards` / `swatches` | 1 | `grams × (step.gramsPerGram ?? 1)`, bước Sáp và `swatches` chọn nhiều thì chia đều cho số loại. Màu nhuộm tính theo ml, hệ số mặc định 0,01 |
 | `blend`, mỗi mục không `exclusive` | 1 | `grams × load × percent / 100` |
 
+- Đây là lượng mặc định. BO cho admin điền lượng khác theo từng lựa chọn (`amounts` trong lựa chọn của bước, [Trình dựng Thủ công, mục 6](./craft-builder.md#6-lựa-chọn-của-khách)), hũ và nắp thì không. Có `amounts` thì dùng số đó.
 - `load` = `step.intensity.load[level]`. Bước không có độ đậm thì dùng 0.08.
 - `percent` là tỉ lệ phối đã quy ra phần trăm ([Trình dựng Thủ công, mục 7.1](./craft-builder.md#71-quy-weight-ra-phần-trăm-blend)).
 - Làm tròn lên (`ceil`) lượng cần của mỗi nguyên liệu cho một hũ.
@@ -207,7 +208,7 @@ Với hũ và nắp, chỉ xét mã **của cỡ đã chọn**. Web hiện "Ch�
   - Chỉ nến tự phối mới vào đây. Nến có sẵn đã có ở Sản phẩm trưng bày nên không sinh bản ghi, kể cả trong đơn có cả hai loại.
   - Mỗi dòng nến tự phối là một bản ghi kèm `quantity`: đơn đặt 2 cây cùng cấu hình là 1 sản phẩm số lượng 2. Tự tạo khi hủy đơn với `cancelOutcome = stocked`.
   - Mỗi bản ghi có 2 cách xử lý, áp dụng cho cả số lượng: **Tạo sản phẩm trưng bày** hoặc **Bỏ**.
-  - **Tạo sản phẩm trưng bày:** sang trang Sản phẩm trưng bày, drawer tạo sản phẩm đã điền sẵn thông tin nến. Chỉ khi tạo thành công, bản ghi mới chuyển sang "Đã tạo trưng bày" và lưu `displayProductId`.
+  - **Tạo sản phẩm trưng bày:** sang trang Sản phẩm trưng bày, drawer tạo sản phẩm đã điền sẵn thông tin nến và công thức. Chỉ khi tạo thành công, bản ghi mới chuyển sang "Đã tạo trưng bày" và lưu `displayProductId`.
   - Đóng drawer mà không tạo thì bản ghi vẫn là Chờ xử lý.
 
 ## 8. API
@@ -286,6 +287,7 @@ Trang **Kho nguyên liệu** (`/inventory`):
   - 20 phiếu gần nhất.
 - **Nút "Phiếu kho":** ghi phiếu cho bất kỳ nguyên liệu nào, có xem trước số tồn sau phiếu.
 - **Chặn xuất quá tồn** ở cả drawer và modal phiếu, kèm gợi ý dùng Kiểm kê.
+- **Cột Tồn kho hiện "Đang giữ · Dùng được"** khi có đơn Đã thanh toán đang giữ nguyên liệu.
 - **Tạo nguyên liệu có tồn ban đầu** (từ Kho hoặc từ trang Thủ công) tự ghi phiếu "Tồn ban đầu".
 - **Ô chọn nguyên liệu** tìm không phân biệt dấu ("sap dau" ra "Sáp đậu nành").
 - **Phiếu kho gần đây:** 8 phiếu mới nhất của cả kho.

@@ -27,7 +27,11 @@
 
 ## Chọn 1 hoặc chọn nhiều
 
-Mọi bước dạng thẻ và bảng màu, gồm cả bước tạo mới, có cài đặt **Số lựa chọn** ở tab Cài đặt: **Chọn 1** hoặc **Chọn nhiều**, kèm ô **Tối đa** từ 2 trở lên. Để trống Tối đa là không giới hạn, ô này khóa ở 1 khi Chọn 1. Bước mới mặc định Chọn 1. Sáp, Màu sáp, Trang trí mặc định Chọn nhiều. Không màu, Không trang trí đứng một mình.
+Mọi bước dạng thẻ và bảng màu, gồm cả bước tạo mới, có cài đặt **Số lựa chọn** ở tab Cài đặt: **Chọn 1** hoặc **Chọn nhiều**, kèm ô **Tối đa** từ 2 trở lên. Để trống Tối đa là không giới hạn, ô này khóa ở 1 khi Chọn 1. Bước mới mặc định Chọn 1. Sáp, Màu sáp, Trang trí mặc định Chọn nhiều. Bước Mùi hương dùng cài đặt riêng là số mục phối tối đa.
+
+Vượt số tối đa thì mục chọn sớm nhất tự bỏ. Đổi giữa Chọn 1 và Chọn nhiều thì số Tối đa được xóa.
+
+Mỗi lựa chọn có công tắc **Đứng một mình**: chọn mục này thì bỏ các mục khác và ngược lại. Không mùi, Không màu, Không trang trí đang bật sẵn.
 
 ## Mùi hương
 
@@ -35,11 +39,11 @@ Tab Cài đặt có **Phụ thu hương**: mức chuẩn (%) và số tiền, m�
 
 ## Màu sáp
 
-Màu nhuộm tính theo ml. Hệ số mặc định 0,01, tức 1 ml cho 100 g sáp. Không màu đứng một mình, không chọn chung với màu khác.
+Màu nhuộm tính theo ml. Hệ số mặc định 0,01, tức 1 ml cho 100 g sáp. Chọn nhiều màu thì lượng mặc định chia đều, phụ thu theo tỉ lệ ml.
 
 ## Bước Sáp
 
-Không còn lựa chọn Sáp pha trộn: muốn pha thì chọn nhiều loại khi tạo đơn. Nguyên liệu Sáp pha trộn vẫn còn trong Kho, ở trạng thái chưa dùng trên web.
+Không còn lựa chọn Sáp pha trộn: muốn pha thì chọn nhiều loại khi tạo đơn, lượng mặc định chia đều, phụ thu theo tỉ lệ gram. Nguyên liệu Sáp pha trộn vẫn còn trong Kho, ở trạng thái chưa dùng trên web.
 
 ## Bản nháp và Lưu
 
@@ -53,14 +57,14 @@ Mọi sửa đổi vào bản nháp. Web, Kho, tạo đơn chỉ dùng bản đ�
 ## Kiểm tra cấu hình
 
 - **Lỗi:** không có đúng 1 bước Hũ, chưa bật bước nào, tắt bước Hũ, không còn kích thước đang bán, bước bắt buộc không có lựa chọn hoặc không còn lựa chọn bán được.
-- **Cảnh báo:** hũ chưa chọn kích thước đổ được hoặc chưa gắn mã theo cỡ, lựa chọn gắn với nguyên liệu không còn tồn tại, bước không bắt buộc chưa có lựa chọn, bước nhập chưa bật ô nào.
+- **Cảnh báo:** hũ chưa chọn kích thước đổ được hoặc chưa gắn mã theo cỡ, lựa chọn gắn với nguyên liệu không còn tồn tại, quy tắc "chỉ dùng với" nhắc tới lựa chọn đã xóa, bước không bắt buộc chưa có lựa chọn, bước nhập chưa bật ô nào.
 
 ## Liên kết trang khác
 
-- **Tạo đơn:** popup Tự phối nến dùng bản đã lưu, các bước đang bật.
+- **Tạo đơn:** popup Tự phối nến dùng bản đã lưu, các bước đang bật, và cho chỉnh lượng từng nguyên liệu trên từng cây nến.
 - **Sản phẩm trưng bày:** danh sách Loại sáp lấy từ bước Sáp.
 - **Kho:** hiện lựa chọn nào đang dùng nguyên liệu đó.
 
 ## Chưa có
 
-Web chưa đọc cấu hình này.
+Web chưa đọc cấu hình này, chưa có chọn nhiều sáp, màu, trang trí và phụ thu hương.
