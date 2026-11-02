@@ -160,11 +160,24 @@ export function DashboardSkeleton() {
   return (
     <Busy label="Đang tải dashboard…">
       <Flex vertical gap={16}>
-        <PageHeaderSkeleton action={false} />
+        <PageHeaderSkeleton actions={[210]} />
+        <Row gutter={[16, 16]}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <Col key={i} xs={12} xl={6}>
+              <Card style={{ height: "100%" }}>
+                <Flex vertical gap={8}>
+                  <Bar width={110} />
+                  <Bar width={70} height={24} />
+                  <Bar width={60} />
+                </Flex>
+              </Card>
+            </Col>
+          ))}
+        </Row>
         <KpiSkeleton />
         <Row gutter={[16, 16]}>
           <Col xs={24} xl={16}>
-            <Card title={<Bar width={90} height={16} />} extra={<Skeleton.Button active size="small" style={{ width: 150 }} />}>
+            <Card title={<Bar width={90} height={16} />}>
               <span className="big-number" style={{ fontSize: 40, lineHeight: 1.15, display: "block" }}>
                 <Bar width={170} height={34} />
               </span>

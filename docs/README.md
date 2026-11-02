@@ -9,7 +9,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Trang | Đường dẫn | Tài liệu | Tình trạng |
 |---|---|---|---|
 | Phần chung (menu, tìm kiếm, thông báo) | | [common.md](./pages/common.md) | Đã có |
-| Dashboard | `/` | [dashboard.md](./pages/dashboard.md) | Đã có, số liệu là mẫu |
+| Dashboard | `/` | [dashboard.md](./pages/dashboard.md) | Đã có, số thật từ đơn trong BO |
 | Đơn hàng | `/orders` | [orders.md](./pages/orders.md) | Đã có, gồm hoàn tiền và giao hàng lỗi |
 | Sản phẩm trưng bày | `/products` | [products.md](./pages/products.md) | Đã có |
 | Sản phẩm hủy đơn | `/cancelled-products` | [cancelled-products.md](./pages/cancelled-products.md) | Đã có |

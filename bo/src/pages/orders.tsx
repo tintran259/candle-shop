@@ -10,7 +10,7 @@ import { OrdersSkeleton } from "@/components/skeletons";
 import { useOrders } from "@/hooks/use-orders";
 import { formatMoneyShort } from "@/lib/format";
 import { applyOrderFilters, defaultOrderFilters, type OrderFilters } from "@/lib/orders/filters";
-import { deadline, isDeliveryIssue, remaining, statusMeta } from "@/lib/orders/labels";
+import { deadline, isDeliveryIssue, paymentStateMeta, remaining, statusMeta, type PaymentState } from "@/lib/orders/labels";
 import { deliveryIssues, orderFlow, type OrderStatus } from "@/lib/orders/types";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
@@ -23,7 +23,14 @@ export function OrdersPage() {
   useTitle("Đơn hàng");
   const api = useOrders();
   const { orders } = api;
-  const [filters, setFiltersState] = useState<OrderFilters>(defaultOrderFilters);
+  // Dashboard link thẳng tới danh sách đã lọc: ?status=, ?payment=, ?sort=
+  const [params] = useSearchParams();
+  const [filters, setFiltersState] = useState<OrderFilters>(() => {
+    const status = tabs.find((t) => t === params.get("status"));
+    const payment = params.get("payment") as PaymentState | null;
+    const sort = params.get("sort") as OrderFilters["sort"] | null;
+    return { ...defaultOrderFilters, ...(status && { status }), ...(payment && payment in paymentStateMeta && { payment }), ...(sort === "ready-soon" && { sort }) };
+  });
   // Memo để bảng (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
   const items = useMemo(() => applyOrderFilters(orders, filters), [orders, filters]);
   const pager = usePageQuery(api.loading ? undefined : items.length);
@@ -41,7 +48,6 @@ export function OrdersPage() {
   const { shown: shownId } = useDrawerTarget(creating ? null : openId);
   // Mỗi lần mở "Tạo đơn" là form mới; ?customer=id (từ hồ sơ khách) điền sẵn khách
   const { key: createKey } = useDrawerTarget(creating ? "new" : null);
-  const [params] = useSearchParams();
 
   const count = (s: OrderStatus | "all") => (s === "all" ? orders.length : orders.filter((o) => o.status === s).length);
   const late = orders.filter((o) => deadline(o)?.tone === "danger").length;

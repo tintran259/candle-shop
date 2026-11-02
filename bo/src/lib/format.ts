@@ -11,7 +11,8 @@ export const formatMoneyShort = (n: number) => {
   return formatMoney(n);
 };
 // Nhãn trục biểu đồ: 25tr, 800k
-export const formatMoneyAxis = (n: number) => {
+export const formatMoneyAxis = (n: number): string => {
+  if (n < 0) return `-${formatMoneyAxis(-n)}`;
   if (n >= 1e9) return `${short.format(n / 1e9)}tỷ`;
   if (n >= 1e6) return `${short.format(n / 1e6)}tr`;
   if (n >= 1e3) return `${short.format(n / 1e3)}k`;
