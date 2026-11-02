@@ -1,11 +1,12 @@
 import { DeleteOutlined } from "@ant-design/icons";
-import { App, Button, Col, Descriptions, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Select, Typography } from "antd";
+import { Alert, App, Button, Col, Descriptions, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Select, Typography } from "antd";
 import { useDeferredValue, useState } from "react";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
 import { fromFormValues, toFormValues, type ProductFormValues } from "@/components/products/product-form";
 import { ProductPreview } from "@/components/products/product-preview";
+import { RecipeField } from "@/components/products/recipe-field";
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCraftConfig } from "@/hooks/use-craft-config";
@@ -16,10 +17,11 @@ import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
 import { aromaLevelLabels, aromaTypeLabels, discountPercent, sizeLabels, toOptions } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 
-type Props = { open: boolean; product?: Product; api: ProductsApi; onClose: () => void };
+// prefill: giá trị điền sẵn khi tạo mới (từ nến hủy đơn); onCreated chạy sau khi tạo mới thành công
+type Props = { open: boolean; product?: Product; prefill?: ProductFormValues; source?: string; api: ProductsApi; onCreated?: (product: Product) => void; onClose: () => void };
 
 // Drawer thêm/sửa sản phẩm. Trang mount lại theo key nên form luôn bắt đầu từ dữ liệu mới.
-export function ProductDrawer({ open, product, api, onClose }: Props) {
+export function ProductDrawer({ open, product, prefill, source, api, onCreated, onClose }: Props) {
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
   // Loại sáp lấy từ bước "wax" của trang Thủ công (nếu admin còn giữ bước này)
@@ -49,11 +51,13 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
 
   const finish = (values: ProductFormValues) => {
     const next = fromFormValues(values, product);
-    if (api.products.some((p) => p.slug === next.slug && p.id !== next.id)) {
+    // Sản phẩm mới lấy slug làm id — trùng slug mà không chặn sẽ ghi đè sản phẩm cũ
+    if (api.products.some((p) => p.id !== product?.id && (p.slug === next.slug || p.id === next.id))) {
       return form.setFields([{ name: "slug", errors: ["Slug đã được dùng cho sản phẩm khác."] }]);
     }
     if (!api.save(next)) return message.error("Bộ nhớ trình duyệt đã đầy — bớt ảnh rồi lưu lại.");
     message.success(product ? `Đã lưu ${next.name}` : `Đã thêm ${next.name}`);
+    if (!product) onCreated?.(next);
     onClose();
   };
 
@@ -68,7 +72,7 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
     <Drawer
       open={open}
       onClose={requestClose}
-      title={product ? "Sửa sản phẩm" : "Thêm sản phẩm"}
+      title={product ? "Sửa sản phẩm" : prefill ? "Tạo sản phẩm trưng bày" : "Thêm sản phẩm"}
       size={screens.sm === false ? "100%" : 680}
       destroyOnHidden
       styles={{ header: { background: "#fff" }, body: { padding: 16 }, footer: { background: "#fff" } }}
@@ -97,7 +101,7 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
             Hủy
           </Button>
           <Button type="primary" onClick={() => form.submit()}>
-            {product ? "Lưu thay đổi" : "Thêm sản phẩm"}
+            {product ? "Lưu thay đổi" : prefill ? "Tạo sản phẩm trưng bày" : "Thêm sản phẩm"}
           </Button>
         </Flex>
       }
@@ -106,7 +110,7 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
         <Form
           form={form}
           layout="vertical"
-          initialValues={toFormValues(product)}
+          initialValues={prefill ?? toFormValues(product)}
           onFinish={finish}
           onValuesChange={(changed: Partial<ProductFormValues>) => {
             setDirty(true);
@@ -116,6 +120,7 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
           scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
         >
           <Flex vertical gap={16}>
+            {source && <Alert type="info" showIcon title={source} />}
             <ProductPreview />
 
             <FormSection title="Thông tin cơ bản" description="Tên, đường dẫn và mô tả hiển thị trên trang sản phẩm.">
@@ -196,6 +201,10 @@ export function ProductDrawer({ open, product, api, onClose }: Props) {
                   </Form.Item>
                 </Col>
               </Row>
+            </FormSection>
+
+            <FormSection title="Công thức nguyên liệu" description="Lượng cho 1 cây. Giữ nguyên liệu khi nhận cọc và trừ Kho khi bắt đầu làm.">
+              <RecipeField required={!product} />
             </FormSection>
 
             <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ☆ để đổi.`}>

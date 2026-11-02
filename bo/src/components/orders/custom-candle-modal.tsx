@@ -5,13 +5,21 @@ import { StepIconView } from "@/components/craft/step-icon";
 import { formatDelta, sizeLabel, unitLabel } from "@/lib/craft/groups";
 import {
   activeSteps,
+  blendRatios,
   blendShares,
   describeSelection,
   emptySelection,
+  isMixStep,
+  isWaxStep,
+  materialLines,
   materialNeeds,
   maxJars,
   optionBlock,
+  pickOption,
   priceSelection,
+  scentVolume,
+  selectedSize,
+  toRecipe,
   validateSelection,
   type CraftSelection,
   type StepSelection,
@@ -19,10 +27,11 @@ import {
 import { intensityLabels } from "@/lib/craft/steps";
 import type { CraftConfig, CraftStep, IntensityLevel, StepOption, VesselOption } from "@/lib/craft/types";
 import { formatMoney, formatNumber } from "@/lib/format";
+import type { RecipeLine } from "@/lib/products/types";
 import { lidLevel, optionLevel, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import { brand } from "@/theme";
 
-export type CustomCandle = { selection: CraftSelection; description: string; price: number };
+export type CustomCandle = { selection: CraftSelection; description: string; price: number; recipe: RecipeLine[] };
 
 type Props = {
   open: boolean;
@@ -56,7 +65,7 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
       document.getElementById(`cfg-step-${issues[0].stepId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
-    onApply({ selection, description, price: price.unit });
+    onApply({ selection, description, price: price.unit, recipe: toRecipe(needs) });
   };
 
   return (
@@ -64,9 +73,12 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
       open={open}
       title="Nến tự phối"
       width={screens.md ? 980 : "100%"}
+      centered
       onCancel={onCancel}
       destroyOnHidden
-      styles={{ body: { paddingTop: 4 } }}
+      // Tiêu đề và chân luôn hiện, chỉ phần chọn cuộn. Chân màn hẹp xuống 2 hàng nên chừa nhiều hơn.
+      // Padding ngang + margin âm bằng nửa gutter của Row: không cuộn ngang, đủ chỗ cho viền focus và thanh cuộn
+      styles={{ body: { paddingBlock: 4, paddingInline: 12, marginInline: -12, maxHeight: `calc(100dvh - ${screens.md ? 168 : 216}px)`, overflowX: "hidden", overflowY: "auto", overscrollBehavior: "contain" } }}
       footer={
         <Flex justify="space-between" align="center" gap={12} wrap>
           <Typography.Text type={tried && issues.length ? "danger" : "secondary"} style={{ fontSize: 13 }}>
@@ -103,6 +115,7 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
                   </Flex>
                   <div style={{ marginTop: 10 }}>
                     <StepBody step={step} config={config} selection={selection} map={map} onChange={(next) => set(step.id, next)} />
+                    <AmountFields step={step} config={config} selection={selection} map={map} onChange={(next) => set(step.id, next)} />
                   </div>
                   {tried &&
                     issues
@@ -206,6 +219,53 @@ function OptionCard({ option, on, block, multi, onClick }: { option: StepOption;
   );
 }
 
+// Lượng từng nguyên liệu cho 1 hũ: để trống thì theo mặc định
+function AmountFields({ step, config, selection, map, onChange }: BodyProps) {
+  const sel = selection[step.id];
+  const lines = materialLines(config, selection, map).filter((l) => l.stepId === step.id);
+  if (!lines.length || !sel || sel.kind === "vessel") return null;
+  const setAmount = (optionId: string, value: number | null) => {
+    const rest = { ...sel.amounts };
+    delete rest[optionId];
+    onChange({ ...sel, amounts: value ? { ...rest, [optionId]: value } : rest });
+  };
+  const grams = selectedSize(config, selection)?.grams;
+  const amountOf = (l: (typeof lines)[number]) => l.amount ?? l.fallback;
+  const total = lines.reduce((s, l) => s + amountOf(l), 0);
+  // Tỉ lệ từng loại khi phối nhiều sáp hoặc nhiều mùi
+  const ratios = (isMixStep(step) || step.kind === "blend") && lines.length > 1 && total ? blendShares(lines.map((l) => ({ optionId: l.optionId, weight: amountOf(l) }))) : [];
+  const unitOf = unitLabel[map.get(lines[0].materialId)!.unit];
+  const scent = step.kind === "blend" && sel.kind === "blend" && step.scentPrice?.basePrice && grams ? { ...scentVolume(step, sel, grams), price: step.scentPrice } : null;
+  return (
+    <Flex vertical gap={8} className="cfg-box" style={{ marginTop: 12 }}>
+      <Typography.Text strong style={{ fontSize: 13 }}>
+        Lượng cho 1 hũ
+      </Typography.Text>
+      {lines.map((l) => {
+        const unit = unitLabel[map.get(l.materialId)!.unit];
+        return (
+          <Flex key={l.optionId} align="center" gap={12}>
+            <Typography.Text style={{ flex: 1, minWidth: 0, fontSize: 13 }}>{l.name}</Typography.Text>
+            <InputNumber aria-label={`Lượng ${l.name}`} min={1} precision={0} suffix={unit} value={l.amount ?? null} placeholder={l.fallback ? String(l.fallback) : "Mặc định"} onChange={(v) => setAmount(l.optionId, v)} style={{ width: 128 }} />
+            {ratios.length > 0 && (
+              <Typography.Text type="secondary" className="tabular" style={{ width: 40, textAlign: "right", fontSize: 13 }}>
+                {ratios.find((r) => r.optionId === l.optionId)?.percent}%
+              </Typography.Text>
+            )}
+          </Flex>
+        );
+      })}
+      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        Để trống thì theo số mặc định.
+        {isWaxStep(step) && grams ? ` Tổng ${formatNumber(total)}g, hũ này mặc định ${formatNumber(grams)}g.` : ""}
+        {ratios.length > 0 && !isWaxStep(step) ? ` Tổng ${formatNumber(total)} ${unitOf}.` : ""}
+        {ratios.length > 0 ? " Phụ thu tính theo tỉ lệ này." : ""}
+        {scent ? ` Hương chuẩn ${formatNumber(scent.standard)} ml (${Math.round(scent.price.standardLoad * 100)}%) phụ thu ${formatMoney(scent.price.basePrice)}, vượt mức này phụ thu tăng theo ml.` : ""}
+      </Typography.Text>
+    </Flex>
+  );
+}
+
 function StepBody({ step, config, selection, map, onChange }: BodyProps) {
   const sel = selection[step.id];
   const options = step.kind === "inputs" ? [] : (step.options as StepOption[]).filter((o) => o.available);
@@ -256,17 +316,15 @@ function StepBody({ step, config, selection, map, onChange }: BodyProps) {
   }
 
   if ((step.kind === "cards" || step.kind === "swatches") && (sel?.kind === "cards" || sel?.kind === "swatches")) {
-    const multi = step.kind === "cards" && step.multiple;
-    const max = step.kind === "cards" ? step.maxSelect : undefined;
-    const toggle = (id: string) => {
-      const has = sel.optionIds.includes(id);
-      const next = has ? sel.optionIds.filter((x) => x !== id) : multi ? [...(max && sel.optionIds.length >= max ? sel.optionIds.slice(1) : sel.optionIds), id] : [id];
-      onChange({ ...sel, optionIds: !multi && has && step.required ? sel.optionIds : next });
+    const multi = step.multiple;
+    const toggle = (o: StepOption) => {
+      const has = sel.optionIds.includes(o.id);
+      onChange({ ...sel, optionIds: !multi && has && step.required ? sel.optionIds : pickOption(sel.optionIds, o, options, multi, step.maxSelect) });
     };
     return (
       <div className="cfg-grid" role={multi ? "group" : "radiogroup"} aria-label={step.title.vi}>
         {options.map((o) => (
-          <OptionCard key={o.id} option={o} multi={multi} on={sel.optionIds.includes(o.id)} block={block(o)} onClick={() => toggle(o.id)} />
+          <OptionCard key={o.id} option={o} multi={multi} on={sel.optionIds.includes(o.id)} block={block(o)} onClick={() => toggle(o)} />
         ))}
       </div>
     );
@@ -283,7 +341,7 @@ function StepBody({ step, config, selection, map, onChange }: BodyProps) {
       const items = [...(rest.length >= step.maxBlend ? rest.slice(1) : rest), { optionId: o.id, weight: 50 }];
       onChange({ ...sel, items, intensity: sel.intensity ?? (step.intensity ? "medium" : null) });
     };
-    const shares = blendShares(sel.items);
+    const shares = blendRatios(step, sel, selectedSize(config, selection)?.grams ?? 0);
     return (
       <Flex vertical gap={12}>
         <Typography.Text type="secondary" style={{ fontSize: 13 }}>
@@ -294,7 +352,8 @@ function StepBody({ step, config, selection, map, onChange }: BodyProps) {
             <OptionCard key={o.id} option={o} multi on={sel.items.some((i) => i.optionId === o.id)} block={block(o)} onClick={() => toggle(o)} />
           ))}
         </div>
-        {shares.length > 1 && !exclusive && (
+        {/* Đã điền ml thì tỉ lệ theo ml ở ô Lượng, ô phối không còn tác dụng */}
+        {shares.length > 1 && !exclusive && !sel.items.some((i) => sel.amounts?.[i.optionId]) && (
           <Flex vertical gap={8} className="cfg-box">
             <Typography.Text strong style={{ fontSize: 13 }}>
               Tỉ lệ phối

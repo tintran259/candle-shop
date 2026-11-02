@@ -11,6 +11,8 @@ import type { Material } from "@/lib/inventory/types";
 type Props = {
   items: Material[];
   usage: Map<string, Usage[]>;
+  // Lượng các đơn Đã thanh toán đang giữ
+  held: Map<string, number>;
   pagination: TablePaginationConfig;
   onOpen: (id: string) => void;
   // Mở phiếu nhập kho cho nguyên liệu
@@ -20,7 +22,7 @@ type Props = {
 const barColor = { out: "#ff7875", low: "#ffc069", ok: "#95de64", untracked: "#d9d9d9" } as const;
 
 // Bảng nguyên liệu — bấm dòng để mở chi tiết; nút + để ghi nhận nhập kho nhanh
-function MaterialTableView({ items, usage, pagination, onOpen, onReceive }: Props) {
+function MaterialTableView({ items, usage, held, pagination, onOpen, onReceive }: Props) {
   const columns: TableProps<Material>["columns"] = [
     {
       title: "Nguyên liệu",
@@ -47,6 +49,11 @@ function MaterialTableView({ items, usage, pagination, onOpen, onReceive }: Prop
         return (
           <Flex vertical gap={6} style={{ width: 150 }}>
             <MaterialStock material={m} />
+            {!!held.get(m.id) && (
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                Đang giữ {formatNumber(held.get(m.id)!)} · Dùng được {formatNumber(m.stock - held.get(m.id)!)} {unitLabel[m.unit]}
+              </Typography.Text>
+            )}
             {/* Tồn so với 2 lần ngưỡng sắp hết — đầy thanh là dư dả */}
             {m.tracked && (
               <div aria-hidden style={{ height: 4, borderRadius: 999, background: "#ececea", overflow: "hidden" }}>

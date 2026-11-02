@@ -3,6 +3,7 @@ import {
   DashboardOutlined,
   ExperimentOutlined,
   InboxOutlined,
+  RollbackOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
@@ -20,7 +21,8 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Bán hàng",
     items: [
       { label: "Đơn hàng", path: "/orders", icon: <ShoppingCartOutlined />, badge: "orders" },
-      { label: "Sản phẩm", path: "/products", icon: <ShoppingOutlined /> },
+      { label: "Sản phẩm trưng bày", path: "/products", icon: <ShoppingOutlined /> },
+      { label: "Sản phẩm hủy đơn", path: "/cancelled-products", icon: <RollbackOutlined /> },
       { label: "Thủ công", path: "/craft", icon: <ExperimentOutlined /> },
       { label: "Kho nguyên liệu", path: "/inventory", icon: <InboxOutlined />, badge: "inventory" },
       { label: "Khách hàng", path: "/customers", icon: <TeamOutlined /> },

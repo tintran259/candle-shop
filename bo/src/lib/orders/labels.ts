@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
-import { orderFlow, type Order, type OrderStatus, type PaymentProvider, type ShippingMethod } from "@/lib/orders/types";
+import { depositAmount } from "@/lib/orders/create";
+import { deliveryIssues, orderFlow, type CancelFault, type CancelOutcome, type Order, type OrderStatus, type PaymentProvider, type ReturnCondition, type ShippingMethod } from "@/lib/orders/types";
 
 // Màu trạng thái luôn đi kèm chữ (tag antd preset)
 export const statusMeta: Record<OrderStatus, { label: string; color: string; hint: string }> = {
@@ -9,6 +10,9 @@ export const statusMeta: Record<OrderStatus, { label: string; color: string; hin
   ready: { label: "Chờ giao", color: "cyan", hint: "Đã làm xong, chờ bàn giao vận chuyển." },
   shipping: { label: "Đang giao", color: "purple", hint: "Đơn vị vận chuyển đang giao." },
   completed: { label: "Hoàn tất", color: "green", hint: "Khách đã nhận hàng." },
+  delivery_failed: { label: "Giao không thành", color: "red", hint: "Chọn giao lại hoặc hoàn về." },
+  returning: { label: "Đang hoàn về", color: "volcano", hint: "Hàng đang trên đường về shop." },
+  returned: { label: "Đã hoàn về", color: "magenta", hint: "Hàng đã về shop. Chọn gửi lại đơn hoặc hủy đơn." },
   cancelled: { label: "Đã hủy", color: "default", hint: "Đơn đã hủy." },
 };
 
@@ -36,23 +40,49 @@ export const nextStatus = (s: OrderStatus): OrderStatus | undefined => {
   return i >= 0 && i < orderFlow.length - 1 ? orderFlow[i + 1] : undefined;
 };
 
-// Chỉ hủy được trước khi giao
-export const canCancel = (s: OrderStatus) => ["pending", "paid", "producing", "ready"].includes(s);
+// Hủy được trước khi giao, hoặc sau khi hàng đã hoàn về shop
+export const canCancel = (s: OrderStatus) => ["pending", "paid", "producing", "ready", "returned"].includes(s);
+
+export const isDeliveryIssue = (s: OrderStatus) => (deliveryIssues as readonly OrderStatus[]).includes(s);
+// Số lần giao không thành của các đơn, để cảnh báo khách hay bom hàng
+export const failedDeliveries = (orders: Order[]) => orders.reduce((n, o) => n + o.history.filter((e) => e.status === "delivery_failed").length, 0);
+
+export const faultLabels: Record<CancelFault, string> = { customer: "Lỗi do khách", shop: "Lỗi do shop" };
+export const returnConditionLabels: Record<ReturnCondition, string> = { good: "Nến còn tốt", damaged: "Nến bị hỏng" };
+
+export const cancelOutcomeLabels: Record<CancelOutcome, string> = {
+  returned: "Chưa làm: hoàn nguyên liệu đã trừ về Kho",
+  stocked: "Đã làm: chuyển sang Sản phẩm hủy đơn",
+  consumed: "Đã làm: không hoàn nguyên liệu",
+};
 
 export const providerLabels: Record<PaymentProvider, string> = { vnpay: "VNPay", momo: "MoMo", cod: "Tiền mặt / chuyển khoản" };
 
-// Cọc khi đặt (khách chọn "Cọc 50%") và phí giao theo phương thức — web và đơn tạo tại BO dùng chung
+// Giá trị của đơn trước khi có trang Cài đặt và dữ liệu mẫu. Đơn mới lấy từ Cài đặt và lưu vào đơn
 export const DEPOSIT_RATE = 0.5;
 export const SHIPPING_FEE: Record<ShippingMethod, number> = { standard: 0, express: 50_000 };
-export const shippingLabels: Record<ShippingMethod, string> = { standard: "Tiêu chuẩn (3 ngày)", express: "Nhanh (1 ngày)" };
+const shippingLabels: Record<ShippingMethod, string> = { standard: "Tiêu chuẩn (3 ngày)", express: "Nhanh (1 ngày)" };
+const SHIP_DAYS: Record<ShippingMethod, number> = { standard: 3, express: 1 };
+
+export const depositLabel = (o: Order) => `Cọc ${o.depositPercent ?? DEPOSIT_RATE * 100}%`;
+export const shippingName = (o: Order) => o.shippingName ?? shippingLabels[o.shippingMethod] ?? o.shippingMethod;
+export const shippingDays = (o: Order) => o.shippingDays ?? SHIP_DAYS[o.shippingMethod] ?? 3;
 
 export const paidAmount = (o: Order) =>
   o.payments.filter((p) => p.status === "success").reduce((s, p) => s + p.amount, 0);
 export const remaining = (o: Order) => Math.max(0, o.total - paidAmount(o));
 
-export type PaymentState = "unpaid" | "deposit" | "paid" | "refunded";
+// Lỗi do shop hoàn hết tiền đã thu. Lỗi do khách giữ phần cọc, cọc tính trên tổng trước phí gửi lại
+export function refundFor(o: Order, fault: CancelFault) {
+  const paid = paidAmount(o);
+  if (fault === "shop") return paid;
+  return Math.max(0, paid - depositAmount(o.total - (o.resendFee ?? 0), o.depositPercent ?? DEPOSIT_RATE * 100));
+}
+
+export type PaymentState = "unpaid" | "deposit" | "paid" | "refunding" | "refunded";
 export function paymentState(o: Order): PaymentState {
-  if (o.payments.some((p) => p.status === "refunded")) return "refunded";
+  if (o.refund || o.payments.some((p) => p.status === "refunded")) return "refunded";
+  if (o.refundDue) return "refunding";
   const paid = paidAmount(o);
   if (paid <= 0) return "unpaid";
   return paid >= o.total ? "paid" : "deposit";
@@ -61,6 +91,7 @@ export const paymentStateMeta: Record<PaymentState, { label: string; color: stri
   unpaid: { label: "Chưa thanh toán", color: "default" },
   deposit: { label: "Đã cọc", color: "gold" },
   paid: { label: "Đã thanh toán đủ", color: "green" },
+  refunding: { label: "Chờ hoàn tiền", color: "red" },
   refunded: { label: "Đã hoàn tiền", color: "magenta" },
 };
 

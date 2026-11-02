@@ -1,12 +1,16 @@
 import { useMemo } from "react";
 import { mockInventory } from "@/lib/inventory/mock";
-import type { Inventory, Material, MovementType } from "@/lib/inventory/types";
+import type { Inventory, Material, MovementType, StockMovement } from "@/lib/inventory/types";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE: GET/POST/PATCH /api/admin/inventory,
 // POST /api/admin/inventory/:id/movements (xem docs/inventory.md).
 // v2: hũ & nắp tách mã theo từng dung tích, tinh dầu tính theo ml
-const store = createLocalStore<Inventory>("bo-inventory-v2", mockInventory);
+const store = createLocalStore<Inventory>("bo-inventory-v2", mockInventory, (inv) => ({
+  ...inv,
+  // Bản lưu cũ: màu nhuộm tính theo cái, giờ tính theo ml, giữ nguyên con số
+  materials: inv.materials.map((m) => (m.category === "dye" && m.unit === "pcs" ? { ...m, unit: "ml" } : m)),
+}));
 
 const STAFF = "Admin 2510";
 const now = () => new Date().toISOString();
@@ -57,6 +61,40 @@ const move = (materialId: string, type: Exclude<MovementType, "order">, amount: 
       movements: [movement, ...inv.movements].slice(0, MAX_MOVEMENTS),
     };
   });
+
+// Ghi nhiều phiếu một lần; số tồn mới lấy từ after của từng phiếu
+const record = (inv: Inventory, list: StockMovement[]): Inventory => ({
+  materials: inv.materials.map((m) => {
+    const mv = list.find((x) => x.materialId === m.id);
+    return mv ? { ...m, stock: mv.after, updatedAt: mv.at } : m;
+  }),
+  movements: [...list, ...inv.movements].slice(0, MAX_MOVEMENTS),
+});
+
+// Bắt đầu làm: mỗi nguyên liệu một phiếu "Theo đơn hàng". Nơi gọi đã kiểm tra đủ tồn
+export const consumeOrder = (orderCode: string, needs: Map<string, number>) =>
+  update((inv) =>
+    record(
+      inv,
+      inv.materials.flatMap((m) => {
+        const need = needs.get(m.id);
+        return need ? [{ id: movementId(), materialId: m.id, type: "order" as const, change: -need, after: m.stock - need, note: `Đơn ${orderCode}`, orderCode, by: STAFF, at: now() }] : [];
+      }),
+    ),
+  );
+
+// Hủy đơn chưa làm: hoàn đúng lượng đã ghi trong phiếu của đơn, không tính lại từ cấu hình. Trả về số nguyên liệu được hoàn
+export const restoreOrder = (orderCode: string) => {
+  const inv = store.get();
+  const used = new Map<string, number>();
+  for (const mv of inv.movements) if (mv.orderCode === orderCode) used.set(mv.materialId, (used.get(mv.materialId) ?? 0) - mv.change);
+  const back = inv.materials.flatMap((m) => {
+    const amount = used.get(m.id) ?? 0;
+    return amount > 0 ? [{ id: movementId(), materialId: m.id, type: "in" as const, change: amount, after: m.stock + amount, note: "Hoàn kho do hủy đơn", orderCode, by: STAFF, at: now() }] : [];
+  });
+  if (back.length) store.set(record(inv, back));
+  return back.length;
+};
 
 const reset = () => store.set(null);
 

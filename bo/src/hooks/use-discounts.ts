@@ -14,6 +14,9 @@ const save = (discount: Discount) =>
 
 const patch = (id: string, changes: Partial<Discount>) => update((list) => list.map((x) => (x.id === id ? { ...x, ...changes } : x)));
 
+// Hủy đơn: trả lại lượt mã đã dùng
+export const releaseDiscount = (code: string) => update((list) => list.map((x) => (x.code === code ? { ...x, used: Math.max(0, x.used - 1) } : x)));
+
 const remove = (id: string) => update((list) => list.filter((x) => x.id !== id));
 const reset = () => store.set(null);
 

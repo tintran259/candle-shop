@@ -102,7 +102,7 @@ BO · Kho      ──phiếu kho─────▶ BE ◀──────POST 
 |---|---|---|---|
 | `vessel` | Hũ nến | 1 hũ + 1 cỡ + có/không nắp | `{ optionId, sizeId, withLid }` |
 | `cards` | Sáp, Bấc, Trang trí | 1 hoặc nhiều thẻ | `{ optionIds }` |
-| `swatches` | Màu sáp | đúng 1 màu | `{ optionIds: [id] }` |
+| `swatches` | Màu sáp | 1 hoặc nhiều màu theo `multiple` | `{ optionIds: [id, ...] }` |
 | `blend` | Mùi hương | 1 tới `maxBlend` mục kèm tỉ lệ, độ đậm | `{ items, intensity }` |
 | `inputs` | Cá nhân hóa | ô chữ + tuỳ chọn thêm | `{ values, addons }` |
 
@@ -242,10 +242,16 @@ BE tính lại đúng công thức này khi tạo đơn; web tính y hệt để
 giá 1 hũ = size.basePrice
          + hũ:            option.priceDelta + (withLid ? option.lid.priceDelta : 0)
          + cards/swatches: Σ priceDelta các mục đã chọn
+         + bước Sáp, swatches: Σ round1000( priceDelta × lượng loại đó / tổng lượng )
          + blend:          round( Σ(priceDelta × percent) / 100 ) + (intensity ? intensity.priceDelta[level] : 0)
+                           + phụ thu hương (scentPrice)
          + inputs:         Σ field.priceDelta (ô có chữ sau khi trim) + Σ addon.priceDelta (tuỳ chọn đã tích)
 tổng dòng = giá 1 hũ × số lượng
 ```
+
+Phụ thu hương (`BlendStep.scentPrice = { basePrice, standardLoad }`): `chuẩn = grams × standardLoad`. Lượng hương ≤ chuẩn thì cộng `basePrice`, vượt thì cộng `round1000(basePrice × ml / chuẩn)`. Chọn mục `exclusive` (Không mùi) thì không tính.
+
+Bước Sáp và `swatches` chọn được nhiều loại theo `multiple`, `maxSelect`. Không điền lượng thì lượng mặc định chia đều cho các loại. Mục `exclusive` (Không màu) đứng một mình. Mùi hương có `amounts` thì `percent` tính theo ml đã điền thay vì `weight`.
 
 ### 7.1 Quy `weight` ra phần trăm (blend)
 

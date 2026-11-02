@@ -1,7 +1,7 @@
 import { EditOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Row, Switch, Tag, Typography } from "antd";
 import { memo } from "react";
-import { PriceText, ProductBadges, RatingText } from "@/components/products/product-view";
+import { PriceText, ProductBadges, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
 import { aromaTypeColors, aromaTypeLabels, sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
@@ -26,6 +26,7 @@ function ProductGridView({ items, api, onEdit }: Props) {
               {p.images[0] && <img src={p.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: p.status === "hidden" ? 0.55 : 1 }} />}
               <span style={{ position: "absolute", left: 12, top: 12 }}>
                 <ProductBadges product={p} />
+                <RecipeTag product={p} />
               </span>
             </button>
 

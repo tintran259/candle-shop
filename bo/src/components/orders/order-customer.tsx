@@ -7,7 +7,7 @@ import { InfoRow } from "@/components/info-row";
 import { useCustomers } from "@/hooks/use-customers";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { formatMoney, initials } from "@/lib/format";
-import { canCancel, shippingLabels } from "@/lib/orders/labels";
+import { failedDeliveries, shippingName } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 import { brand } from "@/theme";
 
@@ -25,8 +25,9 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
   const history = api.orders.filter((o) => digits(o.customer.phone) === phone && (o.status !== "cancelled" || o.id === order.id));
   const spent = history.filter((o) => o.status === "completed").reduce((s, o) => s + o.total, 0);
   const returning = history.length > 1;
+  const failures = failedDeliveries(api.orders.filter((o) => digits(o.customer.phone) === phone));
   // Chỉ đổi ngày làm xong khi xưởng chưa làm xong
-  const editable = canCancel(order.status) && order.status !== "ready";
+  const editable = ["pending", "paid", "producing"].includes(order.status);
 
   const copy = (text: string, what: string) => {
     navigator.clipboard?.writeText(text).then(
@@ -66,6 +67,11 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {history.length} đơn{spent ? ` · đã mua ${formatMoney(spent)}` : ""}
             </Typography.Text>
+            {failures > 0 && (
+              <Tag color="red" style={{ marginInlineEnd: 0 }}>
+                Giao lỗi {failures} lần
+              </Tag>
+            )}
           </Flex>
         </Flex>
       </Flex>
@@ -122,7 +128,7 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
         </InfoRow>
         <Flex gap={16} wrap>
           <InfoRow icon={null} label="Hình thức">
-            <Typography.Text>{shippingLabels[order.shippingMethod]}</Typography.Text>
+            <Typography.Text>{shippingName(order)}</Typography.Text>
           </InfoRow>
           <InfoRow icon={null} label="Ngày làm xong">
             {editable ? (

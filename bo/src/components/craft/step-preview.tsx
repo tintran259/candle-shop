@@ -1,3 +1,4 @@
+import { pickOption } from "@/lib/craft/selection";
 import { CheckOutlined } from "@ant-design/icons";
 import { Checkbox, Flex, Input, Slider, Tag, Typography } from "antd";
 import { useState } from "react";
@@ -38,20 +39,18 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
     const first = options.find(sellable)?.id;
     return first ? [first] : [];
   });
-  const toggle = (id: string, multi: boolean, max?: number) =>
-    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : multi ? (max && p.length >= max ? [...p.slice(1), id] : [...p, id]) : [id]));
 
   if (step.kind === "inputs") return <InputsBody step={step} map={map} />;
   if (!options.length) return <Typography.Text type="secondary">Chưa có lựa chọn nào đang bán — khách sẽ không thấy bước này.</Typography.Text>;
 
   if (step.kind === "swatches")
     return (
-      <Flex wrap gap={8} role="radiogroup">
+      <Flex wrap gap={8} role={step.multiple ? "group" : "radiogroup"}>
         {options.map((o) => {
           const on = picked.includes(o.id);
           const out = !sellable(o);
           return (
-            <button key={o.id} type="button" disabled={out} className="sf-swatch" aria-checked={on} role="radio" onClick={() => toggle(o.id, false)}>
+            <button key={o.id} type="button" disabled={out} className="sf-swatch" aria-checked={on} role={step.multiple ? "checkbox" : "radio"} onClick={() => setPicked((p) => pickOption(p, o, options, step.multiple, step.maxSelect))}>
               {/* Có ảnh thì ưu tiên ảnh, không thì màu, không màu thì ô sọc */}
               <span className="sf-dot" style={{ background: o.images?.[0] ? `center / cover no-repeat url("${o.images[0]}")` : (o.swatch ?? striped) }}>
                 {on && <CheckOutlined style={{ fontSize: 12 }} />}
@@ -82,7 +81,7 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
               aria-checked={on}
               disabled={out && !on}
               className="sf-card"
-              onClick={() => toggle(o.id, !!multi, max)}
+              onClick={() => setPicked((p) => pickOption(p, o, options, !!multi, max))}
             >
               <span className="sf-check">{on && <CheckOutlined style={{ fontSize: 10 }} />}</span>
               {o.images?.[0] ? (

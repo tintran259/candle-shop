@@ -82,6 +82,10 @@ export const DEFAULT_INTENSITY: NonNullable<Extract<CraftStep, { kind: "blend" }
   load: { light: 0.06, medium: 0.08, strong: 0.1 },
 };
 
+// Màu nhuộm mặc định: 1 ml cho mỗi 100 g sáp
+export const DYE_RATIO = 0.01;
+export const DEFAULT_SCENT_PRICE = { basePrice: 10_000, standardLoad: 0.1 };
+
 export const isOptionStep = (s: CraftStep): s is OptionStep => s.kind !== "inputs";
 
 // Id duy nhất: slug từ tên, trùng thì thêm -2, -3…
@@ -108,7 +112,7 @@ export function newStep(kind: StepKind, title: string, takenIds: string[]): Craf
     case "cards":
       return { ...base, kind, options: [], multiple: false };
     case "swatches":
-      return { ...base, kind, options: [] };
+      return { ...base, kind, options: [], multiple: false, gramsPerGram: DYE_RATIO };
     case "blend":
       return { ...base, kind, options: [], maxBlend: 3, intensity: null };
     case "inputs":

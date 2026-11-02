@@ -1,7 +1,7 @@
 // ⚠️ DỮ LIỆU MẪU — cấu hình mặc định của trình dựng Thủ công (giá/tồn kho chưa phải số thật).
 // BE dùng đúng nội dung này làm bản ghi đầu tiên khi chưa có cấu hình (xem docs/craft-builder.md).
 // materialId trỏ tới nguyên liệu trong lib/inventory/mock.ts; mục không gắn kho = không theo dõi tồn.
-import { DEFAULT_INTENSITY } from "@/lib/craft/steps";
+import { DEFAULT_INTENSITY, DEFAULT_SCENT_PRICE, DYE_RATIO } from "@/lib/craft/steps";
 import type { CraftConfig } from "@/lib/craft/types";
 
 const all = ["s150", "s200", "s250"];
@@ -43,7 +43,7 @@ export const defaultCraftConfig: CraftConfig = {
       icon: "layers",
       enabled: true,
       required: true,
-      multiple: false,
+      multiple: true,
       previewRole: "waxColor",
       // Sáp tính theo gram: mỗi gram nến cần 1 gram sáp
       gramsPerGram: 1,
@@ -51,7 +51,6 @@ export const defaultCraftConfig: CraftConfig = {
         { id: "soy", name: { vi: "Sáp đậu nành", en: "Soy wax" }, description: { vi: "Tiêu chuẩn, cháy sạch", en: "Standard, clean burn" }, priceDelta: 0, available: true, materialId: "wax-soy", swatch: "#f6efe2" },
         { id: "coconut", name: { vi: "Sáp dừa", en: "Coconut wax" }, description: { vi: "Tỏa hương mạnh, mặt sáp mịn", en: "Strong throw, creamy top" }, priceDelta: 25_000, available: true, materialId: "wax-coconut", swatch: "#fbf7ef" },
         { id: "beeswax", name: { vi: "Sáp ong", en: "Beeswax" }, description: { vi: "Mùi mật nhẹ, màu vàng tự nhiên", en: "Light honey note, natural gold" }, priceDelta: 50_000, available: true, materialId: "wax-beeswax", swatch: "#f0d48a" },
-        { id: "blend", name: { vi: "Sáp pha trộn", en: "Wax blend" }, description: { vi: "Đậu nành + dừa", en: "Soy + coconut" }, priceDelta: 10_000, available: true, materialId: "wax-blend", swatch: "#f8f1e6" },
       ],
     },
     {
@@ -64,6 +63,7 @@ export const defaultCraftConfig: CraftConfig = {
       required: true,
       maxBlend: 3,
       intensity: DEFAULT_INTENSITY,
+      scentPrice: DEFAULT_SCENT_PRICE,
       options: [
         { id: "vanilla", name: { vi: "Vanilla", en: "Vanilla" }, priceDelta: 0, available: true, materialId: "oil-vanilla", swatch: "#f3d9a4" },
         { id: "lavender", name: { vi: "Lavender", en: "Lavender" }, priceDelta: 0, available: true, materialId: "oil-lavender", swatch: "#b9a6d6" },
@@ -95,7 +95,7 @@ export const defaultCraftConfig: CraftConfig = {
           available: true,
           materialId: "wick-wood",
           look: "wood",
-          onlyWith: { container: ["ceramic", "clear-glass", "amber-glass", "plaster"], wax: ["soy", "coconut", "blend"] },
+          onlyWith: { container: ["ceramic", "clear-glass", "amber-glass", "plaster"], wax: ["soy", "coconut"] },
         },
       ],
     },
@@ -107,10 +107,12 @@ export const defaultCraftConfig: CraftConfig = {
       icon: "palette",
       enabled: true,
       required: true,
+      multiple: true,
       previewRole: "waxColor",
+      gramsPerGram: DYE_RATIO,
       options: [
         // Không có màu = giữ màu tự nhiên của sáp (ảnh minh họa dùng màu của bước Sáp)
-        { id: "natural", name: { vi: "Không màu", en: "Undyed" }, priceDelta: 0, available: true },
+        { id: "natural", name: { vi: "Không màu", en: "Undyed" }, priceDelta: 0, available: true, exclusive: true },
         { id: "cream", name: { vi: "Trắng kem", en: "Cream" }, priceDelta: 0, available: true, materialId: "dye-cream", swatch: "#f3ead8" },
         { id: "beige", name: { vi: "Be", en: "Beige" }, priceDelta: 10_000, available: true, materialId: "dye-beige", swatch: "#e6cfae" },
         { id: "sage", name: { vi: "Xanh sage", en: "Sage" }, priceDelta: 10_000, available: true, materialId: "dye-sage", swatch: "#a9b59a" },
@@ -126,10 +128,10 @@ export const defaultCraftConfig: CraftConfig = {
       icon: "sparkles",
       enabled: true,
       required: false,
-      multiple: false,
+      multiple: true,
       previewRole: "decoration",
       options: [
-        { id: "none", name: { vi: "Không trang trí", en: "No decoration" }, priceDelta: 0, available: true },
+        { id: "none", name: { vi: "Không trang trí", en: "No decoration" }, priceDelta: 0, available: true, exclusive: true },
         { id: "botanical", name: { vi: "Hoa khô quanh thành hũ", en: "Botanical rim" }, description: { vi: "Đặt sát thành, cách xa ngọn lửa", en: "Set at the rim, away from the flame" }, priceDelta: 75_000, available: true, materialId: "decor-botanical", look: "flowers" },
         { id: "wax-pattern", name: { vi: "Họa tiết sáp", en: "Wax pattern" }, priceDelta: 50_000, available: true, materialId: "decor-pattern", look: "pattern" },
         { id: "wax-topper", name: { vi: "Topping sáp tạo hình", en: "Sculpted wax topper" }, priceDelta: 90_000, available: true, materialId: "decor-topper", look: "topper" },

@@ -120,7 +120,7 @@ function Profile({ row, api }: { row: CustomerRow; api: CustomersApi }) {
         <Row gutter={[12, 12]} style={{ marginTop: 20 }}>
           {[
             { label: "Đã chi", value: stats.spent ? formatMoneyShort(stats.spent) : "—", hint: "Gồm tiền cọc, trừ đơn hủy" },
-            { label: "Số đơn", value: String(stats.orderCount), hint: stats.cancelled ? `${stats.cancelled} đơn đã hủy` : undefined },
+            { label: "Số đơn", value: String(stats.orderCount), hint: [stats.cancelled && `${stats.cancelled} đơn đã hủy`, stats.failedDeliveries && `${stats.failedDeliveries} lần giao không thành`].filter(Boolean).join(" · ") || undefined },
             { label: "Trung bình / đơn", value: stats.average ? formatMoneyShort(stats.average) : "—" },
             {
               label: "Đơn gần nhất",

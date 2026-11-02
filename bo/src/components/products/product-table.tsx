@@ -1,7 +1,7 @@
 import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import { Button, Flex, Popconfirm, Switch, Table, Tag, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import { memo, useState } from "react";
-import { PriceText, ProductBadges, ProductThumb, RatingText } from "@/components/products/product-view";
+import { PriceText, ProductBadges, ProductThumb, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
 import { formatNumber } from "@/lib/format";
 import { aromaLevelLabels, aromaTypeColors, aromaTypeLabels, sizeLabels } from "@/lib/products/labels";
@@ -31,6 +31,7 @@ function ProductTableView({ items, api, onEdit, pagination }: Props) {
               /{p.slug}
             </Typography.Text>
             <ProductBadges product={{ ...p, isFeatured: false }} />
+            <RecipeTag product={p} />
           </Flex>
         </Flex>
       ),

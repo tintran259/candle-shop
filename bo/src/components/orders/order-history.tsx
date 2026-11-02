@@ -6,17 +6,20 @@ import {
   DollarOutlined,
   ExperimentOutlined,
   GiftOutlined,
+  InboxOutlined,
   RobotOutlined,
+  RollbackOutlined,
   ShoppingCartOutlined,
   UserOutlined,
   WalletOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { Flex, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
 import { FormSection } from "@/components/form/form-section";
 import { formatMoney } from "@/lib/format";
-import { itemCount, providerLabels } from "@/lib/orders/labels";
+import { depositLabel, itemCount, providerLabels } from "@/lib/orders/labels";
 import { boChannel } from "@/lib/orders/create";
 import type { Order, OrderEvent } from "@/lib/orders/types";
 
@@ -26,6 +29,7 @@ type Look = { title: string; detail?: string; icon: ReactNode; fg: string; bg: s
 function present(e: OrderEvent, order: Order): Look {
   if (e.kind === "payment") return { title: e.note ?? "Ghi nhận thanh toán", icon: <DollarOutlined />, fg: "#237804", bg: "#f0f9eb" };
   if (e.kind === "schedule") return { title: "Đổi ngày làm xong", detail: e.note, icon: <CalendarOutlined />, fg: "#0958d9", bg: "#e6f4ff" };
+  if (e.kind === "delivery") return { title: e.note ?? "Giao lại", icon: <CarOutlined />, fg: "#531dab", bg: "#f9f0ff" };
 
   switch (e.status) {
     case "pending": {
@@ -33,7 +37,7 @@ function present(e: OrderEvent, order: Order): Look {
       const channel = boChannel(e.note);
       return {
         title: channel !== undefined ? "Shop tạo đơn" : "Khách đặt hàng",
-        detail: `${channel ? `Khách đặt qua ${channel} · ` : ""}${itemCount(order)} sản phẩm · ${formatMoney(order.total)} · ${order.paymentPlan === "deposit" ? "chọn cọc 50%" : "chọn trả đủ"}`,
+        detail: `${channel ? `Khách đặt qua ${channel} · ` : ""}${itemCount(order)} sản phẩm · ${formatMoney(order.total)} · ${order.paymentPlan === "deposit" ? `chọn ${depositLabel(order).toLowerCase()}` : "chọn trả đủ"}`,
         icon: <ShoppingCartOutlined />,
         fg: "#7a3f17",
         bg: "#fbf1e8",
@@ -57,6 +61,12 @@ function present(e: OrderEvent, order: Order): Look {
       return { title: "Giao cho vận chuyển", icon: <CarOutlined />, fg: "#531dab", bg: "#f9f0ff" };
     case "completed":
       return { title: "Khách đã nhận hàng", icon: <CheckCircleOutlined />, fg: "#237804", bg: "#f0f9eb" };
+    case "delivery_failed":
+      return { title: "Giao không thành", detail: e.note, icon: <WarningOutlined />, fg: "#a8071a", bg: "#fff1f0" };
+    case "returning":
+      return { title: "Hoàn hàng về shop", detail: e.note, icon: <RollbackOutlined />, fg: "#ad2102", bg: "#fff2e8" };
+    case "returned":
+      return { title: "Đã nhận lại hàng", detail: e.note, icon: <InboxOutlined />, fg: "#9e1068", bg: "#fff0f6" };
     case "cancelled":
       return { title: "Đơn bị hủy", detail: e.note ? `Lý do: ${e.note}` : undefined, icon: <CloseCircleOutlined />, fg: "#a8071a", bg: "#fff1f0" };
   }
@@ -82,7 +92,8 @@ function Actor({ by }: { by: string }) {
 
 // Dòng thời gian mới nhất ở trên, gom theo ngày
 export function HistorySection({ order }: { order: Order }) {
-  const events = [...order.history].sort((a, b) => b.at.localeCompare(a.at));
+  // Đảo trước khi sắp xếp: sự kiện cùng thời điểm thì cái ghi sau đứng trên
+  const events = [...order.history].reverse().sort((a, b) => b.at.localeCompare(a.at));
   const days: { label: string; items: OrderEvent[] }[] = [];
   for (const e of events) {
     const label = dayLabel(e.at);

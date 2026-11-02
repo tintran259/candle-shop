@@ -44,7 +44,7 @@ export type OptionFormValues = {
 export type ResolvedMaterials = { materialId?: string; sizeMaterials?: Record<string, VesselSizeStock> };
 
 // Đơn vị gợi ý khi tạo nguyên liệu mới từ một bước
-export const suggestedUnit = (step: OptionStep): Unit => (step.kind === "blend" ? "ml" : step.kind === "cards" && step.gramsPerGram ? "g" : "pcs");
+export const suggestedUnit = (step: OptionStep): Unit => (step.kind === "blend" || step.kind === "swatches" ? "ml" : step.kind === "cards" && step.gramsPerGram ? "g" : "pcs");
 
 export function toFormValues(step: OptionStep, item?: StepOption): OptionFormValues {
   const o = (item ?? {}) as Partial<VesselOption>;

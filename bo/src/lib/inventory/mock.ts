@@ -38,11 +38,11 @@ const seeds: Seed[] = [
   { id: "wick-cotton", name: "Bấc cotton", category: "wick", unit: "pcs", stock: 500, lowStock: 50 },
   { id: "wick-wood", name: "Bấc gỗ", category: "wick", unit: "pcs", stock: 40, lowStock: 20 },
   // Màu nhuộm (tính theo lần pha)
-  { id: "dye-cream", name: "Màu nhuộm trắng kem", category: "dye", unit: "pcs", stock: 200, swatch: "#f3ead8" },
-  { id: "dye-beige", name: "Màu nhuộm be", category: "dye", unit: "pcs", stock: 120, swatch: "#e6cfae" },
-  { id: "dye-sage", name: "Màu nhuộm xanh sage", category: "dye", unit: "pcs", stock: 80, swatch: "#a9b59a" },
-  { id: "dye-brown", name: "Màu nhuộm nâu", category: "dye", unit: "pcs", stock: 60, swatch: "#a07c62" },
-  { id: "dye-pastel-pink", name: "Màu nhuộm hồng pastel", category: "dye", unit: "pcs", stock: 0, swatch: "#f0b3a8" },
+  { id: "dye-cream", name: "Màu nhuộm trắng kem", category: "dye", unit: "ml", stock: 200, lowStock: 30, swatch: "#f3ead8" },
+  { id: "dye-beige", name: "Màu nhuộm be", category: "dye", unit: "ml", stock: 120, lowStock: 30, swatch: "#e6cfae" },
+  { id: "dye-sage", name: "Màu nhuộm xanh sage", category: "dye", unit: "ml", stock: 80, lowStock: 30, swatch: "#a9b59a" },
+  { id: "dye-brown", name: "Màu nhuộm nâu", category: "dye", unit: "ml", stock: 60, lowStock: 30, swatch: "#a07c62" },
+  { id: "dye-pastel-pink", name: "Màu nhuộm hồng pastel", category: "dye", unit: "ml", stock: 0, lowStock: 30, swatch: "#f0b3a8" },
   // Trang trí
   { id: "decor-botanical", name: "Hoa khô trang trí", category: "decor", unit: "pcs", stock: 30 },
   { id: "decor-pattern", name: "Khuôn họa tiết sáp", category: "decor", unit: "pcs", stock: 50 },

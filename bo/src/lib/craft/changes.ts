@@ -139,6 +139,7 @@ function stepFields(a: CraftStep, b: CraftStep): string[] {
     ["gramsPerGram", "Hệ số gram", (v?: number) => String(v ?? 1)],
     ["maxBlend", "Phối tối đa", (v: number) => `${v} mục`],
     ["intensity", "Độ đậm", (v: never) => intensityText(v)],
+    ["scentPrice", "Phụ thu hương", (v?: { basePrice: number; standardLoad: number }) => (v ? `${v.basePrice.toLocaleString("vi-VN")} ₫ tới ${Math.round(v.standardLoad * 1000) / 10}%` : "tắt")],
   ];
   return rows.filter(([k]) => !same(x[k], y[k])).map(([k, label, show]) => arrow(label, show(x[k] as never), show(y[k] as never)));
 }

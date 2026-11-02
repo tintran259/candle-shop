@@ -1,9 +1,17 @@
-import { ArrowRightOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, CloseCircleOutlined, InboxOutlined, RollbackOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Divider, Flex, Steps, Tag, Typography } from "antd";
 import dayjs from "dayjs";
+import { useState } from "react";
+import { Link } from "react-router";
+import { DeliveryFailModal, ReceiveBackModal, ResendModal } from "@/components/orders/order-delivery";
+import { consumeOrder } from "@/hooks/use-inventory";
 import type { OrdersApi } from "@/hooks/use-orders";
-import { formatMoney } from "@/lib/format";
-import { canCancel, deadline, nextAction, nextStatus, remaining, statusMeta, stepLabels } from "@/lib/orders/labels";
+import { useSettings } from "@/hooks/use-settings";
+import { useStockHold } from "@/hooks/use-stock-hold";
+import { unitLabel } from "@/lib/craft/groups";
+import { formatMoney, formatNumber } from "@/lib/format";
+import { orderNeeds, shortages } from "@/lib/orders/materials";
+import { cancelOutcomeLabels, canCancel, deadline, isDeliveryIssue, nextAction, nextStatus, remaining, returnConditionLabels, shippingDays, statusMeta, stepLabels } from "@/lib/orders/labels";
 import { orderFlow, type Order } from "@/lib/orders/types";
 import { radius } from "@/theme";
 
@@ -15,10 +23,11 @@ const dot: Record<Order["status"], string> = {
   ready: "#13c2c2",
   shipping: "#722ed1",
   completed: "#52c41a",
+  delivery_failed: "#f5222d",
+  returning: "#fa541c",
+  returned: "#eb2f96",
   cancelled: "#bfbfbf",
 };
-
-const SHIP_DAYS = { standard: 3, express: 1 } as const;
 
 // Mốc thời gian dưới mỗi bước: đã qua thì giờ thực tế, chưa tới thì ngày dự kiến
 function stepTime(order: Order, step: (typeof orderFlow)[number]) {
@@ -26,7 +35,7 @@ function stepTime(order: Order, step: (typeof orderFlow)[number]) {
   if (reached) return dayjs(reached.at).format("HH:mm DD/MM");
   const ready = dayjs(order.readyDate);
   if (step === "ready") return `Dự kiến ${ready.format("DD/MM")}`;
-  if (step === "completed") return `Dự kiến ${ready.add(SHIP_DAYS[order.shippingMethod], "day").format("DD/MM")}`;
+  if (step === "completed") return `Dự kiến ${ready.add(shippingDays(order), "day").format("DD/MM")}`;
   return undefined;
 }
 
@@ -34,13 +43,64 @@ type Props = { order: Order; api: OrdersApi; onCancel: () => void };
 
 // Thẻ tiến trình đầu drawer: trạng thái hiện tại + hạn + nút bước tiếp theo, rồi thanh 6 bước có mốc thời gian
 export function OrderProcess({ order, api, onCancel }: Props) {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
+  const { settings } = useSettings();
+  const { map, available, source } = useStockHold();
+  const [dialog, setDialog] = useState<"fail" | "back" | "resend" | null>(null);
   const meta = statusMeta[order.status];
   const to = nextStatus(order.status);
   const action = nextAction[order.status];
   const due = deadline(order);
   const left = remaining(order);
-  const current = orderFlow.indexOf(order.status as (typeof orderFlow)[number]);
+  const issue = isDeliveryIssue(order.status);
+  const current = orderFlow.indexOf(issue ? "shipping" : (order.status as (typeof orderFlow)[number]));
+  const shortList = (items: ReturnType<typeof shortages>) => (
+    <ul style={{ margin: 0, paddingInlineStart: 20 }}>
+      {items.map(({ m, need }) => (
+        <li key={m.id}>
+          {m.name}: cần {formatNumber(need)}, còn {formatNumber(m.stock)} {unitLabel[m.unit]}
+        </li>
+      ))}
+    </ul>
+  );
+
+  const proceed = () => {
+    api.advance(order.id);
+    message.success(`Đơn ${order.code}: ${statusMeta[to!].label}`);
+  };
+
+  const goNext = () => {
+    if (!to) return;
+    const needs = orderNeeds(order, source);
+    if (to === "paid") {
+      // Tiền đã về thì vẫn cho xác nhận, nhưng báo trước đơn này không giữ đủ nguyên liệu
+      const short = shortages(needs, available);
+      if (short.length)
+        return modal.confirm({
+          title: "Không đủ nguyên liệu để giữ cho đơn này",
+          content: shortList(short),
+          okText: "Vẫn xác nhận",
+          cancelText: "Quay lại",
+          onOk: proceed,
+        });
+    }
+    if (to === "producing") {
+      const short = shortages(needs, map);
+      if (short.length) return modal.warning({ title: "Kho không đủ để bắt đầu làm", content: shortList(short), okText: "Đã hiểu" });
+      consumeOrder(order.code, needs);
+    }
+    if (to === "completed" && left > 0)
+      return modal.confirm({
+        title: "Khách đã nhận và đã thu đủ tiền?",
+        content: `Hệ thống sẽ ghi nhận đã thu ${formatMoney(left)} còn lại.`,
+        okText: "Đã thu đủ, hoàn tất",
+        cancelText: "Quay lại",
+        onOk: proceed,
+      });
+    proceed();
+  };
+
+  const close = () => setDialog(null);
 
   return (
     <section aria-label="Tiến trình đơn" style={{ background: "#fff", borderRadius: radius.card, padding: 24 }}>
@@ -79,8 +139,28 @@ export function OrderProcess({ order, api, onCancel }: Props) {
           </Flex>
         </Flex>
 
-        {(action || canCancel(order.status)) && (
+        {(action || issue || canCancel(order.status)) && (
           <Flex gap={8} align="center" wrap>
+            {order.status === "shipping" && (
+              <Button icon={<WarningOutlined />} onClick={() => setDialog("fail")}>
+                Giao không thành
+              </Button>
+            )}
+            {order.status === "delivery_failed" && (
+              <>
+                <Button icon={<RollbackOutlined />} onClick={() => { api.startReturn(order.id); message.success(`Đơn ${order.code}: ${statusMeta.returning.label}`); }}>
+                  Hoàn về
+                </Button>
+                <Button type="primary" size="large" icon={<SendOutlined />} onClick={() => { api.redeliver(order.id); message.success(`Đơn ${order.code}: ${statusMeta.shipping.label}`); }}>
+                  Giao lại
+                </Button>
+              </>
+            )}
+            {order.status === "returning" && (
+              <Button type="primary" size="large" icon={<InboxOutlined />} onClick={() => setDialog("back")}>
+                Đã nhận lại hàng
+              </Button>
+            )}
             {canCancel(order.status) && (
               <Button danger icon={<CloseCircleOutlined />} onClick={onCancel}>
                 Hủy đơn
@@ -92,32 +172,86 @@ export function OrderProcess({ order, api, onCancel }: Props) {
                 size="large"
                 icon={<ArrowRightOutlined />}
                 iconPlacement="end"
-                onClick={() => {
-                  api.advance(order.id);
-                  message.success(`Đơn ${order.code}: ${statusMeta[to].label}`);
-                }}
+                onClick={goNext}
               >
                 {action}
+              </Button>
+            )}
+            {order.status === "returned" && (
+              <Button type="primary" size="large" icon={<SendOutlined />} onClick={() => setDialog("resend")}>
+                Gửi lại đơn
               </Button>
             )}
           </Flex>
         )}
       </Flex>
 
+      {order.status === "delivery_failed" && <Alert type="warning" showIcon style={{ marginTop: 16 }} title={`Giao không thành lần ${order.deliveryAttempts ?? 1}/${settings.maxDeliveryAttempts}`} description={order.deliveryIssue} />}
+      {order.status === "returned" && order.returnCondition && (
+        <Alert type={order.returnCondition === "good" ? "info" : "warning"} showIcon style={{ marginTop: 16 }} title={returnConditionLabels[order.returnCondition]} description={order.returnNote} />
+      )}
+
       <Divider style={{ margin: "20px 0" }} />
 
       {order.status === "cancelled" ? (
-        <Alert type="error" showIcon title="Đơn đã hủy" description={order.cancelReason} />
+        <Alert
+          type="error"
+          showIcon
+          title="Đơn đã hủy"
+          description={
+            <>
+              {order.cancelReason}
+              {order.cancelOutcome && (
+                <div>
+                  {order.cancelOutcome === "stocked" ? <Link to="/cancelled-products">{cancelOutcomeLabels.stocked}</Link> : cancelOutcomeLabels.returned}
+                </div>
+              )}
+            </>
+          }
+        />
       ) : (
         <Steps
           size="small"
           current={current}
-          status={current === orderFlow.length - 1 ? "finish" : "process"}
+          status={issue ? "error" : current === orderFlow.length - 1 ? "finish" : "process"}
           titlePlacement="vertical"
           responsive
           items={orderFlow.map((s) => ({ title: stepLabels[s], content: stepTime(order, s) }))}
         />
       )}
+
+      <DeliveryFailModal
+        open={dialog === "fail"}
+        order={order}
+        max={settings.maxDeliveryAttempts}
+        onClose={close}
+        onConfirm={(reason) => {
+          api.failDelivery(order.id, reason, settings.maxDeliveryAttempts);
+          close();
+          message.warning(`Đã ghi nhận giao không thành đơn ${order.code}`);
+        }}
+      />
+      <ReceiveBackModal
+        open={dialog === "back"}
+        order={order}
+        onClose={close}
+        onConfirm={(condition, note) => {
+          api.receiveReturn(order.id, condition, note);
+          close();
+          message.success(`Đơn ${order.code}: ${statusMeta.returned.label}`);
+        }}
+      />
+      <ResendModal
+        open={dialog === "resend"}
+        order={order}
+        fee={settings.resendFee}
+        onClose={close}
+        onConfirm={(fee) => {
+          api.resend(order.id, fee);
+          close();
+          message.success(`Đã gửi lại đơn ${order.code}`);
+        }}
+      />
     </section>
   );
 }

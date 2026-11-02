@@ -2,10 +2,12 @@ import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Grid, Pagination, Popconfirm, Row, Statistic, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { ProductDrawer } from "@/components/products/product-drawer";
+import { fromCancelled } from "@/components/products/product-form";
 import { ProductGrid } from "@/components/products/product-grid";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductToolbar } from "@/components/products/product-toolbar";
 import { ProductsSkeleton } from "@/components/skeletons";
+import { useCancelledProducts } from "@/hooks/use-cancelled-products";
 import { useProducts } from "@/hooks/use-products";
 import { applyFilters, defaultFilters, type ProductFilters, type ViewMode } from "@/lib/products/filters";
 import { discountPercent } from "@/lib/products/labels";
@@ -13,10 +15,11 @@ import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
 
-// Quản lý sản phẩm nến bán sẵn trên web
+// Sản phẩm trưng bày: mẫu nến hiện trên web để khách đặt, có công thức nguyên liệu, không giữ số tồn thành phẩm
 export function ProductsPage() {
-  useTitle("Sản phẩm");
+  useTitle("Sản phẩm trưng bày");
   const api = useProducts();
+  const cancelled = useCancelledProducts();
   const screens = Grid.useBreakpoint();
   const [filters, setFiltersState] = useState<ProductFilters>(defaultFilters);
   // Memo để bảng/lưới (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
@@ -31,7 +34,7 @@ export function ProductsPage() {
     pager.resetPage();
   };
   const [view, setView] = useState<ViewMode | null>(null);
-  // Trên URL (?edit=): null = đóng, "new" = thêm mới, còn lại là id đang sửa
+  // Trên URL (?edit=): null = đóng, "new" = thêm mới, "from:<id>" = tạo từ nến hủy đơn, còn lại là id đang sửa
   const [editing, setEditing] = useOpenParam("edit");
 
   const { products } = api;
@@ -41,7 +44,12 @@ export function ProductsPage() {
   const { shown, key: drawerKey } = useDrawerTarget(editing);
   const current = shown && shown !== "new" ? products.find((p) => p.id === shown) : undefined;
 
-  if (api.loading) return <ProductsSkeleton />;
+  // Cây nến đã xử lý rồi thì không tạo lại được
+  const fromItem = shown?.startsWith("from:") ? cancelled.items.find((c) => c.id === shown.slice(5) && c.status === "pending") : undefined;
+
+  if (api.loading || cancelled.loading) return <ProductsSkeleton />;
+
+  const prefill = fromItem && fromCancelled(fromItem, api.products, fromItem.recipe ?? []);
 
   const stats = [
     { label: "Sản phẩm", value: products.length },
@@ -55,9 +63,9 @@ export function ProductsPage() {
       <Flex justify="space-between" align="flex-end" wrap gap={16}>
         <div>
           <Typography.Title level={3} style={{ marginBottom: 4 }}>
-            Sản phẩm
+            Sản phẩm trưng bày
           </Typography.Title>
-          <Typography.Text type="secondary">Nến làm sẵn theo mẫu — khách đặt, xưởng làm trong 2–3 ngày.</Typography.Text>
+          <Typography.Text type="secondary">Mẫu nến hiện trên web để khách đặt, xưởng làm trong 2–3 ngày. Không phụ thuộc số tồn ở Kho.</Typography.Text>
         </div>
         <Flex gap={8}>
           <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
@@ -123,7 +131,16 @@ export function ProductsPage() {
         </Flex>
       )}
 
-      <ProductDrawer key={drawerKey} open={editing !== null && (editing === "new" || !!current)} product={current} api={api} onClose={() => setEditing(null)} />
+      <ProductDrawer
+        key={drawerKey}
+        open={editing !== null && (editing === "new" || !!current || !!fromItem)}
+        product={current}
+        prefill={prefill}
+        source={fromItem && `Lấy từ nến của đơn hủy ${fromItem.orderCode}. Kiểm tra lại thông tin trước khi tạo.`}
+        api={api}
+        onCreated={fromItem && ((p) => cancelled.save(fromItem.id, { status: "converted", displayProductId: p.id }))}
+        onClose={() => setEditing(null)}
+      />
     </Flex>
   );
 }

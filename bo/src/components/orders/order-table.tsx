@@ -3,7 +3,7 @@ import { memo } from "react";
 import dayjs from "dayjs";
 import { ItemStack, PaymentTag, ReadyDate, StatusTag } from "@/components/orders/order-view";
 import { formatMoney } from "@/lib/format";
-import { itemCount, providerLabels } from "@/lib/orders/labels";
+import { depositLabel, itemCount, providerLabels } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 
 // Bảng đơn hàng — bấm cả dòng để mở chi tiết
@@ -62,7 +62,7 @@ function OrderTableView({ items, onOpen, pagination }: { items: Order[]; onOpen:
         <Flex vertical gap={2} align="flex-start">
           <PaymentTag order={o} />
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            {providerLabels[o.paymentMethod]} · {o.paymentPlan === "deposit" ? "Cọc 50%" : "Trả đủ"}
+            {providerLabels[o.paymentMethod]} · {o.paymentPlan === "deposit" ? depositLabel(o) : "Trả đủ"}
           </Typography.Text>
         </Flex>
       ),

@@ -2,8 +2,10 @@ import { App, Button, Divider, Flex, Input, Tag, Typography } from "antd";
 import { useState } from "react";
 import { FormSection } from "@/components/form/form-section";
 import { ItemThumb } from "@/components/orders/order-view";
+import { useInventory } from "@/hooks/use-inventory";
 import type { OrdersApi } from "@/hooks/use-orders";
-import { formatMoney } from "@/lib/format";
+import { unitLabel } from "@/lib/craft/groups";
+import { formatMoney, formatNumber } from "@/lib/format";
 import type { Order } from "@/lib/orders/types";
 
 type Props = { order: Order; api: OrdersApi };
@@ -22,6 +24,14 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
 }
 
 export function ItemsSection({ order }: { order: Order }) {
+  const { materials } = useInventory();
+  const recipeText = (recipe: NonNullable<Order["items"][number]["recipe"]>) =>
+    recipe
+      .map((r) => {
+        const m = materials.find((x) => x.id === r.materialId);
+        return m ? `${m.name} ${formatNumber(r.quantity)} ${unitLabel[m.unit]}` : r.materialId;
+      })
+      .join(" · ");
   return (
     <FormSection title={`Sản phẩm (${order.items.length})`}>
       <Flex vertical gap={12}>
@@ -36,6 +46,11 @@ export function ItemsSection({ order }: { order: Order }) {
               {i.custom && (
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {i.custom}
+                </Typography.Text>
+              )}
+              {i.recipe && i.recipe.length > 0 && (
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  Công thức 1 hũ: {recipeText(i.recipe)}
                 </Typography.Text>
               )}
               <Typography.Text type="secondary" className="tabular" style={{ fontSize: 13 }}>

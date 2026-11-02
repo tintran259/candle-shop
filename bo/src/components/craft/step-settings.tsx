@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { IconPicker } from "@/components/craft/step-icon";
 import { MoneyInput } from "@/components/money-input";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
-import { DEFAULT_INTENSITY, intensityLabels, kindMeta, previewRoleMeta } from "@/lib/craft/steps";
+import { DEFAULT_INTENSITY, DEFAULT_SCENT_PRICE, intensityLabels, kindMeta, previewRoleMeta } from "@/lib/craft/steps";
 import type { BlendStep, CraftStep, IntensityLevel, Localized } from "@/lib/craft/types";
 
 const levels: IntensityLevel[] = ["light", "medium", "strong"];
@@ -81,23 +81,31 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
           <Switch checked={step.required} disabled={isVessel} onChange={(required) => set({ required })} aria-label="Bắt buộc" />
         </Setting>
 
-        {step.kind === "cards" && (
+        {(step.kind === "cards" || step.kind === "swatches") && (
           <>
-            <Setting label="Cho chọn nhiều" description="Khách tích được nhiều thẻ (vd nhiều phụ kiện).">
-              <Flex gap={8} align="center">
-                {step.multiple && (
-                  <InputNumber
-                    aria-label="Chọn tối đa"
-                    min={2}
-                    precision={0}
-                    placeholder="Không giới hạn"
-                    prefix="Tối đa"
-                    value={step.maxSelect}
-                    onChange={(n) => set({ maxSelect: n ?? undefined })}
-                    style={{ width: 170 }}
-                  />
-                )}
-                <Switch checked={step.multiple} onChange={(multiple) => set({ multiple, maxSelect: multiple ? step.maxSelect : undefined })} aria-label="Cho chọn nhiều" />
+            <Setting label="Số lựa chọn" description="Chọn 1 mục, hoặc chọn nhiều mục với số tối đa. Để trống Tối đa là không giới hạn.">
+              <Flex gap={8} align="center" wrap>
+                <InputNumber
+                  aria-label="Chọn tối đa"
+                  min={2}
+                  precision={0}
+                  placeholder="Không giới hạn"
+                  prefix="Tối đa"
+                  disabled={!step.multiple}
+                  value={step.multiple ? step.maxSelect : 1}
+                  onChange={(n) => set({ maxSelect: n ?? undefined })}
+                  style={{ width: 190 }}
+                />
+                <Radio.Group
+                  optionType="button"
+                  aria-label="Số lựa chọn"
+                  value={step.multiple}
+                  onChange={(e) => set({ multiple: e.target.value, maxSelect: undefined })}
+                  options={[
+                    { value: false, label: "Chọn 1" },
+                    { value: true, label: "Chọn nhiều" },
+                  ]}
+                />
               </Flex>
             </Setting>
           </>
@@ -122,7 +130,7 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
               <InputNumber
                 aria-label="Hệ số gram"
                 min={0}
-                step={0.1}
+                step={step.kind === "swatches" ? 0.01 : 0.1}
                 prefix="Hệ số"
                 value={step.gramsPerGram ?? 1}
                 onChange={(n) => n !== null && set({ gramsPerGram: n })}
@@ -164,6 +172,7 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
 
 function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<BlendStep>) => void }) {
   const { intensity } = step;
+  const scent = step.scentPrice ?? { basePrice: 0, standardLoad: DEFAULT_SCENT_PRICE.standardLoad };
   return (
     <>
       <Setting label="Số mục phối tối đa mỗi hũ" description="1 = khách chỉ chọn một mục, không có thanh chỉnh tỉ lệ.">
@@ -173,6 +182,24 @@ function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<Bl
           onChange={(e) => set({ maxBlend: e.target.value })}
           options={[1, 2, 3, 4].map((n) => ({ value: n, label: n === 1 ? "1 mục" : `Tối đa ${n}` }))}
         />
+      </Setting>
+      <Setting label="Phụ thu hương" description="Lượng hương tới mức chuẩn tính phụ thu mặc định, vượt mức thì phụ thu tăng theo tỉ lệ ml. Phụ thu 0 là tắt. Mức chuẩn tính trên lượng sáp của cỡ.">
+        <Flex gap={8} align="center" wrap>
+          <InputNumber
+            aria-label="Mức hương chuẩn"
+            min={1}
+            max={30}
+            step={0.5}
+            prefix="Chuẩn"
+            suffix="%"
+            value={Math.round((scent.standardLoad || 0) * 1000) / 10}
+            onChange={(n) => n !== null && set({ scentPrice: { ...scent, standardLoad: n / 100 } })}
+            style={{ width: 130 }}
+          />
+          <div style={{ width: 150 }}>
+            <MoneyInput value={scent.basePrice} onChange={(n) => n !== null && set({ scentPrice: { ...scent, basePrice: n } })} />
+          </div>
+        </Flex>
       </Setting>
       <Setting label="Cho chọn độ đậm" description="Nhẹ / Vừa / Đậm — tỉ lệ (gram tinh dầu / gram sáp) quyết định lượng trừ kho.">
         <Switch checked={!!intensity} onChange={(v) => set({ intensity: v ? DEFAULT_INTENSITY : null })} aria-label="Cho chọn độ đậm" />

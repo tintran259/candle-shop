@@ -1,4 +1,4 @@
-import { Alert, App, Button, Col, Drawer, Flex, Form, Grid, Input, Modal, Result, Row, Typography } from "antd";
+import { Alert, App, Button, Col, Drawer, Flex, Form, Grid, Input, Modal, Radio, Result, Row, Typography } from "antd";
 import { useDeferredValue, useState } from "react";
 import { OrderProcess } from "@/components/orders/order-process";
 import { CustomerSection } from "@/components/orders/order-customer";
@@ -6,8 +6,14 @@ import { PaymentSection } from "@/components/orders/order-payment";
 import { HistorySection } from "@/components/orders/order-history";
 import { ItemsSection, NotesSection } from "@/components/orders/order-sections";
 import { OrderDetailSkeleton } from "@/components/skeletons";
-import type { OrdersApi } from "@/hooks/use-orders";
-import type { Order } from "@/lib/orders/types";
+import type { CancelInput, OrdersApi } from "@/hooks/use-orders";
+import { addFromOrder } from "@/hooks/use-cancelled-products";
+import { releaseDiscount } from "@/hooks/use-discounts";
+import { restoreOrder, useInventory } from "@/hooks/use-inventory";
+import { hasCustomItems } from "@/lib/cancelled/labels";
+import { formatMoney } from "@/lib/format";
+import { faultLabels, paidAmount, refundFor } from "@/lib/orders/labels";
+import type { CancelFault, CancelOutcome, Order } from "@/lib/orders/types";
 
 // open: có id đơn trên URL. Đang tải → khung xương; tải xong mà không có đơn → báo không tìm thấy
 type Props = { open: boolean; order?: Order; api: OrdersApi; onClose: () => void };
@@ -79,10 +85,15 @@ export function OrderDrawer({ open, order, api, onClose }: Props) {
           open={cancelOpen}
           order={order}
           onClose={() => setCancelOpen(false)}
-          onConfirm={(reason) => {
-            api.cancel(order.id, reason);
+          onConfirm={(input) => {
+            const { reason, outcome } = input;
+            const restored = outcome === "returned" ? restoreOrder(order.code) : 0;
+            const stocked = outcome === "stocked" ? addFromOrder(order, reason) : 0;
+            api.cancel(order.id, input);
+            if (order.discountCode) releaseDiscount(order.discountCode);
             setCancelOpen(false);
-            message.success(`Đã hủy đơn ${order.code}`);
+            if (stocked) message.success(`Đã hủy đơn ${order.code}, ${stocked} sản phẩm thủ công chuyển sang Sản phẩm hủy đơn`);
+            else message.success(restored ? `Đã hủy đơn ${order.code}, hoàn ${restored} nguyên liệu về Kho` : `Đã hủy đơn ${order.code}`);
           }}
         />
       )}
@@ -90,9 +101,17 @@ export function OrderDrawer({ open, order, api, onClose }: Props) {
   );
 }
 
-function CancelModal({ open, order, onClose, onConfirm }: { open: boolean; order: Order; onClose: () => void; onConfirm: (reason: string) => void }) {
-  const [form] = Form.useForm<{ reason: string }>();
-  const paid = order.payments.some((p) => p.status === "success");
+function CancelModal({ open, order, onClose, onConfirm }: { open: boolean; order: Order; onClose: () => void; onConfirm: (input: CancelInput) => void }) {
+  const [form] = Form.useForm<{ reason: string; outcome?: CancelOutcome; fault?: CancelFault }>();
+  const fault = Form.useWatch("fault", form);
+  const { movements } = useInventory();
+  const paid = paidAmount(order);
+  const refund = fault ? refundFor(order, fault) : 0;
+  const crafted = hasCustomItems(order);
+  // Nến thủ công đã xong thì tự chuyển, trừ nến hoàn về bị hỏng
+  const finished = crafted && (order.status === "ready" || (order.status === "returned" && order.returnCondition === "good"));
+  // Đơn toàn nến có sẵn chỉ cần hỏi khi đã trừ Kho theo công thức
+  const ask = order.status === "producing" && (crafted || movements.some((m) => m.orderCode === order.code && m.type === "order"));
   return (
     <Modal
       open={open}
@@ -104,16 +123,34 @@ function CancelModal({ open, order, onClose, onConfirm }: { open: boolean; order
       onOk={() => form.submit()}
       destroyOnHidden
     >
-      {paid && (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 16 }}
-          title="Khách đã thanh toán"
-          description="Nhớ hoàn tiền cho khách qua cổng thanh toán — hệ thống chưa tự hoàn."
-        />
+      {finished && (
+        <Alert type="info" showIcon style={{ marginBottom: 16 }} title="Nến đã làm xong" description="Nến thủ công sẽ chuyển sang Sản phẩm hủy đơn, nguyên liệu không hoàn về Kho." />
       )}
-      <Form form={form} layout="vertical" onFinish={(v) => onConfirm(v.reason.trim())}>
+      {order.status === "returned" && order.returnCondition === "damaged" && (
+        <Alert type="info" showIcon style={{ marginBottom: 16 }} title="Nến đã ghi nhận hỏng" description="Không tạo sản phẩm hủy đơn, nguyên liệu không hoàn về Kho." />
+      )}
+      <Form form={form} layout="vertical" onFinish={(v) => onConfirm({ reason: v.reason.trim(), outcome: finished ? "stocked" : v.outcome, fault: v.fault })}>
+        {ask && (
+          <Form.Item name="outcome" label="Bạn đã thực hiện làm sản phẩm này chưa?" rules={[{ required: true, message: "Chọn đã làm hay chưa để xử lý Kho." }]}>
+            <Radio.Group
+              vertical
+              options={[
+                { value: "returned", label: "Chưa làm, hoàn nguyên liệu về Kho" },
+                crafted ? { value: "stocked", label: "Đã làm, chuyển sang Sản phẩm hủy đơn" } : { value: "consumed", label: "Đã làm, không hoàn nguyên liệu" },
+              ]}
+            />
+          </Form.Item>
+        )}
+        {paid > 0 && (
+          <Form.Item
+            name="fault"
+            label={`Khách đã trả ${formatMoney(paid)}. Lỗi do ai?`}
+            extra={fault && (refund ? `Cần hoàn ${formatMoney(refund)}, giữ lại ${formatMoney(paid - refund)}.` : "Không hoàn tiền, giữ lại tiền cọc.")}
+            rules={[{ required: true, message: "Chọn lỗi do ai để tính tiền hoàn." }]}
+          >
+            <Radio.Group options={(["customer", "shop"] as const).map((value) => ({ value, label: faultLabels[value] }))} />
+          </Form.Item>
+        )}
         <Form.Item name="reason" label="Lý do hủy" rules={[{ required: true, whitespace: true, message: "Nhập lý do hủy." }]} style={{ marginBottom: 0 }}>
           <Input.TextArea autoFocus autoSize={{ minRows: 2, maxRows: 4 }} placeholder="VD: Khách đổi ý, hết nguyên liệu…" />
         </Form.Item>

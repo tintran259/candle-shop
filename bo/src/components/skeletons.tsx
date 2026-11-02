@@ -417,6 +417,41 @@ export const ProductsSkeleton = () => (
   />
 );
 
+export const CancelledSkeleton = () => (
+  <ListPageSkeleton
+    label="Đang tải sản phẩm hủy đơn…"
+    actions={[124]}
+    toolbar={<ToolbarSkeleton rows={[{ fields: [{ width: 520, maxWidth: "100%" }, { flex: "1 1 240px" }] }]} />}
+  />
+);
+
+export const SettingsSkeleton = () => (
+  <Busy label="Đang tải cài đặt…">
+    <Flex vertical gap={16}>
+      <PageHeaderSkeleton actions={[118, 96]} />
+      <Row gutter={[16, 16]} align="top">
+        <Col xs={24} lg={16}>
+          <Flex vertical gap={16}>
+            {[110, 130, 220].map((h) => (
+              <Card key={h} styles={{ body: { minHeight: h } }}>
+                <Bar width={140} height={16} />
+                <div style={{ marginTop: 10 }}>
+                  <Bar width="60%" />
+                </div>
+              </Card>
+            ))}
+          </Flex>
+        </Col>
+        <Col xs={24} lg={8}>
+          <Card styles={{ body: { minHeight: 300 } }}>
+            <Bar width={100} height={16} />
+          </Card>
+        </Col>
+      </Row>
+    </Flex>
+  </Busy>
+);
+
 export const DiscountsSkeleton = () => (
   <ListPageSkeleton
     label="Đang tải mã giảm giá…"
@@ -499,6 +534,8 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname.startsWith("/craft")) return <CraftSkeleton />;
   if (pathname.startsWith("/orders")) return <OrdersSkeleton />;
   if (pathname.startsWith("/products")) return <ProductsSkeleton />;
+  if (pathname.startsWith("/cancelled-products")) return <CancelledSkeleton />;
+  if (pathname.startsWith("/settings")) return <SettingsSkeleton />;
   if (pathname.startsWith("/discounts")) return <DiscountsSkeleton />;
   if (pathname.startsWith("/customers")) return <CustomersSkeleton />;
   if (pathname.startsWith("/inventory")) return <InventorySkeleton />;
@@ -515,9 +552,7 @@ export function AppShellSkeleton() {
         style={{ borderRadius: radius.card, background: brand.mocha, flexShrink: 0 }}
       />
       <div className="shell-content" style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-          <RouteSkeleton pathname={window.location.pathname} />
-        </div>
+        <RouteSkeleton pathname={window.location.pathname} />
       </div>
     </Flex>
   );

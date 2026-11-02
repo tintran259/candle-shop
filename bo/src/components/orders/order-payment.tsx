@@ -1,11 +1,12 @@
-import { CheckCircleFilled, ClockCircleFilled, CheckCircleOutlined, RollbackOutlined } from "@ant-design/icons";
-import { App, Button, Flex, Progress, Tag, Typography } from "antd";
+import { CheckCircleFilled, ClockCircleFilled, RollbackOutlined } from "@ant-design/icons";
+import { Alert, Button, Flex, Image, Progress, Tag, Typography } from "antd";
 import dayjs from "dayjs";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { FormSection } from "@/components/form/form-section";
+import { RefundModal } from "@/components/orders/order-refund";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { formatMoney } from "@/lib/format";
-import { paidAmount, providerLabels, remaining } from "@/lib/orders/labels";
+import { depositLabel, faultLabels, paidAmount, providerLabels, remaining } from "@/lib/orders/labels";
 import type { Order, Payment, PaymentStatus } from "@/lib/orders/types";
 
 const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
@@ -18,7 +19,7 @@ const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
 // Tên khoản thu dễ hiểu thay vì chỉ ghi cổng thanh toán
 function paymentTitle(order: Order, p: Payment, index: number) {
   // Khoản đầu luôn là cọc / trả đủ lúc đặt — kể cả đơn tạo tại BO trả tiền mặt
-  if (index === 0) return order.paymentPlan === "deposit" ? "Tiền cọc 50%" : "Thanh toán đủ";
+  if (index === 0) return order.paymentPlan === "deposit" ? `Tiền ${depositLabel(order).toLowerCase()}` : "Thanh toán đủ";
   if (p.provider === "cod") return "Thu nốt khi giao";
   return "Thanh toán thêm";
 }
@@ -26,7 +27,9 @@ function paymentTitle(order: Order, p: Payment, index: number) {
 // Giải thích phần còn phải thu: thu lúc nào, bằng cách nào
 function remainingNote(order: Order, left: number) {
   if (order.status === "cancelled") {
-    return order.payments.some((p) => p.status === "refunded") ? "Đơn đã hủy — đã hoàn tiền cho khách." : "Đơn đã hủy — không thu thêm.";
+    if (order.refund || order.payments.some((p) => p.status === "refunded")) return "Đơn đã hủy — đã hoàn tiền cho khách.";
+    if (order.refundDue) return "Đơn đã hủy — chờ hoàn tiền cho khách.";
+    return order.cancelFault === "customer" ? "Đơn đã hủy — giữ tiền cọc do lỗi từ khách." : "Đơn đã hủy — không thu thêm.";
   }
   if (!left) return "Đã thu đủ, không cần thu thêm.";
   if (order.status === "pending") {
@@ -34,7 +37,7 @@ function remainingNote(order: Order, left: number) {
     const what = order.paymentPlan === "deposit" ? `cọc ${formatMoney(due)}` : formatMoney(due);
     return `Chờ khách thanh toán ${what} qua ${providerLabels[order.paymentMethod]}.`;
   }
-  return "Thu tiền mặt / chuyển khoản khi giao hàng.";
+  return "Bấm Khách đã nhận là ghi nhận đã thu đủ.";
 }
 
 function Figure({ label, value, note, tone, icon }: { label: string; value: number; note: string; tone: "success" | "warning" | "neutral"; icon: ReactNode }) {
@@ -59,17 +62,16 @@ function Figure({ label, value, note, tone, icon }: { label: string; value: numb
 }
 
 export function PaymentSection({ order, api }: { order: Order; api: OrdersApi }) {
-  const { message } = App.useApp();
+  const [refunding, setRefunding] = useState(false);
   const paid = paidAmount(order);
-  const refunded = order.payments.filter((p) => p.status === "refunded").reduce((s, p) => s + p.amount, 0);
+  const refunded = order.payments.filter((p) => p.status === "refunded").reduce((s, p) => s + p.amount, order.refund?.amount ?? 0);
   const cancelled = order.status === "cancelled";
   const left = cancelled ? 0 : remaining(order);
   const percent = order.total ? Math.round((paid / order.total) * 100) : 0;
-  const canCollect = left > 0 && order.status !== "pending";
   const methods = [...new Set(order.payments.filter((p) => p.status === "success").map((p) => providerLabels[p.provider]))].join(" + ");
 
   return (
-    <FormSection title="Thanh toán" description={`${order.paymentPlan === "deposit" ? "Cọc 50% khi đặt, phần còn lại thu khi giao" : "Khách trả đủ khi đặt"} · ${providerLabels[order.paymentMethod]}`}>
+    <FormSection title="Thanh toán" description={`${order.paymentPlan === "deposit" ? `${depositLabel(order)} khi đặt, phần còn lại thu khi giao` : "Khách trả đủ khi đặt"} · ${providerLabels[order.paymentMethod]}`}>
       {/* Tiến độ thu tiền trên tổng đơn */}
       <Flex justify="space-between" align="baseline">
         <Typography.Text type="secondary">Tổng đơn</Typography.Text>
@@ -103,19 +105,36 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
         />
       </Flex>
 
-      {canCollect && (
-        <Button
-          type="primary"
-          icon={<CheckCircleOutlined />}
-          block
-          style={{ marginTop: 12 }}
-          onClick={() => {
-            api.collectRemaining(order.id);
-            message.success(`Đã ghi nhận thu ${formatMoney(left)}`);
-          }}
-        >
-          Đã thu {formatMoney(left)} khi giao
-        </Button>
+      {order.refundDue && !order.refund && (
+        <>
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginTop: 12 }}
+            title={`Cần hoàn ${formatMoney(order.refundDue)} cho khách`}
+            description={`${order.cancelFault ? `${faultLabels[order.cancelFault]}. ` : ""}Hoàn xong thì ghi nhận kèm ảnh chứng từ.`}
+          />
+          <Button type="primary" icon={<RollbackOutlined />} block style={{ marginTop: 12 }} onClick={() => setRefunding(true)}>
+            Ghi nhận đã hoàn tiền
+          </Button>
+          <RefundModal open={refunding} order={order} api={api} onClose={() => setRefunding(false)} />
+        </>
+      )}
+
+      {order.refund && (
+        <Flex vertical gap={8} style={{ marginTop: 12 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            Hoàn lúc {dayjs(order.refund.at).format("HH:mm DD/MM")} · {order.refund.by}
+            {order.refund.note && ` · ${order.refund.note}`}
+          </Typography.Text>
+          <Flex gap={8} wrap>
+            <Image.PreviewGroup>
+              {order.refund.images.map((src, i) => (
+                <Image key={i} src={src} alt={`Ảnh chứng từ ${i + 1}`} width={64} height={64} style={{ objectFit: "cover", borderRadius: 8 }} />
+              ))}
+            </Image.PreviewGroup>
+          </Flex>
+        </Flex>
       )}
 
       <Typography.Text type="secondary" strong style={{ display: "block", fontSize: 12, margin: "18px 0 8px", letterSpacing: "0.04em" }}>

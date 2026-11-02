@@ -10,13 +10,13 @@ import { OrdersSkeleton } from "@/components/skeletons";
 import { useOrders } from "@/hooks/use-orders";
 import { formatMoneyShort } from "@/lib/format";
 import { applyOrderFilters, defaultOrderFilters, type OrderFilters } from "@/lib/orders/filters";
-import { deadline, remaining, statusMeta } from "@/lib/orders/labels";
-import { orderFlow, type OrderStatus } from "@/lib/orders/types";
+import { deadline, isDeliveryIssue, remaining, statusMeta } from "@/lib/orders/labels";
+import { deliveryIssues, orderFlow, type OrderStatus } from "@/lib/orders/types";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
 
-const tabs: (OrderStatus | "all")[] = ["all", ...orderFlow, "cancelled"];
+const tabs: (OrderStatus | "all")[] = ["all", ...orderFlow, ...deliveryIssues, "cancelled"];
 
 // Quản lý đơn hàng làm theo đơn: thanh toán → làm → giao
 export function OrdersPage() {
@@ -66,6 +66,7 @@ export function OrdersPage() {
     { label: "Chờ thanh toán", value: count("pending") },
     { label: "Cần làm", value: count("paid") + count("producing"), note: late ? `${late} đơn trễ hạn` : undefined },
     { label: "Chờ giao", value: count("ready") },
+    { label: "Giao lỗi cần xử lý", value: orders.filter((o) => isDeliveryIssue(o.status)).length },
     { label: "Còn phải thu", value: formatMoneyShort(toCollect) },
   ];
 
@@ -90,7 +91,7 @@ export function OrdersPage() {
 
       <Row gutter={[16, 16]}>
         {stats.map((s) => (
-          <Col key={s.label} xs={12} lg={6}>
+          <Col key={s.label} flex="1 1 180px">
             <Card style={{ height: "100%" }}>
               <Statistic title={s.label} value={s.value} />
               {s.note && (

@@ -3,22 +3,26 @@ import { Alert, App, Avatar, Button, Col, DatePicker, Drawer, Flex, Form, Grid, 
 import dayjs, { type Dayjs } from "dayjs";
 import { useDeferredValue, useMemo, useState } from "react";
 import { FormSection } from "@/components/form/form-section";
+import { MoneyInput } from "@/components/money-input";
 import { CustomCandleModal, type CustomCandle } from "@/components/orders/custom-candle-modal";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useCustomers } from "@/hooks/use-customers";
 import { useDiscounts } from "@/hooks/use-discounts";
-import { useInventory } from "@/hooks/use-inventory";
+import { getSettings } from "@/hooks/use-settings";
 import { useOrders } from "@/hooks/use-orders";
 import { useProducts } from "@/hooks/use-products";
+import { useStockHold } from "@/hooks/use-stock-hold";
 import { unitLabel } from "@/lib/craft/groups";
 import { materialNeeds, maxJars } from "@/lib/craft/selection";
 import { phoneKey } from "@/lib/customers/stats";
 import { formatMoney, formatNumber } from "@/lib/format";
-import { toMap } from "@/lib/inventory/stock";
+import { linesNeeds, shortages } from "@/lib/orders/materials";
+import { failedDeliveries } from "@/lib/orders/labels";
 import { buildOrder, channelLabels, evaluateDiscount, lineTotal, orderChannels, orderTotals, type DraftLine, type OrderChannel } from "@/lib/orders/create";
-import { providerLabels, SHIPPING_FEE, shippingLabels, statusMeta } from "@/lib/orders/labels";
+import { providerLabels, statusMeta } from "@/lib/orders/labels";
 import type { PaymentPlan, PaymentProvider, ShippingMethod } from "@/lib/orders/types";
+import { shippingOptionLabel } from "@/lib/settings/types";
 import { fold } from "@/lib/search";
 import { brand } from "@/theme";
 
@@ -35,6 +39,7 @@ type Values = {
   channel: OrderChannel;
   lines: DraftLine[];
   shippingMethod: ShippingMethod;
+  shippingFee?: number;
   readyDate: Dayjs;
   discountCode?: string;
   paymentPlan: PaymentPlan;
@@ -62,10 +67,12 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
   const { products } = useProducts();
   const { discounts, patch: patchDiscount } = useDiscounts();
   const customers = useCustomers();
-  // Web dùng bản Thủ công đã lưu; tồn kho lấy trực tiếp từ Kho
+  // Web dùng bản Thủ công đã lưu; tồn kho là số còn dùng được, đã trừ phần các đơn đang giữ
   const { config } = useCraftConfig();
-  const { materials } = useInventory();
-  const map = useMemo(() => toMap(materials), [materials]);
+  const { available: map, source } = useStockHold();
+  // Lấy một lần lúc mở — đơn đang tạo không đổi theo Cài đặt
+  const [settings] = useState(getSettings);
+  const shippingOptions = settings.shippingOptions.filter((o) => o.enabled);
 
   // Khách chọn sẵn (vd mở từ hồ sơ khách): điền tên, SĐT, email, địa chỉ giao gần nhất
   const fromCustomer = (id?: string) => {
@@ -81,7 +88,8 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
       ...fromCustomer(customerId),
       channel: "phone",
       lines: [],
-      shippingMethod: "standard",
+      shippingMethod: shippingOptions[0]?.id,
+      shippingFee: shippingOptions[0]?.fee ?? 0,
       readyDate: dayjs().add(DEFAULT_READY_DAYS, "day"),
       paymentPlan: "deposit",
       paymentMethod: "cod",
@@ -110,19 +118,16 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
   const phone = phoneKey(v.phone ?? "");
   const profile = phone.length >= 9 ? customers.customers.find((c) => phoneKey(c.phone) === phone) : undefined;
   const previous = phone ? orders.orders.filter((o) => phoneKey(o.customer.phone) === phone) : [];
-  const shipping = v.shippingMethod ?? "standard";
-  const discount = evaluateDiscount(v.discountCode, discounts, lines, SHIPPING_FEE[shipping], previous);
-  const totals = orderTotals(lines, shipping, v.paymentPlan ?? "deposit", discount.amount);
+  const shippingFee = Math.max(0, Number(v.shippingFee) || 0);
+  const discount = evaluateDiscount(v.discountCode, discounts, lines, shippingFee, previous);
+  const totals = orderTotals(lines, shippingFee, v.paymentPlan ?? "deposit", discount.amount, settings.depositPercent);
 
-  // Nguyên liệu cho cả đơn (mọi dòng tự phối × số lượng) — báo thiếu khi nhiều dòng dùng chung một nguyên liệu
-  const needs = new Map<string, number>();
-  for (const l of lines)
-    if (l.kind === "custom" && l.craft) for (const [id, n] of materialNeeds(config, l.craft, map)) needs.set(id, (needs.get(id) ?? 0) + n * (l.quantity ?? 1));
-  const shortages = [...needs].map(([id, need]) => ({ m: map.get(id)!, need })).filter(({ m, need }) => m && m.stock < need);
+  // Nguyên liệu cho cả đơn — báo thiếu khi nhiều dòng dùng chung một nguyên liệu
+  const shortage = shortages(linesNeeds(lines, { ...source, map }), map);
 
   const setLine = (index: number | "new", candle: CustomCandle) => {
     const current = (form.getFieldValue("lines") ?? []) as DraftLine[];
-    const line: DraftLine = { kind: "custom", name: "Nến tự phối", craft: candle.selection, custom: candle.description, price: candle.price, quantity: index === "new" ? 1 : (current[index]?.quantity ?? 1) };
+    const line: DraftLine = { kind: "custom", name: "Nến tự phối", craft: candle.selection, recipe: candle.recipe, custom: candle.description, price: candle.price, quantity: index === "new" ? 1 : (current[index]?.quantity ?? 1) };
     form.setFieldValue("lines", index === "new" ? [...current, line] : current.map((l, i) => (i === index ? line : l)));
     setDirty(true);
     setCrafting(null);
@@ -133,7 +138,9 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
       {
         customer: { name: values.name, phone: values.phone, email: values.email ?? "" },
         shippingAddress: values.address,
-        shippingMethod: values.shippingMethod,
+        shipping: shippingOptions.find((o) => o.id === values.shippingMethod) ?? shippingOptions[0],
+        shippingFee,
+        depositPercent: settings.depositPercent,
         lines: values.lines,
         discount,
         paymentPlan: values.paymentPlan,
@@ -173,7 +180,7 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
     const values = { ...all, ...validated, lines: all.lines ?? [] };
     if (!values.lines.length) return message.error("Thêm ít nhất một sản phẩm.");
     if (discount.error) return message.error(`Mã giảm giá: ${discount.error}`);
-    if (shortages.length) return message.error(`Kho không đủ ${shortages.map(({ m }) => m.name).join(", ")} — giảm số lượng hoặc đổi cấu hình.`);
+    if (shortage.length) return message.error(`Kho không đủ ${shortage.map(({ m }) => m.name).join(", ")} — giảm số lượng hoặc đổi cấu hình.`);
     if (!profile?.blocked) return create(values);
     modal.confirm({
       title: `${profile.name} đang bị chặn đặt hàng`,
@@ -242,7 +249,7 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
           </Typography.Text>
         </Flex>
         <Flex justify="space-between" style={{ padding: "3px 0" }}>
-          <Typography.Text type="secondary">{v.paymentPlan === "full" ? "Thu khi đặt" : "Cọc 50% khi đặt"}</Typography.Text>
+          <Typography.Text type="secondary">{v.paymentPlan === "full" ? "Thu khi đặt" : `Cọc ${settings.depositPercent}% khi đặt`}</Typography.Text>
           <Typography.Text className="tabular">{formatMoney(totals.dueNow)}</Typography.Text>
         </Flex>
         {totals.total > totals.dueNow && (
@@ -260,7 +267,7 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
           {statusMeta[v.received ? "paid" : "pending"].label}
         </Tag>
       </Flex>
-      {shortages.length > 0 && (
+      {shortage.length > 0 && (
         <Alert
           type="error"
           showIcon
@@ -268,7 +275,7 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
           title="Kho không đủ nguyên liệu"
           description={
             <ul style={{ margin: 0, paddingLeft: 16 }}>
-              {shortages.map(({ m, need }) => (
+              {shortage.map(({ m, need }) => (
                 <li key={m.id}>
                   {m.name}: cần {formatNumber(need)}, còn {formatNumber(m.stock)} {unitLabel[m.unit]}
                 </li>
@@ -368,7 +375,7 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
                   {profile?.blocked ? (
                     <Alert type="error" showIcon title={`${profile.name} đang bị chặn đặt hàng`} description={profile.blockReason} />
                   ) : profile ? (
-                    <Alert type="info" showIcon title={`Số này thuộc hồ sơ ${profile.name} · ${previous.filter((o) => o.status !== "cancelled").length} đơn trước`} />
+                    <Alert type="info" showIcon title={`Số này thuộc hồ sơ ${profile.name} · ${previous.filter((o) => o.status !== "cancelled").length} đơn trước${failedDeliveries(previous) ? ` · ${failedDeliveries(previous)} lần giao không thành` : ""}`} />
                   ) : phone.length >= 9 ? (
                     <Alert type="success" showIcon title="Khách mới — tạo hồ sơ khách khi tạo đơn." />
                   ) : null}
@@ -476,13 +483,14 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
                       <Form.Item name="shippingMethod" label="Phương thức">
                         <Radio.Group
                           style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                          options={(Object.keys(shippingLabels) as ShippingMethod[]).map((m) => ({
-                            value: m,
+                          onChange={(e) => form.setFieldValue("shippingFee", shippingOptions.find((o) => o.id === e.target.value)?.fee ?? 0)}
+                          options={shippingOptions.map((o) => ({
+                            value: o.id,
                             label: (
                               <span>
-                                {shippingLabels[m]}{" "}
+                                {shippingOptionLabel(o)}{" "}
                                 <Typography.Text type="secondary" className="tabular">
-                                  · {SHIPPING_FEE[m] ? formatMoney(SHIPPING_FEE[m]) : "miễn phí"}
+                                  · {o.fee ? formatMoney(o.fee) : "miễn phí"}
                                 </Typography.Text>
                               </span>
                             ),
@@ -491,6 +499,11 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={11}>
+                      <Form.Item name="shippingFee" label="Phí vận chuyển" extra="Tự điền theo phương thức, sửa được cho đơn này.">
+                        <MoneyInput aria-label="Phí vận chuyển" />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={13}>
                       <Form.Item name="readyDate" label="Ngày xưởng làm xong" rules={[{ required: true, message: "Chọn ngày." }]} extra="Xưởng làm theo đơn 2–3 ngày." style={{ marginBottom: 0 }}>
                         <DatePicker format="DD/MM/YYYY" allowClear={false} disabledDate={(d) => d.isBefore(dayjs(), "day")} style={{ width: "100%" }} />
                       </Form.Item>
@@ -517,7 +530,7 @@ export function OrderCreateDrawer({ open, customerId, onClose, onCreated }: Prop
                         <Radio.Group
                           optionType="button"
                           options={[
-                            { value: "deposit", label: "Cọc 50%" },
+                            { value: "deposit", label: `Cọc ${settings.depositPercent}%` },
                             { value: "full", label: "Trả đủ" },
                           ]}
                         />

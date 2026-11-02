@@ -155,14 +155,14 @@ Ví dụ: hũ gốm còn 10 cái 150ml, 0 cái 200ml, 6 cái 250ml. Khách vẫn
 | Hũ của cỡ đã chọn | 1 | 1 (nên để `pcs`) |
 | Nắp của cỡ đã chọn (khi `withLid`) | 1 | 1 (nên để `pcs`) |
 | Tuỳ chọn thêm đã tích | 1 | 1 |
-| `cards` / `swatches` | 1 | `grams × (step.gramsPerGram ?? 1)` |
+| `cards` / `swatches` | 1 | `grams × (step.gramsPerGram ?? 1)`, bước Sáp và `swatches` chọn nhiều thì chia đều cho số loại. Màu nhuộm tính theo ml, hệ số mặc định 0,01 |
 | `blend`, mỗi mục không `exclusive` | 1 | `grams × load × percent / 100` |
 
 - `load` = `step.intensity.load[level]`. Bước không có độ đậm thì dùng 0.08.
 - `percent` là tỉ lệ phối đã quy ra phần trăm ([Trình dựng Thủ công, mục 7.1](./craft-builder.md#71-quy-weight-ra-phần-trăm-blend)).
 - Làm tròn lên (`ceil`) lượng cần của mỗi nguyên liệu cho một hũ.
 - Không trừ khi: không gắn nguyên liệu, nguyên liệu `tracked = false`, hoặc mục `exclusive` của `blend`.
-- **Nhiều lựa chọn dùng chung một nguyên liệu:** cộng dồn lượng cần trước khi so với tồn kho. Vd sáp pha trộn và sáp đậu nành cùng trỏ `wax-soy` thì cộng cả hai.
+- **Nhiều lựa chọn dùng chung một nguyên liệu:** cộng dồn lượng cần trước khi so với tồn kho. Vd hai lựa chọn cùng trỏ `wax-soy` thì cộng cả hai.
 
 Ví dụ một hũ gốm 150ml (120g sáp), có nắp, sáp đậu nành, Vanilla 70% / Lavender 30% độ đậm Vừa:
 
@@ -186,11 +186,29 @@ Với hũ và nắp, chỉ xét mã **của cỡ đã chọn**. Web hiện "Ch�
 
 **Trừ kho:**
 
-- Trừ khi đơn chuyển sang "đã thanh toán". Nếu nghiệp vụ muốn giữ hàng từ lúc tạo đơn thì trừ khi tạo đơn; chọn một và làm nhất quán.
+- Trừ khi đơn chuyển sang **"Đang làm"** (bấm "Bắt đầu làm"). Kho thiếu thì không cho bắt đầu và liệt kê nguyên liệu thiếu. Nến tự phối trừ theo `OrderItem.recipe`, bản chụp công thức 1 hũ lúc tạo đơn gồm lượng admin tự điền (`amounts` trong lựa chọn từng bước). Nến có sẵn trừ theo công thức của sản phẩm (`Product.recipe`: `{ materialId, quantity }[]`, lượng cho 1 cây); sản phẩm chưa có công thức thì không trừ.
 - Trong **một transaction**: khóa các dòng nguyên liệu liên quan, kiểm tra lại `stock` đủ (tránh bán âm khi hai đơn cùng lúc), trừ, rồi ghi một phiếu `order` cho mỗi nguyên liệu, kèm `orderCode`.
 - Không đủ tồn thì từ chối với mã `outOfStock` cho bước liên quan.
-- **Hủy đơn đã trừ kho:** ghi phiếu `in` hoàn lại đúng lượng đã trừ, kèm `orderCode` và note "Hoàn kho do hủy đơn".
-- Trừ theo **lượng đã ghi trong phiếu `order` của đơn**, không tính lại từ cấu hình hiện tại, vì cấu hình có thể đã đổi.
+- **Giữ nguyên liệu:** đơn ở trạng thái Đã thanh toán giữ lượng của cả đơn. `stock` không đổi; số dùng được = `stock` − tổng lượng giữ, dùng để kiểm tra khi tạo đơn. BO tính số giữ từ đơn, không lưu riêng. BE nên tính trong cùng transaction để hai đơn không giữ trùng.
+- **Xác nhận tiền khi không đủ để giữ:** cảnh báo, admin vẫn xác nhận được vì tiền đã về.
+- **Hủy đơn trước khi làm** (chờ thanh toán, đã thanh toán): chưa trừ nên `stock` không đổi, phần giữ tự nhả.
+- **Hủy đơn đang làm:** nếu đơn có nến thủ công hoặc đã có phiếu `order`, bắt buộc trả lời "Bạn đã thực hiện làm sản phẩm này chưa?". Đơn toàn nến có sẵn chưa có công thức thì không hỏi.
+  - **Chưa làm:** ghi phiếu `in` hoàn lại đúng lượng đã trừ, kèm `orderCode` và note "Hoàn kho do hủy đơn" (`cancelOutcome = returned`).
+  - **Đã làm:** không hoàn kho, nến chuyển sang **Sản phẩm hủy đơn** (`cancelOutcome = stocked`).
+  - Đơn toàn nến có sẵn đã làm: không hoàn kho, không tạo bản ghi (`cancelOutcome = consumed`).
+- **Hủy đơn chờ giao:** nến đã xong nên không hỏi, nến thủ công luôn chuyển sang **Sản phẩm hủy đơn** (`cancelOutcome = stocked`).
+- **Hủy sau khi hoàn về:** nến còn tốt thì như chờ giao; nến hỏng chỉ ghi vào đơn, không tạo bản ghi và không ghi phiếu kho.
+- Hoàn theo **lượng đã ghi trong phiếu `order` của đơn**, không tính lại từ cấu hình hiện tại, vì cấu hình có thể đã đổi.
+
+**Hai loại sản phẩm:**
+
+- **Sản phẩm trưng bày** (`/products`): mẫu nến hiện trên web để khách đặt, không có số tồn thành phẩm, không kiểm tra Kho khi hiển thị, nguyên liệu tính theo `recipe`.
+- **Sản phẩm hủy đơn** (`/cancelled-products`): nến thủ công có thật, chỉ quản lý ở BO, không hiện trên web.
+  - Chỉ nến tự phối mới vào đây. Nến có sẵn đã có ở Sản phẩm trưng bày nên không sinh bản ghi, kể cả trong đơn có cả hai loại.
+  - Mỗi dòng nến tự phối là một bản ghi kèm `quantity`: đơn đặt 2 cây cùng cấu hình là 1 sản phẩm số lượng 2. Tự tạo khi hủy đơn với `cancelOutcome = stocked`.
+  - Mỗi bản ghi có 2 cách xử lý, áp dụng cho cả số lượng: **Tạo sản phẩm trưng bày** hoặc **Bỏ**.
+  - **Tạo sản phẩm trưng bày:** sang trang Sản phẩm trưng bày, drawer tạo sản phẩm đã điền sẵn thông tin nến. Chỉ khi tạo thành công, bản ghi mới chuyển sang "Đã tạo trưng bày" và lưu `displayProductId`.
+  - Đóng drawer mà không tạo thì bản ghi vẫn là Chờ xử lý.
 
 ## 8. API
 

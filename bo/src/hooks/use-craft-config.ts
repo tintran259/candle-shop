@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { defaultCraftConfig } from "@/lib/craft/default-config";
+import { DEFAULT_SCENT_PRICE, DYE_RATIO } from "@/lib/craft/steps";
 import { isOptionStep, newStep } from "@/lib/craft/steps";
 import type { CraftConfig, CraftStep, StepKind, StepOption } from "@/lib/craft/types";
 import { createMaterials } from "@/hooks/use-inventory";
@@ -7,14 +8,40 @@ import { materialUsage } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 
+// Bản lưu cũ: bỏ lựa chọn Sáp pha trộn và cho chọn nhiều sáp. Chỉ đổi khi còn lựa chọn đó, sau này admin tắt chọn nhiều vẫn giữ
+function dropWaxBlend(config: CraftConfig): CraftConfig {
+  const isOld = (s: CraftStep) => s.kind === "cards" && s.id === "wax" && s.options.some((o) => o.id === "blend");
+  if (!config.steps.some(isOld)) return config;
+  const unlink = (o: StepOption): StepOption => (o.onlyWith?.wax ? { ...o, onlyWith: { ...o.onlyWith, wax: o.onlyWith.wax.filter((id) => id !== "blend") } } : o);
+  const steps = config.steps.map((s) => {
+    if (s.kind === "inputs") return s;
+    const options = (s.options as StepOption[]).filter((o) => !(isOld(s) && o.id === "blend")).map(unlink);
+    return { ...s, options, ...(isOld(s) ? { multiple: true } : {}) } as CraftStep;
+  });
+  return { ...config, steps };
+}
+
+// Bản lưu cũ: thêm phụ thu hương chuẩn; màu sáp cho chọn nhiều, tính theo ml; trang trí cho chọn nhiều; Không màu, Không trang trí đứng một mình
+const upgrade = (config: CraftConfig): CraftConfig => ({
+  ...dropWaxBlend(config),
+  steps: dropWaxBlend(config).steps.map((s) => {
+    if (s.kind === "blend" && s.id === "fragrance" && s.scentPrice === undefined) return { ...s, scentPrice: DEFAULT_SCENT_PRICE };
+    if (s.kind === "swatches" && s.multiple === undefined)
+      return { ...s, multiple: s.id === "color", gramsPerGram: s.gramsPerGram ?? DYE_RATIO, options: s.options.map((o) => (o.materialId ? o : { ...o, exclusive: true })) };
+    if (s.kind === "cards" && s.id === "decoration" && s.options.some((o) => o.id === "none" && !o.exclusive))
+      return { ...s, multiple: true, options: s.options.map((o) => (o.id === "none" ? { ...o, exclusive: true } : o)) };
+    return s;
+  }),
+});
+
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE: GET /api/shop-config/craft để tải,
 // PUT /api/shop-config/craft để lưu cả cấu hình (xem docs/craft-builder.md).
 // v5: hũ gắn kho theo từng cỡ (sizeMaterials), cỡ có dung tích ml — bỏ dữ liệu v4
-const store = createLocalStore<CraftConfig>("bo-craft-builder-v5", defaultCraftConfig);
+const store = createLocalStore<CraftConfig>("bo-craft-builder-v5", defaultCraftConfig, upgrade);
 
 // Bản nháp trên trang Thủ công: mọi chỉnh sửa vào đây, chỉ lên web (store) khi bấm Lưu.
 // Giữ trên trình duyệt để rời trang / tải lại không mất việc đang làm. null = không có thay đổi.
-const draftStore = createLocalStore<CraftConfig | null>("bo-craft-builder-v5-draft", null);
+const draftStore = createLocalStore<CraftConfig | null>("bo-craft-builder-v5-draft", null, (c) => c && upgrade(c));
 
 // Nguyên liệu tạo mới từ drawer lựa chọn ("Tạo nguyên liệu mới trong Kho") — thuộc bản nháp:
 // chỉ vào Kho khi bấm Lưu, Bỏ thay đổi thì không sót lại gì trong Kho.

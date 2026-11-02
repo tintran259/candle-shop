@@ -1,12 +1,13 @@
 // Tạo đơn tại BO (khách đặt qua điện thoại, Zalo, Facebook, tại cửa hàng…). Cùng cách tính tiền với web:
-// tạm tính − giảm giá + phí giao; cọc 50% hoặc trả đủ. Tiền là VNĐ, số nguyên.
+// tạm tính − giảm giá + phí giao; đặt cọc theo % trong Cài đặt hoặc trả đủ. Tiền là VNĐ, số nguyên.
 import dayjs from "dayjs";
 import type { CraftSelection } from "@/lib/craft/selection";
 import { discountStatus } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
-import { DEPOSIT_RATE, SHIPPING_FEE } from "@/lib/orders/labels";
-import type { Order, OrderEvent, OrderItem, PaymentPlan, PaymentProvider, ShippingMethod } from "@/lib/orders/types";
+import type { Order, OrderEvent, OrderItem, PaymentPlan, PaymentProvider } from "@/lib/orders/types";
+import type { RecipeLine } from "@/lib/products/types";
+import { shippingOptionLabel, type ShippingOption } from "@/lib/settings/types";
 
 // Kênh khách đặt — ghi vào lịch sử đơn
 export const orderChannels = ["phone", "zalo", "facebook", "store", "other"] as const;
@@ -26,6 +27,7 @@ export type DraftLine = {
   image?: string;
   custom?: string;
   craft?: CraftSelection;
+  recipe?: RecipeLine[];
   price?: number;
   quantity?: number;
 };
@@ -57,11 +59,13 @@ export function evaluateDiscount(code: string | undefined, discounts: Discount[]
 
 export type OrderTotals = { subtotal: number; discount: number; shippingFee: number; total: number; dueNow: number };
 
-export function orderTotals(lines: DraftLine[], shipping: ShippingMethod, plan: PaymentPlan, discount: number): OrderTotals {
+// Tiền cọc làm tròn tới nghìn đồng
+export const depositAmount = (total: number, percent: number) => Math.round((total * percent) / 100 / 1000) * 1000;
+
+export function orderTotals(lines: DraftLine[], shippingFee: number, plan: PaymentPlan, discount: number, depositPercent: number): OrderTotals {
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
-  const shippingFee = SHIPPING_FEE[shipping];
   const total = Math.max(0, subtotal - discount + shippingFee);
-  const dueNow = plan === "deposit" ? Math.round((total * DEPOSIT_RATE) / 1000) * 1000 : total;
+  const dueNow = plan === "deposit" ? depositAmount(total, depositPercent) : total;
   return { subtotal, discount, shippingFee, total, dueNow };
 }
 
@@ -78,7 +82,10 @@ export function nextOrderCode(orders: Order[], at = dayjs()) {
 export type CreateOrderInput = {
   customer: Order["customer"];
   shippingAddress: string;
-  shippingMethod: ShippingMethod;
+  shipping: ShippingOption;
+  // Phí của đơn này, admin có thể sửa khác phí trong Cài đặt
+  shippingFee: number;
+  depositPercent: number;
   lines: DraftLine[];
   discount: DiscountResult;
   paymentPlan: PaymentPlan;
@@ -96,7 +103,7 @@ export type CreateOrderInput = {
 export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
   const now = dayjs();
   const at = now.toISOString();
-  const totals = orderTotals(input.lines, input.shippingMethod, input.paymentPlan, input.discount.amount);
+  const totals = orderTotals(input.lines, input.shippingFee, input.paymentPlan, input.discount.amount, input.depositPercent);
   const items: OrderItem[] = input.lines.map((l, i) => ({
     id: `${now.valueOf().toString(36)}-${i}`,
     productId: l.kind === "product" ? l.productId : undefined,
@@ -106,6 +113,7 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
     quantity: Math.round(l.quantity ?? 1),
     custom: l.kind === "custom" ? l.custom?.trim() : undefined,
     craft: l.kind === "custom" ? l.craft : undefined,
+    recipe: l.kind === "custom" ? l.recipe : undefined,
   }));
   const history: OrderEvent[] = [{ at, status: "pending", by: input.by, note: `${BO_ORDER_NOTE} · ${channelLabels[input.channel]}` }];
   if (input.received)
@@ -116,7 +124,10 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
     status: input.received ? "paid" : "pending",
     customer: { name: input.customer.name.trim(), phone: input.customer.phone.trim(), email: input.customer.email.trim() },
     shippingAddress: input.shippingAddress.trim(),
-    shippingMethod: input.shippingMethod,
+    shippingMethod: input.shipping.id,
+    shippingName: shippingOptionLabel(input.shipping),
+    shippingDays: input.shipping.days,
+    depositPercent: input.depositPercent,
     items,
     subtotal: totals.subtotal,
     discount: totals.discount,

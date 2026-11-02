@@ -6,10 +6,10 @@ import type { Material } from "@/lib/inventory/types";
 import { discountStatus, periodHint } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
-import { deadline, remaining } from "@/lib/orders/labels";
+import { deadline, remaining, statusMeta } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 
-export type NotificationKind = "order-late" | "order-due" | "order-new" | "order-paid" | "stock-out" | "stock-low" | "discount";
+export type NotificationKind = "order-late" | "order-due" | "order-new" | "order-paid" | "order-delivery" | "order-refund" | "stock-out" | "stock-low" | "discount";
 // danger/warning = cần xử lý; info = hoạt động mới
 export type NotificationTone = "danger" | "warning" | "info";
 
@@ -54,6 +54,28 @@ export function buildNotifications(src: { orders: Order[]; materials: Material[]
         tone: "warning",
         title: `Đơn ${o.code} cần làm xong ${d.label.toLowerCase()}`,
         description: `${o.customer.name} · ${o.items.length} sản phẩm.`,
+        to: `/orders?order=${o.id}`,
+      });
+    }
+
+    if (o.status === "delivery_failed" || o.status === "returned") {
+      list.push({
+        id: `order-delivery:${o.id}:${o.status}:${o.deliveryAttempts ?? 0}`,
+        kind: "order-delivery",
+        tone: "danger",
+        title: `Đơn ${o.code}: ${statusMeta[o.status].label}`,
+        description: statusMeta[o.status].hint,
+        to: `/orders?order=${o.id}`,
+      });
+    }
+
+    if (o.refundDue && !o.refund) {
+      list.push({
+        id: `order-refund:${o.id}`,
+        kind: "order-refund",
+        tone: "warning",
+        title: `Đơn ${o.code} cần hoàn ${formatMoney(o.refundDue)}`,
+        description: `${o.customer.name} · chưa ghi nhận đã hoàn tiền.`,
         to: `/orders?order=${o.id}`,
       });
     }

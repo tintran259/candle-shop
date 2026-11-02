@@ -1,4 +1,4 @@
-// Sản phẩm nến bán sẵn (trang Sản phẩm). Gộp các trường của bảng Product bên BE (Prisma)
+// Sản phẩm trưng bày: mẫu nến hiện trên web. Gộp các trường của bảng Product bên BE (Prisma)
 // với các thuộc tính lọc mà web đang dùng (loại hương, độ thơm, kích thước).
 // Shop làm theo đơn (2–3 ngày) nên không quản lý tồn kho ở đây.
 
@@ -12,6 +12,9 @@ export type ProductSize = (typeof productSizes)[number];
 
 // active = đang bán trên web, hidden = tạm ẩn
 export type ProductStatus = "active" | "hidden";
+
+// Một nguyên liệu trong công thức, lượng cho 1 cây theo đơn vị của nguyên liệu
+export type RecipeLine = { materialId: string; quantity: number };
 
 export type Product = {
   id: string;
@@ -30,6 +33,8 @@ export type Product = {
   waxType?: string;
   // Giờ cháy ước tính
   burnTime?: number;
+  // Công thức để giữ và trừ Kho khi khách đặt. Sản phẩm cũ có thể chưa có
+  recipe?: RecipeLine[];
   status: ProductStatus;
   isNew: boolean;
   isFeatured: boolean;

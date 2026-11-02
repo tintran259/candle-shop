@@ -617,7 +617,9 @@ button.change-row:focus-visible {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 96px 112px 32px;
   grid-template-areas: "thumb main qty total remove";
-  align-items: center;
+  /* Canh theo hàng đầu: ô chọn, số lượng, thành tiền, nút xóa (cao 36px) cùng tâm với ảnh 44px;
+     dòng đơn giá nằm dưới ô chọn không đẩy lệch các ô bên phải */
+  align-items: start;
   gap: 12px;
   padding: 10px 12px;
   border: 1px solid #f0ebe4;
@@ -640,17 +642,22 @@ button.change-row:focus-visible {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  padding-top: 4px;
 }
 .order-line-qty {
   grid-area: qty;
+  padding-top: 4px;
 }
 .order-line-total {
   grid-area: total;
+  padding-top: 4px;
+  line-height: 36px;
   text-align: right;
   white-space: nowrap;
 }
 .order-line-remove {
   grid-area: remove;
+  margin-top: 4px;
 }
 .order-lines-empty {
   padding: 16px;
@@ -668,6 +675,55 @@ button.change-row:focus-visible {
   }
   .order-line-qty {
     max-width: 128px;
+  }
+}
+/* Trang Cài đặt: hàng phương thức giao + khung xem trước */
+.ship-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 160px 110px 32px;
+  gap: 12px;
+  align-items: start;
+}
+.ship-head {
+  font-size: 12px;
+  color: #6b6b6b;
+}
+.ship-switch {
+  margin-top: 7px;
+}
+.settings-preview {
+  position: sticky;
+  top: 16px;
+  padding: 20px;
+  background: #fff;
+}
+@media (max-width: 575px) {
+  .ship-head {
+    display: none;
+  }
+  /* Điện thoại: mỗi phương thức là một khối, công tắc + tên ở trên, phí + ngày ở dưới */
+  .ship-row {
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) 32px;
+    grid-template-areas:
+      "switch name name name"
+      "fee fee days remove";
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1ece4;
+  }
+  .ship-switch {
+    grid-area: switch;
+  }
+  .ship-name {
+    grid-area: name;
+  }
+  .ship-fee {
+    grid-area: fee;
+  }
+  .ship-days {
+    grid-area: days;
+  }
+  .ship-remove {
+    grid-area: remove;
   }
 }
 /* Tóm tắt đơn: dính bên phải khi drawer rộng */

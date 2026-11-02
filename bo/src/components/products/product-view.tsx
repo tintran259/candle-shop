@@ -63,6 +63,15 @@ export function ProductBadges({ product }: { product: Pick<Product, "isNew" | "i
   );
 }
 
+// Sản phẩm chưa có công thức thì đơn không giữ và không trừ Kho
+export function RecipeTag({ product }: { product: Pick<Product, "recipe"> }) {
+  return product.recipe?.length ? null : (
+    <Tag color="warning" style={{ marginInlineEnd: 0 }}>
+      Chưa có công thức
+    </Tag>
+  );
+}
+
 export function RatingText({ product }: { product: Pick<Product, "rating" | "reviewCount"> }) {
   return (
     <Typography.Text className="tabular" style={{ whiteSpace: "nowrap" }}>

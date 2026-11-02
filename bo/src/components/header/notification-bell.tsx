@@ -1,10 +1,12 @@
 import {
   BellOutlined,
+  CarOutlined,
   CheckOutlined,
   ClockCircleOutlined,
   DollarOutlined,
   ExclamationCircleOutlined,
   InboxOutlined,
+  RollbackOutlined,
   ShoppingCartOutlined,
   TagOutlined,
 } from "@ant-design/icons";
@@ -21,6 +23,8 @@ const kindIcons: Record<NotificationKind, ReactNode> = {
   "order-due": <ClockCircleOutlined />,
   "order-new": <ShoppingCartOutlined />,
   "order-paid": <DollarOutlined />,
+  "order-delivery": <CarOutlined />,
+  "order-refund": <RollbackOutlined />,
   "stock-out": <InboxOutlined />,
   "stock-low": <InboxOutlined />,
   discount: <TagOutlined />,

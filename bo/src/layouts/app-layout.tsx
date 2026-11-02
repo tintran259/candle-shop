@@ -43,12 +43,12 @@ export function AppLayout() {
   const siderCollapsed = mobile ? !open : collapsed;
   const compact = !mobile && collapsed;
   const current = findNavItem(pathname);
-  // Đơn cần xử lý: chờ thanh toán hoặc đã thanh toán nhưng xưởng chưa nhận làm
+  // Đơn cần xử lý: chờ thanh toán, đã thanh toán nhưng xưởng chưa nhận làm, hoặc giao lỗi chờ quyết định
   const { orders, loading } = useOrders();
   // Nguyên liệu hết hàng — lựa chọn dùng chúng đang bị khóa trên web
   const inventory = useInventory();
   const menuItems = buildMenu({
-    orders: loading ? 0 : orders.filter((o) => o.status === "pending" || o.status === "paid").length,
+    orders: loading ? 0 : orders.filter((o) => ["pending", "paid", "delivery_failed", "returned"].includes(o.status)).length,
     inventory: inventory.loading ? 0 : inventory.materials.filter((m) => m.tracked && m.stock <= 0).length,
   });
   // Đang tải code của trang sắp mở → hiện khung xương đúng trang đó thay vì giữ trang cũ
@@ -161,9 +161,7 @@ export function AppLayout() {
         </Header>
 
         <Content style={{ padding: mobile ? GAP : `${GAP}px ${GAP * 1.5}px ${GAP * 1.5}px` }}>
-          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-            {nextPath && nextPath !== pathname ? <RouteSkeleton pathname={nextPath} /> : <Outlet />}
-          </div>
+          {nextPath && nextPath !== pathname ? <RouteSkeleton pathname={nextPath} /> : <Outlet />}
         </Content>
       </Layout>
     </Layout>

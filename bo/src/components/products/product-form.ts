@@ -1,6 +1,7 @@
 // Chuyển qua lại giữa Product và giá trị phẳng của antd Form
 import { slugify } from "@/lib/craft/groups";
-import type { AromaLevel, AromaType, Product, ProductSize } from "@/lib/products/types";
+import type { CancelledProduct } from "@/lib/cancelled/types";
+import type { AromaLevel, AromaType, Product, ProductSize, RecipeLine } from "@/lib/products/types";
 
 export type ProductFormValues = {
   name: string;
@@ -15,6 +16,7 @@ export type ProductFormValues = {
   scent?: string;
   waxType?: string;
   burnTime?: number | null;
+  recipe: RecipeLine[];
   active: boolean;
   isNew: boolean;
   isFeatured: boolean;
@@ -34,9 +36,27 @@ export function toFormValues(p?: Product): ProductFormValues {
     scent: p?.scent,
     waxType: p?.waxType,
     burnTime: p?.burnTime ?? null,
+    recipe: p?.recipe ?? [],
     active: (p?.status ?? "active") === "active",
     isNew: p?.isNew ?? true,
     isFeatured: p?.isFeatured ?? false,
+  };
+}
+
+// Điền sẵn form từ nến hủy đơn; slug tự tránh slug đã dùng, công thức lấy từ nến tự phối
+export function fromCancelled(item: CancelledProduct, products: Product[], recipe: RecipeLine[]): ProductFormValues {
+  const base = slugify(item.name);
+  const taken = (slug: string) => products.some((p) => p.slug === slug || p.id === slug);
+  let slug = base;
+  for (let i = 2; taken(slug); i++) slug = `${base}-${i}`;
+  return {
+    ...toFormValues(),
+    name: item.name,
+    slug,
+    description: item.custom,
+    price: item.price,
+    images: item.images,
+    recipe,
   };
 }
 
@@ -59,6 +79,7 @@ export function fromFormValues(v: ProductFormValues, previous?: Product): Produc
     scent: clean(v.scent),
     waxType: v.waxType || undefined,
     burnTime: v.burnTime || undefined,
+    recipe: v.recipe?.length ? v.recipe : undefined,
     status: v.active ? "active" : "hidden",
     isNew: v.isNew,
     isFeatured: v.isFeatured,

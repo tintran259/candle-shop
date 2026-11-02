@@ -1,6 +1,6 @@
 // ⚠️ DỮ LIỆU MẪU — 6 sản phẩm đầu khớp với web (fe/src/lib/data.ts), giá quy đổi sang VNĐ.
 // Bản thật lấy từ BE: GET /api/products.
-import type { Product } from "@/lib/products/types";
+import type { Product, RecipeLine } from "@/lib/products/types";
 
 type Seed = Omit<Product, "updatedAt" | "images" | "slug"> & { image: string };
 
@@ -77,7 +77,7 @@ const seeds: Seed[] = [
     aromaLevel: "strong",
     size: "big",
     scent: "Muối biển, bergamot",
-    waxType: "Sáp pha trộn",
+    waxType: "Sáp dừa",
     burnTime: 50,
     status: "active",
     isNew: false,
@@ -170,8 +170,23 @@ const seeds: Seed[] = [
   },
 ];
 
+const line = (materialId: string, quantity: number): RecipeLine => ({ materialId, quantity });
+const candle = (jar: string, wax: string, grams: number, oil: string, ml: number) => [line(jar, 1), line(wax, grams), line(oil, ml), line("wick-cotton", 1)];
+
+const recipes: Record<string, RecipeLine[]> = {
+  "brown-relac": candle("jar-amber-glass-200", "wax-soy", 180, "oil-sandalwood", 15),
+  "moon-morning": candle("jar-clear-glass-150", "wax-coconut", 130, "oil-white-tea", 10),
+  "vanilla-relax": candle("jar-clear-glass-150", "wax-soy", 130, "oil-vanilla", 10),
+  "beach-sunshine": candle("jar-clear-glass-200", "wax-coconut", 180, "oil-citrus", 15),
+  "moonlight-aurora": candle("jar-amber-glass-250", "wax-soy", 230, "oil-lavender", 20),
+  "woman-secret": candle("jar-ceramic-250", "wax-soy", 230, "oil-sandalwood", 20),
+  "lavender-dream": candle("jar-clear-glass-200", "wax-soy", 180, "oil-lavender", 15),
+  "citrus-bloom": candle("jar-tin-150", "wax-coconut", 130, "oil-citrus", 10),
+};
+
 export const mockProducts: Product[] = seeds.map(({ image, ...p }) => ({
   ...p,
+  recipe: recipes[p.id],
   slug: p.id,
   images: [image],
   updatedAt: p.createdAt,

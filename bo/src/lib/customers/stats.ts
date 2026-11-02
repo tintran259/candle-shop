@@ -2,7 +2,7 @@
 // Khi có BE nên trả sẵn trong GET /api/customers (đếm/tổng ở DB thay vì tải hết đơn).
 import dayjs from "dayjs";
 import type { Customer } from "@/lib/customers/types";
-import { paidAmount } from "@/lib/orders/labels";
+import { failedDeliveries, paidAmount } from "@/lib/orders/labels";
 import type { Order, OrderItem } from "@/lib/orders/types";
 
 export const phoneKey = (phone: string) => phone.replace(/\D/g, "");
@@ -29,6 +29,8 @@ export type CustomerStats = {
   // Không tính đơn đã hủy
   orderCount: number;
   cancelled: number;
+  // Số lần giao không thành, để cảnh báo khách hay bom hàng
+  failedDeliveries: number;
   // Tiền thực nhận (gồm cọc), không tính đơn hủy
   spent: number;
   average: number;
@@ -68,6 +70,7 @@ export function customerStats(customer: Customer, ordersByPhone: Map<string, Ord
     orders,
     orderCount: valid.length,
     cancelled: orders.length - valid.length,
+    failedDeliveries: failedDeliveries(orders),
     spent,
     average: valid.length ? Math.round(spent / valid.length) : 0,
     lastOrderAt,

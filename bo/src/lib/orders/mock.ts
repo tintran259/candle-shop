@@ -56,7 +56,7 @@ const seeds: Seed[] = [
   { name: "Bùi Quốc Bảo", phone: "0948 565 787", address: "10 Trần Phú, Nha Trang", items: [[product("brown-relac"), 1]], status: "completed", placed: -121, readyAfter: 3, plan: "full", method: "momo" },
   { name: "Bùi Quốc Bảo", phone: "0948 565 787", address: "10 Trần Phú, Nha Trang", items: [[product("moonlight-aurora"), 1]], status: "completed", placed: -150, readyAfter: 3, plan: "deposit", method: "vnpay" },
   { name: "Châu Ngọc Hân", phone: "0915 343 565", address: "27 Lý Thường Kiệt, Hoàn Kiếm, Hà Nội", items: [[product("woman-secret"), 1]], status: "completed", placed: -38, readyAfter: 2, plan: "full", method: "vnpay" },
-  { name: "Trương Văn Lực", phone: "0973 787 909", address: "88 Quang Trung, Gò Vấp, TP.HCM", items: [[product("beach-sunshine"), 2]], status: "cancelled", placed: -20, readyAfter: 3, plan: "deposit", method: "momo", cancelReason: "Khách không nghe máy khi giao, trả hàng về." },
+  { name: "Trương Văn Lực", phone: "0973 787 909", address: "88 Quang Trung, Gò Vấp, TP.HCM", items: [[custom("Hũ gốm · 200g · Sáp ong · Vanilla · Không trang trí", 925_000), 2]], status: "cancelled", placed: -20, readyAfter: 3, plan: "deposit", method: "momo", cancelReason: "Khách không nghe máy khi giao, trả hàng về." },
 ];
 
 const slugEmail = (name: string) =>
@@ -73,7 +73,7 @@ function build(s: Seed, index: number): Order {
   const dueNow = s.plan === "deposit" ? Math.round((total * DEPOSIT_RATE) / 1000) * 1000 : total;
 
   // Lịch sử đi theo quy trình tới trạng thái hiện tại
-  const reached = s.status === "cancelled" ? ["pending", "paid"] : orderFlow.slice(0, orderFlow.indexOf(s.status) + 1);
+  const reached = s.status === "cancelled" ? ["pending", "paid"] : orderFlow.slice(0, orderFlow.indexOf(s.status as (typeof orderFlow)[number]) + 1);
   const history: OrderEvent[] = reached.map((status, i) => ({
     at: at(i === 0 ? 0 : i * 18),
     status: status as OrderStatus,
@@ -118,6 +118,7 @@ function build(s: Seed, index: number): Order {
     readyDate: placedAt.add(s.readyAfter, "day").format("YYYY-MM-DD"),
     note: s.note,
     cancelReason: s.cancelReason,
+    cancelOutcome: s.status === "cancelled" && items.some((i) => i.custom) ? "stocked" : undefined,
     history,
     createdAt: placedAt.toISOString(),
     updatedAt: history.at(-1)!.at,

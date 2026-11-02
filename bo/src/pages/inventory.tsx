@@ -10,6 +10,7 @@ import { RestockPanel } from "@/components/inventory/restock-panel";
 import { InventorySkeleton } from "@/components/skeletons";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useInventory } from "@/hooks/use-inventory";
+import { useStockHold } from "@/hooks/use-stock-hold";
 import {
   applyInventoryFilters,
   defaultInventoryFilters,
@@ -32,6 +33,7 @@ export function InventoryPage() {
   useTitle("Kho nguyên liệu");
   const { message } = App.useApp();
   const api = useInventory();
+  const { held } = useStockHold();
   const craft = useCraftConfig();
   const loading = api.loading || craft.loading;
   const usage = useMemo(() => materialUsage(craft.config), [craft.config]);
@@ -149,7 +151,7 @@ export function InventoryPage() {
 
       <Card styles={{ body: { padding: 12 } }}>
         {items.length ? (
-          <MaterialTable items={items} usage={usage} pagination={pagination} onOpen={setOpenId} onReceive={setMoving} />
+          <MaterialTable items={items} usage={usage} held={held} pagination={pagination} onOpen={setOpenId} onReceive={setMoving} />
         ) : !materials.length ? (
           // Kho trống khác với lọc không ra kết quả — hướng admin thêm nguyên liệu đầu tiên
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Kho chưa có nguyên liệu nào. Thêm sáp, tinh dầu, hũ… để gắn vào các lựa chọn trên trang Thủ công.">

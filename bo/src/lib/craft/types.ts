@@ -128,7 +128,16 @@ export type CardsStep = StepBase & {
   gramsPerGram?: number;
 };
 
-export type SwatchesStep = StepBase & { kind: "swatches"; options: StepOption[]; previewRole?: PreviewRole; gramsPerGram?: number };
+export type SwatchesStep = StepBase & {
+  kind: "swatches";
+  options: StepOption[];
+  // Chọn nhiều màu hay một màu
+  multiple: boolean;
+  // Chọn nhiều tối đa (bỏ trống = không giới hạn)
+  maxSelect?: number;
+  previewRole?: PreviewRole;
+  gramsPerGram?: number;
+};
 
 export type IntensityLevel = "light" | "medium" | "strong";
 export type BlendStep = StepBase & {
@@ -138,6 +147,8 @@ export type BlendStep = StepBase & {
   maxBlend: number;
   // null = không cho chọn độ đậm. load = tỉ lệ (gram tinh dầu / gram sáp)
   intensity: { priceDelta: Record<IntensityLevel, Money>; load: Record<IntensityLevel, number> } | null;
+  // Phụ thu hương: basePrice khi lượng hương tới mức standardLoad (ml hương / gram sáp), vượt thì tăng theo tỉ lệ ml
+  scentPrice?: { basePrice: Money; standardLoad: number };
 };
 
 export type InputsStep = StepBase & { kind: "inputs"; fields: TextFieldDef[]; addons: AddonDef[] };
