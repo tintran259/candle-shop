@@ -89,13 +89,14 @@ const removeStep = (id: string) =>
       ),
   }));
 
-const moveStep = (id: string, delta: -1 | 1) =>
+// Kéo thả: đưa bước id vào vị trí của bước to
+const moveStep = (id: string, to: string) =>
   update((c) => {
     const i = c.steps.findIndex((s) => s.id === id);
-    const j = i + delta;
-    if (i < 0 || j < 0 || j >= c.steps.length) return c;
+    const j = c.steps.findIndex((s) => s.id === to);
+    if (i < 0 || j < 0 || i === j) return c;
     const steps = [...c.steps];
-    [steps[i], steps[j]] = [steps[j], steps[i]];
+    steps.splice(j, 0, ...steps.splice(i, 1));
     return { ...c, steps };
   });
 
