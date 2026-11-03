@@ -1,15 +1,31 @@
 import { App as AntdApp, ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, redirect, RouterProvider } from "react-router";
 import { RouteError } from "@/components/route-error";
 import { AppShellSkeleton } from "@/components/skeletons";
 import { AppLayout } from "@/layouts/app-layout";
+import { getSession } from "@/lib/auth";
 import { NotFoundPage, PlaceholderPage } from "@/pages/placeholder";
-import { theme } from "@/theme";
+import { brand, theme } from "@/theme";
+
+// Chưa đăng nhập (hoặc hết phiên) thì về trang đăng nhập, nhớ trang đang mở để quay lại
+const requireSession = ({ request }: { request: Request }) => {
+  if (getSession()) return null;
+  const { pathname, search } = new URL(request.url);
+  return redirect(pathname === "/" ? "/login" : `/login?next=${encodeURIComponent(pathname + search)}`);
+};
 
 const router = createBrowserRouter([
   {
+    path: "login",
+    lazy: async () => ({ Component: (await import("@/pages/login")).LoginPage }),
+    // Nền trống cùng màu trong lúc tải code trang đăng nhập
+    hydrateFallbackElement: <div style={{ minHeight: "100vh", background: brand.page }} />,
+    errorElement: <RouteError />,
+  },
+  {
     element: <AppLayout />,
+    loader: requireSession,
     // Hiện khi trang đầu tiên đang tải code (route lazy)
     hydrateFallbackElement: <AppShellSkeleton />,
     // Lỗi ở chính layout (hiếm) — vẫn có trang báo lỗi thay màn hình mặc định

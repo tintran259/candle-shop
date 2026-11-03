@@ -1,7 +1,7 @@
 import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { Avatar, Badge, Button, Flex, Grid, Layout, Menu, Tag, Tooltip, Typography, type MenuProps } from "antd";
 import { useState } from "react";
-import { Link, Outlet, useLocation, useNavigate, useNavigation } from "react-router";
+import { Link, Navigate, Outlet, useLocation, useNavigate, useNavigation } from "react-router";
 import { GlobalSearch } from "@/components/header/global-search";
 import { NotificationBell } from "@/components/header/notification-bell";
 import { RouteSkeleton } from "@/components/skeletons";
@@ -9,6 +9,7 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useStorefrontSync } from "@/hooks/use-storefront-sync";
 import { useOrders } from "@/hooks/use-orders";
 import { findNavItem, navGroups, type NavItem } from "@/layouts/nav";
+import { logout, useSession } from "@/lib/auth";
 import { brand, radius } from "@/theme";
 
 const { Sider, Header, Content } = Layout;
@@ -55,6 +56,9 @@ export function AppLayout() {
   });
   // Đang tải code của trang sắp mở → hiện khung xương đúng trang đó thay vì giữ trang cũ
   const navigation = useNavigation();
+  const session = useSession();
+  // Đăng xuất ở tab khác hoặc hết phiên → về trang đăng nhập
+  if (!session) return <Navigate to={`/login?next=${encodeURIComponent(pathname)}`} replace />;
   const nextPath = navigation.state === "loading" ? navigation.location.pathname : null;
 
   return (
@@ -116,14 +120,23 @@ export function AppLayout() {
             <>
               <Flex vertical style={{ minWidth: 0, flex: 1 }}>
                 <Typography.Text strong ellipsis style={{ color: "#fff" }}>
-                  Admin 2510
+                  {session.name}
                 </Typography.Text>
                 <Tag color="#f3e6da" style={{ color: brand.mocha, width: "fit-content", marginTop: 2, fontSize: 11, lineHeight: "16px" }}>
                   Quản trị
                 </Tag>
               </Flex>
               <Tooltip title="Đăng xuất">
-                <Button type="text" aria-label="Đăng xuất" icon={<LogoutOutlined />} style={{ color: "rgba(255,255,255,0.85)" }} />
+                <Button
+                  type="text"
+                  aria-label="Đăng xuất"
+                  icon={<LogoutOutlined />}
+                  style={{ color: "rgba(255,255,255,0.85)" }}
+                  onClick={() => {
+                    logout();
+                    navigate("/login", { replace: true });
+                  }}
+                />
               </Tooltip>
             </>
           )}
