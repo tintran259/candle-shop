@@ -12,6 +12,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Dashboard | `/` | [dashboard.md](./pages/dashboard.md) | Đã có, số thật từ đơn trong BO |
 | Đơn hàng | `/orders` | [orders.md](./pages/orders.md) | Đã có, gồm hoàn tiền và giao hàng lỗi |
 | Sản phẩm trưng bày | `/products` | [products.md](./pages/products.md) | Đã có |
+| Danh mục | `/categories` | [categories.md](./pages/categories.md) | Đã có, web chưa đọc |
 | Sản phẩm hủy đơn | `/cancelled-products` | [cancelled-products.md](./pages/cancelled-products.md) | Đã có |
 | Thủ công | `/craft` | [craft.md](./pages/craft.md) | Đã có |
 | Kho nguyên liệu | `/inventory` | [inventory.md](./pages/inventory.md) | Đã có |
@@ -32,6 +33,6 @@ Yêu cầu dữ liệu đơn hàng cho BE nằm ở [orders.md](./pages/orders.m
 ## Giới hạn hiện tại
 
 - **Dữ liệu lưu trên trình duyệt:** chưa có BE, xóa dữ liệu trình duyệt là mất. Máy khác không thấy.
-- **Web (`fe`) chưa nối:** chưa đọc Thủ công, Kho, Cài đặt. Đơn trên web chưa vào BO. Khi nối cần làm thêm: chọn nhiều sáp, màu, trang trí, phụ thu theo tỉ lệ, phụ thu hương.
+- **Web (`fe`) nối tạm với BO:** trang Thủ công chạy theo cấu hình BO. BO chạy trên máy tự đẩy cấu hình đã lưu và tồn dùng được sang web qua `fe/src/app/api/craft-config`, chỉ dùng khi dev. Web chưa đọc Cài đặt, đơn trên web chưa vào BO.
 - **Ô lượng cho 1 hũ:** chỉ có ở popup Tự phối nến của BO, web không có.
 - **Tài khoản:** thao tác đang ghi tên "Admin 2510", chưa có đăng nhập và phân quyền.

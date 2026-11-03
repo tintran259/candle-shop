@@ -65,6 +65,10 @@ Mọi sửa đổi vào bản nháp. Web, Kho, tạo đơn chỉ dùng bản đ�
 - **Sản phẩm trưng bày:** danh sách Loại sáp lấy từ bước Sáp.
 - **Kho:** hiện lựa chọn nào đang dùng nguyên liệu đó.
 
-## Chưa có
+## Trên web
 
-Web chưa đọc cấu hình này, chưa có chọn nhiều sáp, màu, trang trí và phụ thu hương.
+Trang Thủ công của web dựng theo đúng cấu hình đã lưu: các bước đang bật, thứ tự, Số lựa chọn, giá, phụ thu hương, quy tắc "chỉ dùng với". Mỗi lần hiện một bước. Bấm Lưu thay đổi ở BO rồi tải lại trang web là thấy, tồn kho cũng cập nhật theo số dùng được.
+
+Khách không có ô Lượng cho 1 hũ, ô này chỉ có ở BO.
+
+Đây là cầu nối tạm khi chạy trên máy. Khi có BE, web đọc cấu hình từ API.

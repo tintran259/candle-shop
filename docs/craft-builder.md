@@ -389,6 +389,8 @@ Mã lỗi: `required`, `unavailable`, `incompatible`, `tooLong`, `tooMany`, `out
 
 ## 10. Việc của storefront
 
+> **Trạng thái:** mục 2, 3, 6 đã làm trong `fe/src/lib/craft/`, bộ dựng theo `kind` ở `fe/src/components/customizer/step-view.tsx`, tiền đã chuyển sang VNĐ. `types.ts` và `selection.ts` là bản sao từ BO, sửa một bên thì sửa cả hai. Chưa có BE nên web đọc `/api/craft-config` (BO đẩy sang khi dev, kèm id nguyên liệu); khi có BE thay bằng bản công khai ở mục 9.1, không có id kho.
+
 1. **Tiền tệ:** fe đang hiển thị USD (`formatMoney` trong `fe/src/lib/customizer/pricing.ts`, `formatPrice` trong `fe/src/lib/data.ts`). Cần chuyển sang VNĐ cho cả sản phẩm, giỏ hàng, checkout, trước hoặc cùng lúc với việc nối cấu hình.
 2. **Bỏ 7 nhóm cố định** (`groupIds`, `CustomizerCatalog`, `CandleConfiguration`, các component `container-group`, `wax-group`…). Thay bằng một bộ dựng chung đọc `steps` và render theo `kind`. Đổi tương ứng:
    - `options.ts`, `pricing.ts`, `validation.ts`, `snapshot.ts` theo mục 5–8;

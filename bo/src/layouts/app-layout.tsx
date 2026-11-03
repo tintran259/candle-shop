@@ -6,6 +6,7 @@ import { GlobalSearch } from "@/components/header/global-search";
 import { NotificationBell } from "@/components/header/notification-bell";
 import { RouteSkeleton } from "@/components/skeletons";
 import { useInventory } from "@/hooks/use-inventory";
+import { useStorefrontSync } from "@/hooks/use-storefront-sync";
 import { useOrders } from "@/hooks/use-orders";
 import { findNavItem, navGroups, type NavItem } from "@/layouts/nav";
 import { brand, radius } from "@/theme";
@@ -47,6 +48,7 @@ export function AppLayout() {
   const { orders, loading } = useOrders();
   // Nguyên liệu hết hàng — lựa chọn dùng chúng đang bị khóa trên web
   const inventory = useInventory();
+  useStorefrontSync();
   const menuItems = buildMenu({
     orders: loading ? 0 : orders.filter((o) => ["pending", "paid", "delivery_failed", "returned"].includes(o.status)).length,
     inventory: inventory.loading ? 0 : inventory.materials.filter((m) => m.tracked && m.stock <= 0).length,
