@@ -18,7 +18,7 @@ Nút **7 ngày, 30 ngày, 90 ngày** ở đầu trang đổi cả thẻ chỉ s�
 | Giá trị đơn TB | Tổng giá trị đơn ÷ số đơn | Không tính đơn đã hủy. Từ 1 triệu hiện dạng rút gọn, ví dụ 1,5 tr ₫ |
 | Khách hàng mới | Số điện thoại có đơn đầu tiên trong kỳ | Không tính đơn đã hủy |
 | Biểu đồ Doanh thu | Cột theo ngày, rê chuột thấy số tiền và số đơn mới | Ngày hoàn tiền nhiều hơn thu thì cột âm |
-| Theo loại hương | Giá trị đơn theo Nước hoa, Thiên nhiên, Trái cây, Tự phối | Giá × số lượng từng dòng, không tính đơn đã hủy |
+| Theo danh mục | Giá trị đơn theo từng danh mục ở trang [Danh mục](./categories.md), cộng nhóm Tự phối | Giá × số lượng từng dòng, không tính đơn đã hủy |
 | Đơn hàng gần đây | 7 đơn mới nhất, bấm để mở | Không theo kỳ |
 | Sản phẩm bán chạy | 4 sản phẩm bán nhiều nhất, nến tự phối gộp một dòng | Theo số lượng, không tính đơn đã hủy |
 

@@ -4,7 +4,13 @@ import { mockProducts } from "@/lib/products/mock";
 import type { Product } from "@/lib/products/types";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/products (GET/POST/PATCH/DELETE).
-const store = createLocalStore<Product[]>("bo-products-v1", mockProducts);
+// Bản lưu cũ dùng aromaType (fruits/nature/parfum) — chính là id danh mục mặc định
+const migrate = (list: Product[]) =>
+  list.map((p) => {
+    const { aromaType, ...rest } = p as Product & { aromaType?: string };
+    return p.categoryId ? p : { ...rest, categoryId: aromaType ?? "" };
+  });
+const store = createLocalStore<Product[]>("bo-products-v1", mockProducts, migrate);
 
 const today = () => new Date().toISOString().slice(0, 10);
 

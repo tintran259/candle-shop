@@ -1,10 +1,11 @@
 import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
-import { Button, Flex, Popconfirm, Switch, Table, Tag, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Button, Flex, Popconfirm, Switch, Table, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import { memo, useState } from "react";
+import { CategoryTag } from "@/components/products/category-tag";
 import { PriceText, ProductBadges, ProductThumb, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
 import { formatNumber } from "@/lib/format";
-import { aromaLevelLabels, aromaTypeColors, aromaTypeLabels, sizeLabels } from "@/lib/products/labels";
+import { aromaLevelLabels, sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand } from "@/theme";
 
@@ -42,9 +43,7 @@ function ProductTableView({ items, api, onEdit, pagination }: Props) {
       responsive: ["md"],
       render: (_, p) => (
         <Flex vertical gap={4} align="flex-start">
-          <Tag color={aromaTypeColors[p.aromaType]} style={{ marginInlineEnd: 0 }}>
-            {aromaTypeLabels[p.aromaType]}
-          </Tag>
+          <CategoryTag id={p.categoryId} />
           <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
             Cỡ {sizeLabels[p.size].toLowerCase()} · Hương {aromaLevelLabels[p.aromaLevel].toLowerCase()}
           </Typography.Text>

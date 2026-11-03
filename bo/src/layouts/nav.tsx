@@ -1,4 +1,5 @@
 import {
+  AppstoreOutlined,
   CommentOutlined,
   DashboardOutlined,
   ExperimentOutlined,
@@ -22,6 +23,7 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { label: "Đơn hàng", path: "/orders", icon: <ShoppingCartOutlined />, badge: "orders" },
       { label: "Sản phẩm trưng bày", path: "/products", icon: <ShoppingOutlined /> },
+      { label: "Danh mục", path: "/categories", icon: <AppstoreOutlined /> },
       { label: "Sản phẩm hủy đơn", path: "/cancelled-products", icon: <RollbackOutlined /> },
       { label: "Thủ công", path: "/craft", icon: <ExperimentOutlined /> },
       { label: "Kho nguyên liệu", path: "/inventory", icon: <InboxOutlined />, badge: "inventory" },

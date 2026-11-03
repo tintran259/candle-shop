@@ -1,12 +1,10 @@
 // Sản phẩm trưng bày: mẫu nến hiện trên web. Gộp các trường của bảng Product bên BE (Prisma)
-// với các thuộc tính lọc mà web đang dùng (loại hương, độ thơm, kích thước).
+// với các thuộc tính lọc mà web đang dùng (danh mục, độ thơm, kích thước).
 // Shop làm theo đơn (2–3 ngày) nên không quản lý tồn kho ở đây.
 
-export const aromaTypes = ["fruits", "nature", "parfum"] as const;
 export const aromaLevels = ["soft", "medium", "strong"] as const;
 export const productSizes = ["small", "medium", "big"] as const;
 
-export type AromaType = (typeof aromaTypes)[number];
 export type AromaLevel = (typeof aromaLevels)[number];
 export type ProductSize = (typeof productSizes)[number];
 
@@ -26,7 +24,8 @@ export type Product = {
   salePrice?: number;
   // Ảnh đầu tiên là ảnh chính
   images: string[];
-  aromaType: AromaType;
+  // Danh mục (loại hương) ở trang Danh mục
+  categoryId: string;
   aromaLevel: AromaLevel;
   size: ProductSize;
   scent?: string;

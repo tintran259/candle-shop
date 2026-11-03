@@ -10,6 +10,7 @@ import { TopProducts } from "@/components/dashboard/top-products";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { useInventory } from "@/hooks/use-inventory";
 import { useOrders } from "@/hooks/use-orders";
+import { useCategories } from "@/hooks/use-categories";
 import { useProducts } from "@/hooks/use-products";
 import { dashboardRanges, dashboardStats } from "@/lib/dashboard/stats";
 import { useTitle } from "@/lib/use-title";
@@ -25,7 +26,8 @@ export function DashboardPage() {
   const [params, setParams] = useSearchParams();
   const asked = Number(params.get("days"));
   const days = dashboardRanges.find((d) => d === asked) ?? DEFAULT_DAYS;
-  const stats = useMemo(() => dashboardStats(orders, products, days), [orders, products, days]);
+  const { label: categoryLabel } = useCategories();
+  const stats = useMemo(() => dashboardStats(orders, products, categoryLabel, days), [orders, products, categoryLabel, days]);
 
   // Chờ tải xong mới hiện cả trang để bố cục không nhảy
   if (loading || l2 || l3) return <DashboardSkeleton />;

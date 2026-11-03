@@ -1,7 +1,7 @@
 // Chuyển qua lại giữa Product và giá trị phẳng của antd Form
 import { slugify } from "@/lib/craft/groups";
 import type { CancelledProduct } from "@/lib/cancelled/types";
-import type { AromaLevel, AromaType, Product, ProductSize, RecipeLine } from "@/lib/products/types";
+import type { AromaLevel, Product, ProductSize, RecipeLine } from "@/lib/products/types";
 
 export type ProductFormValues = {
   name: string;
@@ -10,7 +10,7 @@ export type ProductFormValues = {
   price: number;
   salePrice?: number | null;
   images: string[];
-  aromaType: AromaType;
+  categoryId?: string;
   aromaLevel: AromaLevel;
   size: ProductSize;
   scent?: string;
@@ -30,7 +30,7 @@ export function toFormValues(p?: Product): ProductFormValues {
     price: p?.price ?? 0,
     salePrice: p?.salePrice ?? null,
     images: p?.images ?? [],
-    aromaType: p?.aromaType ?? "nature",
+    categoryId: p?.categoryId,
     aromaLevel: p?.aromaLevel ?? "medium",
     size: p?.size ?? "medium",
     scent: p?.scent,
@@ -73,7 +73,7 @@ export function fromFormValues(v: ProductFormValues, previous?: Product): Produc
     price: Math.round(v.price ?? 0),
     salePrice: v.salePrice ? Math.round(v.salePrice) : undefined,
     images: v.images ?? [],
-    aromaType: v.aromaType,
+    categoryId: v.categoryId ?? "",
     aromaLevel: v.aromaLevel,
     size: v.size,
     scent: clean(v.scent),

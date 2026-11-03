@@ -1,11 +1,7 @@
-import type { AromaLevel, AromaType, Product, ProductSize } from "@/lib/products/types";
+import type { AromaLevel, Product, ProductSize } from "@/lib/products/types";
 
-export const aromaTypeLabels: Record<AromaType, string> = { fruits: "Trái cây", nature: "Thiên nhiên", parfum: "Nước hoa" };
 export const aromaLevelLabels: Record<AromaLevel, string> = { soft: "Nhẹ", medium: "Vừa", strong: "Đậm" };
 export const sizeLabels: Record<ProductSize, string> = { small: "Nhỏ", medium: "Vừa", big: "Lớn" };
-
-// Màu tag loại hương (tag antd preset — luôn kèm chữ)
-export const aromaTypeColors: Record<AromaType, string> = { fruits: "orange", nature: "green", parfum: "purple" };
 
 export const toOptions = <K extends string>(labels: Record<K, string>) =>
   (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }));

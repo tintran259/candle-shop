@@ -1,9 +1,10 @@
 import { EditOutlined } from "@ant-design/icons";
-import { Button, Col, Flex, Row, Switch, Tag, Typography } from "antd";
+import { Button, Col, Flex, Row, Switch, Typography } from "antd";
 import { memo } from "react";
+import { CategoryTag } from "@/components/products/category-tag";
 import { PriceText, ProductBadges, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
-import { aromaTypeColors, aromaTypeLabels, sizeLabels } from "@/lib/products/labels";
+import { sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand, radius } from "@/theme";
 
@@ -38,9 +39,7 @@ function ProductGridView({ items, api, onEdit }: Props) {
                 <RatingText product={p} />
               </Flex>
               <Flex gap={6} align="center" wrap>
-                <Tag color={aromaTypeColors[p.aromaType]} style={{ marginInlineEnd: 0 }}>
-                  {aromaTypeLabels[p.aromaType]}
-                </Tag>
+                <CategoryTag id={p.categoryId} />
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   Cỡ {sizeLabels[p.size].toLowerCase()} · {p.sold} đã bán
                 </Typography.Text>

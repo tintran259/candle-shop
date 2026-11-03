@@ -1,6 +1,7 @@
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Grid, Pagination, Popconfirm, Row, Statistic, Typography } from "antd";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { ProductDrawer } from "@/components/products/product-drawer";
 import { fromCancelled } from "@/components/products/product-form";
 import { ProductGrid } from "@/components/products/product-grid";
@@ -21,7 +22,9 @@ export function ProductsPage() {
   const api = useProducts();
   const cancelled = useCancelledProducts();
   const screens = Grid.useBreakpoint();
-  const [filters, setFiltersState] = useState<ProductFilters>(defaultFilters);
+  // ?category= từ trang Danh mục: mở sẵn bộ lọc theo danh mục đó
+  const [params] = useSearchParams();
+  const [filters, setFiltersState] = useState<ProductFilters>(() => ({ ...defaultFilters, categoryId: params.get("category") ?? undefined }));
   // Memo để bảng/lưới (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
   const items = useMemo(() => applyFilters(api.products, filters), [api.products, filters]);
   const pager = usePageQuery(api.loading ? undefined : items.length);

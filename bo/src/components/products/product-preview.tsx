@@ -1,7 +1,8 @@
-import { Flex, Form, Tag, Typography } from "antd";
+import { Flex, Form, Typography } from "antd";
+import { CategoryTag } from "@/components/products/category-tag";
 import type { ProductFormValues } from "@/components/products/product-form";
 import { PriceText, ProductBadges, ProductThumb } from "@/components/products/product-view";
-import { aromaLevelLabels, aromaTypeColors, aromaTypeLabels, sizeLabels } from "@/lib/products/labels";
+import { aromaLevelLabels, sizeLabels } from "@/lib/products/labels";
 import { radius } from "@/theme";
 
 // Thẻ xem trước đầu drawer — giống cách sản phẩm hiện trên web, cập nhật theo từng thay đổi
@@ -21,9 +22,7 @@ export function ProductPreview() {
             {v.name?.trim() || "Sản phẩm mới"}
           </Typography.Title>
           <Flex gap={6} align="center" wrap>
-            <Tag color={aromaTypeColors[v.aromaType]} style={{ marginInlineEnd: 0 }}>
-              {aromaTypeLabels[v.aromaType]}
-            </Tag>
+            <CategoryTag id={v.categoryId} />
             <Typography.Text type="secondary" style={{ fontSize: 13 }}>
               Cỡ {sizeLabels[v.size].toLowerCase()} · Hương {aromaLevelLabels[v.aromaLevel].toLowerCase()}
               {v.burnTime ? ` · ~${v.burnTime} giờ` : ""}

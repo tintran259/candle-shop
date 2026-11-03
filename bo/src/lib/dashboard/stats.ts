@@ -2,7 +2,6 @@
 import dayjs, { type Dayjs } from "dayjs";
 import { deadline, isDeliveryIssue } from "@/lib/orders/labels";
 import type { Order, OrderStatus } from "@/lib/orders/types";
-import { aromaTypeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 
 const DAY = "YYYY-MM-DD";
@@ -48,7 +47,8 @@ function newCustomers(orders: Order[], from: string, to: string) {
   return [...first.values()].filter((d) => d >= from && d <= to).length;
 }
 
-export function dashboardStats(orders: Order[], products: Product[], days: number, today: Dayjs = dayjs()) {
+// categoryLabel: tên danh mục theo id (trang Danh mục)
+export function dashboardStats(orders: Order[], products: Product[], categoryLabel: (id?: string) => string, days: number, today: Dayjs = dayjs()) {
   const to = today.format(DAY);
   const from = today.subtract(days - 1, "day").format(DAY);
   const prevTo = today.subtract(days, "day").format(DAY);
@@ -81,7 +81,7 @@ export function dashboardStats(orders: Order[], products: Product[], days: numbe
     for (const item of o.items) {
       const value = item.price * item.quantity;
       const product = item.productId ? byId.get(item.productId) : undefined;
-      const type = item.custom ? "Tự phối" : product ? aromaTypeLabels[product.aromaType] : "Khác";
+      const type = item.custom ? "Tự phối" : product ? categoryLabel(product.categoryId) : "Khác";
       types.set(type, (types.get(type) ?? 0) + value);
       const id = item.custom ? CUSTOM : (item.productId ?? item.name);
       const row = sales.get(id) ?? { id, name: item.custom ? "Nến tự phối" : (product?.name ?? item.name), image: item.custom ? undefined : (product?.images[0] ?? item.image), sold: 0, revenue: 0 };

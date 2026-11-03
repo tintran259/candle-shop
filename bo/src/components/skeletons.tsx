@@ -465,6 +465,16 @@ export const SettingsSkeleton = () => (
   </Busy>
 );
 
+// Danh mục: đầu trang + bảng ngắn, không có thống kê và thanh lọc
+export const CategoriesSkeleton = () => (
+  <Busy label="Đang tải danh mục…">
+    <Flex vertical gap={16}>
+      <PageHeaderSkeleton subLines={1} actions={[130, 150]} />
+      <TableSkeleton rows={3} thumb={false} />
+    </Flex>
+  </Busy>
+);
+
 export const DiscountsSkeleton = () => (
   <ListPageSkeleton
     label="Đang tải mã giảm giá…"
@@ -550,6 +560,7 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname.startsWith("/cancelled-products")) return <CancelledSkeleton />;
   if (pathname.startsWith("/settings")) return <SettingsSkeleton />;
   if (pathname.startsWith("/discounts")) return <DiscountsSkeleton />;
+  if (pathname.startsWith("/categories")) return <CategoriesSkeleton />;
   if (pathname.startsWith("/customers")) return <CustomersSkeleton />;
   if (pathname.startsWith("/inventory")) return <InventorySkeleton />;
   return <ListPageSkeleton label="Đang tải trang…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 150 }] }]} />} />;

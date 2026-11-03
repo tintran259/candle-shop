@@ -1,11 +1,11 @@
 import { slugify } from "@/lib/craft/groups";
 import { sorters, type SortKey } from "@/lib/products/labels";
-import type { AromaType, Product, ProductSize } from "@/lib/products/types";
+import type { Product, ProductSize } from "@/lib/products/types";
 
 export type ProductFilters = {
   q: string;
   status: "all" | "active" | "hidden";
-  aromaType?: AromaType;
+  categoryId?: string;
   size?: ProductSize;
   sort: SortKey;
 };
@@ -18,7 +18,7 @@ export function applyFilters(list: Product[], f: ProductFilters) {
   const q = slugify(f.q);
   return list
     .filter((p) => f.status === "all" || p.status === f.status)
-    .filter((p) => !f.aromaType || p.aromaType === f.aromaType)
+    .filter((p) => !f.categoryId || p.categoryId === f.categoryId)
     .filter((p) => !f.size || p.size === f.size)
     .filter((p) => !q || slugify(p.name).includes(q) || p.slug.includes(q))
     .sort(sorters[f.sort]);

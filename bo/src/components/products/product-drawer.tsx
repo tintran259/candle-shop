@@ -1,6 +1,7 @@
 import { DeleteOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Col, Descriptions, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Select, Typography } from "antd";
 import { useDeferredValue, useState } from "react";
+import { Link } from "react-router";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
@@ -9,16 +10,20 @@ import { ProductPreview } from "@/components/products/product-preview";
 import { RecipeField } from "@/components/products/recipe-field";
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
+import { useCategories } from "@/hooks/use-categories";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import type { ProductsApi } from "@/hooks/use-products";
 import { slugify } from "@/lib/craft/groups";
 import { formatNumber } from "@/lib/format";
 import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
-import { aromaLevelLabels, aromaTypeLabels, discountPercent, sizeLabels, toOptions } from "@/lib/products/labels";
+import { aromaLevelLabels, discountPercent, sizeLabels, toOptions } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 
 // prefill: giá trị điền sẵn khi tạo mới (từ nến hủy đơn); onCreated chạy sau khi tạo mới thành công
 type Props = { open: boolean; product?: Product; prefill?: ProductFormValues; source?: string; api: ProductsApi; onCreated?: (product: Product) => void; onClose: () => void };
+
+// Sản phẩm mới chưa có danh mục thì chọn sẵn danh mục đầu tiên đang hiện
+const withCategory = (v: ProductFormValues, fallback?: string) => (v.categoryId ? v : { ...v, categoryId: fallback });
 
 // Drawer thêm/sửa sản phẩm. Trang mount lại theo key nên form luôn bắt đầu từ dữ liệu mới.
 export function ProductDrawer({ open, product, prefill, source, api, onCreated, onClose }: Props) {
@@ -27,6 +32,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
   // Loại sáp lấy từ bước "wax" của trang Thủ công (nếu admin còn giữ bước này)
   const waxStep = useCraftConfig().config.steps.find((st) => st.id === "wax");
   const waxes = waxStep && waxStep.kind !== "inputs" ? waxStep.options : [];
+  const { categories } = useCategories();
   // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
   const ready = useDeferredValue(true, false);
   const [form] = Form.useForm<ProductFormValues>();
@@ -110,7 +116,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
         <Form
           form={form}
           layout="vertical"
-          initialValues={prefill ?? toFormValues(product)}
+          initialValues={withCategory(prefill ?? toFormValues(product), categories.find((c) => !c.hidden)?.id)}
           onFinish={finish}
           onValuesChange={(changed: Partial<ProductFormValues>) => {
             setDirty(true);
@@ -171,8 +177,20 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
             </FormSection>
 
             <FormSection title="Phân loại & đặc tính" description="Dùng cho bộ lọc trên web và thông tin trang chi tiết.">
-              <Form.Item name="aromaType" label="Loại hương">
-                <Radio.Group optionType="button" options={toOptions(aromaTypeLabels)} />
+              <Form.Item
+                name="categoryId"
+                label="Danh mục"
+                extra={
+                  <>
+                    Thêm, sửa danh mục ở trang <Link to="/categories">Danh mục</Link>.
+                  </>
+                }
+                rules={[{ required: true, message: "Chọn danh mục." }]}
+              >
+                <Select
+                  placeholder="Chọn danh mục"
+                  options={categories.map((c) => ({ value: c.id, label: c.hidden ? `${c.name.vi} (đang ẩn trên web)` : c.name.vi }))}
+                />
               </Form.Item>
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
