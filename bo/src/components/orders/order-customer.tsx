@@ -1,11 +1,14 @@
 import { CopyOutlined, EnvironmentOutlined, MailOutlined, MessageOutlined, PhoneOutlined, RightOutlined } from "@ant-design/icons";
-import { App, Avatar, Button, DatePicker, Divider, Flex, Tag, Tooltip, Typography } from "antd";
+import { App, Avatar, Button, Divider, Flex, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { FormSection } from "@/components/form/form-section";
 import { InfoRow } from "@/components/info-row";
+import { CapacityDatePicker } from "@/components/orders/ready-date";
 import { useCustomers } from "@/hooks/use-customers";
 import type { OrdersApi } from "@/hooks/use-orders";
+import { useWorkshop } from "@/hooks/use-workshop";
+import { candleCount } from "@/lib/capacity";
 import { formatMoney, initials } from "@/lib/format";
 import { failedDeliveries, shippingName } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
@@ -16,6 +19,8 @@ const digits = (s: string) => s.replace(/\D/g, "");
 // Khách hàng: ai, liên hệ thế nào, đã mua bao nhiêu lần; rồi giao tới đâu, khi nào
 export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }) {
   const { message } = App.useApp();
+  const workshop = useWorkshop(order.id);
+  const candles = candleCount(order.items);
   const { customer } = order;
   const phone = digits(customer.phone);
   // Hồ sơ khách cùng số điện thoại (trang Khách hàng)
@@ -132,7 +137,9 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
           </InfoRow>
           <InfoRow icon={null} label="Ngày làm xong">
             {editable ? (
-              <DatePicker
+              <CapacityDatePicker
+                workshop={workshop}
+                candles={candles}
                 aria-label="Ngày làm xong"
                 format="DD/MM/YYYY"
                 allowClear={false}
@@ -140,9 +147,12 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
                 value={dayjs(order.readyDate)}
                 disabledDate={(d) => d.isBefore(dayjs(), "day")}
                 onChange={(d) => {
-                  if (!d) return;
+                  if (!d || Array.isArray(d)) return;
                   api.reschedule(order.id, d.format("YYYY-MM-DD"));
-                  message.success(`Đã đổi ngày làm xong sang ${d.format("DD/MM")} — nhớ báo khách.`);
+                  // Ngày đã quá công suất: vẫn đổi (chỉ cảnh báo, không chặn), lịch đã tô đỏ ngày đầy
+                  const day = workshop.at(d.format("YYYY-MM-DD"), candles);
+                  if (day.over) message.warning(`Đã đổi sang ${d.format("DD/MM")} — ngày này vượt công suất: ${day.load}/${day.capacity} cây. Nhớ báo khách.`);
+                  else message.success(`Đã đổi ngày làm xong sang ${d.format("DD/MM")} — nhớ báo khách.`);
                 }}
                 style={{ width: 140 }}
               />

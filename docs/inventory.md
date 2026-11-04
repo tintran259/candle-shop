@@ -47,6 +47,8 @@ Tài liệu cho người làm **BE**: lưu nguyên liệu, ghi phiếu kho, tín
 | `tracked` | `boolean` | `false` = không đếm tồn, luôn coi là còn hàng. |
 | `stock` | `number` | Số nguyên ≥ 0, tính theo `unit`. **Chỉ đổi qua phiếu kho.** |
 | `lowStock` | `number` | Dưới ngưỡng này là "sắp hết". Mỗi nguyên liệu một ngưỡng riêng. |
+| `unitCost` | `number?` | Giá nhập bình quân mỗi đơn vị, VNĐ, 2 chữ số lẻ. |
+| `recipe` | `{ materialId, quantity }[]?` | Xưởng tự sản xuất: lượng từng nguyên liệu cho 1 đơn vị. Không có = mua về. Không được chứa chính nó, trực tiếp hay gián tiếp. |
 | `swatch` | `string?` | Màu nhận diện trong bảng kho. |
 | `note` | `string?` | |
 | `updatedAt` | `string` (ISO) | Cập nhật khi sửa thông tin hoặc có phiếu mới. |
@@ -91,11 +93,15 @@ Các mức này dùng chung cho bảng kho, khối "Cần nhập thêm", badge t
 |---|---|---|
 | `id` | `string` | |
 | `materialId` | `string` | |
-| `type` | `in \| out \| adjust \| order` | Xem bảng dưới. |
+| `type` | `in \| out \| adjust \| order \| cost` | Xem bảng dưới. |
 | `change` | `number` | Lượng thay đổi có dấu: + là tăng, − là giảm. |
 | `after` | `number` | Số tồn sau phiếu. |
 | `note` | `string?` | Vd "Nhập lô tháng 10 — NCC Hạt Mộc", "Vỡ khi vận chuyển". |
 | `orderCode` | `string?` | Mã đơn, khi `type = order` hoặc khi hoàn kho do hủy đơn. |
+| `totalCost` | `number?` | Phiếu `in` do admin ghi: tổng tiền lô, 0 = hàng không mất tiền. Phiếu hoàn kho không có. |
+| `unitCost` | `number?` | Phiếu `in`: `totalCost ÷ change`. Phiếu `cost`: giá mới. |
+| `previousCost` | `number?` | Phiếu `cost`: giá trước khi sửa, không có nếu trước đó chưa có giá. |
+| `batch` | `string?` | Phiếu `make`: mã mẻ, chung cho phiếu thành phẩm và các phiếu trừ nguyên liệu của mẻ. |
 | `by` | `string` | Người thao tác; "Hệ thống" với phiếu tự động. |
 | `at` | `string` (ISO) | |
 
@@ -107,10 +113,13 @@ Các mức này dùng chung cho bảng kho, khối "Cần nhập thêm", badge t
 | `out` | Xuất / hao hụt | Số lượng xuất (≤ số tồn) | `after = stock − amount` |
 | `adjust` | Kiểm kê | Số đếm thực tế | `after = amount` |
 | `order` | Theo đơn hàng | (BE tự tạo) | `after = stock − lượng cần cho đơn` (mục 7) |
+| `cost` | Sửa giá nhập | Giá mới mỗi đơn vị | `change = 0`, `after = stock`, đổi `Material.unitCost` |
+| `make` | Sản xuất | Số lượng làm, tổng chi phí mẻ | Thành phẩm `after = stock + count`, có `totalCost`, `unitCost`; mỗi nguyên liệu trong `recipe` một phiếu `change = −quantity × count`. Thiếu nguyên liệu thì từ chối cả mẻ |
 
 Quy tắc:
 
 - `amount` là số nguyên ≥ 0. Số tồn không bao giờ âm.
+- **Phiếu `in` do admin ghi bắt buộc có `totalCost`** (≥ 0; 0 là hàng tặng, mẫu thử). Thiếu thì từ chối (`400`) để giá vốn không sai lặng lẽ. Phiếu hoàn kho do hủy đơn không cần, giá bình quân giữ nguyên.
 - **Xuất quá số đang có thì từ chối** (`400`), không tự đưa về 0: hao hụt thật phải được ghi đúng số. Đếm lại thấy lệch thì dùng kiểm kê.
 - `change = after − stock` (với `adjust` có thể âm hoặc dương).
 - Phiếu `in` / `out` làm số tồn không đổi (vd xuất khi đã hết) thì không ghi.
@@ -217,10 +226,11 @@ Với hũ và nắp, chỉ xét mã **của cỡ đã chọn**. Web hiện "Ch�
 |---|---|---|
 | `GET` | `/api/admin/inventory` | Danh sách nguyên liệu. Lọc `?status=out\|low\|ok\|untracked\|unused`, `?category=`, `?q=` (tên, sku, id). Sắp xếp `?sort=urgent\|name\|updated`. Mỗi dòng kèm `usage` (lựa chọn đang dùng). |
 | `GET` | `/api/admin/inventory/:id` | Một nguyên liệu, kèm `usage` và 20 phiếu gần nhất. |
-| `POST` | `/api/admin/inventory` | Tạo nguyên liệu. Nhận `stock` làm tồn ban đầu và ghi phiếu `in` với note "Tồn ban đầu" nếu > 0 (BO đang làm đúng như vậy). |
-| `PATCH` | `/api/admin/inventory/:id` | Sửa thông tin. **Không nhận `stock`** (đổi tồn qua phiếu) và không cho đổi `id`. |
+| `POST` | `/api/admin/inventory` | Tạo nguyên liệu. Nhận `stock` làm tồn ban đầu và ghi phiếu `in` với note "Tồn ban đầu" nếu > 0, kèm `openingTotal` (tiền mua số tồn đó, bắt buộc khi tạo từ Kho có tồn > 0) thì ra `unitCost` ban đầu. Tạo từ trang Thủ công thì chưa có giá. |
+| `PATCH` | `/api/admin/inventory/:id` | Sửa thông tin. **Không nhận `stock`** (đổi tồn qua phiếu) và không cho đổi `id`. Chỉ nhận `unitCost` với nguyên liệu không theo dõi tồn; có theo dõi tồn thì sửa giá qua phiếu `cost`. |
 | `DELETE` | `/api/admin/inventory/:id` | Xóa nguyên liệu. Đang được lựa chọn dùng thì trả `409` kèm danh sách nơi dùng, trừ khi có `?force=true`. |
-| `POST` | `/api/admin/inventory/:id/movements` | Ghi phiếu `{ type: "in" \| "out" \| "adjust", amount, note? }`. Trả nguyên liệu sau cập nhật và phiếu vừa ghi. |
+| `POST` | `/api/admin/inventory/:id/movements` | Ghi phiếu `{ type: "in", amount, totalCost, note? }`, `{ type: "out" \| "adjust", amount, note? }` hoặc `{ type: "cost", unitCost }`. Trả nguyên liệu sau cập nhật và phiếu vừa ghi. |
+| `POST` | `/api/admin/inventory/:id/produce` | Sản xuất một mẻ `{ count, totalCost?, note? }`. Bỏ `totalCost` thì tính theo giá nhập bình quân của nguyên liệu, nguyên liệu nào chưa có giá thì từ chối. Trừ nguyên liệu, cộng thành phẩm, ghi các phiếu `make` chung `batch`, tất cả trong một transaction. `POST /api/admin/inventory` nhận thêm `recipe` và `count` để làm mẻ đầu khi tạo. |
 | `GET` | `/api/admin/inventory/movements` | Lịch sử phiếu, lọc `?materialId=`, `?type=`, `?orderCode=`, phân trang, mới nhất trước. |
 
 **Kiểm tra dữ liệu:**
@@ -243,6 +253,8 @@ model Material {
   tracked   Boolean  @default(true)
   stock     Int      @default(0)
   lowStock  Int
+  unitCost  Decimal? @db.Decimal(12, 2) // giá nhập bình quân mỗi đơn vị, VNĐ, 2 chữ số lẻ
+  recipe    Json?                       // sản xuất: [{ materialId, quantity }] cho 1 đơn vị
   swatch    String?
   note      String?
   updatedAt DateTime @updatedAt
@@ -253,18 +265,24 @@ model StockMovement {
   id         String   @id @default(cuid())
   material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
   materialId String
-  type       String                     // in | out | adjust | order
+  type       String                     // in | out | adjust | order | cost | make
   change     Int
   after      Int
   note       String?
   orderCode  String?
+  totalCost  Int?                       // phiếu nhập: tổng tiền lô, 0 = không mất tiền
+  unitCost   Decimal? @db.Decimal(12, 2) // nhập: totalCost ÷ change; sửa giá: giá mới
+  previousCost Decimal? @db.Decimal(12, 2) // sửa giá: giá trước đó
+  batch      String?                    // sản xuất: mã mẻ
   by         String
   at         DateTime @default(now())
   @@index([materialId, at])
   @@index([orderCode])
+  @@index([batch])
 }
 ```
 
+- **Giá nhập:** phiếu nhập có `totalCost` thì BE tính `unitCost` của lô và cập nhật giá bình quân của nguyên liệu trong cùng transaction: (tồn × giá cũ + lượng × giá lô) ÷ tổng. Phiếu `cost` đặt thẳng giá mới và giữ `previousCost`. Giá mẫu trong mock chỉ để tham khảo.
 - **Seed** từ `bo/src/lib/inventory/mock.ts` để các id khớp với cấu hình Thủ công mặc định (`bo/src/lib/craft/default-config.ts`).
 - `usage` không lưu riêng: tính từ cấu hình Thủ công mỗi lần đọc (dữ liệu nhỏ), hoặc cache lại sau mỗi lần `PUT` cấu hình.
 - Nếu không muốn mất lịch sử khi xóa nguyên liệu, đổi `onDelete: Cascade` thành xóa mềm (`deletedAt`).
@@ -281,7 +299,8 @@ Trang **Kho nguyên liệu** (`/inventory`):
   - sắp xếp "Cần nhập trước" (mặc định), "Tên A–Z", "Mới cập nhật".
 - **Bảng:** tồn kho kèm thanh mức, ngưỡng sắp hết, "Dùng trên web", thời gian cập nhật, nút **+** để nhập nhanh.
 - **Drawer nguyên liệu** (`?material=<id>` hoặc `?material=new`):
-  - số tồn hiện tại và phiếu nhanh: nhập thêm, xuất, kiểm kê;
+  - số tồn hiện tại và phiếu nhanh: nhập thêm, sản xuất (thành phẩm), xuất, kiểm kê;
+  - nguồn: nguyên liệu mua về hoặc sản xuất, kèm công thức "Sản xuất từ";
   - thông tin: tên, mã, loại, đơn vị (Cái / Gram / Mililít), theo dõi tồn hay không, ngưỡng sắp hết, màu, ghi chú;
   - danh sách lựa chọn đang dùng, bấm để sang trang Thủ công;
   - 20 phiếu gần nhất.

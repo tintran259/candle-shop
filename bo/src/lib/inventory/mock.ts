@@ -54,10 +54,44 @@ const seeds: Seed[] = [
   { id: "label-decal", name: "Nhãn decal in tên", category: "packaging", unit: "pcs", stock: 300, lowStock: 50 },
 ];
 
+// Giá nhập mẫu mỗi đơn vị (VNĐ / cái, / g, / ml) theo tiền tố mã — số tham khảo, chưa phải giá thật của xưởng
+const unitCosts: [string, number][] = [
+  ["jar-ceramic", 45_000],
+  ["jar-clear-glass", 18_000],
+  ["jar-amber-glass", 22_000],
+  ["jar-plaster", 35_000],
+  ["jar-tin", 15_000],
+  ["lid-ceramic", 12_000],
+  ["lid-amber", 6_000],
+  ["lid-tin", 5_000],
+  ["wax-soy", 90],
+  ["wax-coconut", 140],
+  ["wax-beeswax", 220],
+  ["wax-blend", 110],
+  ["oil-vanilla", 1_800],
+  ["oil-lavender", 2_200],
+  ["oil-white-tea", 2_000],
+  ["oil-sandalwood", 2_600],
+  ["oil-rose", 3_500],
+  ["oil-citrus", 1_500],
+  ["wick-cotton", 1_500],
+  ["wick-wood", 4_500],
+  ["dye-", 400],
+  ["decor-botanical", 6_000],
+  ["decor-pattern", 2_000],
+  ["decor-topper", 8_000],
+  ["decor-glitter", 1_000],
+  ["box-gift", 25_000],
+  ["card-printed", 3_000],
+  ["label-decal", 1_500],
+];
+const costOf = (id: string) => unitCosts.find(([prefix]) => id.startsWith(prefix))?.[1];
+
 const materials: Material[] = seeds.map(({ lowStock, tracked, days = 7, ...m }) => ({
   ...m,
   tracked: tracked ?? true,
   lowStock: lowStock ?? DEFAULT_LOW_STOCK[m.unit],
+  unitCost: costOf(m.id),
   updatedAt: at(days, 10),
 }));
 

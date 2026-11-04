@@ -48,3 +48,13 @@ Phải ghi lý do. Khách bị chặn có cảnh báo trên hồ sơ và đơn h
 ## Giao lỗi
 
 Số lần giao không thành của khách hiện ở thẻ Số đơn trên hồ sơ, ở khối Khách hàng trong đơn và lúc tạo đơn cho số điện thoại này.
+
+## Kiểm thử
+
+Cách chạy và độ phủ chung ở [testing.md](../testing.md).
+
+**Đã có test:**
+
+- `customers`: mở hồ sơ, ghi chú, chặn và bỏ chặn, mở đơn từ hồ sơ và ngược lại, link sai, tìm kiếm.
+- `customers-list`: thẻ thống kê, số đếm theo nhóm, tìm tên không dấu và số điện thoại, sắp xếp, khách vãng lai, xuất CSV, thêm nhãn rồi lọc theo nhãn, hay mua, điện thoại.
+- `logic/customers`: phân loại VIP / Khách quen / Khách mới / Lâu chưa mua / Chưa mua theo ngưỡng, đã chi theo tiền thực nhận, số lần giao lỗi, hay mua, bộ lọc và 4 cách sắp xếp.

@@ -1,12 +1,15 @@
 import { Flex, Form, Input, InputNumber, Modal, Segmented, Typography } from "antd";
 import { MaterialSelect } from "@/components/inventory/material-select";
+import { LotPriceInput } from "@/components/inventory/price-inputs";
 import { unitLabel } from "@/lib/craft/groups";
-import { formatNumber } from "@/lib/format";
-import { manualMovements, movementShort, stockAfter } from "@/lib/inventory/stock";
-import type { Material, MovementType } from "@/lib/inventory/types";
+import { lotPreview, lotTotal, type LotPrice } from "@/lib/costs";
+import { formatCostChange, formatNumber, formatUnitCost } from "@/lib/format";
+import { lotPriceRequired, manualMovements, movementShort, stockAfter, type ManualMovement } from "@/lib/inventory/stock";
+import type { Material } from "@/lib/inventory/types";
 
-export type ManualMovement = Exclude<MovementType, "order">;
-type Values = { materialId: string; type: ManualMovement; amount: number; note?: string };
+export type { ManualMovement };
+// lot: tiền lô của phiếu nhập — bắt buộc (tổng đã trả, hoặc không mất tiền)
+export type MovementValues = { materialId: string; type: ManualMovement; amount: number; lot?: LotPrice; note?: string };
 
 type Props = {
   open: boolean;
@@ -14,12 +17,12 @@ type Props = {
   // Mở sẵn cho một nguyên liệu / loại phiếu
   preset?: { materialId?: string; type?: ManualMovement };
   onCancel: () => void;
-  onSubmit: (v: Values) => void;
+  onSubmit: (v: MovementValues) => void;
 };
 
 // Phiếu nhập/xuất/kiểm kê — luôn ghi lịch sử, không sửa thẳng số tồn
 export function MovementModal({ open, materials, preset, onCancel, onSubmit }: Props) {
-  const [form] = Form.useForm<Values>();
+  const [form] = Form.useForm<MovementValues>();
   const tracked = materials.filter((m) => m.tracked);
   const materialId = Form.useWatch("materialId", form);
   const type = Form.useWatch("type", form) ?? "in";
@@ -27,6 +30,8 @@ export function MovementModal({ open, materials, preset, onCancel, onSubmit }: P
   const m = tracked.find((x) => x.id === materialId);
   const after = m ? stockAfter(m.stock, type, amount) : null;
   const overdraw = !!m && type === "out" && amount > m.stock;
+  const lot = Form.useWatch("lot", form) as LotPrice | undefined;
+  const preview = m && type === "in" ? lotPreview(m.stock, m.unitCost, amount, lot) : undefined;
 
   return (
     <Modal
@@ -67,6 +72,21 @@ export function MovementModal({ open, materials, preset, onCancel, onSubmit }: P
         >
           <InputNumber min={0} precision={0} suffix={m ? unitLabel[m.unit] : undefined} style={{ width: "100%" }} />
         </Form.Item>
+        {type === "in" && (
+          <Form.Item
+            name="lot"
+            label="Tiền lô"
+            required
+            rules={[{ validator: (_, v?: LotPrice) => (lotTotal(v) === undefined ? Promise.reject(new Error(lotPriceRequired)) : Promise.resolve()) }]}
+            extra={
+              preview && m
+                ? `= ${formatUnitCost(preview.price)}/${unitLabel[m.unit]} · giá nhập bình quân ${formatCostChange(m.unitCost, preview.average)}/${unitLabel[m.unit]}`
+                : "Tổng tiền đã trả cho cả lô, hệ thống tự chia ra giá mỗi đơn vị. Hàng tặng, mẫu thử: chọn Không mất tiền."
+            }
+          >
+            <LotPriceInput />
+          </Form.Item>
+        )}
         <Form.Item name="note" label="Ghi chú" style={{ marginBottom: m ? 12 : 0 }}>
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} maxLength={200} placeholder={type === "in" ? "VD: Lô tháng 11 — NCC Hạt Mộc" : "VD: Vỡ khi vận chuyển"} />
         </Form.Item>

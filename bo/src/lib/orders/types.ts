@@ -48,17 +48,40 @@ export type OrderItem = {
 export type Payment = {
   id: string;
   provider: PaymentProvider;
+  // Khoản hoàn một phần (thu dư sau khi sửa đơn, khiếu nại) là số âm, kind = "refund"
   amount: number;
   status: PaymentStatus;
   // Mã giao dịch VNPay (vnp_TransactionNo) / MoMo (transId)
   transactionId?: string;
+  kind?: "refund";
+  // Ảnh chứng từ và ghi chú của khoản hoàn
+  images?: string[];
+  note?: string;
   createdAt: string;
+};
+
+// Cách xử lý khiếu nại sau khi giao: gửi bù nến mới (đơn 0 ₫), hoàn một phần tiền, hoặc chỉ ghi nhận
+export type ComplaintResolution = "resend" | "refund" | "none";
+
+export type Complaint = {
+  id: string;
+  reason: string;
+  // Ảnh khách gửi (nến vỡ, cháy lỗi…)
+  images: string[];
+  resolution: ComplaintResolution;
+  refundAmount?: number;
+  // Đơn gửi bù được tạo
+  replacementId?: string;
+  replacementCode?: string;
+  at: string;
+  by: string;
 };
 
 export type OrderEvent = {
   at: string;
-  // status = đổi trạng thái; payment = thu tiền; schedule = đổi ngày làm xong; delivery = giao lại, gửi lại. Bỏ trống = status
-  kind?: "status" | "payment" | "schedule" | "delivery";
+  // status = đổi trạng thái; payment = thu, hoàn tiền; schedule = đổi ngày làm xong; delivery = giao lại, gửi lại;
+  // edit = sửa đơn; complaint = khiếu nại sau khi giao. Bỏ trống = status
+  kind?: "status" | "payment" | "schedule" | "delivery" | "edit" | "complaint";
   // Trạng thái đơn tại thời điểm xảy ra sự kiện
   status: OrderStatus;
   note?: string;
@@ -106,6 +129,12 @@ export type Order = {
   returnNote?: string;
   // Tổng phí gửi lại đã cộng vào shippingFee và total
   resendFee?: number;
+  // Giá vốn nguyên liệu chốt lúc Bắt đầu làm (theo giá nhập lúc đó). Chưa làm thì tính ước tính từ công thức
+  materialCost?: number;
+  // Khiếu nại sau khi giao
+  complaints?: Complaint[];
+  // Đơn gửi bù cho đơn gốc này: giá 0 ₫, không tính vào số đơn, doanh thu, khách hàng
+  replacementFor?: { id: string; code: string };
   history: OrderEvent[];
   createdAt: string;
   updatedAt: string;

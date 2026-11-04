@@ -4,7 +4,7 @@ import { OrderProcess } from "@/components/orders/order-process";
 import { CustomerSection } from "@/components/orders/order-customer";
 import { PaymentSection } from "@/components/orders/order-payment";
 import { HistorySection } from "@/components/orders/order-history";
-import { ItemsSection, NotesSection } from "@/components/orders/order-sections";
+import { ComplaintsSection, ItemsSection, NotesSection } from "@/components/orders/order-sections";
 import { OrderDetailSkeleton } from "@/components/skeletons";
 import type { CancelInput, OrdersApi } from "@/hooks/use-orders";
 import { addFromOrder } from "@/hooks/use-cancelled-products";
@@ -16,11 +16,11 @@ import { faultLabels, paidAmount, refundFor } from "@/lib/orders/labels";
 import type { CancelFault, CancelOutcome, Order } from "@/lib/orders/types";
 
 // open: có id đơn trên URL. Đang tải → khung xương; tải xong mà không có đơn → báo không tìm thấy
-type Props = { open: boolean; order?: Order; api: OrdersApi; onClose: () => void };
+type Props = { open: boolean; order?: Order; api: OrdersApi; onClose: () => void; onEdit?: (id: string) => void };
 
 // Chi tiết đơn. Màn rộng chia 2 cột: trái là nội dung đơn (sản phẩm, lịch sử),
 // phải là thông tin tra cứu nhanh (thanh toán, khách, ghi chú). Thao tác nằm ở thẻ tiến trình trên cùng.
-export function OrderDrawer({ open, order, api, onClose }: Props) {
+export function OrderDrawer({ open, order, api, onClose, onEdit }: Props) {
   const { message } = App.useApp();
   const screens = Grid.useBreakpoint();
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -61,11 +61,12 @@ export function OrderDrawer({ open, order, api, onClose }: Props) {
       )}
       {!api.loading && order && ready && (
         <Flex vertical gap={16}>
-          <OrderProcess order={order} api={api} onCancel={() => setCancelOpen(true)} />
+          <OrderProcess order={order} api={api} onCancel={() => setCancelOpen(true)} onEdit={onEdit && (() => onEdit(order.id))} />
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={15}>
               <Flex vertical gap={16}>
                 <ItemsSection order={order} />
+                <ComplaintsSection order={order} />
                 <HistorySection order={order} />
               </Flex>
             </Col>

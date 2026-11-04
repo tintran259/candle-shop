@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 import { cancelOutcomeLabels, faultLabels, nextStatus, refundFor, remaining, returnConditionLabels } from "@/lib/orders/labels";
 import { mockOrders } from "@/lib/orders/mock";
-import type { CancelFault, CancelOutcome, Order, OrderEvent, OrderStatus, Refund, ReturnCondition } from "@/lib/orders/types";
+import { recordComplaint } from "@/lib/orders/complaint";
+import { applyEdit, type EditOrderInput } from "@/lib/orders/edit";
+import type { CancelFault, CancelOutcome, ComplaintResolution, Order, OrderEvent, OrderStatus, Refund, ReturnCondition } from "@/lib/orders/types";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/orders (GET, PATCH status/payment/note).
 // v3: thêm đơn cũ cho trang Khách hàng — bỏ dữ liệu mẫu v2
@@ -29,15 +31,43 @@ const collect = (o: Order): Order => {
 };
 
 // Chuyển sang bước kế tiếp; xác nhận thanh toán thì đánh dấu giao dịch đang chờ là thành công.
-// Khách đã nhận nghĩa là đã thu đủ
-const advance = (id: string) =>
+// Khách đã nhận nghĩa là đã thu đủ. extra: trường ghi kèm, vd giá vốn chốt lúc Bắt đầu làm
+const advance = (id: string, extra?: Partial<Order>) =>
   patch(id, (current) => {
     const to = nextStatus(current.status);
     if (!to) return current;
     const o = to === "completed" ? collect(current) : current;
     const payments = to === "paid" ? o.payments.map((p) => (p.status === "pending" ? { ...p, status: "success" as const } : p)) : o.payments;
-    return { ...o, status: to, payments, history: log(o, to) };
+    return { ...o, ...extra, status: to, payments, history: log(o, to) };
   });
+
+// Sửa đơn sau khi tạo. Trả về danh sách thay đổi (rỗng = không đổi gì)
+const edit = (id: string, input: EditOrderInput) => {
+  const order = store.get().find((o) => o.id === id);
+  if (!order) return [];
+  const result = applyEdit(order, input, STAFF);
+  if (result.changes.length) store.set(store.get().map((o) => (o.id === id ? result.order : o)));
+  return result.changes;
+};
+
+// Hoàn một phần (thu dư sau khi sửa đơn): khoản âm kèm ảnh chứng từ
+const refundPart = (id: string, refund: { amount: number; images: string[]; note?: string }) =>
+  patch(id, (o) => ({
+    ...o,
+    payments: [...o.payments, { id: `pay-${Date.now().toString(36)}`, provider: "cod", amount: -Math.round(refund.amount), status: "success", kind: "refund", images: refund.images, note: refund.note, createdAt: now() }],
+    history: log(o, o.status, `Hoàn ${refund.amount.toLocaleString("vi-VN")} ₫ tiền thu dư`, "payment"),
+  }));
+
+export type ComplaintInput = { reason: string; images: string[]; resolution: ComplaintResolution; refundAmount?: number; refundImages?: string[]; refundNote?: string; replacement?: Order };
+
+// Khiếu nại sau khi giao; gửi bù thì tạo luôn đơn gửi bù
+const complain = (id: string, input: ComplaintInput) => {
+  const list = store.get();
+  const order = list.find((o) => o.id === id);
+  if (!order) return false;
+  const updated = recordComplaint(order, { ...input, by: STAFF });
+  return store.set([...(input.replacement ? [input.replacement] : []), ...list.map((o) => (o.id === id ? updated : o))]);
+};
 
 export type CancelInput = { reason: string; outcome?: CancelOutcome; fault?: CancelFault };
 
@@ -94,7 +124,7 @@ const reset = () => store.set(null);
 export function useOrders() {
   const { data: orders, loading } = useLocalStore(store);
   return useMemo(
-    () => ({ orders, loading, create, advance, cancel, recordRefund, failDelivery, redeliver, startReturn, receiveReturn, resend, reschedule, setInternalNote, reset }),
+    () => ({ orders, loading, create, advance, edit, refundPart, complain, cancel, recordRefund, failDelivery, redeliver, startReturn, receiveReturn, resend, reschedule, setInternalNote, reset }),
     [orders, loading],
   );
 }

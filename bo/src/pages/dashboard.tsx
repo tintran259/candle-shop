@@ -12,6 +12,11 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useOrders } from "@/hooks/use-orders";
 import { useCategories } from "@/hooks/use-categories";
 import { useProducts } from "@/hooks/use-products";
+import { WorkshopSchedule } from "@/components/dashboard/workshop-schedule";
+import { useSettings } from "@/hooks/use-settings";
+import { useStockHold } from "@/hooks/use-stock-hold";
+import { workshopSchedule } from "@/lib/capacity";
+import { orderCost } from "@/lib/costs";
 import { dashboardRanges, dashboardStats } from "@/lib/dashboard/stats";
 import { useTitle } from "@/lib/use-title";
 
@@ -27,7 +32,10 @@ export function DashboardPage() {
   const asked = Number(params.get("days"));
   const days = dashboardRanges.find((d) => d === asked) ?? DEFAULT_DAYS;
   const { label: categoryLabel } = useCategories();
-  const stats = useMemo(() => dashboardStats(orders, products, categoryLabel, days), [orders, products, categoryLabel, days]);
+  const { source } = useStockHold();
+  const { settings } = useSettings();
+  const stats = useMemo(() => dashboardStats(orders, products, categoryLabel, days, undefined, (o) => orderCost(o, source).cost), [orders, products, categoryLabel, days, source]);
+  const schedule = useMemo(() => workshopSchedule(orders, settings.dailyCapacity), [orders, settings.dailyCapacity]);
 
   // Chờ tải xong mới hiện cả trang để bố cục không nhảy
   if (loading || l2 || l3) return <DashboardSkeleton />;
@@ -65,7 +73,10 @@ export function DashboardPage() {
           <RecentOrders />
         </Col>
         <Col xs={24} xl={8}>
-          <TopProducts rows={stats.top} days={days} />
+          <Flex vertical gap={16}>
+            <WorkshopSchedule rows={schedule} />
+            <TopProducts rows={stats.top} days={days} />
+          </Flex>
         </Col>
       </Row>
     </Flex>

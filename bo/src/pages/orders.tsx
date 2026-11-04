@@ -48,6 +48,10 @@ export function OrdersPage() {
   const { shown: shownId } = useDrawerTarget(creating ? null : openId);
   // Mỗi lần mở "Tạo đơn" là form mới; ?customer=id (từ hồ sơ khách) điền sẵn khách
   const { key: createKey } = useDrawerTarget(creating ? "new" : null);
+  // Sửa đơn: ?edit=id, mở đè lên chi tiết đơn
+  const [editId, setEditId] = useOpenParam("edit");
+  const { shown: editShown, key: editKey } = useDrawerTarget(editId);
+  const editing = editShown ? orders.find((o) => o.id === editShown) : undefined;
 
   const count = (s: OrderStatus | "all") => (s === "all" ? orders.length : orders.filter((o) => o.status === s).length);
   const late = orders.filter((o) => deadline(o)?.tone === "danger").length;
@@ -55,8 +59,9 @@ export function OrdersPage() {
 
   const drawer = (
     <>
-      <OrderDrawer open={!!openId && !creating} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} />
+      <OrderDrawer open={!!openId && !creating} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} onEdit={setEditId} />
       <OrderCreateDrawer key={createKey} open={creating} customerId={params.get("customer") ?? undefined} onClose={() => setOpenId(null)} onCreated={setOpenId} />
+      {editing && <OrderCreateDrawer key={editKey} open={!!editId} order={editing} onClose={() => setEditId(null)} />}
     </>
   );
 

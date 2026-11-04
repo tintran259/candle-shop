@@ -26,6 +26,7 @@ import {
 } from "@/lib/craft/selection";
 import { intensityLabels } from "@/lib/craft/steps";
 import type { CraftConfig, CraftStep, IntensityLevel, StepOption, VesselOption } from "@/lib/craft/types";
+import { margin, needsCost } from "@/lib/costs";
 import { formatMoney, formatNumber } from "@/lib/format";
 import type { RecipeLine } from "@/lib/products/types";
 import { lidLevel, optionLevel, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
@@ -57,6 +58,8 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
   const issues = useMemo(() => validateSelection(config, selection, map), [config, selection, map]);
   const description = describeSelection(config, selection);
   const jars = maxJars(needs, map);
+  const cost = useMemo(() => needsCost(needs, map), [needs, map]);
+  const profit = margin(price.unit, cost.cost);
   const set = (stepId: string, next: StepSelection) => setSelection((s) => ({ ...s, [stepId]: next }));
 
   const apply = () => {
@@ -156,6 +159,18 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
                   {formatMoney(price.unit)}
                 </Typography.Text>
               </Flex>
+              <Flex justify="space-between" style={{ paddingTop: 4 }} aria-label="Giá vốn 1 hũ" role="group">
+                <Typography.Text type="secondary">Giá vốn nguyên liệu</Typography.Text>
+                <Typography.Text type="secondary" className="tabular">
+                  {formatMoney(cost.cost)}
+                  {profit.percent !== null && ` · lãi ${Math.round(profit.percent * 100)}%`}
+                </Typography.Text>
+              </Flex>
+              {cost.missing.length > 0 && (
+                <Typography.Text type="warning" style={{ display: "block", fontSize: 12 }}>
+                  Chưa có giá nhập: {cost.missing.map((m) => m.name).join(", ")}
+                </Typography.Text>
+              )}
 
               <Typography.Text type="secondary" style={{ display: "block", fontSize: 12, marginTop: 16 }}>
                 Nguyên liệu cho 1 hũ (trừ Kho)

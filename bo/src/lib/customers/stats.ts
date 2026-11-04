@@ -54,7 +54,8 @@ export function groupOrdersByPhone(orders: Order[]) {
 
 export function customerStats(customer: Customer, ordersByPhone: Map<string, Order[]>, today = dayjs()): CustomerStats {
   const orders = [...(ordersByPhone.get(phoneKey(customer.phone)) ?? [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const valid = orders.filter((o) => o.status !== "cancelled");
+  // Đơn gửi bù khiếu nại không tính là một lần mua
+  const valid = orders.filter((o) => o.status !== "cancelled" && !o.replacementFor);
   const spent = valid.reduce((s, o) => s + paidAmount(o), 0);
   const lastOrderAt = valid[0]?.createdAt;
   const addresses = [...new Set(valid.map((o) => o.shippingAddress))];

@@ -22,6 +22,10 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Mã giảm giá | `/discounts` | [discounts.md](./pages/discounts.md) | Đã có |
 | Cài đặt | `/settings` | [settings.md](./pages/settings.md) | Đã có |
 
+## Kiểm thử
+
+Test E2E bằng Playwright ở `bo/e2e/`, chạy `pnpm test:e2e` trong `bo`. Độ phủ từng trang, test đang trượt và test case còn thiếu ở [testing.md](./testing.md).
+
 ## Đặc tả kỹ thuật cho BE
 
 | Tài liệu | Nội dung |

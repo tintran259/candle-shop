@@ -6,8 +6,9 @@ import { useProducts } from "@/hooks/use-products";
 import { toMap } from "@/lib/inventory/stock";
 import { availableMap, heldNeeds } from "@/lib/orders/materials";
 
-// Số giữ tính từ đơn nên không lưu riêng. map: tồn thực tế; available: tồn trừ phần đang giữ
-export function useStockHold() {
+// Số giữ tính từ đơn nên không lưu riêng. map: tồn thực tế; available: tồn trừ phần đang giữ.
+// excludeId: đơn đang sửa — phần nó đang giữ được tính là còn dùng được cho chính nó
+export function useStockHold(excludeId?: string) {
   const { orders } = useOrders();
   const { products } = useProducts();
   const { config } = useCraftConfig();
@@ -15,7 +16,7 @@ export function useStockHold() {
   return useMemo(() => {
     const map = toMap(materials);
     const source = { config, map, products };
-    const held = heldNeeds(orders, source);
+    const held = heldNeeds(excludeId ? orders.filter((o) => o.id !== excludeId) : orders, source);
     return { source, map, held, available: availableMap(map, held) };
-  }, [orders, products, config, materials]);
+  }, [orders, products, config, materials, excludeId]);
 }

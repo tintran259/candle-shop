@@ -58,7 +58,7 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
             <Typography.Title level={3} style={{ marginBottom: 4 }}>
               Cài đặt
             </Typography.Title>
-            <Typography.Text type="secondary">Tiền cọc, giao hàng và phí vận chuyển. Đổi ở đây chỉ áp dụng cho đơn mới, đơn cũ giữ nguyên.</Typography.Text>
+            <Typography.Text type="secondary">Tiền cọc, công suất xưởng, giao hàng và phí vận chuyển. Đổi ở đây chỉ áp dụng cho đơn mới, đơn cũ giữ nguyên.</Typography.Text>
           </div>
           <Flex gap={8} align="center" wrap>
             {dirty && (
@@ -96,6 +96,33 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
                 >
                   <InputNumber min={1} max={99} precision={0} suffix="%" aria-label="Mức cọc" style={{ width: 160 }} />
                 </Form.Item>
+              </FormSection>
+
+              <FormSection title="Xưởng" description="Dùng để gợi ý ngày làm xong khi tạo, sửa đơn và báo ngày quá tải. Chỉ cảnh báo, không chặn nhận đơn.">
+                <Row gutter={16}>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name="dailyCapacity"
+                      label="Số cây làm được mỗi ngày"
+                      extra="Tính theo số cây của đơn chưa làm xong, theo ngày làm xong. 0 = không giới hạn."
+                      rules={[{ required: true, type: "number", min: 0, max: 1000, message: "Nhập từ 0 đến 1.000 cây." }]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <InputNumber min={0} max={1000} precision={0} suffix="cây" aria-label="Số cây làm được mỗi ngày" style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name="leadDays"
+                      label="Số ngày làm tối thiểu"
+                      extra="Ngày làm xong gợi ý sớm nhất là hôm nay cộng số ngày này."
+                      rules={[{ required: true, type: "number", min: 0, max: 30, message: "Nhập từ 0 đến 30 ngày." }]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <InputNumber min={0} max={30} precision={0} suffix="ngày" aria-label="Số ngày làm tối thiểu" style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                </Row>
               </FormSection>
 
               <FormSection title="Giao hàng" description="Áp dụng khi giao không thành.">

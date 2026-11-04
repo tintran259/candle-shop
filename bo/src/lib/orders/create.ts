@@ -100,12 +100,10 @@ export type CreateOrderInput = {
   by: string;
 };
 
-export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
-  const now = dayjs();
-  const at = now.toISOString();
-  const totals = orderTotals(input.lines, input.shippingFee, input.paymentPlan, input.discount.amount, input.depositPercent);
-  const items: OrderItem[] = input.lines.map((l, i) => ({
-    id: `${now.valueOf().toString(36)}-${i}`,
+// Dòng trong form → dòng trên đơn. stamp để id dòng không trùng giữa các lần tạo / sửa
+export const toItems = (lines: DraftLine[], stamp: string): OrderItem[] =>
+  lines.map((l, i) => ({
+    id: `${stamp}-${i}`,
     productId: l.kind === "product" ? l.productId : undefined,
     name: l.kind === "product" ? (l.name ?? "") : "Nến tự phối",
     image: l.kind === "product" ? l.image : undefined,
@@ -115,6 +113,16 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
     craft: l.kind === "custom" ? l.craft : undefined,
     recipe: l.kind === "custom" ? l.recipe : undefined,
   }));
+
+// Dòng trên đơn → dòng trong form (sửa đơn)
+export const toLines = (items: OrderItem[]): DraftLine[] =>
+  items.map((i) => ({ kind: i.custom ? "custom" : "product", productId: i.productId, name: i.name, image: i.image, custom: i.custom, craft: i.craft, recipe: i.recipe, price: i.price, quantity: i.quantity }));
+
+export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
+  const now = dayjs();
+  const at = now.toISOString();
+  const totals = orderTotals(input.lines, input.shippingFee, input.paymentPlan, input.discount.amount, input.depositPercent);
+  const items = toItems(input.lines, now.valueOf().toString(36));
   const history: OrderEvent[] = [{ at, status: "pending", by: input.by, note: `${BO_ORDER_NOTE} · ${channelLabels[input.channel]}` }];
   if (input.received)
     history.push({ at, status: "paid", by: input.by, note: input.paymentPlan === "deposit" ? `Nhận cọc ${formatMoney(totals.dueNow)}` : "Thanh toán đủ" });

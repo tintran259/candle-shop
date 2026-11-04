@@ -14,9 +14,21 @@ function OrderTableView({ items, onOpen, pagination }: { items: Order[]; onOpen:
       key: "code",
       render: (_, o) => (
         <Flex vertical>
-          <Typography.Link strong className="tabular" onClick={() => onOpen(o.id)}>
-            {o.code}
-          </Typography.Link>
+          <Flex gap={6} align="center" wrap>
+            <Typography.Link strong className="tabular" onClick={() => onOpen(o.id)}>
+              {o.code}
+            </Typography.Link>
+            {o.replacementFor && (
+              <Tag color="purple" style={{ marginInlineEnd: 0 }}>
+                Gửi bù
+              </Tag>
+            )}
+            {!!o.complaints?.length && (
+              <Tag color="volcano" style={{ marginInlineEnd: 0 }}>
+                Khiếu nại
+              </Tag>
+            )}
+          </Flex>
           <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12 }}>
             {dayjs(o.createdAt).format("HH:mm DD/MM")}
           </Typography.Text>

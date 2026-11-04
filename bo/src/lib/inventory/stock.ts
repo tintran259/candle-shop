@@ -14,13 +14,16 @@ export const categoryLabels: Record<MaterialCategory, string> = {
   other: "Khác",
 };
 
-export const movementLabels: Record<MovementType, string> = { in: "Nhập thêm", out: "Xuất / hao hụt", adjust: "Kiểm kê", order: "Theo đơn hàng" };
+export const movementLabels: Record<MovementType, string> = { in: "Nhập thêm", out: "Xuất / hao hụt", adjust: "Kiểm kê", order: "Theo đơn hàng", cost: "Sửa giá nhập", make: "Sản xuất" };
+// Phiếu nhập phải có tiền để giá vốn không sai lặng lẽ
+export const lotPriceRequired = "Nhập tổng tiền đã trả cho lô, hoặc chọn “Không mất tiền”.";
 // Nhãn ngắn cho nút chọn loại phiếu (vừa màn hình điện thoại)
 export const manualMovements = ["in", "out", "adjust"] as const;
-export const movementShort: Record<(typeof manualMovements)[number], string> = { in: "Nhập thêm", out: "Xuất kho", adjust: "Kiểm kê" };
+export type ManualMovement = (typeof manualMovements)[number];
+export const movementShort: Record<ManualMovement, string> = { in: "Nhập thêm", out: "Xuất kho", adjust: "Kiểm kê" };
 
 // Số tồn sau phiếu; null = phiếu không hợp lệ (xuất quá số đang có, hoặc không đổi gì)
-export function stockAfter(stock: number, type: (typeof manualMovements)[number], amount: number | null | undefined) {
+export function stockAfter(stock: number, type: ManualMovement, amount: number | null | undefined) {
   if (amount === null || amount === undefined || amount < 0) return null;
   if (type === "adjust") return amount;
   if (amount === 0) return null;

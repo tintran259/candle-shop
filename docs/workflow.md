@@ -22,7 +22,11 @@ flowchart TD
   E -- Hủy, chưa làm --> Y[Đã hủy, hoàn nguyên liệu]
   E -- Hủy, đã làm --> Z[Đã hủy, nến thủ công vào Sản phẩm hủy đơn]
   F -- Hủy --> Z
+  H -- Khiếu nại: gửi bù --> R[Đơn gửi bù 0 ₫, vào Đã thanh toán]
+  H -- Khiếu nại: hoàn một phần --> H
 ```
+
+Trước khi Bắt đầu làm, đơn sửa được cả sản phẩm; sau đó chỉ sửa liên hệ, địa chỉ, giao hàng, ghi chú. Xem [Đơn hàng › Sửa đơn](./pages/orders.md#sửa-đơn).
 
 ## 2. Chuẩn bị trước khi có đơn
 
@@ -183,7 +187,24 @@ Quy tắc:
 - **Theo dõi:** trang Đơn hàng có thẻ **Giao lỗi cần xử lý** và các tab riêng. Đơn Giao không thành, Đã hoàn về có thông báo và tính vào số trên menu.
 - **Khách hay bom hàng:** số lần giao không thành hiện trên hồ sơ khách, chi tiết đơn và lúc tạo đơn.
 
-## 7. Quyết định đã chốt
+## 7. Khiếu nại sau khi giao
+
+Chỉ đơn **Hoàn tất** có nút **Khiếu nại**. Admin ghi nội dung khách phản ánh, ảnh khách gửi (không bắt buộc) và chọn một cách xử lý:
+
+| Cách xử lý | Kết quả |
+|---|---|
+| Gửi bù nến mới | Tạo đơn mới 0 ₫ cùng khách, địa chỉ, chọn cây và số lượng (không quá đơn gốc). Đơn vào thẳng **Đã thanh toán** để giữ nguyên liệu, rồi đi qua đủ các bước làm, giao. Kho thiếu thì không tạo được |
+| Hoàn một phần tiền | Ghi khoản hoàn kèm ảnh chứng từ (bắt buộc), tối đa số tiền shop đang giữ. Doanh thu trừ vào ngày hoàn |
+| Chỉ ghi nhận | Lưu khiếu nại, không bồi thường |
+
+- Đơn gốc vẫn là Hoàn tất, có khối **Khiếu nại** và nhãn "Khiếu nại" trên bảng đơn. Lịch sử ghi lại khiếu nại.
+- Đơn gửi bù có nhãn "Gửi bù" và link về đơn gốc. Đơn này **không tính** vào số đơn, giá trị đơn trung bình, khách hàng mới, số lần mua của khách; giá vốn của nó **có tính** vào lãi gộp (lãi âm).
+
+## 8. Quyết định đã chốt
+
+- **Sửa đơn:** đổi sản phẩm chỉ khi Chờ thanh toán hoặc Đã thanh toán. Mã giảm giá cũ giữ được khi sửa dù đã hết hạn hay hết lượt, vì đã hợp lệ lúc đặt; vẫn kiểm tra lại đơn tối thiểu và phạm vi.
+- **Thu dư sau khi sửa đơn:** báo "Thu dư, cần hoàn", admin ghi nhận đã hoàn kèm ảnh chứng từ. Khoản này không làm giảm giá trị hàng khi tính lãi.
+- **Công suất xưởng chỉ cảnh báo,** không chặn nhận đơn hay đổi ngày.
 
 - **Lỗi do khách áp dụng cả khi hủy trước lúc giao:** ví dụ khách đổi ý lúc Đã thanh toán thì shop giữ cọc.
 - **Web dùng cùng quy tắc Kho với BO khi nối BE:** nến tự phối giới hạn theo số dùng được, gồm cả phần đang giữ.

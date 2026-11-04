@@ -11,13 +11,21 @@ export function KpiCards({ kpis, days }: { kpis: DashboardStats["kpis"]; days: n
     { label: "Đơn hàng", value: formatNumber(kpis.orders.value), delta: kpis.orders.delta, link: { to: "/orders", label: "Tất cả đơn" } },
     { label: "Giá trị đơn TB", value: formatMoneyShort(kpis.average.value), delta: kpis.average.delta, link: { to: "/products", label: "Sản phẩm" } },
     { label: "Khách hàng mới", value: formatNumber(kpis.customers.value), delta: kpis.customers.delta, link: { to: "/customers", label: "Khách hàng" } },
+    // Lãi gộp = giá trị hàng − giá vốn nguyên liệu, theo đơn đặt trong kỳ (docs/pages/dashboard.md)
+    {
+      label: "Lãi gộp",
+      value: formatMoneyShort(kpis.profit.value),
+      delta: kpis.profit.delta,
+      note: kpis.profit.rate !== null ? `Tỉ lệ lãi ${Math.round(kpis.profit.rate * 100)}% trên giá trị hàng` : undefined,
+      link: { to: "/inventory", label: "Giá nhập ở Kho" },
+    },
   ];
   return (
     <Row gutter={[16, 16]}>
       {items.map((item) => {
         const up = (item.delta ?? 0) >= 0;
         return (
-          <Col key={item.label} xs={24} sm={12} xl={6}>
+          <Col key={item.label} xs={24} sm={12} flex="1 1 220px">
             <Card style={{ height: "100%" }}>
               <Flex vertical gap={8} style={{ height: "100%" }}>
                 <Typography.Text strong style={{ fontSize: 17 }}>
@@ -41,6 +49,11 @@ export function KpiCards({ kpis, days }: { kpis: DashboardStats["kpis"]; days: n
                       {formatPercent(item.delta)}
                     </Typography.Text>{" "}
                     so với {days} ngày trước
+                  </Typography.Text>
+                )}
+                {"note" in item && item.note && (
+                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                    {item.note}
                   </Typography.Text>
                 )}
                 <div style={{ marginTop: "auto", paddingTop: 16 }}>

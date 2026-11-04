@@ -71,6 +71,12 @@ export const shippingDays = (o: Order) => o.shippingDays ?? SHIP_DAYS[o.shipping
 export const paidAmount = (o: Order) =>
   o.payments.filter((p) => p.status === "success").reduce((s, p) => s + p.amount, 0);
 export const remaining = (o: Order) => Math.max(0, o.total - paidAmount(o));
+// Khách đã trả nhiều hơn tổng đơn (sau khi sửa đơn bớt hàng) — cần hoàn phần dư
+export const overpaid = (o: Order) => (o.status === "cancelled" ? 0 : Math.max(0, paidAmount(o) - o.total));
+// Tổng các khoản hoàn một phần (thu dư, khiếu nại), số dương
+export const partialRefunds = (o: Order) => -o.payments.filter((p) => p.kind === "refund" && p.status === "success").reduce((s, p) => s + p.amount, 0);
+// Đơn gửi bù cho khiếu nại: không tính vào số đơn, doanh thu, khách hàng
+export const isReplacement = (o: Order) => !!o.replacementFor;
 
 // Lỗi do shop hoàn hết tiền đã thu. Lỗi do khách giữ phần cọc, cọc tính trên tổng trước phí gửi lại
 export function refundFor(o: Order, fault: CancelFault) {
@@ -84,7 +90,8 @@ export function paymentState(o: Order): PaymentState {
   if (o.refund || o.payments.some((p) => p.status === "refunded")) return "refunded";
   if (o.refundDue) return "refunding";
   const paid = paidAmount(o);
-  if (paid <= 0) return "unpaid";
+  // Đơn 0 ₫ (gửi bù khiếu nại) không có gì để thu
+  if (paid <= 0) return o.total > 0 ? "unpaid" : "paid";
   return paid >= o.total ? "paid" : "deposit";
 }
 export const paymentStateMeta: Record<PaymentState, { label: string; color: string }> = {

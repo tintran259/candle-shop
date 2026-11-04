@@ -1,8 +1,9 @@
-import { ArrowRightOutlined, CloseCircleOutlined, InboxOutlined, RollbackOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, CloseCircleOutlined, EditOutlined, InboxOutlined, MessageOutlined, RollbackOutlined, SendOutlined, WarningOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Divider, Flex, Steps, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { Link } from "react-router";
+import { ComplaintModal } from "@/components/orders/order-complaint";
 import { DeliveryFailModal, ReceiveBackModal, ResendModal } from "@/components/orders/order-delivery";
 import { consumeOrder } from "@/hooks/use-inventory";
 import type { OrdersApi } from "@/hooks/use-orders";
@@ -10,6 +11,8 @@ import { useSettings } from "@/hooks/use-settings";
 import { useStockHold } from "@/hooks/use-stock-hold";
 import { unitLabel } from "@/lib/craft/groups";
 import { formatMoney, formatNumber } from "@/lib/format";
+import { needsCost } from "@/lib/costs";
+import { orderEditable } from "@/lib/orders/edit";
 import { orderNeeds, shortages } from "@/lib/orders/materials";
 import { cancelOutcomeLabels, canCancel, deadline, isDeliveryIssue, nextAction, nextStatus, remaining, returnConditionLabels, shippingDays, statusMeta, stepLabels } from "@/lib/orders/labels";
 import { orderFlow, type Order } from "@/lib/orders/types";
@@ -39,14 +42,14 @@ function stepTime(order: Order, step: (typeof orderFlow)[number]) {
   return undefined;
 }
 
-type Props = { order: Order; api: OrdersApi; onCancel: () => void };
+type Props = { order: Order; api: OrdersApi; onCancel: () => void; onEdit?: () => void };
 
 // Thẻ tiến trình đầu drawer: trạng thái hiện tại + hạn + nút bước tiếp theo, rồi thanh 6 bước có mốc thời gian
-export function OrderProcess({ order, api, onCancel }: Props) {
+export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
   const { message, modal } = App.useApp();
   const { settings } = useSettings();
   const { map, available, source } = useStockHold();
-  const [dialog, setDialog] = useState<"fail" | "back" | "resend" | null>(null);
+  const [dialog, setDialog] = useState<"fail" | "back" | "resend" | "complaint" | null>(null);
   const meta = statusMeta[order.status];
   const to = nextStatus(order.status);
   const action = nextAction[order.status];
@@ -64,8 +67,9 @@ export function OrderProcess({ order, api, onCancel }: Props) {
     </ul>
   );
 
-  const proceed = () => {
-    api.advance(order.id);
+  // extra: trường ghi kèm khi chuyển bước, vd giá vốn chốt lúc Bắt đầu làm
+  const proceed = (extra?: Partial<Order>) => {
+    api.advance(order.id, extra);
     message.success(`Đơn ${order.code}: ${statusMeta[to!].label}`);
   };
 
@@ -81,13 +85,15 @@ export function OrderProcess({ order, api, onCancel }: Props) {
           content: shortList(short),
           okText: "Vẫn xác nhận",
           cancelText: "Quay lại",
-          onOk: proceed,
+          onOk: () => proceed(),
         });
     }
     if (to === "producing") {
       const short = shortages(needs, map);
       if (short.length) return modal.warning({ title: "Kho không đủ để bắt đầu làm", content: shortList(short), okText: "Đã hiểu" });
       consumeOrder(order.code, needs);
+      // Chốt giá vốn theo giá nhập lúc trừ Kho
+      return proceed({ materialCost: needsCost(needs, map).cost });
     }
     if (to === "completed" && left > 0)
       return modal.confirm({
@@ -95,7 +101,7 @@ export function OrderProcess({ order, api, onCancel }: Props) {
         content: `Hệ thống sẽ ghi nhận đã thu ${formatMoney(left)} còn lại.`,
         okText: "Đã thu đủ, hoàn tất",
         cancelText: "Quay lại",
-        onOk: proceed,
+        onOk: () => proceed(),
       });
     proceed();
   };
@@ -139,8 +145,18 @@ export function OrderProcess({ order, api, onCancel }: Props) {
           </Flex>
         </Flex>
 
-        {(action || issue || canCancel(order.status)) && (
+        {(action || issue || canCancel(order.status) || onEdit) && (
           <Flex gap={8} align="center" wrap>
+            {onEdit && orderEditable(order.status) && (
+              <Button icon={<EditOutlined />} onClick={onEdit}>
+                Sửa đơn
+              </Button>
+            )}
+            {order.status === "completed" && (
+              <Button icon={<MessageOutlined />} onClick={() => setDialog("complaint")}>
+                Khiếu nại
+              </Button>
+            )}
             {order.status === "shipping" && (
               <Button icon={<WarningOutlined />} onClick={() => setDialog("fail")}>
                 Giao không thành
@@ -186,6 +202,19 @@ export function OrderProcess({ order, api, onCancel }: Props) {
         )}
       </Flex>
 
+      {order.replacementFor && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginTop: 16 }}
+          title={
+            <>
+              Đơn gửi bù cho khiếu nại của đơn <Link to={`/orders?order=${order.replacementFor.id}`}>{order.replacementFor.code}</Link>
+            </>
+          }
+          description="Giá 0 ₫: không tính vào doanh thu, số đơn, khách hàng; giá vốn vẫn tính vào lãi gộp."
+        />
+      )}
       {order.status === "delivery_failed" && <Alert type="warning" showIcon style={{ marginTop: 16 }} title={`Giao không thành lần ${order.deliveryAttempts ?? 1}/${settings.maxDeliveryAttempts}`} description={order.deliveryIssue} />}
       {order.status === "returned" && order.returnCondition && (
         <Alert type={order.returnCondition === "good" ? "info" : "warning"} showIcon style={{ marginTop: 16 }} title={returnConditionLabels[order.returnCondition]} description={order.returnNote} />
@@ -241,6 +270,7 @@ export function OrderProcess({ order, api, onCancel }: Props) {
           message.success(`Đơn ${order.code}: ${statusMeta.returned.label}`);
         }}
       />
+      {dialog === "complaint" && <ComplaintModal open order={order} api={api} onClose={close} />}
       <ResendModal
         open={dialog === "resend"}
         order={order}

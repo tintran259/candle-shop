@@ -5,6 +5,7 @@ import { memo } from "react";
 import { MaterialAvatar, MaterialStock } from "@/components/craft/material-view";
 import { unitLabel } from "@/lib/craft/groups";
 import { formatNumber } from "@/lib/format";
+import { isMade } from "@/lib/inventory/production";
 import { categoryLabels, materialLevel, type Usage } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 
@@ -35,7 +36,7 @@ function MaterialTableView({ items, usage, held, pagination, onOpen, onReceive }
               {m.name}
             </Typography.Link>
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {[categoryLabels[m.category], m.sku].filter(Boolean).join(" · ")}
+              {[categoryLabels[m.category], m.sku, isMade(m) && "Tự sản xuất"].filter(Boolean).join(" · ")}
             </Typography.Text>
           </Flex>
         </Flex>

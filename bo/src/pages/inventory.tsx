@@ -21,6 +21,8 @@ import {
   type InventoryFilters,
   type InventoryStatus,
 } from "@/lib/inventory/filters";
+import { lotTotal } from "@/lib/costs";
+import { formatMoneyShort } from "@/lib/format";
 import { categoryLabels, materialLevel, materialUsage, movementLabels } from "@/lib/inventory/stock";
 import { materialCategories } from "@/lib/inventory/types";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
@@ -69,8 +71,10 @@ export function InventoryPage() {
   const low = materials.filter((m) => materialLevel(m) === "low");
   const count = (s: InventoryStatus) => materials.filter((m) => matchStatus(m, s, usage)).length;
 
+  // Giá trị tồn: tồn × giá nhập bình quân của nguyên liệu có theo dõi tồn và có giá
+  const stockValue = materials.reduce((s, m) => s + (m.tracked && m.unitCost !== undefined ? Math.max(0, m.stock) * m.unitCost : 0), 0);
   const stats = [
-    { label: "Nguyên liệu", value: materials.length },
+    { label: "Nguyên liệu", value: materials.length, note: `Giá trị tồn ${formatMoneyShort(stockValue)}` },
     { label: "Sắp hết", value: low.length, color: low.length ? "#d46b08" : undefined },
     { label: "Hết hàng", value: out.length, color: out.length ? "#cf1322" : undefined },
     { label: "Chưa dùng", value: count("unused") },
@@ -103,6 +107,11 @@ export function InventoryPage() {
           <Col key={s.label} xs={12} lg={6}>
             <Card style={{ height: "100%" }}>
               <Statistic title={s.label} value={s.value} styles={{ content: { color: s.color } }} />
+              {"note" in s && s.note && (
+                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                  {s.note}
+                </Typography.Text>
+              )}
             </Card>
           </Col>
         ))}
@@ -193,7 +202,7 @@ export function InventoryPage() {
         preset={moving ?? undefined}
         onCancel={() => setMoving(null)}
         onSubmit={(v) => {
-          api.move(v.materialId, v.type, v.amount, v.note);
+          api.move(v.materialId, v.type, v.amount, v.note, v.type === "in" ? lotTotal(v.lot) : undefined);
           message.success(`${movementLabels[v.type]}: ${materials.find((m) => m.id === v.materialId)?.name}`);
           setMoving(null);
         }}

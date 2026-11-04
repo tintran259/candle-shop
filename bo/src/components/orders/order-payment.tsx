@@ -6,7 +6,7 @@ import { FormSection } from "@/components/form/form-section";
 import { RefundModal } from "@/components/orders/order-refund";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { formatMoney } from "@/lib/format";
-import { depositLabel, faultLabels, paidAmount, providerLabels, remaining } from "@/lib/orders/labels";
+import { depositLabel, faultLabels, overpaid, paidAmount, partialRefunds, providerLabels, remaining } from "@/lib/orders/labels";
 import type { Order, Payment, PaymentStatus } from "@/lib/orders/types";
 
 const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
@@ -18,6 +18,7 @@ const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
 
 // Tên khoản thu dễ hiểu thay vì chỉ ghi cổng thanh toán
 function paymentTitle(order: Order, p: Payment, index: number) {
+  if (p.kind === "refund") return "Hoàn tiền cho khách";
   // Khoản đầu luôn là cọc / trả đủ lúc đặt — kể cả đơn tạo tại BO trả tiền mặt
   if (index === 0) return order.paymentPlan === "deposit" ? `Tiền ${depositLabel(order).toLowerCase()}` : "Thanh toán đủ";
   if (p.provider === "cod") return "Thu nốt khi giao";
@@ -31,6 +32,7 @@ function remainingNote(order: Order, left: number) {
     if (order.refundDue) return "Đơn đã hủy — chờ hoàn tiền cho khách.";
     return order.cancelFault === "customer" ? "Đơn đã hủy — giữ tiền cọc do lỗi từ khách." : "Đơn đã hủy — không thu thêm.";
   }
+  if (overpaid(order)) return "Khách đã trả dư sau khi sửa đơn.";
   if (!left) return "Đã thu đủ, không cần thu thêm.";
   if (order.status === "pending") {
     const due = order.payments.find((p) => p.status === "pending")?.amount ?? left;
@@ -62,9 +64,12 @@ function Figure({ label, value, note, tone, icon }: { label: string; value: numb
 }
 
 export function PaymentSection({ order, api }: { order: Order; api: OrdersApi }) {
-  const [refunding, setRefunding] = useState(false);
+  const [refunding, setRefunding] = useState<"cancel" | "overpaid" | null>(null);
   const paid = paidAmount(order);
+  const extra = overpaid(order);
+  // Hoàn khi hủy đơn thay ô Đã thu; hoàn một phần (thu dư, khiếu nại) ghi chú dưới ô Đã thu
   const refunded = order.payments.filter((p) => p.status === "refunded").reduce((s, p) => s + p.amount, order.refund?.amount ?? 0);
+  const partial = partialRefunds(order);
   const cancelled = order.status === "cancelled";
   const left = cancelled ? 0 : remaining(order);
   const percent = order.total ? Math.round((paid / order.total) * 100) : 0;
@@ -94,7 +99,13 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
         {refunded > 0 ? (
           <Figure label="Đã hoàn" value={refunded} note="Đã trả lại cho khách." tone="neutral" icon={<RollbackOutlined />} />
         ) : (
-          <Figure label="Đã thu" value={paid} note={paid ? `Qua ${methods}` : "Chưa nhận khoản nào."} tone={paid ? "success" : "neutral"} icon={<CheckCircleFilled />} />
+          <Figure
+            label="Đã thu"
+            value={paid}
+            note={partial ? `Sau khi đã hoàn ${formatMoney(partial)}` : paid ? `Qua ${methods}` : "Chưa nhận khoản nào."}
+            tone={paid ? "success" : "neutral"}
+            icon={<CheckCircleFilled />}
+          />
         )}
         <Figure
           label="Còn phải thu"
@@ -114,12 +125,27 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
             title={`Cần hoàn ${formatMoney(order.refundDue)} cho khách`}
             description={`${order.cancelFault ? `${faultLabels[order.cancelFault]}. ` : ""}Hoàn xong thì ghi nhận kèm ảnh chứng từ.`}
           />
-          <Button type="primary" icon={<RollbackOutlined />} block style={{ marginTop: 12 }} onClick={() => setRefunding(true)}>
+          <Button type="primary" icon={<RollbackOutlined />} block style={{ marginTop: 12 }} onClick={() => setRefunding("cancel")}>
             Ghi nhận đã hoàn tiền
           </Button>
-          <RefundModal open={refunding} order={order} api={api} onClose={() => setRefunding(false)} />
         </>
       )}
+
+      {extra > 0 && (
+        <>
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginTop: 12 }}
+            title={`Thu dư ${formatMoney(extra)}, cần hoàn cho khách`}
+            description="Tổng đơn giảm sau khi sửa đơn. Hoàn xong thì ghi nhận kèm ảnh chứng từ."
+          />
+          <Button type="primary" icon={<RollbackOutlined />} block style={{ marginTop: 12 }} onClick={() => setRefunding("overpaid")}>
+            Ghi nhận đã hoàn phần dư
+          </Button>
+        </>
+      )}
+      <RefundModal key={refunding ?? "closed"} open={!!refunding} order={order} api={api} overpaid={refunding === "overpaid"} onClose={() => setRefunding(null)} />
 
       {order.refund && (
         <Flex vertical gap={8} style={{ marginTop: 12 }}>
@@ -146,16 +172,26 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
             <Flex vertical style={{ minWidth: 0 }}>
               <Typography.Text strong>{paymentTitle(order, p, i)}</Typography.Text>
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {providerLabels[p.provider]} · {dayjs(p.createdAt).format("HH:mm DD/MM")}
+                {p.kind === "refund" ? "Hoàn" : providerLabels[p.provider]} · {dayjs(p.createdAt).format("HH:mm DD/MM")}
                 {p.transactionId && ` · Mã GD ${p.transactionId}`}
+                {p.note && ` · ${p.note}`}
               </Typography.Text>
+              {!!p.images?.length && (
+                <Flex gap={6} wrap style={{ marginTop: 6 }}>
+                  <Image.PreviewGroup>
+                    {p.images.map((src, k) => (
+                      <Image key={k} src={src} alt={`Ảnh chứng từ ${k + 1}`} width={48} height={48} style={{ objectFit: "cover", borderRadius: 6 }} />
+                    ))}
+                  </Image.PreviewGroup>
+                </Flex>
+              )}
             </Flex>
             <Flex vertical align="flex-end" gap={2}>
               <Typography.Text strong className="tabular">
                 {formatMoney(p.amount)}
               </Typography.Text>
-              <Tag color={paymentStatus[p.status].color} style={{ marginInlineEnd: 0 }}>
-                {paymentStatus[p.status].label}
+              <Tag color={p.kind === "refund" ? "magenta" : paymentStatus[p.status].color} style={{ marginInlineEnd: 0 }}>
+                {p.kind === "refund" ? "Đã hoàn" : paymentStatus[p.status].label}
               </Tag>
             </Flex>
           </Flex>

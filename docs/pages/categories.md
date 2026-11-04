@@ -43,3 +43,12 @@ Sản phẩm lưu trước khi có trang này dùng trường loại hương `fr
 
 - **Web chưa đọc danh mục từ BO.** Sản phẩm và bộ lọc trên web vẫn lấy từ dữ liệu cứng của web.
 - Mỗi sản phẩm chỉ thuộc 1 danh mục.
+
+## Kiểm thử
+
+Cách chạy và độ phủ chung ở [testing.md](../testing.md).
+
+**Đã có test:**
+
+- `categories`: danh mục mặc định, dữ liệu cũ tự vào đúng danh mục, thêm, chặn tên trùng, kéo thả bằng chuột và bàn phím, ẩn trên web, đổi tên giữ mã, chặn xóa khi còn sản phẩm, mở Sản phẩm lọc sẵn, form sản phẩm, điện thoại.
+- `misc-extra`: chọn màu tag, để trống tên tiếng Anh thì dùng tên tiếng Việt.

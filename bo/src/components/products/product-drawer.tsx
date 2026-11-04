@@ -7,7 +7,7 @@ import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
 import { fromFormValues, toFormValues, type ProductFormValues } from "@/components/products/product-form";
 import { ProductPreview } from "@/components/products/product-preview";
-import { RecipeField } from "@/components/products/recipe-field";
+import { RecipeCost, RecipeField } from "@/components/products/recipe-field";
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCategories } from "@/hooks/use-categories";
@@ -223,6 +223,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
 
             <FormSection title="Công thức nguyên liệu" description="Lượng cho 1 cây. Giữ nguyên liệu khi nhận cọc và trừ Kho khi bắt đầu làm.">
               <RecipeField required={!product} />
+              <RecipeCost />
             </FormSection>
 
             <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ☆ để đổi.`}>

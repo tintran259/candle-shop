@@ -55,3 +55,15 @@ Màn hẹp tự ẩn cột phụ để không cuộn ngang. Dưới 992px, 2 nú
 
 - Xử lý riêng từng cây trong cùng một bản ghi.
 - Hoàn tác thao tác Bỏ.
+
+## Kiểm thử
+
+Cách chạy và độ phủ chung ở [testing.md](../testing.md).
+
+**Đã có test:**
+
+- `cancelled-products`: 2 cách xử lý, điền sẵn từ đơn, đóng không tạo, slug, thiếu ảnh, điện thoại.
+- `cancelled-merge`: gộp theo dòng, đơn hỗn hợp, đơn toàn nến có sẵn.
+- `cancelled-display`: đơn toàn nến có sẵn đã trừ Kho thì hỏi đã làm chưa.
+- `cancelled-actions`: cột Xử lý đủ 2 nút ở mọi bề ngang.
+- `cancelled-extra`: đơn Đã hoàn về nến tốt thì vào, nến hỏng thì không; tìm theo mã đơn, lọc Chờ xử lý.

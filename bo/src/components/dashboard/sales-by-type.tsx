@@ -7,7 +7,7 @@ import { brand } from "@/theme";
 export function SalesByType({ rows, days }: { rows: TypeSales[]; days: number }) {
   const max = Math.max(...rows.map((r) => r.revenue));
   return (
-    <Card title="Theo loại hương" extra={<Typography.Text type="secondary">{days} ngày qua</Typography.Text>} style={{ height: "100%" }}>
+    <Card title="Theo danh mục" extra={<Typography.Text type="secondary">{days} ngày qua</Typography.Text>} style={{ height: "100%" }}>
       {rows.length ? (
         <Flex vertical gap={10} component="ul" style={{ margin: 0, padding: 0, listStyle: "none" }}>
           {rows.map((r) => (

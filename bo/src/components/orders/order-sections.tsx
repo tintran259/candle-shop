@@ -1,8 +1,13 @@
-import { App, Button, Divider, Flex, Input, Tag, Typography } from "antd";
+import { App, Button, Divider, Flex, Image, Input, Tag, Tooltip, Typography } from "antd";
+import dayjs from "dayjs";
+import { Link } from "react-router";
 import { useState } from "react";
 import { FormSection } from "@/components/form/form-section";
 import { ItemThumb } from "@/components/orders/order-view";
 import { useInventory } from "@/hooks/use-inventory";
+import { useStockHold } from "@/hooks/use-stock-hold";
+import { goodsValue, margin, orderCost } from "@/lib/costs";
+import { resolutionLabels } from "@/lib/orders/complaint";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { unitLabel } from "@/lib/craft/groups";
 import { formatMoney, formatNumber } from "@/lib/format";
@@ -25,6 +30,10 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
 
 export function ItemsSection({ order }: { order: Order }) {
   const { materials } = useInventory();
+  const { source } = useStockHold();
+  const cost = orderCost(order, source);
+  const value = goodsValue(order);
+  const result = margin(value, cost.cost);
   const recipeText = (recipe: NonNullable<Order["items"][number]["recipe"]>) =>
     recipe
       .map((r) => {
@@ -70,6 +79,31 @@ export function ItemsSection({ order }: { order: Order }) {
         <Row label="Phí giao hàng" value={order.shippingFee ? formatMoney(order.shippingFee) : "Miễn phí"} />
         <Row label="Tổng cộng" value={formatMoney(order.total)} strong />
       </Flex>
+      {order.status !== "cancelled" && (
+        <Flex vertical gap={6} style={{ marginTop: 12, paddingTop: 12, borderTop: "1px dashed #eee5da" }} aria-label="Giá vốn và lãi gộp" role="group">
+          <Flex justify="space-between">
+            <Typography.Text type="secondary">
+              Giá vốn nguyên liệu{" "}
+              <Tooltip title={cost.final ? "Chốt theo giá nhập lúc Bắt đầu làm." : "Ước tính theo công thức và giá nhập hiện tại; chốt khi Bắt đầu làm."}>
+                <Tag style={{ marginInlineEnd: 0 }}>{cost.final ? "đã chốt" : "ước tính"}</Tag>
+              </Tooltip>
+            </Typography.Text>
+            <Typography.Text className="tabular">{formatMoney(cost.cost)}</Typography.Text>
+          </Flex>
+          <Flex justify="space-between">
+            <Typography.Text type="secondary">Lãi gộp (không tính phí giao)</Typography.Text>
+            <Typography.Text strong className="tabular" type={result.profit < 0 ? "danger" : undefined}>
+              {formatMoney(result.profit)}
+              {result.percent !== null && ` · ${Math.round(result.percent * 100)}%`}
+            </Typography.Text>
+          </Flex>
+          {cost.missing.length > 0 && (
+            <Typography.Text type="warning" style={{ fontSize: 12 }}>
+              Chưa có giá nhập: {cost.missing.map((m) => m.name).join(", ")} — giá vốn đang thiếu phần này.
+            </Typography.Text>
+          )}
+        </Flex>
+      )}
     </FormSection>
   );
 }
@@ -116,3 +150,44 @@ export function NotesSection({ order, api }: Props) {
     </FormSection>
   );
 }
+
+// Khiếu nại sau khi giao: nội dung, ảnh khách gửi, cách xử lý, link đơn gửi bù
+export function ComplaintsSection({ order }: { order: Order }) {
+  if (!order.complaints?.length) return null;
+  return (
+    <FormSection title={`Khiếu nại (${order.complaints.length})`}>
+      <Flex vertical gap={14}>
+        {order.complaints.map((c) => (
+          <Flex key={c.id} vertical gap={4}>
+            <Flex justify="space-between" gap={8} wrap>
+              <Typography.Text strong>{c.reason}</Typography.Text>
+              <Tag color={c.resolution === "none" ? "default" : "volcano"} style={{ marginInlineEnd: 0 }}>
+                {resolutionLabels[c.resolution]}
+              </Tag>
+            </Flex>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {dayjs(c.at).format("HH:mm DD/MM/YYYY")} · {c.by}
+              {c.refundAmount ? ` · hoàn ${formatMoney(c.refundAmount)}` : ""}
+              {c.replacementId && (
+                <>
+                  {" · gửi bù "}
+                  <Link to={`/orders?order=${c.replacementId}`}>{c.replacementCode}</Link>
+                </>
+              )}
+            </Typography.Text>
+            {c.images.length > 0 && (
+              <Flex gap={6} wrap>
+                <Image.PreviewGroup>
+                  {c.images.map((src, i) => (
+                    <Image key={i} src={src} alt={`Ảnh khách gửi ${i + 1}`} width={56} height={56} style={{ objectFit: "cover", borderRadius: 8 }} />
+                  ))}
+                </Image.PreviewGroup>
+              </Flex>
+            )}
+          </Flex>
+        ))}
+      </Flex>
+    </FormSection>
+  );
+}
+

@@ -33,3 +33,12 @@ Mật khẩu được so ngay trên trình duyệt, mã sha256 nằm trong code 
 - `POST /api/auth/login { email, password, remember }`: kiểm tra mật khẩu đã băm (bcrypt/argon2), trả cookie phiên `httpOnly`, `Secure`, `SameSite=Lax`; giới hạn số lần sai theo IP.
 - `POST /api/auth/logout`, `GET /api/auth/me`.
 - Mọi API của BO trả 401 khi chưa đăng nhập. BO chỉ cần thay hàm `checkCredentials` trong `bo/src/lib/auth.ts` và đọc phiên từ `/api/auth/me`.
+
+## Kiểm thử
+
+Cách chạy và độ phủ chung ở [testing.md](../testing.md).
+
+**Đã có test:**
+
+- `login`: chặn khi chưa đăng nhập và nhớ trang đang mở, bỏ trống, sai mật khẩu, khóa sau 5 lần sai, ghi nhớ và không ghi nhớ, đăng xuất, phiên hết hạn, chặn chuyển hướng ra ngoài, Caps Lock, điện thoại.
+- `login-extra`: đếm ngược khi bị khóa, hết 30 giây tự mở lại; đăng xuất ở tab khác thì tab đang mở cũng thoát.

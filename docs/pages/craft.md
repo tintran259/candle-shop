@@ -7,7 +7,8 @@
 ## Bố cục
 
 - **Thẻ thống kê:** Bước đang hiện, Lựa chọn đang bán, Đang bị khóa, Giá thấp nhất.
-- **Danh sách bước (trái):** thứ tự, bật/tắt, đổi thứ tự, thêm bước. Bước có thay đổi chưa lưu có dấu chấm.
+- **Đầu trang:** Cấu hình mẫu, Xuất JSON (tải file cấu hình đang sửa), trạng thái Đã lưu.
+- **Danh sách bước (trái):** thứ tự, thêm bước. Kéo tay nắm ⠿ để đổi thứ tự, bằng chuột, chạm hoặc bàn phím (Tab tới tay nắm, Space nhấc, mũi tên, Space đặt). Bước có thay đổi chưa lưu có dấu chấm, bước đang ẩn có icon con mắt gạch.
 - **Trình sửa bước (phải):** các tab theo loại bước.
 
 | Tab | Nội dung |
@@ -72,3 +73,17 @@ Trang Thủ công của web dựng theo đúng cấu hình đã lưu: các bư�
 Khách không có ô Lượng cho 1 hũ, ô này chỉ có ở BO.
 
 Đây là cầu nối tạm khi chạy trên máy. Khi có BE, web đọc cấu hình từ API.
+
+## Kiểm thử
+
+Cách chạy và độ phủ chung ở [testing.md](../testing.md).
+
+**Đã có test:**
+
+- `craft-builder`: dựng cấu hình từ đầu trên kho của E2E 1, kích thước, gắn kho, bản nháp, lưu, bỏ thay đổi, xem trước khóa theo tồn.
+- `craft-changes`, `orders-pending`: danh sách thay đổi, hoàn tác từng bước, nguyên liệu chờ lưu.
+- `craft-drag`: kéo thả thứ tự bước bằng chuột và bàn phím.
+- `craft-wax`, `craft-scent`, `craft-select`, `craft-exclusive`: chọn nhiều sáp, phụ thu theo tỉ lệ, phụ thu hương, màu theo ml, Chọn 1 / Chọn nhiều / Tối đa, Đứng một mình.
+- `craft-fixes`: nút nhập nhanh, ảnh ưu tiên hơn màu.
+- `craft-ui`: thẻ thống kê, sửa lựa chọn giữ quy tắc chỉ dùng với, xem trước, thêm / bật / đổi chỗ / xóa bước, lựa chọn kèm nguyên liệu mới, icon và tên tiếng Anh, bước Cá nhân hóa, bảng kích thước, Cấu hình mẫu, Xuất JSON, điện thoại.
+- `storefront-sync`: web chạy theo cấu hình BO. Chỉ chạy khi web chạy ở cổng 3000, không thì bỏ qua.
