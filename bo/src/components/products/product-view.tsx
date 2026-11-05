@@ -1,5 +1,6 @@
-import { StarFilled } from "@ant-design/icons";
-import { Avatar, Flex, Tag, Typography } from "antd";
+import { StarFilled, WarningOutlined } from "@ant-design/icons";
+import { Avatar, Flex, Tag, Tooltip, Typography } from "antd";
+import { belowCost, type PriceCheck } from "@/lib/craft/pricing";
 import { discountPercent } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { formatMoney } from "@/lib/format";
@@ -29,6 +30,19 @@ export function PriceText({ product, size = 14 }: { product: Pick<Product, "pric
         {formatMoney(product.price)}
       </Typography.Text>
     </Flex>
+  );
+}
+
+// Dưới giá: sản phẩm đang bán thấp hơn giá vốn (đỏ) hoặc lãi dưới mức tối thiểu (cam), theo giá nhập hiện tại trong Kho
+export function PriceFlag({ check }: { check?: PriceCheck }) {
+  if (!check) return null;
+  const below = belowCost(check);
+  return (
+    <Tooltip title={`Giá vốn công thức hiện tại ${formatMoney(check.floor)}, đang bán ${formatMoney(check.price)}. Mở sản phẩm để xem gợi ý giá.`}>
+      <Tag color={below ? "error" : "warning"} icon={<WarningOutlined />} style={{ marginInlineEnd: 0, marginTop: 4, width: "fit-content" }}>
+        {below ? `Thấp hơn vốn ${formatMoney(check.floor - check.price)}` : `Lãi thấp ${Math.round((check.margin ?? 0) * 100)}%`}
+      </Tag>
+    </Tooltip>
   );
 }
 

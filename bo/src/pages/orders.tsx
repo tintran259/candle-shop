@@ -1,4 +1,4 @@
-import { PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Row, Statistic, Tabs, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -7,6 +7,7 @@ import { OrderDrawer } from "@/components/orders/order-drawer";
 import { OrderTable } from "@/components/orders/order-table";
 import { OrderToolbar } from "@/components/orders/order-toolbar";
 import { OrdersSkeleton } from "@/components/skeletons";
+import { useOrderDraft } from "@/hooks/use-order-draft";
 import { useOrders } from "@/hooks/use-orders";
 import { formatMoneyShort } from "@/lib/format";
 import { applyOrderFilters, defaultOrderFilters, type OrderFilters } from "@/lib/orders/filters";
@@ -22,6 +23,8 @@ const tabs: (OrderStatus | "all")[] = ["all", ...orderFlow, ...deliveryIssues, "
 export function OrdersPage() {
   useTitle("Đơn hàng");
   const api = useOrders();
+  // Đơn đang tạo dở: nút Tạo đơn hàng thành Tiếp tục đơn nháp
+  const { draft } = useOrderDraft();
   const { orders } = api;
   // Dashboard link thẳng tới danh sách đã lọc: ?status=, ?payment=, ?sort=
   const [params] = useSearchParams();
@@ -91,8 +94,8 @@ export function OrdersPage() {
           <Typography.Text type="secondary">Theo dõi từ lúc khách thanh toán, xưởng làm (2–3 ngày) tới khi giao xong.</Typography.Text>
         </div>
         <Flex gap={8} wrap>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpenId("new")}>
-            Tạo đơn hàng
+          <Button type="primary" icon={draft ? <EditOutlined /> : <PlusOutlined />} onClick={() => setOpenId("new")}>
+            {draft ? "Tiếp tục đơn nháp" : "Tạo đơn hàng"}
           </Button>
         </Flex>
       </Flex>

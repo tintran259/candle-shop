@@ -24,7 +24,7 @@ import { MoneyInput } from "@/components/money-input";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
 import { shapeLabels, sizeLabel, unitNames } from "@/lib/craft/groups";
-import { needsReview, optionCheck, suggestPrice, suggestUnitPrice, vesselSizeChecks, type SizeCheck } from "@/lib/craft/pricing";
+import { lidCheck, needsReview, optionCheck, suggestPrice, suggestUnitPrice, vesselSizeChecks, type PriceCheck, type SizeCheck } from "@/lib/craft/pricing";
 import { stepAmounts, vesselStep } from "@/lib/craft/selection";
 import { formatMoney } from "@/lib/format";
 import { DEFAULT_LOW_STOCK, jarTypes, jarsOfType, toMap } from "@/lib/inventory/stock";
@@ -70,6 +70,7 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
   const jarType = Form.useWatch("jarType", form);
   const hasLid = Form.useWatch("hasLid", form);
   const sizeValues = Form.useWatch("sizes", form) as Record<string, SizeValues> | undefined;
+  const lidPrice = Form.useWatch("lidPrice", form) as number | null | undefined;
   const map = useMemo(() => toMap(materials), [materials]);
   // Hũ: các cỡ theo loại hũ đang chọn (cỡ đã có + mã hũ cùng loại trong Kho)
   const rows = useMemo(() => (isVessel ? vesselRows(option as VesselOption | undefined, jarType, materials) : []), [isVessel, option, jarType, materials]);
@@ -102,6 +103,12 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
     } as VesselOption;
     return vesselSizeChecks(config, step, draft, map);
   }, [isVessel, step, option, price, rows, sizeValues, hasLid, config, map]);
+  // Phụ thu nắp so với giá vốn mã nắp của từng cỡ đang bán
+  const lidPriceCheck = useMemo(() => {
+    if (!isVessel || !hasLid) return null;
+    const draft = { lid: { priceDelta: Math.round(lidPrice ?? 0) }, sizes: sizesFromForm(rows, sizeValues, true, !option) } as VesselOption;
+    return lidCheck(draft, map);
+  }, [isVessel, hasLid, lidPrice, rows, sizeValues, option, map]);
   const role = step.kind === "cards" || step.kind === "swatches" ? step.previewRole : undefined;
   const looks = role ? previewRoleMeta[role].looks : undefined;
   // Bước khác có lựa chọn — để đặt quy tắc "chỉ dùng với"
@@ -338,6 +345,11 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
                 isNew={!option}
                 materials={materials}
                 checks={sizeChecks}
+                lid={lidPriceCheck}
+                onLidPrice={(n) => {
+                  form.setFieldValue("lidPrice", n);
+                  setDirty(true);
+                }}
                 pricing={pricing}
                 jarPrice={Math.round(price ?? 0)}
                 onPrice={(key, n) => {
@@ -387,12 +399,14 @@ type VesselProps = {
   isNew: boolean;
   materials: Material[];
   checks: Map<string, SizeCheck>;
+  lid: PriceCheck | null;
+  onLidPrice: (n: number) => void;
   pricing: Pick<ShopSettings, "minMargin" | "priceMarkup">;
   jarPrice: number;
   onPrice: (key: string, n: number) => void;
 };
 
-function VesselFields({ rows, isNew, materials, checks, pricing, jarPrice, onPrice }: VesselProps) {
+function VesselFields({ rows, isNew, materials, checks, lid, onLidPrice, pricing, jarPrice, onPrice }: VesselProps) {
   const hasLid = Form.useWatch("hasLid");
   const jarType = Form.useWatch("jarType");
   const types = jarTypes(materials);
@@ -407,9 +421,21 @@ function VesselFields({ rows, isNew, materials, checks, pricing, jarPrice, onPri
         <SwitchField name="translucent" label="Hũ trong suốt" description="Ảnh minh họa sẽ thấy được màu sáp bên trong." />
         <SwitchField name="hasLid" label="Có nắp đi kèm" description="Nắp mỗi cỡ là một mã riêng trong Kho — chọn ở từng cỡ bên dưới." last={!hasLid} />
         {hasLid && (
-          <Form.Item name="lidPrice" label="Phụ thu nắp" style={{ marginTop: 16, marginBottom: 0 }}>
-            <MoneyInput />
-          </Form.Item>
+          <>
+            <Form.Item name="lidPrice" label="Phụ thu nắp" style={{ marginTop: 16, marginBottom: 0 }}>
+              <MoneyInput aria-label="Phụ thu nắp" />
+            </Form.Item>
+            {/* So với nắp đắt nhất trong các cỡ đang bán; nắp chọn ở từng cỡ bên dưới */}
+            {lid && (
+              <div role="group" aria-label="Giá vốn nắp" style={{ marginTop: 6 }}>
+                <CostCheck c={lid} min={pricing.minMargin} inline note={lid.size && `nắp cỡ ${lid.size.ml}ml`}>
+                  {lid.floor > 0 && needsReview(lid, pricing.minMargin) && (
+                    <SuggestButton value={suggestPrice(lid.floor, pricing)} current={lid.price} label="Gợi ý phụ thu nắp" onApply={onLidPrice} />
+                  )}
+                </CostCheck>
+              </div>
+            )}
+          </>
         )}
       </FormSection>
 
@@ -463,7 +489,7 @@ function VesselFields({ rows, isNew, materials, checks, pricing, jarPrice, onPri
   );
 }
 
-type RowProps = Omit<VesselProps, "rows" | "checks"> & { row: SizeRow; hasLid: boolean; lids: Material[]; check?: SizeCheck };
+type RowProps = Omit<VesselProps, "rows" | "checks" | "lid" | "onLidPrice"> & { row: SizeRow; hasLid: boolean; lids: Material[]; check?: SizeCheck };
 
 // Một cỡ của hũ: bán hay không, phụ thu cỡ, sáp đổ, giờ cháy, nắp; kèm giá khách trả so với giá vốn
 function SizeRowFields({ row, isNew, hasLid, materials, lids, check, pricing, jarPrice, onPrice }: RowProps) {

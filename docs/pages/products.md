@@ -17,6 +17,14 @@ Sản phẩm trưng bày **không có số tồn thành phẩm**. Khách đặt 
 - **Trên từng dòng:** bật/tắt bán, bật/tắt nổi bật, sửa. Xóa nằm trong drawer sửa hoặc khi chọn nhiều.
 - **Chọn nhiều:** hiện, ẩn hoặc xóa hàng loạt.
 
+## Giá vốn
+
+Giá bán (hoặc giá giảm nếu có) so với giá vốn công thức 1 cây theo **giá nhập bình quân hiện tại** trong Kho, không phải giá lúc tạo sản phẩm. Giá nhập tăng làm sản phẩm thấp hơn vốn hoặc lãi dưới mức tối thiểu ở [Cài đặt](./settings.md) thì:
+
+- Đầu trang có thông báo **N sản phẩm cần xem lại giá bán**, nút **Chỉ xem các sản phẩm này** để lọc (bấm lại **Xem tất cả**).
+- Dưới giá trên bảng và thẻ lưới có nhãn **Thấp hơn vốn X ₫** (đỏ) hoặc **Lãi thấp Y%** (cam), rê chuột xem giá vốn.
+- Không tự đổi giá; mở sản phẩm để xem gợi ý giá dưới ô Giá bán. Sản phẩm chưa có công thức không kiểm tra.
+
 ## Drawer thêm, sửa
 
 | Khối | Trường | Quy tắc |
@@ -71,5 +79,7 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `workshop-cost`: giá vốn 1 cây và % lãi trong form sản phẩm.
 - `products`: thẻ thống kê, tab trạng thái, tìm, lọc kích thước và danh mục, sắp xếp, bảng / lưới, điện thoại mặc định lưới, công tắc nổi bật và đang bán, ẩn / hiện / xóa hàng loạt, thêm sản phẩm (slug theo tên, giá giảm, danh mục chọn sẵn, chọn nguyên liệu giống nến tự phối, thiếu bước báo lỗi dưới từng bước, Giá nằm dưới phần nguyên liệu, tóm tắt cỡ và số cây Kho đủ làm, công thức, cỡ trên web, loại sáp, giờ cháy tự suy ra, ảnh), slug trùng, sản phẩm chưa có công thức, đổi ảnh chính, xóa trong drawer.
 - `start-empty`: Đơn hàng, Sản phẩm trưng bày, Sản phẩm hủy đơn bắt đầu trống, không còn nút Dữ liệu mẫu, Kho giữ nguyên.
+- `price-guards`: sản phẩm bán thấp hơn vốn có thông báo, nhãn cạnh giá, lọc riêng rồi xem lại tất cả.
+- `logic/price-guards`: so theo giá giảm nếu có, không có công thức thì bỏ qua, giá nhập tăng thì sản phẩm vào danh sách cần xem lại, bộ lọc.
 - `logic/products`: bộ lọc và 5 cách sắp xếp, phần trăm giảm, chuyển form, tạo từ nến hủy đơn (công thức vào phụ kiện khác), sản phẩm cũ giữ công thức, chọn giống nến tự phối (công thức theo lựa chọn + phụ kiện, cỡ theo dung tích, loại sáp, giờ cháy theo cỡ, bỏ bước Cá nhân hóa), nguyên liệu theo công thức (không công thức thì không giữ, không trừ Kho; chỉ đơn Đã thanh toán giữ; báo thiếu).
 - Một phần ở `drawers`, `categories`, `cancelled-products`, `orders-decisions`.

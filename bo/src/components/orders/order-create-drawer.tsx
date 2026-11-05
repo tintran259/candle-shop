@@ -1,7 +1,7 @@
 import { DeleteOutlined, EditOutlined, ExperimentOutlined, PlusOutlined } from "@ant-design/icons";
 import { Alert, App, Avatar, Button, Col, Drawer, Flex, Form, Grid, Input, InputNumber, Radio, Row, Segmented, Select, Switch, Tag, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { FormSection } from "@/components/form/form-section";
 import { MoneyInput } from "@/components/money-input";
 import { CustomCandleModal, type CustomCandle } from "@/components/orders/custom-candle-modal";
@@ -11,12 +11,16 @@ import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useCustomers } from "@/hooks/use-customers";
 import { releaseDiscount, useDiscounts } from "@/hooks/use-discounts";
+import { draftHasContent, getOrderDraft, saveOrderDraft, type OrderDraft } from "@/hooks/use-order-draft";
 import { getSettings } from "@/hooks/use-settings";
 import { useOrders } from "@/hooks/use-orders";
 import { useProducts } from "@/hooks/use-products";
 import { useStockHold } from "@/hooks/use-stock-hold";
 import { useWorkshop } from "@/hooks/use-workshop";
 import { candleCount } from "@/lib/capacity";
+import { discountRule } from "@/lib/discounts/labels";
+import { needsCost } from "@/lib/costs";
+import { belowCost, lowMargin } from "@/lib/craft/pricing";
 import { unitLabel } from "@/lib/craft/groups";
 import { materialNeeds, maxJars } from "@/lib/craft/selection";
 import { phoneKey } from "@/lib/customers/stats";
@@ -24,7 +28,7 @@ import { formatMoney, formatNumber } from "@/lib/format";
 import { linesNeeds, shortages } from "@/lib/orders/materials";
 import { itemsEditable } from "@/lib/orders/edit";
 import { failedDeliveries, paidAmount } from "@/lib/orders/labels";
-import { buildOrder, channelLabels, evaluateDiscount, lineTotal, orderChannels, orderTotals, toLines, type DraftLine, type OrderChannel } from "@/lib/orders/create";
+import { buildOrder, channelLabels, evaluateDiscount, goodsCheck, lineTotal, orderChannels, orderTotals, toLines, type DraftLine, type OrderChannel } from "@/lib/orders/create";
 import { providerLabels, statusMeta } from "@/lib/orders/labels";
 import type { Order, PaymentPlan, PaymentProvider, ShippingMethod } from "@/lib/orders/types";
 import { shippingOptionLabel } from "@/lib/settings/types";
@@ -104,6 +108,39 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
     return { name: c.name, phone: c.phone, email: c.email, address: last?.shippingAddress ?? "" };
   };
 
+  // Đơn nháp (docs/pages/orders.md#đơn-nháp): mở Tạo đơn hàng thì điền tiếp đơn đang dở.
+  // Mở từ hồ sơ khách (?customer=) thì điền khách đó, nháp cũ chỉ báo và mở lại được
+  const [savedDraft] = useState(() => (order ? null : getOrderDraft()));
+  const [restored, setRestored] = useState(() => (savedDraft && !customerId ? savedDraft : null));
+  const [otherDraft, setOtherDraft] = useState(() => (savedDraft && customerId ? savedDraft : null));
+
+  // Giá trị form từ nháp: ngày làm xong đã qua thì lấy ngày gợi ý; dòng nến có sẵn lấy lại tên, ảnh, giá hiện tại
+  const fromDraft = (d: OrderDraft): Partial<Values> => {
+    const day = d.values.readyDate ? dayjs(d.values.readyDate) : undefined;
+    return {
+      ...(d.values as Partial<Values>),
+      readyDate: day && !day.isBefore(dayjs(), "day") ? day : dayjs(workshop.suggest(0)),
+      lines: (d.values.lines ?? []).filter(Boolean).map((l) => {
+        const p = l.kind === "product" ? products.find((x) => x.id === l.productId) : undefined;
+        return p ? { ...l, name: p.name, image: p.images[0], price: p.salePrice ?? p.price } : l;
+      }),
+    };
+  };
+
+  const freshValues = (): Partial<Values> => ({
+    customerId,
+    ...fromCustomer(customerId),
+    channel: "phone",
+    lines: [],
+    shippingMethod: shippingOptions[0]?.id,
+    shippingFee: shippingOptions[0]?.fee ?? 0,
+    // Ngày sớm nhất còn chỗ từ hôm nay + số ngày làm tối thiểu (Cài đặt › Xưởng)
+    readyDate: dayjs(workshop.suggest(0)),
+    paymentPlan: "deposit",
+    paymentMethod: "cod",
+    received: false,
+  });
+
   const initialValues = useMemo<Partial<Values>>(
     () =>
       order
@@ -122,25 +159,52 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
             note: order.note,
             internalNote: order.internalNote,
           }
-        : {
-            customerId,
-            ...fromCustomer(customerId),
-            channel: "phone",
-            lines: [],
-            shippingMethod: shippingOptions[0]?.id,
-            shippingFee: shippingOptions[0]?.fee ?? 0,
-            // Ngày sớm nhất còn chỗ từ hôm nay + số ngày làm tối thiểu (Cài đặt › Xưởng)
-            readyDate: dayjs(workshop.suggest(0)),
-            paymentPlan: "deposit",
-            paymentMethod: "cod",
-            received: false,
-          },
+        : { ...freshValues(), ...(restored ? fromDraft(restored) : {}) },
     // Chỉ tính một lần khi mount — dữ liệu khách đã tải xong trước khi mở drawer
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
+  // Thay toàn bộ form (bỏ cả trường chỉ có ở bản cũ, vd mã giao dịch)
+  const replaceValues = (next: Partial<Values>) => {
+    const all = form.getFieldsValue(true) as Record<string, unknown>;
+    form.setFieldsValue({ ...Object.fromEntries(Object.keys(all).map((k) => [k, undefined])), ...next });
+  };
+  // Bắt đầu đơn mới: xóa nháp, form về trống
+  const startOver = () => {
+    saveOrderDraft(null);
+    replaceValues(freshValues());
+    setRestored(null);
+    setOtherDraft(null);
+    setDirty(false);
+  };
+  // Mở từ hồ sơ khách mà đang có nháp khác: chuyển sang nháp đó
+  const openOther = () => {
+    if (!otherDraft) return;
+    replaceValues(fromDraft(otherDraft));
+    setRestored(otherDraft);
+    setOtherDraft(null);
+    setDirty(false);
+  };
+  const discard = () =>
+    modal.confirm({
+      title: "Bỏ đơn đang tạo?",
+      content: "Đơn nháp sẽ bị xóa, không mở lại được.",
+      okText: "Bỏ đơn",
+      okButtonProps: { danger: true },
+      cancelText: "Giữ lại",
+      onOk: () => {
+        saveOrderDraft(null);
+        onClose();
+      },
+    });
+
   const requestClose = () => {
+    // Tạo đơn: đóng là giữ nháp, mở lại Tạo đơn hàng làm tiếp
+    if (!editing) {
+      if (dirty && draftHasContent(form.getFieldsValue(true))) message.info("Đã lưu nháp đơn — bấm Tiếp tục đơn nháp để làm tiếp.");
+      return onClose();
+    }
     if (!dirty) return onClose();
     modal.confirm({
       title: editing ? "Bỏ các thay đổi?" : "Bỏ đơn đang tạo?",
@@ -170,10 +234,28 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
   const discount = lockItems ? { amount: order!.discount } : evaluateDiscount(v.discountCode, pool, lines, shippingFee, previous);
   const totals = orderTotals(lines, shippingFee, v.paymentPlan ?? "deposit", discount.amount, order?.depositPercent ?? settings.depositPercent);
   const paid = order ? paidAmount(order) : 0;
+
+  // Tự lưu nháp mỗi khi đổi (kể cả thêm nến tự phối) — chỉ khi tạo đơn mới. Trống thì xóa nháp
+  // Chỉ ghi khi nội dung đổi thật — mỗi lần ghi làm trang Đơn hàng vẽ lại (nút Tiếp tục đơn nháp)
+  const lastSaved = useRef("");
+  useEffect(() => {
+    if (editing || !dirty) return;
+    const all = form.getFieldsValue(true) as Partial<Values>;
+    const values = { ...all, readyDate: all.readyDate?.format("YYYY-MM-DD") } as OrderDraft["values"];
+    const json = draftHasContent(values) ? JSON.stringify(values) : "";
+    if (json === lastSaved.current) return;
+    lastSaved.current = json;
+    saveOrderDraft(json ? { savedAt: new Date().toISOString(), values } : null);
+  }, [v, dirty, editing, form]);
   const candles = candleCount(lines);
 
   // Nguyên liệu cho cả đơn — báo thiếu khi nhiều dòng dùng chung một nguyên liệu. Đã trừ Kho thì không kiểm tra lại
-  const shortage = lockItems ? [] : shortages(linesNeeds(lines, { ...source, map }), map);
+  const needs = linesNeeds(lines, { ...source, map });
+  const shortage = lockItems ? [] : shortages(needs, map);
+  // Tiền hàng sau giảm giá so với giá vốn nguyên liệu (giá nhập hiện tại) — mã giảm lớn có thể làm đơn lỗ
+  const cost = needsCost(needs, map);
+  const goods = goodsCheck(totals, cost.cost);
+  const goodsWarning = cost.cost > 0 && (belowCost(goods) || lowMargin(goods, settings.minMargin));
 
   const setLine = (index: number | "new", candle: CustomCandle) => {
     const current = (form.getFieldValue("lines") ?? []) as DraftLine[];
@@ -220,6 +302,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
         createdAt: order.createdAt,
       });
     if (discount.discount) patchDiscount(discount.discount.id, { used: discount.discount.used + 1 });
+    saveOrderDraft(null);
     message.success(`Đã tạo đơn ${order.code}${profile ? "" : " · thêm khách mới"}`);
     onCreated?.(order.id);
   };
@@ -371,6 +454,15 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
           </Tag>
         </Flex>
       )}
+      {goodsWarning && (
+        <Alert
+          type={belowCost(goods) ? "error" : "warning"}
+          showIcon
+          style={{ marginTop: 12 }}
+          title={belowCost(goods) ? `Đơn lỗ ${formatMoney(goods.floor - goods.price)}` : `Lãi chỉ ${Math.round((goods.margin ?? 0) * 100)}%`}
+          description={`Tiền hàng sau giảm giá ${formatMoney(goods.price)}, giá vốn nguyên liệu ${formatMoney(goods.floor)} (lãi tối thiểu ở Cài đặt: ${settings.minMargin}%). Vẫn tạo được đơn.`}
+        />
+      )}
       {shortage.length > 0 && (
         <Alert
           type="error"
@@ -412,9 +504,18 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
               </Typography.Text>
             </Flex>
           )}
-          <Button onClick={requestClose} style={wide ? { marginLeft: "auto" } : undefined}>
-            Hủy
-          </Button>
+          {editing ? (
+            <Button onClick={requestClose} style={wide ? { marginLeft: "auto" } : undefined}>
+              Hủy
+            </Button>
+          ) : (
+            <>
+              <Button type="text" danger onClick={dirty || restored ? discard : onClose} style={wide ? { marginLeft: "auto" } : undefined}>
+                Bỏ đơn
+              </Button>
+              <Button onClick={requestClose}>Lưu nháp</Button>
+            </>
+          )}
           <Button type="primary" onClick={() => form.submit()}>
             {editing ? "Lưu thay đổi" : "Tạo đơn"} · {formatMoney(totals.total)}
           </Button>
@@ -430,6 +531,34 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
           onValuesChange={() => setDirty(true)}
           scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
         >
+          {restored && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              title={`Đang tiếp tục đơn nháp lưu lúc ${dayjs(restored.savedAt).format("HH:mm DD/MM")}`}
+              description="Đơn tự lưu nháp khi bạn nhập; đóng form vẫn giữ. Sản phẩm có sẵn đã lấy lại giá hiện tại."
+              action={
+                <Button size="small" onClick={startOver}>
+                  Bắt đầu đơn mới
+                </Button>
+              }
+            />
+          )}
+          {otherDraft && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              title={`Đang có đơn nháp${otherDraft.values.name ? ` của ${otherDraft.values.name}` : ""}`}
+              description="Nhập đơn này sẽ thay đơn nháp đó."
+              action={
+                <Button size="small" onClick={openOther}>
+                  Mở đơn nháp
+                </Button>
+              }
+            />
+          )}
           <Row gutter={16} align="top">
             <Col span={wide ? 15 : 24}>
               <Flex vertical gap={16}>
@@ -654,7 +783,8 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
                         label="Mã giảm giá"
                         normalize={(s?: string) => s?.toUpperCase().replace(/\s/g, "")}
                         validateStatus={discount.error ? "error" : discount.discount ? "success" : undefined}
-                        help={discount.error ?? (discount.discount ? `Giảm ${formatMoney(discount.amount)} · ${discount.discount.description ?? discount.discount.code}` : undefined)}
+                        // Luật thật của mã (−80%, tối đa…), không dùng mô tả tự gõ — mô tả không tự đổi khi sửa mức giảm
+                        help={discount.error ?? (discount.discount ? `Giảm ${formatMoney(discount.amount)} · ${discountRule(discount.discount)}` : undefined)}
                       >
                         <Input allowClear maxLength={30} placeholder="Không bắt buộc" style={{ maxWidth: 260 }} />
                       </Form.Item>

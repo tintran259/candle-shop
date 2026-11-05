@@ -4,7 +4,7 @@
 //  - Phụ thu lựa chọn khác trả giá nguyên liệu của nó, trừ phần giá hũ đã trả cho mục mặc định cùng bước.
 import { needsCost } from "@/lib/costs";
 import { activeSteps, emptySelection, materialNeeds, priceSelection, vesselStep, type CraftSelection, type StepSelection } from "@/lib/craft/selection";
-import type { CraftConfig, CraftStep, OptionStep, StepOption, VesselOption, VesselSize } from "@/lib/craft/types";
+import type { CraftConfig, CraftStep, InputsStep, OptionStep, StepOption, VesselOption, VesselSize } from "@/lib/craft/types";
 import { amountBasis, basisLabel } from "@/lib/craft/steps";
 import type { MaterialMap } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
@@ -99,6 +99,36 @@ export function sizeCheck(config: CraftConfig, vessel: VesselOption, size: Vesse
   }
   const price = vessel.priceDelta + size.priceDelta;
   return { ...check(price, parts.reduce((s, p) => s + p.cost, 0), missing, vessel, size), parts };
+}
+
+// Nắp: phụ thu nắp ≥ giá vốn mã nắp của từng cỡ đang bán. Lấy cỡ thiếu nhiều nhất; không có nắp hoặc nắp không theo dõi tồn thì null
+export function lidCheck(vessel: VesselOption, map: MaterialMap): PriceCheck | null {
+  if (!vessel.lid) return null;
+  let worst: PriceCheck | null = null;
+  for (const size of vessel.sizes.filter((s) => s.available && s.lidMaterialId)) {
+    const m = map.get(size.lidMaterialId!);
+    if (!m?.tracked) continue;
+    const cost = needsCost(new Map([[m.id, 1]]), map);
+    const c = check(vessel.lid.priceDelta, cost.cost, cost.missing, vessel, size);
+    if (worse(worst, c)) worst = c;
+  }
+  return worst;
+}
+
+// Ô nhập chữ, tuỳ chọn thêm (hộp quà, in nhãn…): phụ thu ≥ giá vốn 1 cái nguyên liệu gắn kèm. Không gắn nguyên liệu thì null
+export function itemCheck(price: number, materialId: string | undefined, map: MaterialMap): PriceCheck | null {
+  const m = materialId ? map.get(materialId) : undefined;
+  if (!m?.tracked) return null;
+  const cost = needsCost(new Map([[m.id, 1]]), map);
+  return check(price, cost.cost, cost.missing);
+}
+
+// Các ô nhập và tuỳ chọn đang hiện của bước Cá nhân hóa: { tên, kiểm tra giá }
+export function inputsChecks(step: InputsStep, map: MaterialMap) {
+  return [
+    ...step.fields.filter((f) => f.enabled).map((f) => ({ id: f.id, name: f.label.vi, check: itemCheck(f.priceDelta, f.materialId, map) })),
+    ...step.addons.filter((a) => a.enabled && a.available).map((a) => ({ id: a.id, name: a.name.vi, check: itemCheck(a.priceDelta, a.materialId, map) })),
+  ].filter((x): x is { id: string; name: string; check: PriceCheck } => !!x.check);
 }
 
 // Bản cấu hình có lựa chọn này (lựa chọn đang sửa trong drawer chưa nằm trong cấu hình), bước coi như đang hiện

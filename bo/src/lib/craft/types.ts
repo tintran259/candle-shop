@@ -88,6 +88,8 @@ export type TextFieldDef = {
   maxLength: number;
   // Tính phí khi khách có nhập
   priceDelta: Money;
+  // Nguyên liệu trừ 1 cái khi khách có nhập (vd nhãn decal in tên). Bỏ trống = không trừ Kho
+  materialId?: string;
   enabled: boolean;
   multiline?: boolean;
   // In chữ này lên nhãn trong ảnh minh họa

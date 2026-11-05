@@ -2,16 +2,17 @@ import { EditOutlined } from "@ant-design/icons";
 import { Button, Col, Flex, Row, Switch, Typography } from "antd";
 import { memo } from "react";
 import { CategoryTag } from "@/components/products/category-tag";
-import { PriceText, ProductBadges, RatingText, RecipeTag } from "@/components/products/product-view";
+import { PriceFlag, PriceText, ProductBadges, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
+import type { PriceCheck } from "@/lib/craft/pricing";
 import { sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand, radius } from "@/theme";
 
-type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void };
+type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; review: ReadonlyMap<string, PriceCheck> };
 
 // Lưới thẻ sản phẩm — nhìn ảnh để rà nhanh; bấm ảnh hoặc tên để sửa
-function ProductGridView({ items, api, onEdit }: Props) {
+function ProductGridView({ items, api, onEdit, review }: Props) {
   return (
     <Row gutter={[16, 16]}>
       {items.map((p) => (
@@ -46,6 +47,7 @@ function ProductGridView({ items, api, onEdit }: Props) {
               </Flex>
               <div style={{ marginTop: "auto", paddingTop: 4 }}>
                 <PriceText product={p} size={16} />
+                <PriceFlag check={review.get(p.id)} />
               </div>
             </Flex>
 

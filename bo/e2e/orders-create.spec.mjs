@@ -130,12 +130,11 @@ test("E2E 7 — Tạo đơn hàng tại BO: khách có sẵn / khách mới / kh
   ok("8 Bấm tạo → hỏi xác nhận trước", (await text(".ant-modal-confirm-title")).join().includes("đang bị chặn"));
   await clickText(".ant-modal-confirm-btns button", "Xem lại");
   await sleep(400);
-  // Đóng khi đang nhập dở → hỏi bỏ đơn
+  // Đóng khi đang nhập dở → không hỏi, giữ làm đơn nháp (docs/pages/orders.md#đơn-nháp)
   await press("Escape", "Escape", 27);
-  await sleep(500);
-  ok("8 Đóng khi đang nhập dở → hỏi 'Bỏ đơn đang tạo?'", (await text(".ant-modal-confirm-title")).join().includes("Bỏ đơn đang tạo"));
-  await clickText(".ant-modal-confirm-btns button", "Bỏ đơn");
   await sleep(900);
+  const draft = await ev("JSON.parse(localStorage.getItem('bo-order-draft-v1')||'null')");
+  ok("8 Đóng khi đang nhập dở → lưu nháp, không hỏi", !(await text(".ant-modal-confirm-title")).length && draft?.values?.phone?.replace(/\D/g, "") === "0973787909", JSON.stringify(draft?.values?.phone));
   console.log("  đơn của SĐT bị chặn:", (await orders()).filter((o) => o.customer.phone.replace(/\D/g, "").includes("0973787909")).map((o) => o.code + "|" + o.customer.phone + "|" + o.status));
   ok("8 Không tạo đơn cho khách bị chặn khi chọn 'Xem lại'", (await orders()).filter((o) => o.customer.phone.replace(/[^0-9]/g, "") === "0973787909").length === 1);
 

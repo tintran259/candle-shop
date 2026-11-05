@@ -152,7 +152,7 @@ export const defaultCraftConfig: CraftConfig = {
       enabled: true,
       required: false,
       fields: [
-        { id: "labelText", label: { vi: "Chữ in trên nhãn", en: "Label text" }, placeholder: { vi: "VD: Ngọc ♥", en: "e.g. For Mai" }, maxLength: 24, priceDelta: 25_000, enabled: true, onLabel: true },
+        { id: "labelText", label: { vi: "Chữ in trên nhãn", en: "Label text" }, placeholder: { vi: "VD: Ngọc ♥", en: "e.g. For Mai" }, maxLength: 24, priceDelta: 25_000, enabled: true, onLabel: true, materialId: "label-decal" },
         { id: "recipientName", label: { vi: "Tên người nhận", en: "Recipient name" }, maxLength: 20, priceDelta: 0, enabled: true },
         { id: "giftMessage", label: { vi: "Lời nhắn kèm quà", en: "Gift message" }, maxLength: 150, priceDelta: 0, enabled: true, multiline: true },
       ],

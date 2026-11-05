@@ -126,3 +126,27 @@ test("Lượt dùng: tạo đơn tăng lượt, hiện trong danh sách", async 
   await expect(rows(page).filter({ hasText: "TUPHOI50K" })).toContainText("12");
   await expect(rows(page).filter({ hasText: "TET2027" })).toContainText("Bắt đầu sau");
 });
+
+test("Áp mã vào đơn hiện mức giảm thật của mã, không lấy mô tả cũ", async ({ page }) => {
+  // Sửa TET2027 thành 80%, đang chạy, mô tả vẫn ghi 20% (tạm dừng rồi bật lại để danh sách được lưu)
+  const toggle = rows(page).filter({ hasText: "TET2027" }).getByRole("switch");
+  await toggle.click();
+  await toggle.click();
+  await expect.poll(() => saved(page)).not.toBeNull();
+  await page.evaluate(() => {
+    const list = JSON.parse(localStorage.getItem("bo-discounts-v1")!);
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem("bo-discounts-v1", JSON.stringify(list.map((x) => (x.id === "tet2027" ? { ...x, value: 80, startsAt: today } : x))));
+  });
+  await page.goto("/orders");
+  await page.getByRole("button", { name: /Tạo đơn hàng|Tiếp tục đơn nháp/ }).click();
+  const d = drawer(page).last();
+  await d.getByRole("button", { name: "Nến có sẵn" }).click();
+  await d.getByLabel("Chọn sản phẩm").last().click();
+  await page.keyboard.type("Moon Morning");
+  await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
+  await d.locator("#discountCode").fill("TET2027");
+  const help = d.locator(".ant-form-item").filter({ has: page.locator("#discountCode") }).locator(".ant-form-item-explain");
+  await expect(help).toContainText("TET2027 −80%, tối đa 300.000");
+  await expect(help).not.toContainText("20%");
+});

@@ -38,7 +38,7 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 | Khách hàng | Hồ sơ có sẵn, tên, SĐT, email, kênh đặt, địa chỉ | SĐT trùng hồ sơ thì tự nhận ra khách. Khách bị chặn thì hỏi lại trước khi tạo |
 | Sản phẩm | Nến có sẵn, Tự phối nến, số lượng | Sản phẩm đang ẩn vẫn chọn được, có nhãn "Đang ẩn". Thiếu nguyên liệu cho cả đơn thì chặn, tính trên số dùng được |
 | Giao hàng | Phương thức, phí vận chuyển, ngày xưởng làm xong | Phí tự điền theo phương thức, sửa được cho đơn này. Mặc định xong sau 3 ngày |
-| Thanh toán | Mã giảm giá, cọc hoặc trả đủ, kênh thanh toán, đã nhận tiền, mã giao dịch | % cọc lấy từ Cài đặt |
+| Thanh toán | Mã giảm giá, cọc hoặc trả đủ, kênh thanh toán, đã nhận tiền, mã giao dịch | % cọc lấy từ Cài đặt. Áp mã thì dưới ô hiện số tiền giảm và luật thật của mã (vd "TET2027 −80%, tối đa 300.000 ₫, chỉ nến có sẵn"), không lấy mô tả tự gõ |
 | Ghi chú | Ghi chú của khách, ghi chú nội bộ | |
 
 **Popup Tự phối nến:** đi theo các bước đang bật ở Thủ công. Lựa chọn hết nguyên liệu bị khóa kèm lý do, phần đang giữ cho đơn khác không tính là còn. Tóm tắt bên phải hiện mô tả gửi xưởng, giá 1 hũ, nguyên liệu cần và số hũ Kho làm được. Tiêu đề và nút thêm luôn hiện, chỉ phần chọn cuộn.
@@ -54,8 +54,22 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 
 ```
 Tổng = Tạm tính − Giảm giá + Phí giao
-Cọc  = Tổng × % cọc, làm tròn tới nghìn đồng
+Cọc  = Tổng × % cọc, làm tròn tới nghìn đồng, ít nhất 1.000 ₫ và không quá Tổng
 ```
+
+**Đơn lỗ:** tiền hàng sau giảm giá (Tạm tính − Giảm giá, không tính phí giao, giống lãi gộp) so với giá vốn nguyên liệu các dòng theo giá nhập hiện tại. Thấp hơn vốn thì khung tổng tiền báo đỏ **Đơn lỗ X ₫**; lãi dưới mức tối thiểu ở Cài đặt thì báo cam **Lãi chỉ Y%**. Chỉ cảnh báo, vẫn tạo / lưu được đơn.
+
+### Đơn nháp
+
+Form tạo đơn tự lưu nháp mỗi khi nhập (khách, sản phẩm, nến tự phối, giao hàng, thanh toán, ghi chú), để admin đóng ra làm việc khác rồi quay lại làm tiếp.
+
+- **Đóng form** (nút **Lưu nháp**, dấu ×, phím Esc, bấm ra ngoài) không hỏi nữa, giữ nguyên nháp và báo "Đã lưu nháp đơn". Nút ở trang Đơn hàng đổi thành **Tiếp tục đơn nháp**.
+- **Mở lại:** form điền lại đủ, có dòng "Đang tiếp tục đơn nháp lưu lúc …" kèm nút **Bắt đầu đơn mới** (xóa nháp, form trống). Nến có sẵn lấy lại tên, ảnh, giá hiện tại; nến tự phối giữ cấu hình và giá lúc chọn. Ngày làm xong đã qua thì lấy ngày gợi ý mới.
+- **Bỏ đơn** (chân form): hỏi lại rồi xóa nháp.
+- **Tạo đơn xong** thì xóa nháp.
+- **Mở từ hồ sơ khách** ("Tạo đơn cho khách này") khi đang có nháp: form điền khách đó, báo "Đang có đơn nháp của …" kèm nút **Mở đơn nháp**. Nhập đơn mới sẽ thay nháp cũ.
+- Một nháp cho cả BO, lưu trên trình duyệt đang dùng (chưa có BE). Nháp không giữ nguyên liệu và không tính lượt mã giảm giá; kiểm tra Kho và mã chạy lại lúc tạo đơn.
+- Sửa đơn có sẵn không lưu nháp, đóng khi có thay đổi vẫn hỏi "Bỏ các thay đổi?".
 
 ## Sửa đơn
 
@@ -148,10 +162,13 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `order-changes`: sửa đơn Đã thanh toán bớt hàng rồi ghi nhận hoàn phần dư, sửa đơn đã Bắt đầu làm (khóa sản phẩm), không đổi gì thì không ghi lịch sử, đơn Hoàn tất không có nút Sửa đơn, khiếu nại gửi bù (đơn 0 ₫, link hai chiều, nhãn trên bảng), khiếu nại hoàn một phần (bắt buộc chứng từ).
 - `workshop-cost`: ngày làm xong gợi ý theo công suất, cảnh báo vượt và nút dùng ngày còn chỗ, đổi ngày sang ngày đầy, giá vốn ước tính rồi chốt khi Bắt đầu làm.
 - `logic/order-changes`: quy tắc sửa đơn, tính lại tiền, thu dư, mã giảm giá, đơn gửi bù, ghi khiếu nại, khoản hoàn một phần.
-- `orders-create`: tạo đơn cho khách có sẵn, khách mới, khách bị chặn; mã giảm giá; cọc; đã nhận tiền; mã đơn theo ngày; lịch sử.
+- `orders-create`: tạo đơn cho khách có sẵn, khách mới, khách bị chặn; mã giảm giá; cọc; đã nhận tiền; mã đơn theo ngày; lịch sử; đóng khi đang nhập thì lưu nháp.
+- `order-draft`: đóng giữ nháp, nút Tiếp tục đơn nháp, tải lại trang vẫn còn, giá sản phẩm lấy lại giá hiện tại; Bắt đầu đơn mới; Bỏ đơn; tạo đơn xong xóa nháp; mở từ hồ sơ khách khi đang có nháp.
 - `orders-custom-candle`, `orders-custom-modal`, `orders-amounts`: popup Tự phối nến, khóa lựa chọn hết nguyên liệu, số hũ Kho làm được, chọn nhiều sáp, lượng từng nguyên liệu, công thức trên đơn.
 - `orders-cancel`: Bắt đầu làm trừ Kho, hủy đơn đang làm hỏi đã làm chưa, hoàn Kho, Kho thiếu thì chặn.
 - `orders-decisions`: công thức, giữ nguyên liệu, thu đủ khi hoàn tất, trả lượt mã, hoàn tiền kèm ảnh, giao hàng lỗi, gửi lại đơn.
 - `orders-list`: thẻ thống kê, lọc thanh toán, khoảng ngày, tìm số điện thoại, sắp xếp giá trị, tab dồn vào nút …, đổi ngày làm xong, ghi chú nội bộ, đơn đã làm xong không đổi ngày, sản phẩm đang ẩn có nhãn khi tạo đơn.
 - `logic/orders`: tình trạng thanh toán, số tiền hoàn theo lỗi khách / lỗi shop, thứ tự trạng thái, hủy được khi nào, nhãn hạn làm xong, bộ lọc và sắp xếp.
 - `logic/discounts`: áp mã khi tạo đơn, tổng tiền và tiền cọc.
+- `price-guards`: thêm sản phẩm bán thấp hơn vốn vào đơn thì báo Đơn lỗ.
+- `logic/price-guards`: tiền hàng sau giảm giá không tính phí giao, thấp hơn vốn / lãi thấp; cọc ít nhất 1.000 ₫, không quá tổng, đơn 0 ₫ hoặc 0% thì không cọc.

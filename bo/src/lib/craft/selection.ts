@@ -220,6 +220,7 @@ export function materialLines(config: CraftConfig, selection: CraftSelection, ma
         if (o && !o.exclusive) push(step, sel, o.id, o.name.vi, o.materialId, byUnit(o.materialId, (grams * load * i.percent) / 100));
       }
     } else if (step.kind === "inputs" && sel.kind === "inputs") {
+      for (const f of step.fields) if (f.enabled && sel.values[f.id]?.trim()) push(step, sel, f.id, f.label.vi, f.materialId, 1);
       for (const a of step.addons) if (sel.addons.includes(a.id)) push(step, sel, a.id, a.name.vi, a.materialId, 1);
     } else if ((step.kind === "cards" || step.kind === "swatches") && (sel.kind === "cards" || sel.kind === "swatches")) {
       const share = isMixStep(step) ? Math.max(1, sel.optionIds.length) : 1;
@@ -281,6 +282,7 @@ export function validateSelection(config: CraftConfig, selection: CraftSelection
     if (step.kind === "inputs" && sel?.kind === "inputs") {
       if (step.required && !Object.values(sel.values).some((v) => v.trim()) && !sel.addons.length) push("Nhập ít nhất một ô hoặc chọn tuỳ chọn.");
       for (const f of step.fields) if ((sel.values[f.id]?.trim().length ?? 0) > f.maxLength) push(`${f.label.vi} quá ${f.maxLength} ký tự.`);
+      for (const f of step.fields) if (f.enabled && sel.values[f.id]?.trim() && optionLevel(f.materialId, map) === "out") push(`${f.label.vi}: nguyên liệu đã hết.`);
       for (const a of step.addons) if (sel.addons.includes(a.id) && (!a.available || optionLevel(a.materialId, map) === "out")) push(`${a.name.vi} đã hết.`);
       continue;
     }

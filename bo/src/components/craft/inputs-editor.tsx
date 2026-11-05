@@ -1,8 +1,12 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Checkbox, Col, Empty, Flex, Form, Input, InputNumber, Popconfirm, Row, Switch, Typography } from "antd";
 import { MaterialSelect } from "@/components/inventory/material-select";
+import { CostCheck, SuggestButton } from "@/components/craft/margin";
 import { MoneyInput } from "@/components/money-input";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
+import { useSettings } from "@/hooks/use-settings";
+import { itemCheck, needsReview, suggestPrice } from "@/lib/craft/pricing";
+import { toMap, type MaterialMap } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 import { uniqueId } from "@/lib/craft/steps";
 import type { AddonDef, CraftStep, InputsStep, Localized, TextFieldDef } from "@/lib/craft/types";
@@ -13,6 +17,7 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
   const patchField = (id: string, p: Partial<TextFieldDef>) => update((s) => ({ ...s, fields: s.fields.map((f) => (f.id === id ? { ...f, ...p } : f)) }));
   const patchAddon = (id: string, p: Partial<AddonDef>) => update((s) => ({ ...s, addons: s.addons.map((a) => (a.id === id ? { ...a, ...p } : a)) }));
   const ids = [...step.fields.map((f) => f.id), ...step.addons.map((a) => a.id)];
+  const map = toMap(materials);
 
   const addField = () =>
     update((s) => ({
@@ -61,10 +66,16 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
                   </Col>
                   <Col xs={12} md={6}>
                     <Form.Item label="Phụ thu khi nhập">
-                      <MoneyInput value={f.priceDelta} onChange={(n) => n !== null && patchField(f.id, { priceDelta: n })} />
+                      <MoneyInput value={f.priceDelta} onChange={(n) => n !== null && patchField(f.id, { priceDelta: n })} aria-label={`Phụ thu ${f.label.vi}`} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} md={12}>
+                    <Form.Item label="Nguyên liệu trừ khi khách nhập" extra="VD nhãn decal in tên: trừ 1 cái mỗi hũ, hết thì khách không nhập được.">
+                      <MaterialSelect materials={materials} value={f.materialId ?? ""} onChange={(v) => patchField(f.id, { materialId: v || undefined })} ariaLabel={`Nguyên liệu ${f.label.vi}`} />
                     </Form.Item>
                   </Col>
                 </Row>
+                <ItemCost label={f.label.vi} price={f.priceDelta} materialId={f.materialId} map={map} onApply={(n) => patchField(f.id, { priceDelta: n })} />
                 <Flex justify="space-between" align="center" gap={12} wrap>
                   <Flex gap={16} wrap>
                     <Checkbox checked={!!f.multiline} onChange={(e) => patchField(f.id, { multiline: e.target.checked || undefined })}>
@@ -131,6 +142,7 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
                       </Form.Item>
                     </Col>
                   </Row>
+                  <ItemCost label={a.name.vi} price={a.priceDelta} materialId={a.materialId} map={map} onApply={(n) => patchAddon(a.id, { priceDelta: n })} />
                   <Flex justify="space-between" align="center" gap={12} wrap>
                     <Flex gap={16} wrap>
                       <Checkbox checked={a.available} onChange={(e) => patchAddon(a.id, { available: e.target.checked })}>
@@ -155,6 +167,20 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
         </Flex>
       </section>
     </Flex>
+  );
+}
+
+// Phụ thu so với giá vốn 1 cái nguyên liệu gắn kèm (giá nhập bình quân trong Kho); không gắn nguyên liệu thì không hiện
+function ItemCost({ label, price, materialId, map, onApply }: { label: string; price: number; materialId?: string; map: MaterialMap; onApply: (n: number) => void }) {
+  const { settings } = useSettings();
+  const c = itemCheck(price, materialId, map);
+  if (!c) return null;
+  return (
+    <div role="group" aria-label={`Giá vốn ${label}`} style={{ marginBottom: 12 }}>
+      <CostCheck c={c} min={settings.minMargin} inline>
+        {c.floor > 0 && needsReview(c, settings.minMargin) && <SuggestButton value={suggestPrice(c.floor, settings)} current={price} label={`Gợi ý phụ thu ${label}`} onApply={onApply} />}
+      </CostCheck>
+    </div>
   );
 }
 

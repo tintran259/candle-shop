@@ -59,8 +59,16 @@ export function evaluateDiscount(code: string | undefined, discounts: Discount[]
 
 export type OrderTotals = { subtotal: number; discount: number; shippingFee: number; total: number; dueNow: number };
 
-// Tiền cọc làm tròn tới nghìn đồng
-export const depositAmount = (total: number, percent: number) => Math.round((total * percent) / 100 / 1000) * 1000;
+// Tiền hàng sau giảm giá (tạm tính − giảm giá, không tính phí giao — giống lãi gộp) so với giá vốn nguyên liệu của các dòng.
+// Cùng dạng PriceCheck ở Thủ công: price = tiền hàng, floor = giá vốn
+export function goodsCheck(totals: Pick<OrderTotals, "subtotal" | "discount">, cost: number) {
+  const price = Math.max(0, totals.subtotal - totals.discount);
+  return { price, floor: cost, missing: [], margin: price > 0 ? (price - cost) / price : null };
+}
+
+// Tiền cọc làm tròn tới nghìn đồng, ít nhất 1.000 ₫ và không quá tổng (đơn nhỏ không bị cọc 0 ₫)
+export const depositAmount = (total: number, percent: number) =>
+  total > 0 && percent > 0 ? Math.min(total, Math.max(1000, Math.round((total * percent) / 100 / 1000) * 1000)) : 0;
 
 export function orderTotals(lines: DraftLine[], shippingFee: number, plan: PaymentPlan, discount: number, depositPercent: number): OrderTotals {
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);

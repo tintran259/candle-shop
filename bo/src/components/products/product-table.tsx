@@ -2,17 +2,19 @@ import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, StarFi
 import { Button, Flex, Popconfirm, Switch, Table, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import { memo, useState } from "react";
 import { CategoryTag } from "@/components/products/category-tag";
-import { PriceText, ProductBadges, ProductThumb, RatingText, RecipeTag } from "@/components/products/product-view";
+import { PriceFlag, PriceText, ProductBadges, ProductThumb, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
+import type { PriceCheck } from "@/lib/craft/pricing";
 import { formatNumber } from "@/lib/format";
 import { aromaLevelLabels, sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand } from "@/theme";
 
-type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig };
+// review: sản phẩm cần xem lại giá (thấp hơn vốn / lãi dưới mức)
+type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig; review: ReadonlyMap<string, PriceCheck> };
 
 // Bảng sản phẩm: chọn nhiều để ẩn/hiện/xóa hàng loạt; bật/tắt bán và nổi bật ngay trên dòng
-function ProductTableView({ items, api, onEdit, pagination }: Props) {
+function ProductTableView({ items, api, onEdit, pagination, review }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   // Bỏ các id không còn trong danh sách đang lọc
   const picked = selected.filter((id) => items.some((p) => p.id === id));
@@ -50,7 +52,16 @@ function ProductTableView({ items, api, onEdit, pagination }: Props) {
         </Flex>
       ),
     },
-    { title: "Giá", key: "price", render: (_, p) => <PriceText product={p} /> },
+    {
+      title: "Giá",
+      key: "price",
+      render: (_, p) => (
+        <Flex vertical align="flex-start">
+          <PriceText product={p} />
+          <PriceFlag check={review.get(p.id)} />
+        </Flex>
+      ),
+    },
     { title: "Đánh giá", key: "rating", responsive: ["lg"], render: (_, p) => <RatingText product={p} /> },
     {
       title: "Đã bán",

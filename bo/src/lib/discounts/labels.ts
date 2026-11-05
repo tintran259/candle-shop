@@ -43,6 +43,14 @@ export function conditionText(d: Pick<Discount, "type" | "maxDiscount" | "minOrd
   return parts.join(" · ");
 }
 
+// Luật ngắn khi áp mã vào đơn: "TET2027 −80%, tối đa 300.000 ₫, chỉ nến có sẵn"
+export function discountRule(d: Pick<Discount, "code" | "type" | "value" | "maxDiscount" | "scope">) {
+  const parts = [`${d.code} ${valueText(d)}`];
+  if (d.type === "percent" && d.maxDiscount) parts.push(`tối đa ${formatMoney(d.maxDiscount)}`);
+  if (d.scope !== "all") parts.push(scopeLabels[d.scope].toLowerCase());
+  return parts.join(", ");
+}
+
 export function periodText(d: Pick<Discount, "startsAt" | "endsAt">) {
   const from = dayjs(d.startsAt).format("DD/MM/YYYY");
   return d.endsAt ? `${from} – ${dayjs(d.endsAt).format("DD/MM/YYYY")}` : `Từ ${from} · không hết hạn`;

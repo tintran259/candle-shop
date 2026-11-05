@@ -56,6 +56,6 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 
 **Đã có test:**
 
-- `discounts`: số đếm theo trạng thái, sắp hết hạn, lọc, tìm mã và mô tả, sắp xếp, tạo mã (chuẩn hóa, mã ngắn, mã trùng, tạo ngẫu nhiên), mã giảm số tiền cho nến tự phối có giới hạn lượt, tạm dừng và bật lại, sửa qua đường dẫn, hỏi khi đóng chưa lưu, xóa.
+- `discounts`: số đếm theo trạng thái, sắp hết hạn, lọc, tìm mã và mô tả, sắp xếp, tạo mã (chuẩn hóa, mã ngắn, mã trùng, tạo ngẫu nhiên), mã giảm số tiền cho nến tự phối có giới hạn lượt, tạm dừng và bật lại, sửa qua đường dẫn, hỏi khi đóng chưa lưu, xóa; áp mã vào đơn hiện mức giảm thật (không lấy mô tả cũ).
 - `logic/discounts`: trạng thái tự tính và thứ tự ưu tiên, nhắc hạn, định dạng mã, mọi lý do mã không dùng được, đơn tối thiểu, giảm % có mức tối đa, giảm số tiền không vượt giá trị dòng, phạm vi, miễn phí giao, khách lần đầu, giới hạn mỗi khách.
 - Lượt dùng tăng khi tạo đơn và trả lại khi hủy ở `orders-create`, `orders-decisions`.

@@ -18,7 +18,7 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useSettings } from "@/hooks/use-settings";
 import { describeChanges, orderChanged } from "@/lib/craft/changes";
 import { CRAFT_PREVIEW_NOTICE } from "@/lib/craft/groups";
-import { needsReview, optionCheck, sizeCheck } from "@/lib/craft/pricing";
+import { inputsChecks, lidCheck, needsReview, optionCheck, sizeCheck } from "@/lib/craft/pricing";
 import { emptySelection, priceSelection, type StepSelection } from "@/lib/craft/selection";
 import { isOptionStep, kindMeta, optionRows, validateConfig } from "@/lib/craft/steps";
 import type { CraftConfig, CraftStep, OptionStep, StepOption, VesselOption } from "@/lib/craft/types";
@@ -123,7 +123,18 @@ export function CraftPage() {
       .filter((s): s is OptionStep => s.enabled && isOptionStep(s) && s.kind !== "vessel")
       .flatMap((s) => (s.options as StepOption[]).filter((o) => o.available).map((o) => optionCheck(config, s, o, map)))
       .filter((c) => c && needsReview(c, settings.minMargin)).length;
-    return sizes + options;
+    // Nắp (đếm theo hũ) và ô nhập / tuỳ chọn thêm có gắn nguyên liệu
+    const lids =
+      vessel?.kind === "vessel" && vessel.enabled
+        ? vessel.options.filter((o) => o.available).filter((o) => {
+            const c = lidCheck(o, map);
+            return c && needsReview(c, settings.minMargin);
+          }).length
+        : 0;
+    const inputs = config.steps
+      .flatMap((s) => (s.enabled && s.kind === "inputs" ? inputsChecks(s, map) : []))
+      .filter((x) => needsReview(x.check, settings.minMargin)).length;
+    return sizes + options + lids + inputs;
   }, [config, map, settings.minMargin]);
   const withIssues = new Set(issues.filter((i) => i.level === "error" || i.level === "warning").map((i) => i.stepId).filter(Boolean) as string[]);
 
@@ -239,10 +250,10 @@ export function CraftPage() {
         <Alert
           type="warning"
           showIcon
-          title={`${lowMargins} cỡ hoặc lựa chọn cần xem lại giá bán`}
+          title={`${lowMargins} cỡ, nắp hoặc lựa chọn cần xem lại giá bán`}
           description={
             <>
-              Giá bán thấp hơn giá vốn hoặc lãi dưới {settings.minMargin}% — xem từng cỡ trong drawer hũ và cột Giá vốn tối thiểu ở tab Lựa chọn của từng bước. <Link to="/settings">Đổi mức lãi tối thiểu</Link>
+              Giá bán thấp hơn giá vốn hoặc lãi dưới {settings.minMargin}% — xem từng cỡ và phụ thu nắp trong drawer hũ, cột Giá vốn tối thiểu ở tab Lựa chọn của từng bước, phụ thu ô nhập và tuỳ chọn thêm ở bước Cá nhân hóa. <Link to="/settings">Đổi mức lãi tối thiểu</Link>
             </>
           }
         />

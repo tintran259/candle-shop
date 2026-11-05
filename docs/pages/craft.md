@@ -103,16 +103,18 @@ Giá bán không tự chạy theo giá vốn để giá trên web không nhảy 
 | **Giá bán / 100 g, / ml** (sáp, màu, hương) | Nguyên liệu đó theo lượng | Sáp ong: vốn 22.000 ₫/100 g. Rose: vốn 3.500 ₫/ml |
 | **Phụ thu lựa chọn** ở bước bắt buộc tính giá cố định (Bấc…) | Phần đắt hơn mục mặc định, vì giá hũ đã trả mục mặc định | Bấc gỗ: 4.500 − 1.500 = 3.000 ₫ |
 | **Phụ thu lựa chọn** ở bước không bắt buộc (Trang trí…) | Cả giá nguyên liệu của nó | Hoa khô: 6.000 ₫ |
+| **Phụ thu nắp** (drawer hũ, dưới ô Phụ thu nắp) | Mã nắp của cỡ khách chọn, so ở cỡ có nắp đắt nhất | Nắp thiếc 5.000 ₫: phụ thu 0 ₫ là thấp hơn vốn. Nắp gốm 12.000 ₫ |
+| **Phụ thu ô nhập, tuỳ chọn thêm** (bước Cá nhân hóa) | 1 cái nguyên liệu gắn kèm | In tên lên nhãn: nhãn decal 1.500 ₫. Hộp quà: 25.000 ₫ |
 
 - **Mục mặc định** của bước: lựa chọn đang bán có phụ thu thấp nhất, bằng nhau thì giá vốn thấp hơn (vd Bấc cotton). Cột ghi "Tính trong giá hũ".
 - **Cỡ để so:** phụ thu cố định so ở cỡ thiếu nhiều nhất, ghi kèm "cỡ 250ml". Bước Hũ: bảng hiện cỡ tệ nhất, từng cỡ xem trong drawer hũ. Sáp, màu, hương so theo đơn vị nên không phụ thuộc cỡ.
 - **Trạng thái** dưới số vốn:
   - **Thấp hơn vốn X ₫** (đỏ): giá bán thấp hơn giá vốn tối thiểu.
   - **lãi Y%** (phụ). Dưới **Lãi tối thiểu** ở [Cài đặt](./settings.md) (mặc định 50%) thì màu cam kèm ⚠.
-  - Đầu trang có thông báo đếm số cỡ, lựa chọn đang bán cần xem lại.
+  - Đầu trang có thông báo đếm số cỡ, nắp (theo hũ), lựa chọn, ô nhập và tuỳ chọn thêm đang bán cần xem lại.
 - **Gợi ý giá** (nút "Gợi ý …", chỉ hiện khi cần xem lại và cao hơn giá đang đặt, chỉ điền khi bấm): giá vốn tối thiểu × **Hệ số gợi ý giá** (mặc định ×2,5), không thấp hơn mức đạt lãi tối thiểu, làm tròn lên 5.000 ₫ (giá theo lượng làm tròn lên 100 ₫). Có ở từng cỡ trong drawer hũ (điền Phụ thu cỡ = giá gợi ý − giá hũ) và dưới ô giá trong drawer lựa chọn (tính theo phụ thu và nguyên liệu đang nhập, chưa cần Áp dụng).
 - Nguyên liệu chưa có giá nhập: ghi "Thiếu giá N nguyên liệu", giá vốn đang thiếu phần đó. Nguyên liệu không theo dõi tồn không tính, giống giá vốn ở đơn hàng.
-- Chưa so: phụ thu nắp với giá nắp, ô chữ và tuỳ chọn của bước Cá nhân hóa.
+- **Ô nhập chữ** có thể gắn nguyên liệu (**Nguyên liệu trừ khi khách nhập**, vd nhãn decal): khách có nhập thì trừ 1 cái, hết thì không thêm được vào đơn. Cấu hình mẫu gắn "Chữ in trên nhãn" với nhãn decal. Ô không gắn nguyên liệu thì không so giá.
 - Đơn hàng giữ cách cũ: giá bán chốt lúc tạo đơn, giá vốn cả hũ chốt lúc Bắt đầu làm.
 
 ## Kiểm tra cấu hình
@@ -147,5 +149,7 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `craft-fixes`: nút nhập nhanh, ảnh ưu tiên hơn màu.
 - `craft-ui`: thẻ thống kê, sửa lựa chọn giữ quy tắc chỉ dùng với, xem trước, thêm / bật / đổi chỗ / xóa bước, lựa chọn kèm nguyên liệu mới, icon và tên tiếng Anh, bước Cá nhân hóa, bước Hũ không còn tab Kích thước, giá theo cỡ, Cấu hình mẫu, Xuất JSON, điện thoại.
 - `craft-pricing`: bảng Hũ hiện giá theo từng cỡ; drawer hũ so khách trả với vốn hũ + sáp + bấc, giá hũ thấp hơn vốn báo đỏ, bấm gợi ý điền phụ thu cỡ; Kho thêm hũ cùng Loại hũ (tên tự điền) → Thủ công báo cỡ mới, cỡ mới để tắt, bật và đặt giá; Rose thấp hơn vốn, sáp mặc định tính trong giá hũ, sáp ong chỉ bù phần chênh, gợi ý phụ thu trong drawer; cột Giá bình quân ở Kho; Lãi tối thiểu và Hệ số ở Cài đặt.
+- `price-guards`: drawer Hũ thiếc báo phụ thu nắp thấp hơn vốn nắp, gợi ý điền phụ thu nắp; bước Cá nhân hóa gắn nguyên liệu cho ô nhập, so phụ thu với vốn, gợi ý giá; cảnh báo đầu trang tính cả nắp.
+- `logic/price-guards`: nắp so ở cỡ đắt nhất, bỏ qua hũ không nắp; ô nhập và tuỳ chọn thêm so với 1 cái nguyên liệu; nhập chữ in nhãn trừ 1 nhãn decal, bỏ trống không trừ, hết nhãn báo lỗi.
 - `logic/craft-pricing`: giá khách trả = giá hũ + phụ thu cỡ; vốn hũ cỡ đó + sáp + bấc mặc định, thấp hơn vốn, lãi dưới mức, thiếu giá nhập; cột hũ lấy cỡ thiếu nhiều nhất; bước bắt buộc chỉ bù phần chênh, hương gồm phụ thu hương, lựa chọn mới chưa lưu; mã hũ cùng loại xếp theo dung tích, đoán loại hũ theo tên; chuyển cấu hình cũ giữ nguyên giá khách trả; giá gợi ý.
 - `storefront-sync`: web chạy theo cấu hình BO. Chỉ chạy khi web chạy ở cổng 3000, không thì bỏ qua.
