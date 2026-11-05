@@ -52,9 +52,7 @@ export function CategoryTable({ api, count, onEdit }: Props) {
       title: "Hiện trên web",
       key: "hidden",
       align: "center",
-      render: (_, c) => (
-        <Switch size="small" checked={!c.hidden} onChange={(on) => api.patch(c.id, { hidden: !on })} aria-label={`Hiện trên web: ${c.name.vi}`} />
-      ),
+      render: (_, c) => <Switch size="small" checked={!c.hidden} onChange={(on) => api.patch(c.id, { hidden: !on })} aria-label={`Hiện trên web: ${c.name.vi}`} />,
     },
     {
       key: "actions",

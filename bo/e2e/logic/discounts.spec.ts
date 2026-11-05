@@ -135,8 +135,9 @@ test.describe("Mã riêng cho khách được chọn", () => {
 });
 
 test.describe("Tổng tiền đơn", () => {
-  test("Tổng = tạm tính − giảm + phí giao, cọc làm tròn tới nghìn đồng", () => {
-    expect(orderTotals([product(333_333, 3)], 50_000, "deposit", 100_000, 30)).toEqual({ subtotal: 999_999, discount: 100_000, shippingFee: 50_000, total: 949_999, dueNow: 285_000 });
+  test("Tổng = tạm tính − giảm + phí giao; cọc trên tiền hàng (không gồm phí giao), làm tròn tới nghìn đồng", () => {
+    // Cọc 30% của 899.999 tiền hàng = 269.999,7 → 270.000
+    expect(orderTotals([product(333_333, 3)], 50_000, "deposit", 100_000, 30)).toEqual({ subtotal: 999_999, discount: 100_000, shippingFee: 50_000, total: 949_999, dueNow: 270_000 });
   });
   test("Trả đủ thì thu ngay toàn bộ, tổng không âm", () => {
     expect(orderTotals([product(100_000)], 0, "full", 0, 50).dueNow).toBe(100_000);

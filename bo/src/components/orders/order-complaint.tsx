@@ -41,7 +41,13 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
   const picks = order.items.map((i) => ({ itemId: i.id, quantity: Math.max(0, Math.round(quantities[i.id] ?? i.quantity)) }));
   const candles = picks.reduce((s, p) => s + p.quantity, 0);
   // Nến gửi bù làm lại từ đầu: kiểm tra nguyên liệu như đơn mới
-  const short = shortages(linesNeeds(picks.map((p) => ({ ...order.items.find((i) => i.id === p.itemId)!, quantity: p.quantity })), source), available);
+  const short = shortages(
+    linesNeeds(
+      picks.map((p) => ({ ...order.items.find((i) => i.id === p.itemId)!, quantity: p.quantity })),
+      source,
+    ),
+    available,
+  );
   const maxRefund = maxComplaintRefund(order);
 
   const finish = (v: Values) => {
@@ -58,7 +64,13 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
       replacement,
     });
     if (!saved) return message.error("Bộ nhớ trình duyệt đã đầy — bớt ảnh rồi lưu lại.");
-    message.success(replacement ? `Đã ghi nhận khiếu nại, tạo đơn gửi bù ${replacement.code}` : v.resolution === "refund" ? `Đã ghi nhận khiếu nại, hoàn ${formatMoney(v.refundAmount ?? 0)}` : "Đã ghi nhận khiếu nại");
+    message.success(
+      replacement
+        ? `Đã ghi nhận khiếu nại, tạo đơn gửi bù ${replacement.code}`
+        : v.resolution === "refund"
+          ? `Đã ghi nhận khiếu nại, hoàn ${formatMoney(v.refundAmount ?? 0)}`
+          : "Đã ghi nhận khiếu nại",
+    );
     onClose();
   };
 
@@ -67,7 +79,13 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ resolution: "resend", images: [], refundImages: [], quantities: Object.fromEntries(order.items.map((i) => [i.id, i.quantity])), readyDate: dayjs(workshop.suggest(order.items.reduce((s, i) => s + i.quantity, 0))) }}
+        initialValues={{
+          resolution: "resend",
+          images: [],
+          refundImages: [],
+          quantities: Object.fromEntries(order.items.map((i) => [i.id, i.quantity])),
+          readyDate: dayjs(workshop.suggest(order.items.reduce((s, i) => s + i.quantity, 0))),
+        }}
         onFinish={finish}
       >
         <Form.Item name="reason" label="Khách phản ánh" rules={[{ required: true, whitespace: true, message: "Nhập nội dung khiếu nại." }]}>

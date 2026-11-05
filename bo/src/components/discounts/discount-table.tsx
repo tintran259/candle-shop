@@ -17,12 +17,7 @@ function DiscountTableView({ items, api, onEdit, pagination }: Props) {
       key: "code",
       render: (_, d) => (
         <Flex vertical gap={4} style={{ minWidth: 170, maxWidth: 220 }}>
-          <Typography.Text
-            strong
-            copyable={{ text: d.code, tooltips: ["Sao chép mã", "Đã sao chép"] }}
-            className="tabular"
-            style={{ letterSpacing: "0.04em" }}
-          >
+          <Typography.Text strong copyable={{ text: d.code, tooltips: ["Sao chép mã", "Đã sao chép"] }} className="tabular" style={{ letterSpacing: "0.04em" }}>
             {d.code}
           </Typography.Text>
           {d.description && (
@@ -113,9 +108,7 @@ function DiscountTableView({ items, api, onEdit, pagination }: Props) {
       title: "Bật",
       dataIndex: "active",
       align: "center",
-      render: (v: boolean, d) => (
-        <Switch size="small" checked={v} onChange={(on) => api.patch(d.id, { active: on })} aria-label={`${v ? "Tạm dừng" : "Bật"} mã ${d.code}`} />
-      ),
+      render: (v: boolean, d) => <Switch size="small" checked={v} onChange={(on) => api.patch(d.id, { active: on })} aria-label={`${v ? "Tạm dừng" : "Bật"} mã ${d.code}`} />,
     },
     {
       key: "actions",

@@ -25,8 +25,7 @@ export type AppNotification = {
   to: string;
 };
 
-const lastEventAt = (o: Order, status: Order["status"]) =>
-  [...o.history].reverse().find((e) => e.status === status && (e.kind ?? "status") === "status")?.at ?? o.updatedAt;
+const lastEventAt = (o: Order, status: Order["status"]) => [...o.history].reverse().find((e) => e.status === status && (e.kind ?? "status") === "status")?.at ?? o.updatedAt;
 
 const names = (items: Material[]) => {
   const list = items.map((i) => i.name);
@@ -107,7 +106,11 @@ export function buildNotifications(src: { orders: Order[]; materials: Material[]
   // Tồn kho (Kho nguyên liệu): gộp một thông báo cho mỗi mức để không tràn danh sách
   const out = src.materials.filter((m) => materialLevel(m) === "out");
   const low = src.materials.filter((m) => materialLevel(m) === "low");
-  const ids = (items: Material[]) => items.map((i) => i.id).sort().join(",");
+  const ids = (items: Material[]) =>
+    items
+      .map((i) => i.id)
+      .sort()
+      .join(",");
   if (out.length)
     list.push({
       id: `stock-out:${ids(out)}`,

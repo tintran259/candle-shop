@@ -4,11 +4,15 @@ import { expect, test } from "./support/harness.mjs";
 const drawer = (page) => page.locator(".ant-drawer-open").last();
 const draft = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-order-draft-v1") ?? "null"));
 
+// Chọn lại nếu cú bấm đầu bị trượt khi máy tải nặng — chờ tới khi tóm tắt đơn có sản phẩm
 const pickProduct = async (page, d, name: string) => {
   await d.getByRole("button", { name: "Nến có sẵn" }).click();
-  await d.getByLabel("Chọn sản phẩm").last().click();
-  await page.keyboard.type(name);
-  await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: name }).first().click();
+  await expect(async () => {
+    await d.getByLabel("Chọn sản phẩm").last().click();
+    await page.keyboard.type(name);
+    await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: name }).first().click();
+    await expect(d.locator("aside.order-summary")).toContainText(name, { timeout: 2000 });
+  }).toPass({ timeout: 15_000 });
 };
 
 // Nhập dở: khách, SĐT, 1 Moon Morning, ghi chú

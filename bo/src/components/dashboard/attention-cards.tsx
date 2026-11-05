@@ -13,7 +13,14 @@ export function AttentionCards() {
   const items = [
     { label: "Đơn trễ hạn", value: formatNumber(a.late), urgent: a.late > 0, to: "/orders?sort=ready-soon", link: "Xem đơn" },
     { label: "Giao lỗi cần xử lý", value: formatNumber(a.issues), urgent: a.issues > 0, to: `/orders?status=${a.issueStatus ?? "delivery_failed"}`, link: "Xem đơn" },
-    { label: "Chờ hoàn tiền", value: formatMoneyShort(a.refundAmount), urgent: a.refundCount > 0, note: a.refundCount ? `${a.refundCount} đơn` : undefined, to: "/orders?payment=refunding", link: "Xem đơn" },
+    {
+      label: "Chờ hoàn tiền",
+      value: formatMoneyShort(a.refundAmount),
+      urgent: a.refundCount > 0,
+      note: a.refundCount ? `${a.refundCount} đơn` : undefined,
+      to: "/orders?payment=refunding",
+      link: "Xem đơn",
+    },
     { label: "Nguyên liệu đang giữ", value: formatNumber(held.size), urgent: false, note: held.size ? "Cho đơn đã thanh toán" : undefined, to: "/inventory", link: "Xem Kho" },
   ];
   return (

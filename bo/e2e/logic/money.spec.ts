@@ -74,6 +74,20 @@ test("Hủy sau khi đã trả đủ cả phí giao: hoàn trừ phí giao trư�
   expect(orderMoney(o)).toMatchObject({ goods: 165_000, shipping: 0 });
 });
 
+test("Cọc 150.000 rồi shop hủy và hoàn đủ 150.000: doanh thu 0, lãi 0 — không ảnh hưởng lãi gộp", () => {
+  // Lúc còn đang làm: chưa chốt nên không vào doanh thu, lãi gộp
+  const open = order({ status: "producing" });
+  expect(dashboardStats([open], [], () => "", 7, today, () => 100_000).kpis.profit.value).toBe(0);
+  // Hủy lỗi do shop, hoàn đủ 150.000, chưa làm hoặc đã hoàn nguyên liệu về Kho
+  const refunded = order({ status: "cancelled", cancelFault: "shop", refund: { amount: 150_000, images: [], at: at(1), by: "x" } });
+  expect(orderMoney(refunded).goods).toBe(0);
+  expect(orderProfit(refunded, 100_000).profit).toBe(0);
+  expect(orderProfit({ ...refunded, materialCost: 100_000, cancelOutcome: "returned" }, 100_000).profit).toBe(0);
+  const s = dashboardStats([refunded], [], () => "", 7, today, () => 100_000);
+  expect(s.kpis.revenue.value).toBe(0);
+  expect(s.kpis.profit.value).toBe(0);
+});
+
 test("Dashboard: doanh thu không gồm phí vận chuyển, lãi gồm đơn hủy và trừ phí shop chịu", () => {
   const done = order({ id: "a", status: "completed", shippingFee: 30_000, total: 330_000, shippingCost: 30_000, payments: [pay(330_000)] as Order["payments"] });
   const cancelled = order({ id: "b", status: "cancelled", cancelFault: "customer", shippingCost: 60_000 });
@@ -83,4 +97,41 @@ test("Dashboard: doanh thu không gồm phí vận chuyển, lãi gồm đơn h�
   expect(s.kpis.profit.value).toBe(290_000);
   expect(s.kpis.profit.shipping).toBe(-60_000);
   expect(s.daily.reduce((n, d) => n + d.revenue, 0)).toBe(450_000);
+});
+
+test("Bảng ví dụ đã chốt (docs/pages/dashboard.md#quy-tắc-lãi-gộp)", () => {
+  const cancel = (fault: "customer" | "shop", trips: number) =>
+    order({
+      status: "cancelled",
+      cancelFault: fault,
+      cancelOutcome: "stocked",
+      materialCost: 100_000,
+      shippingFee: 30_000 * (trips - 1),
+      resendFee: 30_000 * (trips - 1),
+      total: 300_000 + 30_000 * (trips - 1),
+      shippingCost: 30_000 * trips,
+      ...(fault === "shop" && { refund: { amount: 150_000, images: [], at: at(1), by: "x" } }),
+    });
+  // Khách không nhận, mất cọc: 1 lượt → 120.000; 3 lượt → 60.000
+  expect([orderMoney(cancel("customer", 1)).goods, orderProfit(cancel("customer", 1), 100_000).profit]).toEqual([150_000, 120_000]);
+  expect([orderMoney(cancel("customer", 3)).goods, orderProfit(cancel("customer", 3), 100_000).profit]).toEqual([150_000, 60_000]);
+  // Lỗi do shop, hoàn cọc: doanh thu 0, lãi −30.000
+  expect([orderMoney(cancel("shop", 1)).goods, orderProfit(cancel("shop", 1), 100_000).profit]).toEqual([0, -30_000]);
+  // Hoàn tất: khách trả phí giao 30.000 → 200.000; miễn phí giao, shop trả 30.000 → 170.000
+  expect(orderProfit(order({ status: "completed", shippingFee: 30_000, total: 330_000, shippingCost: 30_000 }), 100_000).profit).toBe(200_000);
+  expect(orderProfit(order({ status: "completed", shippingCost: 30_000 }), 100_000).profit).toBe(170_000);
+});
+
+test("Cọc tính trên tiền hàng, không gồm phí vận chuyển", async () => {
+  const { orderTotals } = await import("@/lib/orders/create");
+  const { refundFor } = await import("@/lib/orders/labels");
+  // 300.000 tiền hàng + 30.000 phí giao, cọc 50% = 150.000 (không phải 165.000)
+  expect(orderTotals([{ kind: "product", productId: "p", price: 300_000, quantity: 1 }], 30_000, "deposit", 0, 50)).toMatchObject({ total: 330_000, dueNow: 150_000 });
+  // Có giảm giá 50.000: cọc 50% của 250.000
+  expect(orderTotals([{ kind: "product", productId: "p", price: 300_000, quantity: 1 }], 30_000, "deposit", 50_000, 50).dueNow).toBe(125_000);
+  // Khách hủy (lỗi do khách) sau khi trả đủ 330.000: giữ 150.000 cọc, hoàn 180.000
+  const paidFull = order({ shippingFee: 30_000, total: 330_000, payments: [pay(330_000)] as Order["payments"] });
+  expect(refundFor(paidFull, "customer")).toBe(180_000);
+  // Đã gửi lại (phí gửi lại cộng vào phí giao): cọc vẫn 150.000
+  expect(refundFor(order({ shippingFee: 60_000, resendFee: 30_000, total: 360_000, payments: [pay(150_000)] as Order["payments"] }), "customer")).toBe(0);
 });

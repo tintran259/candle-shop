@@ -126,6 +126,8 @@ export type Order = {
   // Số tiền phải hoàn lúc hủy, chưa hoàn thì chưa có refund
   refundDue?: number;
   refund?: Refund;
+  // Đơn vị vận chuyển chọn lúc tạo đơn; lúc Giao cho vận chuyển chọn sẵn đơn vị này
+  carrier?: { id: string; name: string };
   shipment?: Shipment;
   // Tổng phí shop đã trả đơn vị vận chuyển (mọi lượt giao, phí hoàn hàng) — chi phí, trừ vào lãi. Chưa giao thì không có
   shippingCost?: number;

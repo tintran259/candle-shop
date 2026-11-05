@@ -77,3 +77,23 @@ test("Tạo đơn: tiền hàng sau giảm giá thấp hơn vốn nguyên liệu
   await expect(alert).toBeVisible();
   await expect(alert).toContainText("Tiền hàng sau giảm giá 10.000");
 });
+
+test("Khách chỉ cọc rồi không nhận: sản phẩm báo bỏ cọc lỗ, form sản phẩm gợi ý giá đủ bù", async ({ page }) => {
+  // Phí giao phương thức mặc định 1.000.000 ₫: mọi sản phẩm mẫu đều không đủ bù khi khách bỏ cọc
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "bo-settings-v1",
+      JSON.stringify({ minMargin: 0, priceMarkup: 1, depositPercent: 50, shippingOptions: [{ id: "standard", name: "Tiêu chuẩn", fee: 1_000_000, days: 3, enabled: true }] }),
+    ),
+  );
+  await page.goto("/products");
+  await expect(page.getByText(/sản phẩm cần xem lại giá bán/)).toBeVisible();
+  await expect(page.locator("main").getByText(/^Bỏ cọc lỗ /).first()).toBeVisible();
+
+  await page.goto("/products?edit=moon-morning");
+  const note = drawer(page).getByRole("note", { name: "Khách bỏ cọc" });
+  await expect(note).toContainText("Khách cọc 50% rồi không nhận: cọc");
+  await expect(note).toContainText("ship 1.000.000 ₫ (phí giao mặc định)");
+  await expect(note).toContainText(/lỗ .* · giá từ .* thì không lỗ/);
+  await expect(drawer(page).getByRole("button", { name: /^Gợi ý giá bán: / })).toBeVisible();
+});

@@ -32,10 +32,7 @@ export function applyCustomerFilters(rows: CustomerRow[], f: CustomerFilters) {
     })
     .filter(({ customer: c }) => f.account === "all" || (f.account === "account") === c.hasAccount)
     .filter(({ customer: c }) => !f.tag || c.tags.includes(f.tag))
-    .filter(
-      ({ customer: c }) =>
-        !q || fold(c.name).includes(q) || fold(c.email).includes(q) || (qDigits.length >= 3 && phoneKey(c.phone).includes(qDigits)),
-    )
+    .filter(({ customer: c }) => !q || fold(c.name).includes(q) || fold(c.email).includes(q) || (qDigits.length >= 3 && phoneKey(c.phone).includes(qDigits)))
     .sort((a, b) => {
       if (f.sort === "spent") return b.stats.spent - a.stats.spent;
       if (f.sort === "orders") return b.stats.orderCount - a.stats.orderCount;

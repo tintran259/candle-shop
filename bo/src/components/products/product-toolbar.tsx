@@ -32,13 +32,7 @@ export function ProductToolbar({ filters, onChange, counts, view, onViewChange }
           ]}
         />
         <Flex gap={8} align="center">
-          <Select
-            aria-label="Sắp xếp"
-            value={filters.sort}
-            onChange={(sort) => set({ sort })}
-            options={sortOptions.map((o) => ({ ...o }))}
-            style={{ width: 160 }}
-          />
+          <Select aria-label="Sắp xếp" value={filters.sort} onChange={(sort) => set({ sort })} options={sortOptions.map((o) => ({ ...o }))} style={{ width: 160 }} />
           <Segmented<ViewMode>
             value={view}
             onChange={onViewChange}

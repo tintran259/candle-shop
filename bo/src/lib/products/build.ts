@@ -1,6 +1,7 @@
 // Sản phẩm trưng bày dựng giống nến tự phối: chọn theo các bước Thủ công (hũ + cỡ + nắp, sáp, hương, bấc, màu, trang trí),
 // cộng phụ kiện khác lấy thẳng từ Kho. Công thức trừ Kho, cỡ trên web, loại sáp, giờ cháy đều suy ra từ đây (docs/pages/products.md#công-thức-theo-thủ-công)
-import { activeSteps, emptySelection, materialNeeds, priceSelection, selectedSize, validateSelection, type CraftSelection } from "@/lib/craft/selection";
+import { activeSteps, emptySelection, materialNeeds, priceSelection, selectedSize, type CraftSelection } from "@/lib/craft/selection";
+import { validateSelection } from "@/lib/craft/validate";
 import { amountBasis } from "@/lib/craft/steps";
 import type { CraftConfig, StepOption } from "@/lib/craft/types";
 import type { MaterialMap } from "@/lib/inventory/stock";

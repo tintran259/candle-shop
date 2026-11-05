@@ -32,8 +32,7 @@ const urgency = (m: Material) => {
   return m.stock / Math.max(1, m.lowStock);
 };
 
-export const matchStatus = (m: Material, status: InventoryStatus, usage: Map<string, Usage[]>) =>
-  status === "all" || (status === "unused" ? !usage.has(m.id) : materialLevel(m) === status);
+export const matchStatus = (m: Material, status: InventoryStatus, usage: Map<string, Usage[]>) => status === "all" || (status === "unused" ? !usage.has(m.id) : materialLevel(m) === status);
 
 export function applyInventoryFilters(list: Material[], status: InventoryStatus, f: InventoryFilters, usage: Map<string, Usage[]>) {
   const q = fold(f.q.trim());

@@ -55,9 +55,7 @@ function Stub({ discount, muted, width, compact }: { discount: Discount; muted: 
       }}
     >
       {main}
-      {discount.type === "percent" && discount.maxDiscount ? (
-        <Typography.Text style={{ fontSize: 12, color: fg, marginTop: 4 }}>tối đa {shortVnd(discount.maxDiscount)}</Typography.Text>
-      ) : null}
+      {discount.type === "percent" && discount.maxDiscount ? <Typography.Text style={{ fontSize: 12, color: fg, marginTop: 4 }}>tối đa {shortVnd(discount.maxDiscount)}</Typography.Text> : null}
     </Flex>
   );
 }
@@ -101,11 +99,7 @@ export function DiscountTicket({ discount }: { discount: Discount }) {
       {/* Đường xé: nét đứt + 2 lỗ khoét trùng màu nền drawer */}
       <span aria-hidden style={{ position: "absolute", left: STUB - 1, top: NOTCH / 2 + 4, bottom: NOTCH / 2 + 4, borderLeft: "2px dashed #e8dccf" }} />
       {(["top", "bottom"] as const).map((edge) => (
-        <span
-          key={edge}
-          aria-hidden
-          style={{ position: "absolute", left: STUB - NOTCH / 2, [edge]: -NOTCH / 2, width: NOTCH, height: NOTCH, borderRadius: 999, background: brand.page }}
-        />
+        <span key={edge} aria-hidden style={{ position: "absolute", left: STUB - NOTCH / 2, [edge]: -NOTCH / 2, width: NOTCH, height: NOTCH, borderRadius: 999, background: brand.page }} />
       ))}
 
       <Flex vertical gap={10} style={{ flex: 1, minWidth: 0, padding: compact ? "16px 14px 16px 20px" : "18px 20px 18px 24px" }}>

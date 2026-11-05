@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { getSettings, useSettings } from "@/hooks/use-settings";
 import { formatMoney } from "@/lib/format";
 import { paidAmount, providerLabels, shippingName } from "@/lib/orders/labels";
-import { codAmount, itemsSummary } from "@/lib/orders/shipping";
+import { carrierName, codAmount, itemsSummary } from "@/lib/orders/shipping";
 import type { Order } from "@/lib/orders/types";
 import type { Sender } from "@/lib/settings/types";
 
@@ -108,7 +108,7 @@ function InvoicePage({ order: o, sender }: { order: Order; sender: Sender }) {
         <div>
           <div className="print-label">Giao hàng</div>
           <div>{shippingName(o)}</div>
-          {o.shipment && <div>{o.shipment.trackingCode ? `${o.shipment.carrier} · ${o.shipment.trackingCode}` : o.shipment.carrier}</div>}
+          {carrierName(o) && <div>{o.shipment?.trackingCode ? `${o.shipment.carrier} · ${o.shipment.trackingCode}` : carrierName(o)}</div>}
           <div>Thanh toán: {providerLabels[o.paymentMethod]}</div>
         </div>
       </div>
@@ -187,14 +187,10 @@ function LabelPage({ order: o, sender }: { order: Order; sender: Sender }) {
     <section className="print-page ship-label">
       <div className="label-row label-top">
         <div className="print-brand">{sender.name || "2510 Candle"}</div>
-        {o.shipment ? (
-          <div className="label-carrier">
-            <div>{o.shipment.carrier}</div>
-            {o.shipment.trackingCode && <strong>{o.shipment.trackingCode}</strong>}
-          </div>
-        ) : (
-          <div className="label-carrier">{shippingName(o)}</div>
-        )}
+        <div className="label-carrier">
+          <div>{carrierName(o) ?? shippingName(o)}</div>
+          {o.shipment?.trackingCode && <strong>{o.shipment.trackingCode}</strong>}
+        </div>
       </div>
       <div className="label-row label-code">
         <span className="print-label">Mã đơn</span>
@@ -202,9 +198,7 @@ function LabelPage({ order: o, sender }: { order: Order; sender: Sender }) {
       </div>
       <div className="label-row">
         <div className="print-label">Người gửi</div>
-        <div>
-          {[sender.name, sender.phone].filter(Boolean).join(" · ")}
-        </div>
+        <div>{[sender.name, sender.phone].filter(Boolean).join(" · ")}</div>
         {sender.address && <div>{sender.address}</div>}
       </div>
       <div className="label-row label-to">

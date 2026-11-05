@@ -62,7 +62,7 @@ const orders = [
   }),
   // E. Hủy lỗi do shop, đã trả 400 rồi hoàn đủ 400 → Doanh thu 0 · Lãi 0
   make("e", 400_000, 9, { status: "cancelled", cancelFault: "shop", payments: [pay("e1", 400_000, 9)], refund: { amount: 400_000, images: [], at: ago(4), by: "x" }, history: [closed("pending", 9), closed("cancelled", 5)] }),
-  // F. Đang giao, đã cọc 300: Doanh thu 300 · chưa chốt nên không vào Lãi, TB
+  // F. Đang giao, đã cọc 300: chưa chốt nên không vào Doanh thu, Lãi, TB — ghi "Chưa tính 300.000 ₫ đã thu của 1 đơn" 
   make("f", 600_000, 2, { status: "shipping", paymentPlan: "deposit", shippingCost: 30_000, materialCost: 200_000, payments: [pay("f1", 300_000, 2)] }),
   // G. Hoàn tất ngoài kỳ (đặt 45 ngày, xong 40 ngày trước): không tính gì
   make("g", 900_000, 45, { materialCost: 100_000, payments: [pay("g1", 900_000, 45)], history: [closed("pending", 45), closed("completed", 40)] }),
@@ -74,15 +74,16 @@ const orders = [
     history: [closed("pending", 15), closed("completed", 14)],
   }),
 ];
-// Doanh thu 500 + 300 + 150 + 150 + 0 + 300 + 300 = 1.700
+// Doanh thu (chỉ đơn đã chốt) 500 + 300 + 150 + 150 + 0 + 300 = 1.400
 // Giá trị đơn TB: (500 + 300 + 300) / 3 = 366.667
 // Lãi gộp: 350 + 175 + 150 + 10 + 0 + 180 = 865 trên 6 đơn đã chốt; phí vận chuyển shop chịu 25 + 60 = 85; tỉ lệ 865 / 1.400 = 62%
 
 test("Số liệu tính đúng theo quy tắc", () => {
   const source = { map: new Map(), products: [] } as unknown as Parameters<typeof orderCost>[1];
   const s = dashboardStats(orders as unknown as Order[], [], () => "", 30, dayjs(), (o) => orderCost(o, source).cost);
-  expect(s.kpis.revenue.value).toBe(1_700_000);
-  expect(s.daily.reduce((n, d) => n + d.revenue, 0)).toBe(1_700_000);
+  expect(s.kpis.revenue.value).toBe(1_400_000);
+  expect(s.kpis.revenue.pending).toEqual({ amount: 300_000, count: 1 });
+  expect(s.daily.reduce((n, d) => n + d.revenue, 0)).toBe(1_400_000);
   expect(s.kpis.orders.value).toBe(4);
   expect(Math.round(s.kpis.average.value)).toBe(366_667);
   expect(s.kpis.average.completed).toBe(3);
@@ -97,8 +98,9 @@ test("Thẻ trên Dashboard hiện đúng số", async ({ page, t }) => {
   await page.goto("/?days=30");
   const card = (label: string) => page.locator("main .ant-card").filter({ has: page.getByText(label, { exact: true }) }).first();
   const text = async (label: string) => (await card(label).innerText()).replace(/\s+/g, " ");
-  await expect(card("Doanh thu")).toContainText("Tiền hàng thực nhận");
-  expect(await text("Doanh thu")).toContain("1,7 tr");
+  await expect(card("Doanh thu")).toContainText("Tiền hàng của đơn hoàn tất và tiền giữ lại của đơn hủy, không gồm phí vận chuyển");
+  expect(await text("Doanh thu")).toContain("1,4 tr");
+  expect(await text("Doanh thu")).toContain("Chưa tính 300.000 ₫ đã thu của 1 đơn chưa hoàn tất");
   expect(await text("Đơn hàng")).toMatch(/Đơn hàng 4 /);
   expect(await text("Giá trị đơn TB")).toContain("366.667 ₫");
   expect(await text("Giá trị đơn TB")).toContain("Tiền hàng TB của 3 đơn hoàn tất, không gồm phí vận chuyển");

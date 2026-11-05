@@ -39,7 +39,7 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 |---|---|---|
 | Khách hàng | Hồ sơ có sẵn, tên, SĐT, email, kênh đặt, địa chỉ | SĐT trùng hồ sơ thì tự nhận ra khách. Khách bị chặn thì hỏi lại trước khi tạo |
 | Sản phẩm | Nến có sẵn, Tự phối nến, số lượng | Sản phẩm đang ẩn vẫn chọn được, có nhãn "Đang ẩn". Thiếu nguyên liệu cho cả đơn thì chặn, tính trên số dùng được |
-| Giao hàng | Phương thức, phí vận chuyển, ngày xưởng làm xong | Phí tự điền theo phương thức, sửa được cho đơn này. Mặc định xong sau 3 ngày |
+| Giao hàng | Phương thức, phí vận chuyển (khách trả), đơn vị vận chuyển, ngày xưởng làm xong | Phí tự điền theo phương thức, sửa được cho đơn này. Đơn vị vận chuyển chọn từ [Cài đặt](./settings.md#đơn-vị-vận-chuyển), lúc giao chọn sẵn đơn vị này. Mặc định xong sau 3 ngày |
 | Thanh toán | Mã giảm giá, cọc hoặc trả đủ, kênh thanh toán, đã nhận tiền, mã giao dịch | % cọc lấy từ Cài đặt. Áp mã thì dưới ô hiện số tiền giảm và luật thật của mã (vd "TET2027 −80%, tối đa 300.000 ₫, chỉ nến có sẵn"), không lấy mô tả tự gõ |
 | Ghi chú | Ghi chú của khách, ghi chú nội bộ | |
 
@@ -56,10 +56,12 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 
 ```
 Tổng = Tạm tính − Giảm giá + Phí giao
-Cọc  = Tổng × % cọc, làm tròn tới nghìn đồng, ít nhất 1.000 ₫ và không quá Tổng
+Cọc  = (Tạm tính − Giảm giá) × % cọc, không gồm phí vận chuyển; làm tròn tới nghìn đồng, ít nhất 1.000 ₫
+       Vd 300.000 ₫ hàng + 30.000 ₫ phí giao, cọc 50% = 150.000 ₫; phí giao thu cùng phần còn lại khi giao
 ```
 
 **Đơn lỗ:** tiền hàng sau giảm giá (Tạm tính − Giảm giá, không tính phí giao, giống lãi gộp) so với giá vốn nguyên liệu các dòng theo giá nhập hiện tại. Thấp hơn vốn thì khung tổng tiền báo đỏ **Đơn lỗ X ₫**; lãi dưới mức tối thiểu ở Cài đặt thì báo cam **Lãi chỉ Y%**. Chỉ cảnh báo, vẫn tạo / lưu được đơn.
+
 
 ### Đơn nháp
 
@@ -82,7 +84,7 @@ Nút **Sửa đơn** trên thẻ tiến trình, mở cùng form với Tạo đơ
 | Chờ thanh toán, Đã thanh toán | Mọi thứ: khách, địa chỉ, sản phẩm, số lượng, nến tự phối, giao hàng, phí giao, ngày làm xong, mã giảm giá, ghi chú |
 | Từ Đang làm trở đi | Khách, địa chỉ, giao hàng, phí giao, ngày làm xong, ghi chú. Sản phẩm khóa vì nguyên liệu đã trừ Kho; muốn đổi thì hủy đơn rồi tạo mới |
 
-- **Tiền:** tạm tính, giảm giá, tổng tự tính lại. Đơn Chờ thanh toán: khoản đang chờ thu đổi theo tổng mới (cọc theo % lúc tạo đơn). Đơn đã thu tiền: các khoản đã thu giữ nguyên, phần còn phải thu đổi theo tổng mới.
+- **Tiền:** tạm tính, giảm giá, tổng tự tính lại. Đơn Chờ thanh toán: khoản đang chờ thu đổi theo tổng mới (cọc theo % lúc tạo đơn, trên tiền hàng). Đơn đã thu tiền: các khoản đã thu giữ nguyên, phần còn phải thu đổi theo tổng mới.
 - **Thu dư:** tổng mới thấp hơn số đã thu thì khối Thanh toán báo "Thu dư, cần hoàn" và có nút **Ghi nhận đã hoàn phần dư** (bắt buộc ảnh chứng từ).
 - **Nguyên liệu:** đơn Đã thanh toán giữ theo sản phẩm mới; khi sửa, phần đơn này đang giữ được tính là còn dùng được cho chính nó.
 - **Mã giảm giá:** đổi mã thì trả lượt mã cũ, tính lượt mã mới. Giữ mã cũ thì bỏ qua hạn dùng và số lượt.
@@ -113,7 +115,8 @@ Nút **Sửa đơn** trên thẻ tiến trình, mở cùng form với Tạo đơ
 Đơn Chờ giao bấm **Giao cho vận chuyển** thì mở popup:
 
 - **Thu hộ (COD):** số khách còn phải trả, để nhập đúng khi tạo đơn trên app đơn vị vận chuyển. Đã trả đủ thì ghi "Không thu hộ".
-- **Phí trả đơn vị vận chuyển:** số shop trả bên vận chuyển cho lượt này, mặc định bằng phí giao khách trả, sửa được. Là chi phí, trừ vào lãi; phí vận chuyển khách trả không tính vào doanh thu.
+- **Đơn vị vận chuyển:** đơn đã chọn đơn vị lúc tạo thì popup chỉ hiện tên đơn vị, không chọn lại (muốn đổi thì Sửa đơn trước khi giao). Đơn cũ chưa chọn đơn vị, hoặc đơn vị đã tắt ở Cài đặt, thì chọn trong popup. Sửa vận chuyển và Gửi lại đơn vẫn chọn được.
+- **Phí trả đơn vị vận chuyển:** số shop trả bên vận chuyển cho lượt này, mặc định bằng phí giao khách trả, sửa được. Là chi phí, trừ vào lãi; phí vận chuyển khách trả không tính vào doanh thu. Nhập khác phí khách trả thì popup báo **"Shop chịu thêm …"** (phần chênh trừ vào lãi, không thu thêm của khách) hoặc **"Shop dư …"**. So trên tổng cả đơn: phí khách trả (gồm phí gửi lại) với phí đã trả mọi lượt.
 - **Đơn vị vận chuyển:** các đơn vị đang dùng ở [Cài đặt › Đơn vị vận chuyển](./settings.md#đơn-vị-vận-chuyển).
 - **Mã vận đơn:** bắt buộc nếu đơn vị đó bắt buộc mã (Shop tự giao thì không). Tự bỏ khoảng trắng, viết hoa. Mã đã dùng cho đơn khác chưa hủy thì báo "Mã này đã dùng cho đơn …".
 
@@ -180,6 +183,7 @@ Xem [Workflow mục 7](../workflow.md#7-khiếu-nại-sau-khi-giao).
 | `resendFee` | Tổng phí gửi lại đã cộng vào `shippingFee` và `total` |
 | `items[].recipe` | Công thức 1 hũ của nến tự phối lúc tạo đơn |
 | `materialCost` | Giá vốn nguyên liệu chốt lúc Bắt đầu làm |
+| `carrier` | `{ id, name }` đơn vị vận chuyển chọn lúc tạo đơn. Sửa đơn đổi được khi chưa giao cho vận chuyển |
 | `shippingCost` | Tổng phí shop đã trả đơn vị vận chuyển (mọi lượt giao, phí hoàn hàng). Chưa giao thì không có |
 | `shipment` | Lượt giao hiện tại: `carrierId`, `carrier` (tên), `trackingCode`, `trackingUrl`, `cost` (phí trả đơn vị vận chuyển lượt này), `at`. Gửi lại đơn thì thay bằng lượt mới, lịch sử giữ mã cũ. Mã vận đơn không trùng giữa các đơn chưa hủy |
 | `complaints[]` | `reason`, `images`, `resolution` (`resend`, `refund`, `none`), `refundAmount`, `replacementId`, `replacementCode`, `at`, `by` |
@@ -213,10 +217,11 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `orders-custom-candle`, `orders-custom-modal`, `orders-amounts`: popup Tự phối nến, khóa lựa chọn hết nguyên liệu, số hũ Kho làm được, chọn nhiều sáp, lượng từng nguyên liệu, công thức trên đơn.
 - `orders-cancel`: Bắt đầu làm trừ Kho, hủy đơn đang làm hỏi đã làm chưa, hoàn Kho, Kho thiếu thì chặn.
 - `orders-decisions`: công thức, giữ nguyên liệu, thu đủ khi hoàn tất, trả lượt mã, hoàn tiền kèm ảnh, giao hàng lỗi, gửi lại đơn (nhập mã vận đơn mới, sang thẳng Đang giao).
-- `shipping`: giao cho vận chuyển (báo thu hộ, bắt buộc mã, chặn mã trùng, lưu link tra cứu), mã trên bảng và tìm theo mã, sửa vận chuyển sang Shop tự giao, khách không nhận hàng hoàn về rồi gửi lại đổi sang đơn vị khác (chặn mã cũ, thu hộ cộng phí gửi lại), in nhãn và phiếu đơn, nhắc thiếu người gửi, chọn nhiều đơn in hàng loạt, xuất Excel theo tab, thêm đơn vị vận chuyển có link tra cứu.
+- `shipping`: giao cho vận chuyển (báo thu hộ, bắt buộc mã, chặn mã trùng, lưu link tra cứu), mã trên bảng và tìm theo mã, sửa vận chuyển sang Shop tự giao, khách không nhận hàng hoàn về rồi gửi lại đổi sang đơn vị khác (chặn mã cũ, thu hộ cộng phí gửi lại), in nhãn và phiếu đơn, nhắc thiếu người gửi, chọn nhiều đơn in hàng loạt, xuất Excel theo tab, thêm đơn vị vận chuyển có link tra cứu, chọn đơn vị lúc tạo đơn rồi lúc giao chỉ hiện tên (không chọn lại) và báo shop chịu thêm khi phí trả đơn vị cao hơn phí khách trả.
 - `logic/shipping`: link tra cứu, chuẩn hóa mã, mã trùng, tiền thu hộ, tìm theo mã vận đơn, nội dung file Excel đơn hàng.
 - `orders-list`: thẻ thống kê, lọc thanh toán, khoảng ngày, tìm số điện thoại, sắp xếp giá trị, tab dồn vào nút …, đổi ngày làm xong, ghi chú nội bộ, đơn đã làm xong không đổi ngày, sản phẩm đang ẩn có nhãn khi tạo đơn.
 - `logic/orders`: tình trạng thanh toán, số tiền hoàn theo lỗi khách / lỗi shop, thứ tự trạng thái, hủy được khi nào, nhãn hạn làm xong, bộ lọc và sắp xếp.
 - `logic/discounts`: áp mã khi tạo đơn, tổng tiền và tiền cọc.
 - `price-guards`: thêm sản phẩm bán thấp hơn vốn vào đơn thì báo Đơn lỗ.
 - `logic/price-guards`: tiền hàng sau giảm giá không tính phí giao, thấp hơn vốn / lãi thấp; cọc ít nhất 1.000 ₫, không quá tổng, đơn 0 ₫ hoặc 0% thì không cọc.
+- `logic/money`: cọc tính trên tiền hàng không gồm phí giao, tiền giữ lại khi khách hủy sau khi đã gửi lại.

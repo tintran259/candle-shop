@@ -54,12 +54,7 @@ export function OrderDrawer({ open, order, api, onClose, onEdit }: Props) {
     >
       {(api.loading || (order && !ready)) && <OrderDetailSkeleton />}
       {!api.loading && !order && (
-        <Result
-          status="404"
-          title="Không tìm thấy đơn hàng"
-          subTitle="Đơn có thể đã bị xóa hoặc đường dẫn không đúng."
-          extra={<Button onClick={onClose}>Về danh sách đơn</Button>}
-        />
+        <Result status="404" title="Không tìm thấy đơn hàng" subTitle="Đơn có thể đã bị xóa hoặc đường dẫn không đúng." extra={<Button onClick={onClose}>Về danh sách đơn</Button>} />
       )}
       {!api.loading && order && ready && (
         <Flex vertical gap={16}>
@@ -116,19 +111,8 @@ function CancelModal({ open, order, onClose, onConfirm }: { open: boolean; order
   // Đơn toàn nến có sẵn chỉ cần hỏi khi đã trừ Kho theo công thức
   const ask = order.status === "producing" && (crafted || movements.some((m) => m.orderCode === order.code && m.type === "order"));
   return (
-    <Modal
-      open={open}
-      title={`Hủy đơn ${order.code}?`}
-      okText="Hủy đơn"
-      okButtonProps={{ danger: true }}
-      cancelText="Quay lại"
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      destroyOnHidden
-    >
-      {finished && (
-        <Alert type="info" showIcon style={{ marginBottom: 16 }} title="Nến đã làm xong" description="Nến thủ công sẽ chuyển sang Sản phẩm hủy đơn, nguyên liệu không hoàn về Kho." />
-      )}
+    <Modal open={open} title={`Hủy đơn ${order.code}?`} okText="Hủy đơn" okButtonProps={{ danger: true }} cancelText="Quay lại" onCancel={onClose} onOk={() => form.submit()} destroyOnHidden>
+      {finished && <Alert type="info" showIcon style={{ marginBottom: 16 }} title="Nến đã làm xong" description="Nến thủ công sẽ chuyển sang Sản phẩm hủy đơn, nguyên liệu không hoàn về Kho." />}
       {order.status === "returned" && order.returnCondition === "damaged" && (
         <Alert type="info" showIcon style={{ marginBottom: 16 }} title="Nến đã ghi nhận hỏng" description="Không tạo sản phẩm hủy đơn, nguyên liệu không hoàn về Kho." />
       )}

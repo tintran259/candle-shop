@@ -35,6 +35,29 @@ export function suggestPrice(cost: number, { priceMarkup, minMargin }: { priceMa
   return Math.max(0, Math.ceil(Math.max(cost * priceMarkup, floor) / 5000) * 5000);
 }
 
+// Khách chỉ cọc rồi không nhận hàng (mất cọc): cọc − nguyên liệu − phí vận chuyển phải ≥ 0.
+// shipping: phí giao của đơn, hoặc phí phương thức mặc định ở Cài đặt › Phí vận chuyển khi chưa có đơn (sản phẩm).
+// Áp cho giá trọn một cây / cả đơn (sản phẩm trưng bày, đơn hàng), không áp cho phụ thu lẻ ở Thủ công.
+// minPrice: giá thấp nhất để cọc đủ bù, làm tròn lên 5.000 ₫
+export type DepositCheck = { deposit: number; cost: number; shipping: number; left: number; minPrice: number };
+export function depositCheck(price: number, cost: number, { depositPercent, shipping }: { depositPercent: number; shipping: number }): DepositCheck {
+  const rate = depositPercent / 100;
+  const deposit = Math.round(price * rate);
+  return {
+    deposit,
+    cost,
+    shipping,
+    left: deposit - cost - shipping,
+    minPrice: rate > 0 ? Math.ceil((cost + shipping) / rate / 5000) * 5000 : Infinity,
+  };
+}
+// Khách bỏ cọc thì shop lỗ
+export const depositLoss = (d: DepositCheck) => d.left < 0;
+
+// Giá gợi ý cho trọn một cây: theo hệ số và lãi tối thiểu, và đủ để khách bỏ cọc shop không lỗ
+export const suggestFullPrice = (cost: number, settings: { priceMarkup: number; minMargin: number; depositPercent: number; shipping: number }) =>
+  Math.max(suggestPrice(cost, settings), depositCheck(0, cost, settings).minPrice);
+
 // Giá theo lượng gợi ý (mỗi 100 g / mỗi ml): cùng quy tắc nhưng làm tròn lên 100 ₫
 export function suggestUnitPrice(cost: number, { priceMarkup, minMargin }: { priceMarkup: number; minMargin: number }) {
   const floor = minMargin < 100 ? cost / (1 - minMargin / 100) : Infinity;
@@ -98,7 +121,16 @@ export function sizeCheck(config: CraftConfig, vessel: VesselOption, size: Vesse
     if (uncovered(d) > 0) parts.push({ step: step.title.vi, name: d.option.name.vi, cost: uncovered(d) });
   }
   const price = vessel.priceDelta + size.priceDelta;
-  return { ...check(price, parts.reduce((s, p) => s + p.cost, 0), missing, vessel, size), parts };
+  return {
+    ...check(
+      price,
+      parts.reduce((s, p) => s + p.cost, 0),
+      missing,
+      vessel,
+      size,
+    ),
+    parts,
+  };
 }
 
 // Nắp: phụ thu nắp ≥ giá vốn mã nắp của từng cỡ đang bán. Lấy cỡ thiếu nhiều nhất; không có nắp hoặc nắp không theo dõi tồn thì null
@@ -145,8 +177,7 @@ const worse = (a: PriceCheck | null, b: PriceCheck) => !a || gap(b) > gap(a) || 
 export type OptionCheck = PriceCheck & { isDefault: boolean };
 
 // Mọi cỡ đang bán của các hũ đang bán — để so lựa chọn tính theo gram (sáp, màu, hương)
-const jarSizes = (config: CraftConfig) =>
-  (vesselStep(config)?.options ?? []).filter((v) => v.available).flatMap((v) => v.sizes.filter((s) => s.available).map((size) => ({ vessel: v, size })));
+const jarSizes = (config: CraftConfig) => (vesselStep(config)?.options ?? []).filter((v) => v.available).flatMap((v) => v.sizes.filter((s) => s.available).map((size) => ({ vessel: v, size })));
 
 // Hũ: giá hũ + phụ thu cỡ so với vốn từng cỡ. Lựa chọn khác: phụ thu ≥ giá vốn của nó (trừ phần mục mặc định đã tính trong giá hũ)
 export function optionCheck(config: CraftConfig, step: OptionStep, option: StepOption, map: MaterialMap): OptionCheck | null {

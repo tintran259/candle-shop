@@ -14,33 +14,10 @@ import { formatMoney, formatNumber } from "@/lib/format";
 import { needsCost } from "@/lib/costs";
 import { orderEditable } from "@/lib/orders/edit";
 import { orderNeeds, shortages } from "@/lib/orders/materials";
-import { cancelOutcomeLabels, canCancel, deadline, isDeliveryIssue, nextAction, nextStatus, remaining, returnConditionLabels, shippingDays, statusMeta, stepLabels } from "@/lib/orders/labels";
+import { cancelOutcomeLabels, canCancel, deadline, isDeliveryIssue, nextAction, nextStatus, remaining, returnConditionLabels, statusMeta, stepLabels } from "@/lib/orders/labels";
 import { orderFlow, type Order } from "@/lib/orders/types";
 import { radius } from "@/theme";
-
-// Màu chấm trạng thái (khớp màu tag antd)
-const dot: Record<Order["status"], string> = {
-  pending: "#faad14",
-  paid: "#1677ff",
-  producing: "#fa8c16",
-  ready: "#13c2c2",
-  shipping: "#722ed1",
-  completed: "#52c41a",
-  delivery_failed: "#f5222d",
-  returning: "#fa541c",
-  returned: "#eb2f96",
-  cancelled: "#bfbfbf",
-};
-
-// Mốc thời gian dưới mỗi bước: đã qua thì giờ thực tế, chưa tới thì ngày dự kiến
-function stepTime(order: Order, step: (typeof orderFlow)[number]) {
-  const reached = order.history.find((e) => e.status === step);
-  if (reached) return dayjs(reached.at).format("HH:mm DD/MM");
-  const ready = dayjs(order.readyDate);
-  if (step === "ready") return `Dự kiến ${ready.format("DD/MM")}`;
-  if (step === "completed") return `Dự kiến ${ready.add(shippingDays(order), "day").format("DD/MM")}`;
-  return undefined;
-}
+import { dot, stepTime } from "@/components/orders/process-steps";
 
 type Props = { order: Order; api: OrdersApi; onCancel: () => void; onEdit?: () => void };
 
@@ -166,10 +143,24 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
             )}
             {order.status === "delivery_failed" && (
               <>
-                <Button icon={<RollbackOutlined />} onClick={() => { api.startReturn(order.id); message.success(`Đơn ${order.code}: ${statusMeta.returning.label}`); }}>
+                <Button
+                  icon={<RollbackOutlined />}
+                  onClick={() => {
+                    api.startReturn(order.id);
+                    message.success(`Đơn ${order.code}: ${statusMeta.returning.label}`);
+                  }}
+                >
                   Hoàn về
                 </Button>
-                <Button type="primary" size="large" icon={<SendOutlined />} onClick={() => { api.redeliver(order.id); message.success(`Đơn ${order.code}: ${statusMeta.shipping.label}`); }}>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<SendOutlined />}
+                  onClick={() => {
+                    api.redeliver(order.id);
+                    message.success(`Đơn ${order.code}: ${statusMeta.shipping.label}`);
+                  }}
+                >
                   Giao lại
                 </Button>
               </>
@@ -185,13 +176,7 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
               </Button>
             )}
             {to && action && (
-              <Button
-                type="primary"
-                size="large"
-                icon={<ArrowRightOutlined />}
-                iconPlacement="end"
-                onClick={goNext}
-              >
+              <Button type="primary" size="large" icon={<ArrowRightOutlined />} iconPlacement="end" onClick={goNext}>
                 {action}
               </Button>
             )}
@@ -217,7 +202,9 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
           description="Giá 0 ₫: không tính vào doanh thu, số đơn, khách hàng; giá vốn vẫn tính vào lãi gộp."
         />
       )}
-      {order.status === "delivery_failed" && <Alert type="warning" showIcon style={{ marginTop: 16 }} title={`Giao không thành lần ${order.deliveryAttempts ?? 1}/${settings.maxDeliveryAttempts}`} description={order.deliveryIssue} />}
+      {order.status === "delivery_failed" && (
+        <Alert type="warning" showIcon style={{ marginTop: 16 }} title={`Giao không thành lần ${order.deliveryAttempts ?? 1}/${settings.maxDeliveryAttempts}`} description={order.deliveryIssue} />
+      )}
       {order.status === "returned" && order.returnCondition && (
         <Alert type={order.returnCondition === "good" ? "info" : "warning"} showIcon style={{ marginTop: 16 }} title={returnConditionLabels[order.returnCondition]} description={order.returnNote} />
       )}
@@ -232,11 +219,7 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
           description={
             <>
               {order.cancelReason}
-              {order.cancelOutcome && (
-                <div>
-                  {order.cancelOutcome === "stocked" ? <Link to="/cancelled-products">{cancelOutcomeLabels.stocked}</Link> : cancelOutcomeLabels.returned}
-                </div>
-              )}
+              {order.cancelOutcome && <div>{order.cancelOutcome === "stocked" ? <Link to="/cancelled-products">{cancelOutcomeLabels.stocked}</Link> : cancelOutcomeLabels.returned}</div>}
             </>
           }
         />

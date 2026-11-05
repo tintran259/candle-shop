@@ -2,7 +2,7 @@ import { Alert, Form, Input, Modal, Radio, Select, Typography, type FormInstance
 import { MoneyInput } from "@/components/money-input";
 import { formatMoney } from "@/lib/format";
 import { returnConditionLabels } from "@/lib/orders/labels";
-import { codAmount, normalizeTrackingCode, shipmentText, trackingOwner } from "@/lib/orders/shipping";
+import { codAmount, normalizeTrackingCode, shipmentText, shippingGap, trackingOwner } from "@/lib/orders/shipping";
 import type { Order, ReturnCondition, Shipment } from "@/lib/orders/types";
 import { trackingLink, type Carrier } from "@/lib/settings/types";
 
@@ -37,7 +37,12 @@ export function ReceiveBackModal({ open, order, onClose, onConfirm }: Base & { o
         <Form.Item name="condition" label="Tình trạng nến" rules={[{ required: true, message: "Chọn tình trạng nến." }]}>
           <Radio.Group vertical options={(["good", "damaged"] as const).map((value) => ({ value, label: returnConditionLabels[value] }))} />
         </Form.Item>
-        <Form.Item name="returnFee" label="Phí hoàn hàng trả đơn vị vận chuyển" extra="Chi phí của shop, trừ vào lãi. Không mất phí thì để 0." rules={[{ required: true, type: "number", min: 0, message: "Nhập phí hoàn hàng." }]}>
+        <Form.Item
+          name="returnFee"
+          label="Phí hoàn hàng trả đơn vị vận chuyển"
+          extra="Chi phí của shop, trừ vào lãi. Không mất phí thì để 0."
+          rules={[{ required: true, type: "number", min: 0, message: "Nhập phí hoàn hàng." }]}
+        >
           <MoneyInput aria-label="Phí hoàn hàng" />
         </Form.Item>
         <Form.Item name="note" label="Ghi chú" extra="Nến hỏng chỉ ghi vào đơn, không tạo phiếu Kho." style={{ marginBottom: 0 }}>
@@ -49,15 +54,55 @@ export function ReceiveBackModal({ open, order, onClose, onConfirm }: Base & { o
 }
 
 // Chọn đơn vị và nhập mã vận đơn — dùng ở Giao cho vận chuyển, Sửa vận chuyển, Gửi lại đơn.
-// previous: mã của lượt giao trước (gửi lại đơn), không cho dùng lại
-function ShipFields({ form, order, orders, list, previous }: { form: FormInstance; order: Order; orders: Order[]; list: Carrier[]; previous?: string }) {
+// previous: mã của lượt giao trước (gửi lại đơn), không cho dùng lại.
+// customerFee / otherCost: tổng phí khách trả và phí đã trả đơn vị ở các lượt khác — để báo shop chịu thêm hay dư
+function ShipFields({
+  form,
+  order,
+  orders,
+  list,
+  previous,
+  customerFee,
+  otherCost,
+  fixed,
+}: {
+  form: FormInstance;
+  order: Order;
+  orders: Order[];
+  list: Carrier[];
+  previous?: string;
+  customerFee: number;
+  otherCost: number;
+  // Đơn vị đã chọn lúc tạo đơn: chỉ hiện tên, không cho chọn lại (đổi ở Sửa đơn)
+  fixed?: boolean;
+}) {
   const carrierId = Form.useWatch("carrierId", form);
+  const cost = Form.useWatch("cost", form);
   const carrier = list.find((c) => c.id === carrierId);
+  const gap = shippingGap(customerFee, otherCost + (Number(cost) || 0));
   return (
     <>
-      <Form.Item name="carrierId" label="Đơn vị vận chuyển" rules={[{ required: true, message: "Chọn đơn vị vận chuyển." }]} extra={!list.length && "Chưa có đơn vị nào đang dùng — thêm ở Cài đặt › Đơn vị vận chuyển."}>
-        <Select aria-label="Đơn vị vận chuyển" options={list.map((c) => ({ value: c.id, label: c.name }))} onChange={() => form.validateFields(["trackingCode"]).catch(() => undefined)} />
-      </Form.Item>
+      {fixed ? (
+        <>
+          <Form.Item name="carrierId" hidden>
+            <Input />
+          </Form.Item>
+          <Form.Item label="Đơn vị vận chuyển" extra="Đã chọn lúc tạo đơn — muốn đổi thì Sửa đơn.">
+            <Typography.Text strong data-testid="ship-carrier">
+              {carrier?.name}
+            </Typography.Text>
+          </Form.Item>
+        </>
+      ) : (
+        <Form.Item
+          name="carrierId"
+          label="Đơn vị vận chuyển"
+          rules={[{ required: true, message: "Chọn đơn vị vận chuyển." }]}
+          extra={!list.length && "Chưa có đơn vị nào đang dùng — thêm ở Cài đặt › Đơn vị vận chuyển."}
+        >
+          <Select aria-label="Đơn vị vận chuyển" options={list.map((c) => ({ value: c.id, label: c.name }))} onChange={() => form.validateFields(["trackingCode"]).catch(() => undefined)} />
+        </Form.Item>
+      )}
       <Form.Item
         name="trackingCode"
         label="Mã vận đơn"
@@ -81,12 +126,22 @@ function ShipFields({ form, order, orders, list, previous }: { form: FormInstanc
       <Form.Item
         name="cost"
         label="Phí trả đơn vị vận chuyển"
-        extra={`Số shop trả bên vận chuyển cho lượt này — chi phí, trừ vào lãi. Khách trả phí giao ${formatMoney(order.shippingFee)}.`}
+        extra={`Số shop trả bên vận chuyển cho lượt này. Khách trả phí giao ${formatMoney(customerFee)}${otherCost ? `, các lượt trước đã trả ${formatMoney(otherCost)}` : ""}.`}
         rules={[{ required: true, type: "number", min: 0, message: "Nhập phí trả đơn vị vận chuyển." }]}
         style={{ marginTop: 16, marginBottom: 0 }}
       >
         <MoneyInput aria-label="Phí trả đơn vị vận chuyển" />
       </Form.Item>
+      {gap !== 0 && (
+        <Alert
+          role="status"
+          type={gap > 0 ? "warning" : "info"}
+          showIcon
+          style={{ marginTop: 12 }}
+          title={gap > 0 ? `Shop chịu thêm ${formatMoney(gap)}` : `Shop dư ${formatMoney(-gap)} so với phí khách trả`}
+          description={gap > 0 ? "Phí trả đơn vị vận chuyển cao hơn phí khách trả — phần chênh trừ vào lãi gộp, không thu thêm của khách." : "Phần dư cộng vào lãi gộp."}
+        />
+      )}
     </>
   );
 }
@@ -127,9 +182,7 @@ export function ResendModal({
   const list = carriers.filter((c) => c.enabled);
   return (
     <Modal open={open} title={`Gửi lại đơn ${order.code}?`} okText="Gửi lại đơn" cancelText="Quay lại" onCancel={onClose} onOk={() => form.submit()} destroyOnHidden>
-      {order.returnCondition === "damaged" && (
-        <Alert type="warning" showIcon style={{ marginBottom: 16 }} title="Nến đã ghi nhận hỏng" description="Kiểm tra lại hoặc thay nến trước khi gửi." />
-      )}
+      {order.returnCondition === "damaged" && <Alert type="warning" showIcon style={{ marginBottom: 16 }} title="Nến đã ghi nhận hỏng" description="Kiểm tra lại hoặc thay nến trước khi gửi." />}
       <CodAlert cod={codAmount(order) + Math.max(0, Math.round(Number(feeNow ?? fee) || 0))} />
       <Form
         form={form}
@@ -137,7 +190,12 @@ export function ResendModal({
         initialValues={{ fee, cost: fee, carrierId: list.some((c) => c.id === last?.carrierId) ? last?.carrierId : list[0]?.id }}
         onFinish={(v) => onConfirm(Math.round(v.fee), toShipment(list, v))}
       >
-        <Form.Item name="fee" label="Phí gửi lại khách trả" extra="Cộng vào tổng đơn, thu khi khách nhận hàng. Không thu thì để 0." rules={[{ required: true, type: "number", min: 0, message: "Nhập phí gửi lại." }]}>
+        <Form.Item
+          name="fee"
+          label="Phí gửi lại khách trả"
+          extra="Cộng vào tổng đơn, thu khi khách nhận hàng. Không thu thì để 0."
+          rules={[{ required: true, type: "number", min: 0, message: "Nhập phí gửi lại." }]}
+        >
           <MoneyInput />
         </Form.Item>
         {last && (
@@ -145,26 +203,28 @@ export function ResendModal({
             Lần giao trước: {shipmentText(last)}. Có thể chọn đơn vị khác.
           </Typography.Paragraph>
         )}
-        <ShipFields form={form} order={order} orders={orders} list={list} previous={last?.trackingCode} />
+        <ShipFields
+          form={form}
+          order={order}
+          orders={orders}
+          list={list}
+          previous={last?.trackingCode}
+          customerFee={order.shippingFee + Math.max(0, Math.round(Number(feeNow ?? fee) || 0))}
+          otherCost={order.shippingCost ?? 0}
+        />
       </Form>
     </Modal>
   );
 }
 
 // Giao cho vận chuyển: chọn đơn vị, nhập mã vận đơn. Sửa lại được khi đơn đang giao (editing)
-export function ShipModal({
-  open,
-  order,
-  orders,
-  carriers,
-  onClose,
-  onConfirm,
-}: Base & { orders: Order[]; carriers: Carrier[]; onConfirm: (shipment: Shipment) => void }) {
+export function ShipModal({ open, order, orders, carriers, onClose, onConfirm }: Base & { orders: Order[]; carriers: Carrier[]; onConfirm: (shipment: Shipment) => void }) {
   const [form] = Form.useForm<ShipValues>();
   const current = order.shipment;
   const editing = !!current;
   // Đơn vị đang dùng; đơn vị của đơn đã tắt ở Cài đặt vẫn giữ để sửa mã
-  const list = carriers.filter((c) => c.enabled || c.id === current?.carrierId);
+  const list = carriers.filter((c) => c.enabled || c.id === current?.carrierId || c.id === order.carrier?.id);
+  const planned = current?.carrierId ?? order.carrier?.id;
   return (
     <Modal
       open={open}
@@ -179,9 +239,23 @@ export function ShipModal({
       <Form
         form={form}
         layout="vertical"
-        initialValues={{ carrierId: current?.carrierId ?? list[0]?.id, trackingCode: current?.trackingCode, cost: current ? (current.cost ?? 0) : order.shippingFee - (order.resendFee ?? 0) }}
-        onFinish={(v) => onConfirm(toShipment(list, v, current?.at))}>
-        <ShipFields form={form} order={order} orders={orders} list={list} />
+        initialValues={{
+          carrierId: list.some((c) => c.id === planned) ? planned : list[0]?.id,
+          trackingCode: current?.trackingCode,
+          cost: current ? (current.cost ?? 0) : order.shippingFee - (order.resendFee ?? 0),
+        }}
+        onFinish={(v) => onConfirm(toShipment(list, v, current?.at))}
+      >
+        <ShipFields
+          form={form}
+          order={order}
+          orders={orders}
+          list={list}
+          customerFee={order.shippingFee}
+          otherCost={(order.shippingCost ?? 0) - (current?.cost ?? 0)}
+          // Giao lần đầu mà đơn đã chọn đơn vị lúc tạo đơn: không chọn lại. Sửa vận chuyển vẫn chọn được
+          fixed={!editing && !!order.carrier && list.some((c) => c.id === order.carrier?.id)}
+        />
       </Form>
     </Modal>
   );

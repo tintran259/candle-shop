@@ -38,7 +38,12 @@ export type SearchResult = {
 
 // Bỏ dấu + chữ thường từng ký tự — giữ đúng độ dài để tô đậm đúng vị trí trên chữ gốc
 const foldChar = (c: string) => {
-  const f = c.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+  const f = c
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
   return f.length === 1 ? f : c;
 };
 export const fold = (s: string) => Array.from(s, foldChar).join("");
@@ -72,16 +77,10 @@ export function search(raw: string, src: SearchSources): SearchResult[] {
   if (!q) return [];
   const qDigits = digits(raw);
 
-  const pages: SearchResult[] = src.pages
-    .filter((p) => matches(q, p.label, p.keywords))
-    .map((p) => ({ key: `page:${p.path}`, group: "pages", title: p.label, to: p.path }));
+  const pages: SearchResult[] = src.pages.filter((p) => matches(q, p.label, p.keywords)).map((p) => ({ key: `page:${p.path}`, group: "pages", title: p.label, to: p.path }));
 
   const orders: SearchResult[] = src.orders
-    .filter(
-      (o) =>
-        matches(q, o.code, o.customer.name, o.customer.email) ||
-        (qDigits.length >= 3 && digits(o.customer.phone).includes(qDigits)),
-    )
+    .filter((o) => matches(q, o.code, o.customer.name, o.customer.email) || (qDigits.length >= 3 && digits(o.customer.phone).includes(qDigits)))
     .map((o) => ({
       key: `order:${o.id}`,
       group: "orders",
@@ -131,8 +130,7 @@ export function search(raw: string, src: SearchSources): SearchResult[] {
 
   // Nguyên liệu trong kho (mở Kho) + bước & lựa chọn trên trang Thủ công
   const map = toMap(src.inventory);
-  const levelTag = (level: string) =>
-    level === "out" ? { label: "Hết hàng", color: "red" } : level === "low" ? { label: "Sắp hết", color: "orange" } : undefined;
+  const levelTag = (level: string) => (level === "out" ? { label: "Hết hàng", color: "red" } : level === "low" ? { label: "Sắp hết", color: "orange" } : undefined);
   const materials: SearchResult[] = [
     ...src.inventory
       .filter((m) => matches(q, m.name, m.sku))

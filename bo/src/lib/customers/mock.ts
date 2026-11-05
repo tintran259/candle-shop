@@ -31,7 +31,9 @@ for (const o of [...sampleOrders].sort((a, b) => a.createdAt.localeCompare(b.cre
     tags: [],
     blocked: false,
     // Có tài khoản: đăng ký trước đơn đầu vài ngày; vãng lai: hồ sơ tạo lúc đặt đơn đầu
-    createdAt: dayjs(o.createdAt).subtract(hasAccount ? (key.charCodeAt(9) % 20) + 1 : 0, "day").toISOString(),
+    createdAt: dayjs(o.createdAt)
+      .subtract(hasAccount ? (key.charCodeAt(9) % 20) + 1 : 0, "day")
+      .toISOString(),
     ...extras[key],
   });
 }
@@ -43,7 +45,14 @@ const accountsOnly: Customer[] = [
 ].map(({ name, phone, days, newsletter }) => ({
   id: `cus-${phoneKey(phone).slice(-6)}`,
   name,
-  email: `${name.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/đ/gi, "d").toLowerCase().split(" ").slice(-2).join("")}@example.com`,
+  email: `${name
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .split(" ")
+    .slice(-2)
+    .join("")}@example.com`,
   phone,
   hasAccount: true,
   newsletter,

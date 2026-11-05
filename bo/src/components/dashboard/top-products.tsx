@@ -15,7 +15,14 @@ export function TopProducts({ rows, days }: { rows: ProductSales[]; days: number
               <Typography.Text type="secondary" strong className="tabular" style={{ width: 16 }}>
                 {i + 1}
               </Typography.Text>
-              <Avatar shape="square" size={44} src={p.image} icon={p.image ? undefined : <ExperimentOutlined style={{ color: brand.emberDark }} />} alt="" style={{ borderRadius: 12, background: brand.emberLight, flexShrink: 0 }} />
+              <Avatar
+                shape="square"
+                size={44}
+                src={p.image}
+                icon={p.image ? undefined : <ExperimentOutlined style={{ color: brand.emberDark }} />}
+                alt=""
+                style={{ borderRadius: 12, background: brand.emberLight, flexShrink: 0 }}
+              />
               <Flex vertical style={{ flex: 1, minWidth: 0 }}>
                 <Typography.Text strong ellipsis>
                   {p.name}

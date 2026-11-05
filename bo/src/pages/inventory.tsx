@@ -10,16 +10,7 @@ import { InventorySkeleton } from "@/components/skeletons";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useInventory } from "@/hooks/use-inventory";
 import { useStockHold } from "@/hooks/use-stock-hold";
-import {
-  applyInventoryFilters,
-  defaultInventoryFilters,
-  matchStatus,
-  sortOptions,
-  statusLabels,
-  statusOrder,
-  type InventoryFilters,
-  type InventoryStatus,
-} from "@/lib/inventory/filters";
+import { applyInventoryFilters, defaultInventoryFilters, matchStatus, sortOptions, statusLabels, statusOrder, type InventoryFilters, type InventoryStatus } from "@/lib/inventory/filters";
 import { lotTotal } from "@/lib/costs";
 import { formatMoneyShort } from "@/lib/format";
 import { categoryLabels, materialLevel, materialUsage, movementLabels } from "@/lib/inventory/stock";
@@ -146,13 +137,7 @@ export function InventoryPage() {
               options={materialCategories.map((c) => ({ value: c, label: categoryLabels[c] }))}
               style={{ flex: "0 1 180px", minWidth: 140 }}
             />
-            <Select
-              aria-label="Sắp xếp"
-              value={filters.sort}
-              onChange={(sort) => setFilters({ ...filters, sort })}
-              options={sortOptions}
-              style={{ flex: "0 1 180px", minWidth: 150 }}
-            />
+            <Select aria-label="Sắp xếp" value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} options={sortOptions} style={{ flex: "0 1 180px", minWidth: 150 }} />
           </Flex>
         </Flex>
       </Card>

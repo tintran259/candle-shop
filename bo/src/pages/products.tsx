@@ -20,6 +20,7 @@ import { discountPercent } from "@/lib/products/labels";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
+import { defaultShippingFee } from "@/lib/settings/types";
 
 // Sản phẩm trưng bày: mẫu nến hiện trên web để khách đặt, có công thức nguyên liệu, không giữ số tồn thành phẩm
 export function ProductsPage() {
@@ -33,7 +34,7 @@ export function ProductsPage() {
   // Giá vốn theo giá nhập hiện tại: giá nhập tăng sau khi tạo sản phẩm thì báo lại ở đây
   const inventory = useInventory();
   const { settings } = useSettings();
-  const review = useMemo(() => productsToReview(api.products, toMap(inventory.materials), settings.minMargin), [api.products, inventory.materials, settings.minMargin]);
+  const review = useMemo(() => productsToReview(api.products, toMap(inventory.materials), { ...settings, shipping: defaultShippingFee(settings) }), [api.products, inventory.materials, settings]);
   // Memo để bảng/lưới (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
   const items = useMemo(() => applyFilters(api.products, filters, review), [api.products, filters, review]);
   const pager = usePageQuery(api.loading ? undefined : items.length);
@@ -128,10 +129,7 @@ export function ProductsPage() {
 
       {items.length === 0 ? (
         <Card>
-          <Empty
-            description={products.length ? "Không có sản phẩm khớp bộ lọc." : "Chưa có sản phẩm nào."}
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
+          <Empty description={products.length ? "Không có sản phẩm khớp bộ lọc." : "Chưa có sản phẩm nào."} image={Empty.PRESENTED_IMAGE_SIMPLE}>
             {products.length ? (
               <Button onClick={() => setFilters(defaultFilters)}>Xóa bộ lọc</Button>
             ) : (

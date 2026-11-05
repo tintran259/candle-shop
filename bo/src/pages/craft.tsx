@@ -1,68 +1,27 @@
-import { CheckOutlined, DownloadOutlined, EyeInvisibleOutlined, ReloadOutlined, SaveOutlined, WarningOutlined } from "@ant-design/icons";
-import { Alert, App, Button, Card, Col, Empty, Flex, Grid, Popconfirm, Row, Statistic, Switch, Tabs, Tag, Typography } from "antd";
-import dayjs from "dayjs";
+import { CheckOutlined, DownloadOutlined, ReloadOutlined, SaveOutlined } from "@ant-design/icons";
+import { Alert, App, Button, Card, Col, Empty, Flex, Grid, Popconfirm, Row, Statistic, Typography } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { AddStepModal } from "@/components/craft/add-step-modal";
-import { InputsEditor } from "@/components/craft/inputs-editor";
 import { OptionDrawer } from "@/components/craft/option-drawer";
-import { OptionTable } from "@/components/craft/option-table";
 import { ChangesDrawer, SaveBar } from "@/components/craft/save-bar";
-import { StepIconView } from "@/components/craft/step-icon";
 import { StepList } from "@/components/craft/step-list";
-import { StepPreview } from "@/components/craft/step-preview";
-import { StepSettings } from "@/components/craft/step-settings";
 import { CraftSkeleton } from "@/components/skeletons";
+import { CraftAlerts } from "@/components/craft/craft-alerts";
+import { StepEditorCard } from "@/components/craft/step-editor-card";
+import { blockedOptions, cheapestPrice, countLowMargins, downloadJson } from "@/lib/craft/overview";
 import { useCraftDraft } from "@/hooks/use-craft-config";
 import { useInventory } from "@/hooks/use-inventory";
 import { useSettings } from "@/hooks/use-settings";
 import { describeChanges, orderChanged } from "@/lib/craft/changes";
 import { CRAFT_PREVIEW_NOTICE } from "@/lib/craft/groups";
-import { inputsChecks, lidCheck, needsReview, optionCheck, sizeCheck } from "@/lib/craft/pricing";
-import { emptySelection, priceSelection, type StepSelection } from "@/lib/craft/selection";
-import { isOptionStep, kindMeta, optionRows, validateConfig } from "@/lib/craft/steps";
-import type { CraftConfig, CraftStep, OptionStep, StepOption, VesselOption } from "@/lib/craft/types";
+import { isOptionStep, optionRows, validateConfig } from "@/lib/craft/steps";
+import type { StepOption } from "@/lib/craft/types";
 import { formatMoneyShort } from "@/lib/format";
-import { sellable, sellableSizes, toMap, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
+import { toMap } from "@/lib/inventory/stock";
 import { useDrawerTarget } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
-import { brand } from "@/theme";
-
-// Tải cấu hình về máy dạng JSON — đúng định dạng BE sẽ nhận (docs/craft-builder.md)
-function downloadJson(data: unknown) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `craft-config-${dayjs().format("YYYY-MM-DD")}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// Giá một hũ rẻ nhất (ước tính): hũ và cỡ rẻ nhất còn đặt được + lựa chọn rẻ nhất còn bán ở mỗi bước bắt buộc đang hiện
-function cheapestPrice(config: CraftConfig, map: MaterialMap) {
-  const vessel = config.steps.find((s) => s.kind === "vessel");
-  if (!vessel || vessel.kind !== "vessel") return 0;
-  const empty = emptySelection(config);
-  const totals = vessel.options
-    .filter((o) => sellable(o, map))
-    .flatMap((o) => sellableSizes(o, map).map((size) => ({ [vessel.id]: { kind: "vessel" as const, optionId: o.id, sizeId: size.id, withLid: false } })))
-    .map((jar) => {
-      let total = priceSelection(config, jar).unit;
-      for (const step of config.steps) {
-        if (!step.enabled || !step.required || step.kind === "inputs" || step.kind === "vessel" || !empty[step.id]) continue;
-        const pick = (id: string): StepSelection => {
-          const sel = empty[step.id];
-          return sel.kind === "blend" ? { ...sel, items: [{ optionId: id, weight: 1 }] } : { ...(sel as Extract<StepSelection, { optionIds: string[] }>), optionIds: [id] };
-        };
-        const prices = (step.options as StepOption[]).filter((o) => sellable(o, map)).map((o) => priceSelection(config, { ...jar, [step.id]: pick(o.id) }).unit - priceSelection(config, jar).unit);
-        if (prices.length) total += Math.min(...prices);
-      }
-      return total;
-    });
-  return totals.length ? Math.min(...totals) : 0;
-}
 
 // Trình dựng trang Thủ công: admin tạo các bước, mỗi bước dùng một component, web dựng theo đúng thứ tự
 export function CraftPage() {
@@ -112,42 +71,19 @@ export function CraftPage() {
 
   const issues = useMemo(() => validateConfig(config, materials), [config, materials]);
   // Số cỡ và lựa chọn đang bán cần xem lại giá: thấp hơn giá vốn, hoặc lãi dưới mức tối thiểu ở Cài đặt
-  const lowMargins = useMemo(() => {
-    // Hũ đếm từng cỡ, lựa chọn khác đếm theo cỡ tệ nhất
-    const vessel = config.steps.find((s) => s.kind === "vessel");
-    const sizes =
-      vessel?.kind === "vessel"
-        ? vessel.options.filter((o) => o.available).flatMap((o) => o.sizes.filter((s) => s.available && needsReview(sizeCheck(config, o, s, map), settings.minMargin))).length
-        : 0;
-    const options = config.steps
-      .filter((s): s is OptionStep => s.enabled && isOptionStep(s) && s.kind !== "vessel")
-      .flatMap((s) => (s.options as StepOption[]).filter((o) => o.available).map((o) => optionCheck(config, s, o, map)))
-      .filter((c) => c && needsReview(c, settings.minMargin)).length;
-    // Nắp (đếm theo hũ) và ô nhập / tuỳ chọn thêm có gắn nguyên liệu
-    const lids =
-      vessel?.kind === "vessel" && vessel.enabled
-        ? vessel.options.filter((o) => o.available).filter((o) => {
-            const c = lidCheck(o, map);
-            return c && needsReview(c, settings.minMargin);
-          }).length
-        : 0;
-    const inputs = config.steps
-      .flatMap((s) => (s.enabled && s.kind === "inputs" ? inputsChecks(s, map) : []))
-      .filter((x) => needsReview(x.check, settings.minMargin)).length;
-    return sizes + options + lids + inputs;
-  }, [config, map, settings.minMargin]);
-  const withIssues = new Set(issues.filter((i) => i.level === "error" || i.level === "warning").map((i) => i.stepId).filter(Boolean) as string[]);
+  const lowMargins = useMemo(() => countLowMargins(config, map, settings.minMargin), [config, map, settings.minMargin]);
+  const withIssues = new Set(
+    issues
+      .filter((i) => i.level === "error" || i.level === "warning")
+      .map((i) => i.stepId)
+      .filter(Boolean) as string[],
+  );
 
   if (api.loading || inventory.loading) return <CraftSkeleton />;
 
   const rows = optionRows(config).filter(({ step: s }) => s.enabled);
-  // Lựa chọn đang bán nhưng nguyên liệu hết hàng — web đang khóa. Hũ đếm theo từng cỡ hết mã hũ (vd Hũ gốm 200ml)
-  const blocked = rows.flatMap(({ step: s, option }) => {
-    if (!option.available) return [];
-    if (s.kind !== "vessel") return sellable(option, map) ? [] : [option.id];
-    const v = option as VesselOption;
-    return v.sizes.filter((size) => size.available && vesselSizeLevel(v, size.id, map) === "out").map((size) => `${v.id}:${size.id}`);
-  });
+  // Lựa chọn đang bán nhưng nguyên liệu hết hàng — web đang khóa
+  const blocked = blockedOptions(config, map);
   const cheapest = cheapestPrice(config, map);
   const errors = issues.filter((i) => i.level === "error");
   const warnings = issues.length - errors.length;
@@ -177,8 +113,6 @@ export function CraftPage() {
       onOk: doSave,
     });
   };
-  // Số thứ tự trên web chỉ đếm các bước đang hiện
-  const webIndex = (s: CraftStep) => config.steps.filter((x) => x.enabled).indexOf(s) + 1;
 
   const stats = [
     { label: "Bước đang hiện", value: `${config.steps.filter((s) => s.enabled).length}/${config.steps.length}` },
@@ -190,7 +124,6 @@ export function CraftPage() {
       note: blocked.length ? <Link to="/inventory?status=out">Mở Kho nguyên liệu</Link> : undefined,
     },
     { label: "Giá thấp nhất", value: cheapest ? formatMoneyShort(cheapest) : "—", note: <span style={{ color: "#6b6b6b" }}>Hũ rẻ nhất có thể đặt</span> },
-
   ];
 
   return (
@@ -223,41 +156,7 @@ export function CraftPage() {
 
       <Alert type="info" showIcon title={CRAFT_PREVIEW_NOTICE} />
 
-      {issues.length > 0 && (
-        <Alert
-          type={errors.length ? "error" : "warning"}
-          showIcon
-          icon={<WarningOutlined />}
-          title={errors.length ? `${errors.length} lỗi cần sửa trước khi lên web` : `${issues.length} điểm nên xem lại`}
-          description={
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {issues.slice(0, 6).map((i, k) => (
-                <li key={k}>
-                  {i.stepId ? (
-                    <Typography.Link onClick={() => selectStep(i.stepId!)}>{i.message}</Typography.Link>
-                  ) : (
-                    i.message
-                  )}
-                </li>
-              ))}
-              {issues.length > 6 && <li>và {issues.length - 6} điểm khác…</li>}
-            </ul>
-          }
-        />
-      )}
-
-      {lowMargins > 0 && (
-        <Alert
-          type="warning"
-          showIcon
-          title={`${lowMargins} cỡ, nắp hoặc lựa chọn cần xem lại giá bán`}
-          description={
-            <>
-              Giá bán thấp hơn giá vốn hoặc lãi dưới {settings.minMargin}% — xem từng cỡ và phụ thu nắp trong drawer hũ, cột Giá vốn tối thiểu ở tab Lựa chọn của từng bước, phụ thu ô nhập và tuỳ chọn thêm ở bước Cá nhân hóa. <Link to="/settings">Đổi mức lãi tối thiểu</Link>
-            </>
-          }
-        />
-      )}
+      <CraftAlerts issues={issues} errors={errors.length} lowMargins={lowMargins} minMargin={settings.minMargin} onSelectStep={selectStep} />
 
       <Row gutter={[16, 16]}>
         {stats.map((s) => (
@@ -278,79 +177,18 @@ export function CraftPage() {
         </Col>
         <Col xs={24} lg={15} xl={17} id="craft-editor" style={{ scrollMarginTop: 16 }}>
           {step ? (
-            <Card
-              title={
-                <Flex align="center" gap={10} style={{ minWidth: 0 }}>
-                  <span aria-hidden style={{ color: brand.emberDark, fontSize: 18 }}>
-                    <StepIconView icon={step.icon} />
-                  </span>
-                  <Typography.Text strong ellipsis style={{ fontSize: 16 }}>
-                    {step.title.vi}
-                  </Typography.Text>
-                  {/* Màn hẹp bỏ tag loại bước để tên bước không bị cắt còn "H…" */}
-                  {screens.sm !== false && <Tag style={{ marginInlineEnd: 0 }}>{kindMeta[step.kind].label}</Tag>}
-                  {!step.enabled && (
-                    <Tag icon={<EyeInvisibleOutlined />} style={{ marginInlineEnd: 0 }}>
-                      Đang ẩn
-                    </Tag>
-                  )}
-                  {(() => {
-                    const n = detail.steps.find((c) => c.step.id === step.id)?.items.length;
-                    return n ? (
-                      <Tag color="orange" style={{ marginInlineEnd: 0, cursor: "pointer" }} onClick={() => setReviewing(true)}>
-                        {n} thay đổi chưa lưu
-                      </Tag>
-                    ) : null;
-                  })()}
-                </Flex>
-              }
-              extra={
-                <Flex align="center" gap={8}>
-                  <Typography.Text type="secondary" style={{ fontSize: 13 }} className="hide-xs">
-                    Hiện trên web
-                  </Typography.Text>
-                  <Switch
-                    checked={step.enabled}
-                    disabled={step.kind === "vessel"}
-                    aria-label="Hiện trên web"
-                    onChange={(enabled) => api.updateStep(step.id, (s) => ({ ...s, enabled }))}
-                  />
-                </Flex>
-              }
-              styles={{ body: { paddingTop: 4 } }}
-            >
-              <Tabs
-                activeKey={view}
-                onChange={(k) => go({ step: step.id, view: k === "main" ? null : k, edit: null })}
-                items={[
-                  {
-                    key: "main",
-                    label: step.kind === "vessel" ? "Hũ" : step.kind === "inputs" ? "Ô nhập & tuỳ chọn" : "Lựa chọn",
-                    children:
-                      step.kind === "inputs" ? (
-                        <InputsEditor step={step} api={api} materials={materials} />
-                      ) : (
-                        <OptionTable step={step} config={config} api={api} map={map} pricing={settings} onEdit={(id) => go({ step: step.id, view: null, edit: id })} />
-                      ),
-                  },
-                  { key: "settings", label: "Cài đặt", children: <StepSettings step={step} api={api} onRemoved={() => go({ step: null, view: null, edit: null })} /> },
-                  {
-                    key: "preview",
-                    label: "Xem trước",
-                    children: (
-                      <Flex vertical gap={12}>
-                        <Typography.Text type="secondary">
-                          {step.enabled
-                            ? `Mô phỏng bước ${webIndex(step)} trên trang Thủ công — bấm thử được, không lưu.`
-                            : "Bước đang ẩn — khách chưa thấy bước này. Mô phỏng nếu bật lên:"}
-                        </Typography.Text>
-                        <StepPreview key={step.id} step={step} map={map} index={step.enabled ? webIndex(step) : config.steps.filter((x) => x.enabled).length + 1} />
-                      </Flex>
-                    ),
-                  },
-                ]}
-              />
-            </Card>
+            <StepEditorCard
+              step={step}
+              config={config}
+              api={api}
+              materials={materials}
+              map={map}
+              settings={settings}
+              view={view}
+              pending={detail.steps.find((c) => c.step.id === step.id)?.items.length}
+              onReview={() => setReviewing(true)}
+              go={go}
+            />
           ) : (
             <Card>
               <Empty description="Chưa có bước nào.">
@@ -389,7 +227,16 @@ export function CraftPage() {
         }}
       />
       {api.dirty && (
-        <SaveBar changes={detail.steps} reordered={detail.reordered} newMaterials={api.pending} errors={errors.length} warnings={warnings} onSave={commit} onDiscard={api.discard} onDetails={() => setReviewing(true)} />
+        <SaveBar
+          changes={detail.steps}
+          reordered={detail.reordered}
+          newMaterials={api.pending}
+          errors={errors.length}
+          warnings={warnings}
+          onSave={commit}
+          onDiscard={api.discard}
+          onDetails={() => setReviewing(true)}
+        />
       )}
       <ChangesDrawer
         open={reviewing}

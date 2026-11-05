@@ -4,12 +4,12 @@ import { memo } from "react";
 import { CategoryTag } from "@/components/products/category-tag";
 import { PriceFlag, PriceText, ProductBadges, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
-import type { PriceCheck } from "@/lib/craft/pricing";
+import type { ProductReview } from "@/lib/products/pricing";
 import { sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand, radius } from "@/theme";
 
-type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; review: ReadonlyMap<string, PriceCheck> };
+type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; review: ReadonlyMap<string, ProductReview> };
 
 // Lưới thẻ sản phẩm — nhìn ảnh để rà nhanh; bấm ảnh hoặc tên để sửa
 function ProductGridView({ items, api, onEdit, review }: Props) {
@@ -18,13 +18,7 @@ function ProductGridView({ items, api, onEdit, review }: Props) {
       {items.map((p) => (
         <Col key={p.id} xs={24} sm={12} lg={8} xxl={6}>
           <article style={{ background: "#fff", borderRadius: radius.card, overflow: "hidden", height: "100%", display: "flex", flexDirection: "column" }}>
-            <button
-              type="button"
-              onClick={() => onEdit(p.id)}
-              aria-label={`Sửa ${p.name}`}
-              className="product-cover"
-              style={{ aspectRatio: "4 / 3", background: brand.emberLight }}
-            >
+            <button type="button" onClick={() => onEdit(p.id)} aria-label={`Sửa ${p.name}`} className="product-cover" style={{ aspectRatio: "4 / 3", background: brand.emberLight }}>
               {p.images[0] && <img src={p.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: p.status === "hidden" ? 0.55 : 1 }} />}
               <span style={{ position: "absolute", left: 12, top: 12 }}>
                 <ProductBadges product={p} />
@@ -53,12 +47,7 @@ function ProductGridView({ items, api, onEdit, review }: Props) {
 
             <Flex align="center" justify="space-between" style={{ padding: "10px 16px", borderTop: "1px solid #f1f1f1" }}>
               <Flex component="label" align="center" gap={8} style={{ cursor: "pointer" }}>
-                <Switch
-                  size="small"
-                  checked={p.status === "active"}
-                  onChange={(on) => api.patch([p.id], { status: on ? "active" : "hidden" })}
-                  aria-label={`Đang bán: ${p.name}`}
-                />
+                <Switch size="small" checked={p.status === "active"} onChange={(on) => api.patch([p.id], { status: on ? "active" : "hidden" })} aria-label={`Đang bán: ${p.name}`} />
                 <Typography.Text type="secondary" style={{ fontSize: 13 }}>
                   {p.status === "active" ? "Đang bán" : "Tạm ẩn"}
                 </Typography.Text>

@@ -11,14 +11,7 @@ export function PlaceholderPage() {
   const item = allNavItems.find((i) => i.path === `/${section}`);
   useTitle(item?.label ?? "Không tìm thấy");
   if (!item) return <NotFoundPage />;
-  return (
-    <Result
-      icon={<ToolOutlined style={{ color: brand.ember }} />}
-      title={item.label}
-      subTitle="Trang này đang được xây dựng."
-      extra={<BackHome />}
-    />
-  );
+  return <Result icon={<ToolOutlined style={{ color: brand.ember }} />} title={item.label} subTitle="Trang này đang được xây dựng." extra={<BackHome />} />;
 }
 
 export function NotFoundPage() {

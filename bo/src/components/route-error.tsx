@@ -4,8 +4,7 @@ import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
 // Lỗi tải file code của trang: sau mỗi lần build / deploy, file code từng trang đổi tên (mã băm mới), file cũ bị xóa.
 // Tab đang mở còn giữ tên cũ nên chuyển sang trang chưa mở sẽ lỗi "Failed to fetch dynamically imported module".
-const isStaleChunk = (e: unknown) =>
-  e instanceof Error && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(e.message);
+const isStaleChunk = (e: unknown) => e instanceof Error && /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(e.message);
 
 // Trang báo lỗi thay cho màn hình mặc định của React Router — giữ sidebar, có nút tải lại / về tổng quan
 export function RouteError() {

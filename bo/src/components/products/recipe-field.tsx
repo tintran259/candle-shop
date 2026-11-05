@@ -38,10 +38,7 @@ function RecipeRow({ name, materials, onRemove }: { name: number; materials: Mat
 export function RecipeField({ required, exclude }: { required: boolean; exclude?: string[] }) {
   const materials = useInventory().materials.filter((m) => m.tracked && !exclude?.includes(m.id));
   return (
-    <Form.List
-      name="recipe"
-      rules={[{ validator: (_, lines?: unknown[]) => (required && !lines?.length ? Promise.reject(new Error("Thêm ít nhất một nguyên liệu.")) : Promise.resolve()) }]}
-    >
+    <Form.List name="recipe" rules={[{ validator: (_, lines?: unknown[]) => (required && !lines?.length ? Promise.reject(new Error("Thêm ít nhất một nguyên liệu.")) : Promise.resolve()) }]}>
       {(fields, { add, remove }, { errors }) => (
         <>
           {fields.map((field) => (

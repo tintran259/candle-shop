@@ -42,8 +42,10 @@ test.describe("Số tiền hoàn khi hủy", () => {
     expect(refundFor(paid(1_000_000), "customer")).toBe(500_000);
     expect(refundFor(paid(1_000_000, { depositPercent: 30 }), "customer")).toBe(700_000);
   });
-  test("Cọc tính trên tổng trước phí gửi lại", () => {
-    expect(refundFor(paid(1_030_000, { total: 1_030_000, resendFee: 30_000 }), "customer")).toBe(530_000);
+  test("Cọc tính trên tiền hàng, không gồm phí giao và phí gửi lại", () => {
+    expect(refundFor(paid(1_030_000, { total: 1_030_000, shippingFee: 30_000, resendFee: 30_000 }), "customer")).toBe(530_000);
+    // Phí giao 50.000 + gửi lại 30.000: cọc 50% của 1.000.000 tiền hàng
+    expect(refundFor(paid(1_080_000, { total: 1_080_000, shippingFee: 80_000, resendFee: 30_000 }), "customer")).toBe(580_000);
   });
 });
 

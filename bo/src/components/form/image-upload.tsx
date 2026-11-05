@@ -108,14 +108,7 @@ export function ImageUpload({ value = [], onChange }: { value?: string[]; onChan
           </Upload>
         )}
       </Flex>
-      {preview && (
-        <Image
-          src={preview}
-          alt=""
-          style={{ display: "none" }}
-          preview={{ open: true, src: preview, onOpenChange: (open) => !open && setPreview(null) }}
-        />
-      )}
+      {preview && <Image src={preview} alt="" style={{ display: "none" }} preview={{ open: true, src: preview, onOpenChange: (open) => !open && setPreview(null) }} />}
     </>
   );
 }

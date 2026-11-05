@@ -50,7 +50,14 @@ export function SaveBar({ changes, reordered, newMaterials, errors, warnings, on
       </Flex>
       <Flex gap={8} wrap style={{ flexShrink: 0 }}>
         <Button onClick={onDetails}>Xem thay đổi</Button>
-        <Popconfirm title="Bỏ mọi thay đổi chưa lưu?" description="Cấu hình quay về bản web đang dùng." okText="Bỏ thay đổi" okButtonProps={{ danger: true }} cancelText="Tiếp tục sửa" onConfirm={onDiscard}>
+        <Popconfirm
+          title="Bỏ mọi thay đổi chưa lưu?"
+          description="Cấu hình quay về bản web đang dùng."
+          okText="Bỏ thay đổi"
+          okButtonProps={{ danger: true }}
+          cancelText="Tiếp tục sửa"
+          onConfirm={onDiscard}
+        >
           <Button>Bỏ thay đổi</Button>
         </Popconfirm>
         <Button type="primary" onClick={onSave}>

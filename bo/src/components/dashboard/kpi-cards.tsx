@@ -7,8 +7,19 @@ import { formatMoneyShort, formatNumber, formatPercent } from "@/lib/format";
 // Mỗi thẻ: tiêu đề → số lớn nét mảnh + mũi tên xu hướng → mô tả → link ở đáy
 export function KpiCards({ kpis, days }: { kpis: DashboardStats["kpis"]; days: number }) {
   const items = [
-    // Doanh thu = tiền hàng thực nhận, không gồm phí vận chuyển khách trả (docs/pages/dashboard.md#quy-tắc-doanh-thu)
-    { label: "Doanh thu", value: formatMoneyShort(kpis.revenue.value), delta: kpis.revenue.delta, note: "Tiền hàng thực nhận, không gồm phí vận chuyển", link: { to: "/orders", label: "Tất cả đơn" } },
+    // Doanh thu = tiền hàng của đơn đã chốt (hoàn tất, đơn hủy giữ cọc), không gồm phí vận chuyển (docs/pages/dashboard.md#quy-tắc-doanh-thu)
+    {
+      label: "Doanh thu",
+      value: formatMoneyShort(kpis.revenue.value),
+      delta: kpis.revenue.delta,
+      note: [
+        "Tiền hàng của đơn hoàn tất và tiền giữ lại của đơn hủy, không gồm phí vận chuyển",
+        kpis.revenue.pending.count > 0 && `Chưa tính ${formatMoneyShort(kpis.revenue.pending.amount)} đã thu của ${formatNumber(kpis.revenue.pending.count)} đơn chưa hoàn tất`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      link: { to: "/orders", label: "Tất cả đơn" },
+    },
     { label: "Đơn hàng", value: formatNumber(kpis.orders.value), delta: kpis.orders.delta, link: { to: "/orders", label: "Tất cả đơn" } },
     // Tiền hàng trung bình của đơn Hoàn tất trong kỳ, không gồm phí vận chuyển
     {

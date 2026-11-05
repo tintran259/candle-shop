@@ -1,23 +1,11 @@
 // Danh mục component cho bước + các hàm thao tác/kiểm tra cấu hình trình dựng Thủ công
 import { formatDelta, sizeLabel, slugify } from "@/lib/craft/groups";
 import { formatMoney } from "@/lib/format";
-import type {
-  CraftConfig,
-  CraftStep,
-  IntensityLevel,
-  OptionStep,
-  PreviewRole,
-  StepIcon,
-  StepKind,
-  StepOption,
-} from "@/lib/craft/types";
+import type { CraftConfig, CraftStep, IntensityLevel, OptionStep, PreviewRole, StepIcon, StepKind, StepOption } from "@/lib/craft/types";
 import { jarsOfType, sellable, toMap, vesselMaterialIds } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 
-export const kindMeta: Record<
-  StepKind,
-  { label: string; description: string; example: string; icon: StepIcon; roles: PreviewRole[]; single?: boolean }
-> = {
+export const kindMeta: Record<StepKind, { label: string; description: string; example: string; icon: StepIcon; roles: PreviewRole[]; single?: boolean }> = {
   vessel: {
     label: "Hũ & kích thước",
     description: "Thẻ hũ có ảnh minh họa dáng hũ, kèm chọn nắp và kích thước. Mỗi hũ có giá riêng và các cỡ lấy từ Kho.",
@@ -139,8 +127,7 @@ export function newStep(kind: StepKind, title: string, takenIds: string[]): Craf
 
 // Tất cả lựa chọn kèm bước của nó — cho thống kê, tìm kiếm, cảnh báo tồn kho
 export type OptionRow = { step: OptionStep; option: StepOption };
-export const optionRows = (config: CraftConfig): OptionRow[] =>
-  config.steps.filter(isOptionStep).flatMap((step) => (step.options as StepOption[]).map((option) => ({ step, option })));
+export const optionRows = (config: CraftConfig): OptionRow[] => config.steps.filter(isOptionStep).flatMap((step) => (step.options as StepOption[]).map((option) => ({ step, option })));
 
 export type ConfigIssue = { stepId?: string; level: "error" | "warning"; message: string };
 
@@ -164,8 +151,7 @@ export function validateConfig(config: CraftConfig, materials: Material[]): Conf
       if (step.options.length && !step.options.some((o) => o.available && o.sizes.some((s) => s.available)))
         issues.push({ stepId: step.id, level: "error", message: `${name}: chưa có hũ nào có kích thước đang bán.` });
       for (const o of step.options) {
-        if (o.available && !o.sizes.some((s) => s.available))
-          issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa có kích thước nào đang bán.` });
+        if (o.available && !o.sizes.some((s) => s.available)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa có kích thước nào đang bán.` });
         if (vesselMaterialIds(o).some(missing)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” có cỡ gắn với mã hũ/nắp đã xóa khỏi kho.` });
         // Theo dõi tồn vài cỡ nhưng quên gắn mã cho cỡ khác → cỡ đó bán không giới hạn
         const untracked = o.sizes.filter((s) => !s.materialId);
@@ -174,22 +160,23 @@ export function validateConfig(config: CraftConfig, materials: Material[]): Conf
         // Kho có thêm cỡ của loại hũ này mà hũ chưa có
         const added = jarsOfType(materials, o.jarType).filter((m) => !o.sizes.some((s) => s.materialId === m.id));
         if (added.length)
-          issues.push({ stepId: step.id, level: "warning", message: `${name}: Kho có cỡ mới của “${o.name.vi}” (${added.map((m) => (m.capacity ? `${m.capacity}ml` : m.name)).join(", ")}) — mở hũ để đặt giá và bán.` });
+          issues.push({
+            stepId: step.id,
+            level: "warning",
+            message: `${name}: Kho có cỡ mới của “${o.name.vi}” (${added.map((m) => (m.capacity ? `${m.capacity}ml` : m.name)).join(", ")}) — mở hũ để đặt giá và bán.`,
+          });
       }
     }
     if (step.kind === "inputs") {
-      for (const a of step.addons)
-        if (missing(a.materialId)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${a.name.vi}” gắn với nguyên liệu đã xóa khỏi kho.` });
+      for (const a of step.addons) if (missing(a.materialId)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${a.name.vi}” gắn với nguyên liệu đã xóa khỏi kho.` });
       if (step.enabled && !step.fields.some((f) => f.enabled) && !step.addons.some((a) => a.enabled))
         issues.push({ stepId: step.id, level: "warning", message: `${name}: chưa bật ô nhập hay tuỳ chọn nào.` });
       continue;
     }
     // Chưa có lựa chọn nào → một thông báo duy nhất (bắt buộc thì là lỗi), không báo trùng "không còn lựa chọn bán được"
     const onSale = (step.options as StepOption[]).filter((o) => sellable(o, map));
-    if (step.enabled && !step.options.length)
-      issues.push({ stepId: step.id, level: step.required ? "error" : "warning", message: `${name}: chưa có lựa chọn nào.` });
-    else if (step.enabled && step.required && !onSale.length)
-      issues.push({ stepId: step.id, level: "error", message: `${name}: bước bắt buộc nhưng không còn lựa chọn nào bán được.` });
+    if (step.enabled && !step.options.length) issues.push({ stepId: step.id, level: step.required ? "error" : "warning", message: `${name}: chưa có lựa chọn nào.` });
+    else if (step.enabled && step.required && !onSale.length) issues.push({ stepId: step.id, level: "error", message: `${name}: bước bắt buộc nhưng không còn lựa chọn nào bán được.` });
     for (const o of step.options as StepOption[]) {
       if (missing(o.materialId)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” gắn với nguyên liệu đã xóa khỏi kho.` });
       for (const [ref, optionIds] of Object.entries(o.onlyWith ?? {})) {
@@ -199,8 +186,7 @@ export function validateConfig(config: CraftConfig, materials: Material[]): Conf
           continue;
         }
         const missing = optionIds.filter((id) => !(target.options as StepOption[]).some((t) => t.id === id));
-        if (missing.length)
-          issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” nhắc tới lựa chọn không còn trong ${target.title.vi}.` });
+        if (missing.length) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” nhắc tới lựa chọn không còn trong ${target.title.vi}.` });
       }
     }
   }

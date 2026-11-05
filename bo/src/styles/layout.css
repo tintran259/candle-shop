@@ -1,0 +1,298 @@
+/* Sidebar dạng thẻ nổi: nội dung xếp dọc để khối tài khoản nằm dưới đáy */
+.app-sider .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-sider .ant-menu {
+  padding: 0 8px 8px;
+}
+
+/* Logo và khối tài khoản đứng yên, vạch mảnh ngăn với menu */
+.app-sider .sider-brand {
+  flex-shrink: 0;
+  margin: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Chỉ menu cuộn, thanh cuộn mảnh cùng tông nền (không còn thanh cuộn trắng của trình duyệt) */
+.app-sider .sider-menu {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+/* Tiêu đề nhóm: chữ hoa nhỏ, giãn chữ — tách bậc rõ với mục menu */
+.app-sider .ant-menu-item-group-title {
+  padding: 16px 16px 6px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.app-sider .ant-menu-item-group:first-child .ant-menu-item-group-title {
+  padding-top: 12px !important;
+}
+/* Thu gọn còn icon: tên nhóm bị cắt ("SÁ…") nên thay bằng vạch ngăn mảnh */
+.app-sider .ant-menu-inline-collapsed .ant-menu-item-group-title {
+  font-size: 0;
+  height: 1px;
+  padding: 0 !important;
+  margin: 10px 20px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.app-sider .ant-menu-inline-collapsed .ant-menu-item-group:first-child .ant-menu-item-group-title {
+  background: none;
+  margin-block: 4px;
+}
+
+/* Mục đang mở: vạch màu nhấn bên trái ngoài nền sáng hơn */
+.app-sider .ant-menu-item-selected {
+  position: relative;
+  font-weight: 600;
+}
+.app-sider .ant-menu-item-selected::before {
+  content: "";
+  position: absolute;
+  inset-block: 10px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #e8b48a;
+}
+.app-sider .ant-menu-item .ant-menu-item-icon {
+  font-size: 16px;
+}
+
+/* Dòng danh sách: nền màu nhấn nhạt khi rê chuột */
+.list-row {
+  padding: 10px 12px;
+  border-radius: 12px;
+  transition: background-color 0.2s ease-out;
+}
+.list-row:hover {
+  background: #fbf1e8;
+}
+
+/* Ô trong thẻ "Cần nhập thêm" — cả ô là một nút */
+.restock-tile {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: #f6f6f3;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+}
+.restock-tile:hover {
+  background: #fbf1e8;
+  border-color: #f3dcc7;
+}
+.restock-tile:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: 2px;
+}
+.restock-tile-arrow {
+  transition: transform 0.2s ease-out;
+}
+.restock-tile:hover .restock-tile-arrow {
+  transform: translateX(2px);
+}
+
+/* Ô ảnh trong drawer: bấm để xem lớn; ảnh chính có viền màu nhấn */
+.image-tile {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: zoom-in;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  background: #f6f6f3;
+}
+.image-tile:focus-visible {
+  outline-color: #b5652e;
+}
+
+.image-upload-trigger .ant-upload.ant-upload-select {
+  width: 112px !important;
+  height: 112px !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+}
+
+/* Ảnh bìa thẻ sản phẩm (dạng lưới) — cả ảnh là nút mở drawer */
+.product-cover {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+.product-cover img {
+  transition: transform 0.3s ease-out;
+}
+.product-cover:hover img {
+  transform: scale(1.03);
+}
+.product-cover:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: -2px;
+}
+
+/* Link "Xem thêm →": mũi tên nhích sang khi rê chuột */
+.more-link .anticon {
+  transition: transform 0.2s ease-out;
+}
+.more-link:hover .anticon {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .more-link .anticon,
+  .restock-tile,
+  .restock-tile-arrow,
+  .product-cover img {
+    transition: none;
+  }
+  .skel-bar {
+    animation: none;
+  }
+}
+
+/* Ô tìm kiếm trên header — trông như input, bấm mở bảng tìm nhanh */
+.search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 300px;
+  height: 36px;
+  padding: 0 6px 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b6b6b;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease-out;
+}
+.search-trigger:hover {
+  border-color: #e8b48a;
+}
+.search-trigger:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: 2px;
+}
+.kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #f6f6f3;
+  border: 1px solid #ebebe6;
+  color: #454545;
+  font: 500 11px/18px Inter, sans-serif;
+  text-align: center;
+}
+.search-hints {
+  color: #6b6b6b;
+  font-size: 12px;
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.search-row[aria-selected="true"] {
+  background: #fbf1e8;
+}
+.search-row-enter {
+  color: #7a3f17;
+  visibility: hidden;
+}
+.search-row[aria-selected="true"] .search-row-enter {
+  visibility: visible;
+}
+.search-mark {
+  padding: 0;
+  background: #f6dcc5;
+  color: inherit;
+  border-radius: 2px;
+}
+
+/* Dòng bấm được trong danh sách (vd đơn hàng trong hồ sơ khách) */
+.list-row-button {
+  /* Dùng cho cả <button> và <a>: thẻ <a> mặc định content-box → padding cộng thêm làm dòng tràn khỏi thẻ */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 12px;
+  /* Nền hover tràn ra lề trong thẻ, chữ vẫn thẳng hàng tiêu đề */
+  margin: 0 -12px;
+  width: calc(100% + 24px);
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+.list-row-button:hover {
+  background: #fbf1e8;
+}
+.list-row-button:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: -2px;
+}
+
+/* Dòng thông báo: chưa đọc có nền nhạt + chấm */
+.notif-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease-out;
+}
+.notif-row.is-unread {
+  background: #fcf8f4;
+}
+.notif-row:hover {
+  background: #fbf1e8;
+}
+.notif-row:focus-visible {
+  outline: 2px solid #b5652e;
+  outline-offset: -2px;
+}
+.notif-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #b5652e;
+}
+
+/* Màn hình cảm ứng không có bàn phím — ẩn gợi ý phím tắt */
+@media (hover: none) {
+  .search-hints {
+    display: none !important;
+  }
+}

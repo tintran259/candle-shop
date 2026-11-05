@@ -1,37 +1,14 @@
-import { CheckOutlined, LockOutlined } from "@ant-design/icons";
-import { Button, Checkbox, Col, Empty, Flex, Grid, Input, InputNumber, Modal, Row, Segmented, Tag, Typography } from "antd";
+import { Button, Col, Empty, Flex, Grid, Modal, Row, Typography } from "antd";
 import { useMemo, useState } from "react";
-import { StepIconView } from "@/components/craft/step-icon";
-import { formatDelta, sizeLabel, unitLabel } from "@/lib/craft/groups";
-import {
-  activeSteps,
-  blendRatios,
-  blendShares,
-  describeSelection,
-  emptySelection,
-  isMixStep,
-  jarFrom,
-  isWaxStep,
-  materialLines,
-  materialNeeds,
-  maxJars,
-  optionBlock,
-  pickOption,
-  priceSelection,
-  selectedSize,
-  toRecipe,
-  validateSelection,
-  type CraftSelection,
-  type SelectionIssue,
-  type StepSelection,
-} from "@/lib/craft/selection";
-import { amountBasis, intensityLabels, optionPriceText } from "@/lib/craft/steps";
-import type { CraftConfig, CraftStep, IntensityLevel, StepOption, VesselOption } from "@/lib/craft/types";
+import { formatDelta, unitLabel } from "@/lib/craft/groups";
+import { activeSteps, describeSelection, emptySelection, materialNeeds, maxJars, priceSelection, toRecipe, type CraftSelection, type StepSelection } from "@/lib/craft/selection";
+import type { CraftConfig } from "@/lib/craft/types";
 import { margin, needsCost } from "@/lib/costs";
 import { formatMoney, formatNumber } from "@/lib/format";
 import type { RecipeLine } from "@/lib/products/types";
-import { lidLevel, optionLevel, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
-import { brand } from "@/theme";
+import { type MaterialMap } from "@/lib/inventory/stock";
+import { validateSelection } from "@/lib/craft/validate";
+import { CraftStepSections } from "@/components/orders/craft-step-sections";
 
 export type CustomCandle = { selection: CraftSelection; description: string; price: number; recipe: RecipeLine[] };
 
@@ -43,8 +20,6 @@ type Props = {
   onCancel: () => void;
   onApply: (candle: CustomCandle) => void;
 };
-
-const striped = "repeating-linear-gradient(45deg,#fff 0 4px,#eee8de 4px 8px)";
 
 // Cấu hình nến tự phối cho đơn tạo tại BO — đi đúng các bước của trang Thủ công (bản đã lưu).
 // Mỗi lựa chọn gắn nguyên liệu trong Kho: hết thì khóa; giá, mô tả, số hũ làm được tự tính.
@@ -82,7 +57,9 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
       destroyOnHidden
       // Tiêu đề và chân luôn hiện, chỉ phần chọn cuộn. Chân màn hẹp xuống 2 hàng nên chừa nhiều hơn.
       // Padding ngang + margin âm bằng nửa gutter của Row: không cuộn ngang, đủ chỗ cho viền focus và thanh cuộn
-      styles={{ body: { paddingBlock: 4, paddingInline: 12, marginInline: -12, maxHeight: `calc(100dvh - ${screens.md ? 168 : 216}px)`, overflowX: "hidden", overflowY: "auto", overscrollBehavior: "contain" } }}
+      styles={{
+        body: { paddingBlock: 4, paddingInline: 12, marginInline: -12, maxHeight: `calc(100dvh - ${screens.md ? 168 : 216}px)`, overflowX: "hidden", overflowY: "auto", overscrollBehavior: "contain" },
+      }}
       footer={
         <Flex justify="space-between" align="center" gap={12} wrap>
           <Typography.Text type={tried && issues.length ? "danger" : "secondary"} style={{ fontSize: 13 }}>
@@ -178,290 +155,4 @@ export function CustomCandleModal({ open, config, map, initial, onCancel, onAppl
       )}
     </Modal>
   );
-}
-
-type BodyProps = { step: CraftStep; config: CraftConfig; selection: CraftSelection; map: MaterialMap; onChange: (next: StepSelection) => void };
-
-type SectionsProps = {
-  steps: CraftStep[];
-  config: CraftConfig;
-  selection: CraftSelection;
-  map: MaterialMap;
-  // Lỗi từng bước (hiện dưới bước đó)
-  issues: SelectionIssue[];
-  onChange: (stepId: string, next: StepSelection) => void;
-};
-
-// Các bước chọn nến (thẻ hũ + cỡ + nắp, sáp, hương kèm lượng cho 1 hũ, bấc, màu, trang trí…) — dùng ở popup Tự phối nến và form Sản phẩm trưng bày
-export function CraftStepSections({ steps, config, selection, map, issues, onChange }: SectionsProps) {
-  return (
-    <Flex vertical gap={20} className="cfg-steps">
-      {steps.map((step, i) => (
-        <section key={step.id} id={`cfg-step-${step.id}`} aria-label={step.title.vi} className="cfg-step">
-          <Flex align="center" gap={8} wrap>
-            <span className="cfg-step-index" aria-hidden>
-              {i + 1}
-            </span>
-            <span aria-hidden style={{ color: brand.emberDark }}>
-              <StepIconView icon={step.icon} />
-            </span>
-            <Typography.Text strong style={{ fontSize: 15 }}>
-              {step.title.vi}
-            </Typography.Text>
-            {!step.required && <Tag style={{ marginInlineEnd: 0 }}>Không bắt buộc</Tag>}
-          </Flex>
-          <div style={{ marginTop: 10 }}>
-            <StepBody step={step} config={config} selection={selection} map={map} onChange={(next) => onChange(step.id, next)} />
-            <AmountFields step={step} config={config} selection={selection} map={map} onChange={(next) => onChange(step.id, next)} />
-          </div>
-          {issues
-            .filter((x) => x.stepId === step.id)
-            .map((x) => (
-              <Typography.Text key={x.message} type="danger" role="alert" style={{ display: "block", fontSize: 13, marginTop: 6 }}>
-                {x.message}
-              </Typography.Text>
-            ))}
-        </section>
-      ))}
-    </Flex>
-  );
-}
-
-// Thẻ chọn: ảnh/màu, tên, phụ thu; khóa kèm lý do (hết nguyên liệu, không hợp…)
-function OptionCard({ option, price, on, block, multi, onClick }: { option: StepOption; price: string; on: boolean; block: string | null; multi?: boolean; onClick: () => void }) {
-  const media = option.images?.[0];
-  return (
-    <button type="button" className="cfg-option" role={multi ? "checkbox" : "radio"} aria-checked={on} disabled={!!block && !on} onClick={onClick} title={block ? `${option.name.vi} — ${block}` : option.name.vi}>
-      <span className="cfg-dot" aria-hidden style={{ background: media ? `center / cover no-repeat url("${media}")` : (option.swatch ?? striped) }}>
-        {on && <CheckOutlined style={{ fontSize: 10, color: "#fff" }} />}
-      </span>
-      <span style={{ display: "flex", flexDirection: "column", minWidth: 0, textAlign: "left" }}>
-        <span className="cfg-option-name">{option.name.vi}</span>
-        <span className="cfg-option-meta">
-          {block ? (
-            <>
-              <LockOutlined aria-hidden /> {block}
-            </>
-          ) : (
-            price
-          )}
-        </span>
-      </span>
-    </button>
-  );
-}
-
-// Lượng từng nguyên liệu cho 1 hũ: để trống thì theo mặc định
-function AmountFields({ step, config, selection, map, onChange }: BodyProps) {
-  const sel = selection[step.id];
-  const lines = materialLines(config, selection, map).filter((l) => l.stepId === step.id);
-  if (!lines.length || !sel || sel.kind === "vessel") return null;
-  const setAmount = (optionId: string, value: number | null) => {
-    const rest = { ...sel.amounts };
-    delete rest[optionId];
-    onChange({ ...sel, amounts: value ? { ...rest, [optionId]: value } : rest });
-  };
-  const grams = selectedSize(config, selection)?.grams;
-  const amountOf = (l: (typeof lines)[number]) => l.amount ?? l.fallback;
-  const total = lines.reduce((s, l) => s + amountOf(l), 0);
-  // Tỉ lệ từng loại khi phối nhiều sáp hoặc nhiều mùi
-  const ratios = (isMixStep(step) || step.kind === "blend") && lines.length > 1 && total ? blendShares(lines.map((l) => ({ optionId: l.optionId, weight: amountOf(l) }))) : [];
-  const unitOf = unitLabel[map.get(lines[0].materialId)!.unit];
-  return (
-    <Flex vertical gap={8} className="cfg-box" style={{ marginTop: 12 }}>
-      <Typography.Text strong style={{ fontSize: 13 }}>
-        Lượng cho 1 hũ
-      </Typography.Text>
-      {lines.map((l) => {
-        const unit = unitLabel[map.get(l.materialId)!.unit];
-        return (
-          <Flex key={l.optionId} align="center" gap={12}>
-            <Typography.Text style={{ flex: 1, minWidth: 0, fontSize: 13 }}>{l.name}</Typography.Text>
-            <InputNumber aria-label={`Lượng ${l.name}`} min={1} precision={0} suffix={unit} value={l.amount ?? null} placeholder={l.fallback ? String(l.fallback) : "Mặc định"} onChange={(v) => setAmount(l.optionId, v)} style={{ width: 128 }} />
-            {ratios.length > 0 && (
-              <Typography.Text type="secondary" className="tabular" style={{ width: 40, textAlign: "right", fontSize: 13 }}>
-                {ratios.find((r) => r.optionId === l.optionId)?.percent}%
-              </Typography.Text>
-            )}
-          </Flex>
-        );
-      })}
-      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-        Để trống thì theo số mặc định.
-        {isWaxStep(step) && grams ? ` Tổng ${formatNumber(total)}g, hũ này mặc định ${formatNumber(grams)}g.` : ""}
-        {ratios.length > 0 && !isWaxStep(step) ? ` Tổng ${formatNumber(total)} ${unitOf}.` : ""}
-        {amountBasis(step) ? " Giá tính theo lượng này." : ratios.length > 0 ? " Phụ thu tính theo tỉ lệ này." : ""}
-      </Typography.Text>
-    </Flex>
-  );
-}
-
-function StepBody({ step, config, selection, map, onChange }: BodyProps) {
-  const sel = selection[step.id];
-  const options = step.kind === "inputs" ? [] : (step.options as StepOption[]).filter((o) => o.available);
-  const block = (o: StepOption) => optionBlock(config, selection, step, o, map);
-
-  if (step.kind === "vessel" && sel?.kind === "vessel") {
-    const vessel = options.find((o) => o.id === sel.optionId) as VesselOption | undefined;
-    const sizes = vessel?.sizes.filter((s) => s.available) ?? [];
-    const lidOut = !vessel?.lid || !sel.sizeId || lidLevel(vessel, sel.sizeId, map) === "out";
-    return (
-      <Flex vertical gap={12}>
-        <div className="cfg-grid" role="radiogroup" aria-label="Chọn hũ">
-          {options.map((o) => (
-            <OptionCard
-              key={o.id}
-              option={o}
-              price={`từ ${formatMoney(jarFrom(o as VesselOption))}`}
-              on={o.id === sel.optionId}
-              block={block(o)}
-              onClick={() => {
-                const v = o as VesselOption;
-                // Cỡ thuộc từng hũ: đổi hũ thì giữ cỡ cùng dung tích nếu hũ mới có và còn hàng
-                const ml = vessel?.sizes.find((s) => s.id === sel.sizeId)?.ml;
-                const same = v.sizes.find((s) => s.available && s.ml === ml && vesselSizeLevel(v, s.id, map) !== "out");
-                onChange({ ...sel, optionId: o.id, sizeId: same?.id, withLid: !!v.lid && sel.withLid });
-              }}
-            />
-          ))}
-        </div>
-        {vessel && (
-          <Flex gap={8} wrap role="radiogroup" aria-label="Kích thước">
-            {sizes.map((s) => {
-              const out = vesselSizeLevel(vessel, s.id, map) === "out";
-              return (
-                <button key={s.id} type="button" role="radio" aria-checked={s.id === sel.sizeId} className="sf-chip" data-on={s.id === sel.sizeId} disabled={out} onClick={() => onChange({ ...sel, sizeId: s.id })}>
-                  {sizeLabel(s)} · {out ? "Hết hũ" : formatMoney(vessel.priceDelta + s.priceDelta)}
-                </button>
-              );
-            })}
-          </Flex>
-        )}
-        {vessel?.lid && (
-          <Checkbox checked={sel.withLid && !lidOut} disabled={lidOut} onChange={(e) => onChange({ ...sel, withLid: e.target.checked })}>
-            Thêm nắp {formatDelta(vessel.lid.priceDelta)}
-            {sel.sizeId && lidOut && <Typography.Text type="secondary"> · hết nắp cỡ này</Typography.Text>}
-          </Checkbox>
-        )}
-      </Flex>
-    );
-  }
-
-  if ((step.kind === "cards" || step.kind === "swatches") && (sel?.kind === "cards" || sel?.kind === "swatches")) {
-    const multi = step.multiple;
-    const toggle = (o: StepOption) => {
-      const has = sel.optionIds.includes(o.id);
-      onChange({ ...sel, optionIds: !multi && has && step.required ? sel.optionIds : pickOption(sel.optionIds, o, options, multi, step.maxSelect) });
-    };
-    return (
-      <div className="cfg-grid" role={multi ? "group" : "radiogroup"} aria-label={step.title.vi}>
-        {options.map((o) => (
-          <OptionCard key={o.id} option={o} price={optionPriceText(step, o)} multi={multi} on={sel.optionIds.includes(o.id)} block={block(o)} onClick={() => toggle(o)} />
-        ))}
-      </div>
-    );
-  }
-
-  if (step.kind === "blend" && sel?.kind === "blend") {
-    const exclusive = sel.items.some((i) => options.find((o) => o.id === i.optionId)?.exclusive);
-    const toggle = (o: StepOption) => {
-      const has = sel.items.some((i) => i.optionId === o.id);
-      if (has) return onChange({ ...sel, items: sel.items.filter((i) => i.optionId !== o.id) });
-      // Mục "không phối thêm" đứng một mình; còn lại tối đa maxBlend mục
-      if (o.exclusive || step.maxBlend === 1) return onChange({ ...sel, items: [{ optionId: o.id, weight: 50 }], intensity: o.exclusive ? null : sel.intensity });
-      const rest = sel.items.filter((i) => !options.find((x) => x.id === i.optionId)?.exclusive);
-      const items = [...(rest.length >= step.maxBlend ? rest.slice(1) : rest), { optionId: o.id, weight: 50 }];
-      onChange({ ...sel, items, intensity: sel.intensity ?? (step.intensity ? "medium" : null) });
-    };
-    const shares = blendRatios(step, sel, selectedSize(config, selection)?.grams ?? 0);
-    const hasAmounts = materialLines(config, selection, map).some((l) => l.stepId === step.id);
-    return (
-      <Flex vertical gap={12}>
-        <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-          Phối tối đa {step.maxBlend} mùi.
-        </Typography.Text>
-        <div className="cfg-grid" role="group" aria-label={step.title.vi}>
-          {options.map((o) => (
-            <OptionCard key={o.id} option={o} price={optionPriceText(step, o)} multi on={sel.items.some((i) => i.optionId === o.id)} block={block(o)} onClick={() => toggle(o)} />
-          ))}
-        </div>
-        {/* Tỉ lệ chỉnh ở ô "Lượng cho 1 hũ" (ml, kèm %). Ô Tỉ lệ phối chỉ hiện khi tinh dầu không theo dõi kho nên không có ô lượng */}
-        {shares.length > 1 && !exclusive && !hasAmounts && (
-          <Flex vertical gap={8} className="cfg-box">
-            <Typography.Text strong style={{ fontSize: 13 }}>
-              Tỉ lệ phối
-            </Typography.Text>
-            {shares.map((i) => (
-              <Flex key={i.optionId} align="center" gap={12}>
-                <Typography.Text style={{ flex: 1, fontSize: 13 }}>{options.find((o) => o.id === i.optionId)?.name.vi}</Typography.Text>
-                <InputNumber
-                  aria-label={`Tỉ lệ ${options.find((o) => o.id === i.optionId)?.name.vi}`}
-                  min={10}
-                  max={100}
-                  step={5}
-                  precision={0}
-                  value={sel.items.find((x) => x.optionId === i.optionId)?.weight}
-                  onChange={(w) => w !== null && onChange({ ...sel, items: sel.items.map((x) => (x.optionId === i.optionId ? { ...x, weight: w } : x)) })}
-                  style={{ width: 88 }}
-                />
-                <Typography.Text type="secondary" className="tabular" style={{ width: 40, textAlign: "right", fontSize: 13 }}>
-                  {i.percent}%
-                </Typography.Text>
-              </Flex>
-            ))}
-          </Flex>
-        )}
-        {step.intensity && !exclusive && sel.items.length > 0 && (
-          <Flex align="center" gap={12} wrap>
-            <Typography.Text style={{ fontSize: 13 }}>Độ đậm</Typography.Text>
-            <Segmented<IntensityLevel>
-              value={sel.intensity ?? "medium"}
-              onChange={(intensity) => onChange({ ...sel, intensity })}
-              options={(Object.keys(intensityLabels) as IntensityLevel[]).map((l) => ({
-                value: l,
-                label: intensityLabels[l],
-              }))}
-            />
-          </Flex>
-        )}
-      </Flex>
-    );
-  }
-
-  if (step.kind === "inputs" && sel?.kind === "inputs") {
-    const fields = step.fields.filter((f) => f.enabled);
-    const addons = step.addons.filter((a) => a.enabled);
-    return (
-      <Flex vertical gap={12}>
-        {fields.map((f) => (
-          // Ô nhiều dòng: bộ đếm ký tự nằm dưới ô — chừa chỗ để không đè dòng kế tiếp
-          <label key={f.id} style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: f.multiline ? 16 : 0 }}>
-            <Typography.Text style={{ fontSize: 13 }}>
-              {f.label.vi}
-              {f.priceDelta > 0 && <Typography.Text type="secondary"> · {formatDelta(f.priceDelta)} khi có nhập</Typography.Text>}
-            </Typography.Text>
-            {f.multiline ? (
-              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} maxLength={f.maxLength} showCount value={sel.values[f.id] ?? ""} placeholder={f.placeholder?.vi} onChange={(e) => onChange({ ...sel, values: { ...sel.values, [f.id]: e.target.value } })} />
-            ) : (
-              <Input maxLength={f.maxLength} showCount value={sel.values[f.id] ?? ""} placeholder={f.placeholder?.vi} onChange={(e) => onChange({ ...sel, values: { ...sel.values, [f.id]: e.target.value } })} />
-            )}
-          </label>
-        ))}
-        {addons.map((a) => {
-          const out = !a.available || optionLevel(a.materialId, map) === "out";
-          return (
-            <Checkbox
-              key={a.id}
-              checked={sel.addons.includes(a.id)}
-              disabled={out && !sel.addons.includes(a.id)}
-              onChange={(e) => onChange({ ...sel, addons: e.target.checked ? [...sel.addons, a.id] : sel.addons.filter((x) => x !== a.id) })}
-            >
-              {a.name.vi} <Typography.Text type="secondary">{out ? "· Tạm hết" : formatDelta(a.priceDelta)}</Typography.Text>
-            </Checkbox>
-          );
-        })}
-      </Flex>
-    );
-  }
-  return null;
 }

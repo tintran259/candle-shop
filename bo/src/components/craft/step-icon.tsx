@@ -1,15 +1,4 @@
-import {
-  BgColorsOutlined,
-  BlockOutlined,
-  CoffeeOutlined,
-  EditOutlined,
-  ExperimentOutlined,
-  FireOutlined,
-  GiftOutlined,
-  InboxOutlined,
-  StarOutlined,
-  TagOutlined,
-} from "@ant-design/icons";
+import { BgColorsOutlined, BlockOutlined, CoffeeOutlined, EditOutlined, ExperimentOutlined, FireOutlined, GiftOutlined, InboxOutlined, StarOutlined, TagOutlined } from "@ant-design/icons";
 import { Segmented, Tooltip } from "antd";
 import type { ReactNode } from "react";
 import { stepIcons, type StepIcon } from "@/lib/craft/types";

@@ -69,8 +69,9 @@ test("E2E 7 — Tạo đơn hàng tại BO: khách có sẵn / khách mới / kh
   await sleep(300);
   s = await summary();
   const total = subtotal - expectDisc + 50000;
-  const deposit = Math.round((total * 0.5) / 1000) * 1000;
-  ok("5 Tổng = tạm tính − giảm + 50.000 phí nhanh; cọc 50%", money(s, "Tổng") === total && money(s, "Cọc 50% khi đặt") === deposit, s);
+  // Cọc 50% trên tiền hàng (tạm tính − giảm), không gồm phí giao
+  const deposit = Math.round(((subtotal - expectDisc) * 0.5) / 1000) * 1000;
+  ok("5 Tổng = tạm tính − giảm + 50.000 phí nhanh; cọc 50% tiền hàng", money(s, "Tổng") === total && money(s, "Cọc 50% tiền hàng khi đặt") === deposit, s);
   await shot("o5-form.png", true);
 
   // 6. Tạo đơn → mở chi tiết đơn mới

@@ -1,0 +1,8 @@
+/* Thanh thao tác khi chọn nhiều đơn */
+.bulk-bar {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: #fbf3ea;
+  border: 1px solid #eee5da;
+}

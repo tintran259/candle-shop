@@ -181,10 +181,12 @@ test("Mã riêng: tạo từ hồ sơ khách, khách đó có gợi ý mã khi t
   await o.locator("#name").fill("Ngô Thanh Vy");
   await o.locator("#phone").fill("0944 889 900");
   await o.getByRole("button", { name: "Nến có sẵn" }).click();
-  await o.getByLabel("Chọn sản phẩm").last().click();
-  await page.keyboard.type("Moon Morning");
-  await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
-  await expect(o.locator("aside.order-summary")).toContainText("Moon Morning");
+  await expect(async () => {
+    await o.getByLabel("Chọn sản phẩm").last().click();
+    await page.keyboard.type("Moon Morning");
+    await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
+    await expect(o.locator("aside.order-summary")).toContainText("Moon Morning", { timeout: 2000 });
+  }).toPass({ timeout: 15_000 });
   const hint = o.getByRole("group", { name: "Mã riêng của khách" });
   await expect(hint).toContainText("Khách có mã riêng:");
   await hint.getByRole("button", { name: /VYVIP10/ }).click();

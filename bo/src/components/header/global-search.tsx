@@ -1,17 +1,6 @@
-import {
-  ClockCircleOutlined,
-  EnterOutlined,
-  ExperimentOutlined,
-  FileTextOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
-  ShoppingOutlined,
-  TagOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { EnterOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Empty, Flex, Input, Modal, Spin, Tag, Typography, type InputRef } from "antd";
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useNavigate } from "react-router";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useCustomers } from "@/hooks/use-customers";
@@ -20,17 +9,9 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useOrders } from "@/hooks/use-orders";
 import { useProducts } from "@/hooks/use-products";
 import { allNavItems } from "@/layouts/nav";
-import { matchRange, search, searchGroupLabels, type SearchGroup, type SearchResult } from "@/lib/search";
-import { brand, radius, text } from "@/theme";
-
-const groupIcons: Record<SearchGroup, ReactNode> = {
-  pages: <FileTextOutlined />,
-  orders: <ShoppingCartOutlined />,
-  customers: <UserOutlined />,
-  products: <ShoppingOutlined />,
-  discounts: <TagOutlined />,
-  materials: <ExperimentOutlined />,
-};
+import { search, searchGroupLabels, type SearchResult } from "@/lib/search";
+import { radius, text } from "@/theme";
+import { ResultThumb, Highlight } from "@/components/header/search-parts";
 
 // Thao tác nhanh — hiện khi chưa gõ và tìm được theo tên
 const actions: SearchResult[] = [
@@ -129,11 +110,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   const query = q.trim();
   const results = query ? search(query, { pages, orders, customers, products, discounts, craft, inventory }) : [];
   // Chưa gõ: mở gần đây + thao tác nhanh + các trang
-  const idle = [
-    ...recent.map((r) => ({ ...r, key: `recent:${r.key}` })),
-    ...actions,
-    ...allNavItems.map((i): SearchResult => ({ key: `page:${i.path}`, group: "pages", title: i.label, to: i.path })),
-  ];
+  const idle = [...recent.map((r) => ({ ...r, key: `recent:${r.key}` })), ...actions, ...allNavItems.map((i): SearchResult => ({ key: `page:${i.path}`, group: "pages", title: i.label, to: i.path }))];
   const items = query ? results : idle;
   const current = Math.min(active, Math.max(0, items.length - 1));
 
@@ -171,14 +148,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   };
 
   // Tiêu đề nhóm: kết quả tìm theo loại; lúc chưa gõ chia "Mở gần đây" / "Thao tác nhanh" / "Đi tới trang"
-  const sectionOf = (r: SearchResult) =>
-    query
-      ? searchGroupLabels[r.group]
-      : r.key.startsWith("recent:")
-        ? "Mở gần đây"
-        : r.key.startsWith("action:")
-          ? "Thao tác nhanh"
-          : "Đi tới trang";
+  const sectionOf = (r: SearchResult) => (query ? searchGroupLabels[r.group] : r.key.startsWith("recent:") ? "Mở gần đây" : r.key.startsWith("action:") ? "Thao tác nhanh" : "Đi tới trang");
 
   return (
     <div onKeyDown={onKeyDown}>
@@ -241,15 +211,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                     {section}
                   </Typography.Text>
                 )}
-                <div
-                  id={`search-opt-${i}`}
-                  data-index={i}
-                  role="option"
-                  aria-selected={i === current}
-                  className="search-row"
-                  onMouseMove={() => i !== current && setActive(i)}
-                  onClick={() => pick(r)}
-                >
+                <div id={`search-opt-${i}`} data-index={i} role="option" aria-selected={i === current} className="search-row" onMouseMove={() => i !== current && setActive(i)} onClick={() => pick(r)}>
                   <ResultThumb r={r} recent={r.key.startsWith("recent:")} />
                   <Flex vertical style={{ minWidth: 0, flex: 1 }}>
                     <Typography.Text strong ellipsis>
@@ -286,31 +248,5 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         </span>
       </Flex>
     </div>
-  );
-}
-
-function ResultThumb({ r, recent }: { r: SearchResult; recent: boolean }) {
-  const box = { width: 40, height: 40, borderRadius: radius.inner, flexShrink: 0 } as const;
-  if (r.image) return <img src={r.image} alt="" style={{ ...box, objectFit: "cover" }} />;
-  if (r.swatch) return <span aria-hidden style={{ ...box, background: r.swatch, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)" }} />;
-  const icon = recent ? <ClockCircleOutlined /> : r.key.startsWith("action:") ? <PlusOutlined /> : groupIcons[r.group];
-  return (
-    <Flex aria-hidden align="center" justify="center" style={{ ...box, background: brand.emberLight, color: brand.emberDark, fontSize: 16 }}>
-      {icon}
-    </Flex>
-  );
-}
-
-// Tô đậm đoạn khớp (không phân biệt dấu)
-function Highlight({ text: value, q }: { text: string; q: string }) {
-  const range = q ? matchRange(value, q) : null;
-  if (!range) return <>{value}</>;
-  const chars = Array.from(value);
-  return (
-    <>
-      {chars.slice(0, range[0]).join("")}
-      <mark className="search-mark">{chars.slice(range[0], range[1]).join("")}</mark>
-      {chars.slice(range[1]).join("")}
-    </>
   );
 }

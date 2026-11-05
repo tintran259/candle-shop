@@ -64,7 +64,11 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
             <IconPicker value={step.icon} onChange={(icon) => set({ icon })} />
           </Form.Item>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            Mã bước: <Typography.Text code copyable>{step.id}</Typography.Text> — cố định sau khi tạo (đơn hàng và quy tắc tương thích dùng mã này).
+            Mã bước:{" "}
+            <Typography.Text code copyable>
+              {step.id}
+            </Typography.Text>{" "}
+            — cố định sau khi tạo (đơn hàng và quy tắc tương thích dùng mã này).
           </Typography.Text>
         </Form>
       </Card>
@@ -73,10 +77,7 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
         <Setting label="Hiện trên web" description={isVessel ? "Bước hũ quyết định giá hũ và kích thước nên luôn hiện." : "Tắt để ẩn bước khỏi trang Thủ công, giữ nguyên dữ liệu."}>
           <Switch checked={step.enabled} disabled={isVessel} onChange={(enabled) => set({ enabled })} aria-label="Hiện trên web" />
         </Setting>
-        <Setting
-          label="Bắt buộc"
-          description={step.kind === "inputs" ? "Khách phải nhập ít nhất một ô trước khi thêm vào giỏ." : "Khách phải chọn trước khi thêm vào giỏ."}
-        >
+        <Setting label="Bắt buộc" description={step.kind === "inputs" ? "Khách phải nhập ít nhất một ô trước khi thêm vào giỏ." : "Khách phải chọn trước khi thêm vào giỏ."}>
           <Switch checked={step.required} disabled={isVessel} onChange={(required) => set({ required })} aria-label="Bắt buộc" />
         </Setting>
 
@@ -143,9 +144,7 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
       <Card size="small" title="Xóa bước" className="inner-card" styles={{ body: { paddingTop: 8 } }}>
         <Flex justify="space-between" align="center" gap={16} wrap>
           <Typography.Text type="secondary" style={{ flex: 1, minWidth: 220 }}>
-            {isVessel
-              ? "Không xóa được bước hũ — mỗi cấu hình cần đúng một bước hũ để tính giá hũ."
-              : "Xóa cả bước và các lựa chọn bên trong. Đơn hàng cũ vẫn giữ mô tả đã lưu."}
+            {isVessel ? "Không xóa được bước hũ — mỗi cấu hình cần đúng một bước hũ để tính giá hũ." : "Xóa cả bước và các lựa chọn bên trong. Đơn hàng cũ vẫn giữ mô tả đã lưu."}
           </Typography.Text>
           <Popconfirm
             title={`Xóa bước “${step.title.vi}”?`}

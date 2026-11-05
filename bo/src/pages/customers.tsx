@@ -41,9 +41,7 @@ export function CustomersPage() {
   // Hồ sơ đang mở nằm trên URL (?customer=id) — tìm kiếm, drawer đơn hàng link thẳng tới
   const [openId, setOpenId] = useOpenParam("customer");
   const { shown } = useDrawerTarget(openId);
-  const drawer = (
-    <CustomerDrawer open={!!openId} row={rows.find((r) => r.customer.id === shown)} api={api} loading={loading} onClose={() => setOpenId(null)} />
-  );
+  const drawer = <CustomerDrawer open={!!openId} row={rows.find((r) => r.customer.id === shown)} api={api} loading={loading} onClose={() => setOpenId(null)} />;
 
   if (loading)
     return (
@@ -54,8 +52,7 @@ export function CustomersPage() {
     );
 
   const buyers = rows.filter((r) => r.stats.orderCount > 0);
-  const count = (s: CustomerFilters["segment"]) =>
-    s === "all" ? rows.length : s === "blocked" ? rows.filter((r) => r.customer.blocked).length : rows.filter((r) => r.stats.segment === s).length;
+  const count = (s: CustomerFilters["segment"]) => (s === "all" ? rows.length : s === "blocked" ? rows.filter((r) => r.customer.blocked).length : rows.filter((r) => r.stats.segment === s).length);
   const newIn30 = rows.filter((r) => dayjs().diff(dayjs(r.customer.createdAt), "day") <= 30).length;
   const returning = buyers.filter((r) => r.stats.orderCount > 1).length;
   const spentTotal = buyers.reduce((s, r) => s + r.stats.spent, 0);

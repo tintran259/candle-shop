@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { formatMoney } from "@/lib/format";
 import { depositAmount, toItems, type DiscountResult, type DraftLine, lineTotal } from "@/lib/orders/create";
 import type { Order, OrderStatus } from "@/lib/orders/types";
-import { shippingOptionLabel, type ShippingOption } from "@/lib/settings/types";
+import { shippingOptionLabel, type Carrier, type ShippingOption } from "@/lib/settings/types";
 
 export const itemsEditable = (s: OrderStatus) => s === "pending" || s === "paid";
 export const orderEditable = (s: OrderStatus) => s !== "completed" && s !== "cancelled";
@@ -14,6 +14,8 @@ export type EditOrderInput = {
   shippingAddress: string;
   // Đổi phương thức giao; bỏ trống = giữ nguyên
   shipping?: ShippingOption;
+  // Đổi đơn vị vận chuyển dự kiến; chỉ khi chưa giao cho vận chuyển
+  carrier?: Carrier;
   shippingFee: number;
   readyDate: string;
   // Chỉ dùng khi còn sửa được sản phẩm
@@ -36,12 +38,14 @@ export function applyEdit(order: Order, input: EditOrderInput, by: string, at = 
   const shippingFee = Math.max(0, Math.round(input.shippingFee));
   const total = Math.max(0, subtotal - discount + shippingFee);
   const shipping = input.shipping && input.shipping.id !== order.shippingMethod ? input.shipping : undefined;
+  const carrier = !order.shipment && input.carrier && input.carrier.id !== order.carrier?.id ? { id: input.carrier.id, name: input.carrier.name } : undefined;
 
   const next: Order = {
     ...order,
     customer: { name: input.customer.name.trim(), phone: input.customer.phone.trim(), email: input.customer.email.trim() },
     shippingAddress: input.shippingAddress.trim(),
     ...(shipping && { shippingMethod: shipping.id, shippingName: shippingOptionLabel(shipping), shippingDays: shipping.days }),
+    ...(carrier && { carrier }),
     items,
     subtotal,
     discount,
@@ -54,7 +58,9 @@ export function applyEdit(order: Order, input: EditOrderInput, by: string, at = 
     // Chưa thanh toán: khoản đang chờ thu đổi theo tổng mới (cọc theo % lúc tạo đơn)
     payments:
       order.status === "pending"
-        ? order.payments.map((p) => (p.status === "pending" ? { ...p, amount: order.paymentPlan === "deposit" ? depositAmount(total, order.depositPercent ?? 50) : total } : p))
+        ? order.payments.map((p) =>
+            p.status === "pending" ? { ...p, amount: order.paymentPlan === "deposit" ? depositAmount(Math.max(0, subtotal - discount), order.depositPercent ?? 50) : total } : p,
+          )
         : order.payments,
   };
 
@@ -67,6 +73,7 @@ export function applyEdit(order: Order, input: EditOrderInput, by: string, at = 
   diff("Email", order.customer.email, next.customer.email);
   diff("Địa chỉ giao", order.shippingAddress, next.shippingAddress);
   if (shipping) changes.push(`Giao hàng: ${next.shippingName}`);
+  if (carrier) changes.push(`Đơn vị vận chuyển: ${carrier.name}`);
   if (shippingFee !== order.shippingFee) changes.push(`Phí giao: ${formatMoney(shippingFee)}`);
   if (order.readyDate !== next.readyDate) changes.push(`Ngày làm xong: ${next.readyDate.split("-").reverse().join("/")}`);
   if (canItems && itemsText(order) !== itemsText(next)) changes.push(`Sản phẩm: ${itemsText(next)}`);

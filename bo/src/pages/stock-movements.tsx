@@ -45,8 +45,7 @@ export function StockMovementsPage() {
   const [moving, setMoving] = useState<{ materialId?: string; type?: ManualMovement } | null>(null);
   const { key: movingKey } = useDrawerTarget(moving ? `${moving.materialId ?? ""}:${moving.type ?? ""}` : null);
 
-  if (api.loading)
-    return <ListPageSkeleton label="Đang tải phiếu kho…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 160 }, { width: 200 }, { width: 240 }] }]} />} />;
+  if (api.loading) return <ListPageSkeleton label="Đang tải phiếu kho…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 160 }, { width: 200 }, { width: 240 }] }]} />} />;
 
   const totals = movementTotals(items);
   const { pageItems } = pager.paginate(items);

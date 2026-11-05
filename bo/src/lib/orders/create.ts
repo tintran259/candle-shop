@@ -7,7 +7,7 @@ import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
 import type { Order, OrderEvent, OrderItem, PaymentPlan, PaymentProvider } from "@/lib/orders/types";
 import type { RecipeLine } from "@/lib/products/types";
-import { shippingOptionLabel, type ShippingOption } from "@/lib/settings/types";
+import { shippingOptionLabel, type Carrier, type ShippingOption } from "@/lib/settings/types";
 
 // Kênh khách đặt — ghi vào lịch sử đơn
 export const orderChannels = ["phone", "zalo", "facebook", "store", "other"] as const;
@@ -44,7 +44,8 @@ export function evaluateDiscount(code: string | undefined, discounts: Discount[]
   const d = discounts.find((x) => x.code === key);
   if (!d) return { amount: 0, error: "Không có mã này." };
   const status = discountStatus(d);
-  if (status !== "running") return { amount: 0, error: { paused: "Mã đang tạm dừng.", expired: "Mã đã hết hạn.", exhausted: "Mã đã hết lượt dùng.", scheduled: "Mã chưa tới ngày áp dụng.", running: "" }[status] };
+  if (status !== "running")
+    return { amount: 0, error: { paused: "Mã đang tạm dừng.", expired: "Mã đã hết hạn.", exhausted: "Mã đã hết lượt dùng.", scheduled: "Mã chưa tới ngày áp dụng.", running: "" }[status] };
   if (d.customerIds?.length && !(customerId && d.customerIds.includes(customerId)))
     return { amount: 0, error: customerId ? "Mã này dành riêng cho khách khác." : "Mã dành riêng cho khách được chọn — nhập đúng số điện thoại của khách." };
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
@@ -70,13 +71,13 @@ export function goodsCheck(totals: Pick<OrderTotals, "subtotal" | "discount">, c
 }
 
 // Tiền cọc làm tròn tới nghìn đồng, ít nhất 1.000 ₫ và không quá tổng (đơn nhỏ không bị cọc 0 ₫)
-export const depositAmount = (total: number, percent: number) =>
-  total > 0 && percent > 0 ? Math.min(total, Math.max(1000, Math.round((total * percent) / 100 / 1000) * 1000)) : 0;
+export const depositAmount = (total: number, percent: number) => (total > 0 && percent > 0 ? Math.min(total, Math.max(1000, Math.round((total * percent) / 100 / 1000) * 1000)) : 0);
 
 export function orderTotals(lines: DraftLine[], shippingFee: number, plan: PaymentPlan, discount: number, depositPercent: number): OrderTotals {
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
   const total = Math.max(0, subtotal - discount + shippingFee);
-  const dueNow = plan === "deposit" ? depositAmount(total, depositPercent) : total;
+  // Cọc tính trên tiền hàng (tạm tính − giảm giá), không gồm phí vận chuyển — phí giao thu cùng phần còn lại khi giao
+  const dueNow = plan === "deposit" ? depositAmount(Math.max(0, subtotal - discount), depositPercent) : total;
   return { subtotal, discount, shippingFee, total, dueNow };
 }
 
@@ -94,6 +95,8 @@ export type CreateOrderInput = {
   customer: Order["customer"];
   shippingAddress: string;
   shipping: ShippingOption;
+  // Đơn vị vận chuyển dự kiến
+  carrier?: Carrier;
   // Phí của đơn này, admin có thể sửa khác phí trong Cài đặt
   shippingFee: number;
   depositPercent: number;
@@ -127,7 +130,17 @@ export const toItems = (lines: DraftLine[], stamp: string): OrderItem[] =>
 
 // Dòng trên đơn → dòng trong form (sửa đơn)
 export const toLines = (items: OrderItem[]): DraftLine[] =>
-  items.map((i) => ({ kind: i.custom ? "custom" : "product", productId: i.productId, name: i.name, image: i.image, custom: i.custom, craft: i.craft, recipe: i.recipe, price: i.price, quantity: i.quantity }));
+  items.map((i) => ({
+    kind: i.custom ? "custom" : "product",
+    productId: i.productId,
+    name: i.name,
+    image: i.image,
+    custom: i.custom,
+    craft: i.craft,
+    recipe: i.recipe,
+    price: i.price,
+    quantity: i.quantity,
+  }));
 
 export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
   const now = dayjs();
@@ -135,8 +148,7 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
   const totals = orderTotals(input.lines, input.shippingFee, input.paymentPlan, input.discount.amount, input.depositPercent);
   const items = toItems(input.lines, now.valueOf().toString(36));
   const history: OrderEvent[] = [{ at, status: "pending", by: input.by, note: `${BO_ORDER_NOTE} · ${channelLabels[input.channel]}` }];
-  if (input.received)
-    history.push({ at, status: "paid", by: input.by, note: input.paymentPlan === "deposit" ? `Nhận cọc ${formatMoney(totals.dueNow)}` : "Thanh toán đủ" });
+  if (input.received) history.push({ at, status: "paid", by: input.by, note: input.paymentPlan === "deposit" ? `Nhận cọc ${formatMoney(totals.dueNow)}` : "Thanh toán đủ" });
   return {
     id: `ord-${now.valueOf().toString(36)}`,
     code: nextOrderCode(orders, now),
@@ -146,6 +158,7 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
     shippingMethod: input.shipping.id,
     shippingName: shippingOptionLabel(input.shipping),
     shippingDays: input.shipping.days,
+    carrier: input.carrier && { id: input.carrier.id, name: input.carrier.name },
     depositPercent: input.depositPercent,
     items,
     subtotal: totals.subtotal,
