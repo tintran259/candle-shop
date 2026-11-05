@@ -1,6 +1,6 @@
 // Tiện ích kho: mức tồn, lựa chọn nào đang dùng nguyên liệu nào
 import { sizeLabel } from "@/lib/craft/groups";
-import type { CraftConfig, CraftStep, SizeOption, StepOption, VesselOption } from "@/lib/craft/types";
+import type { CraftConfig, CraftStep, StepOption, VesselOption } from "@/lib/craft/types";
 import type { Material, MaterialCategory, MovementType } from "@/lib/inventory/types";
 
 export const categoryLabels: Record<MaterialCategory, string> = {
@@ -59,20 +59,21 @@ export function optionLevel(materialId: string | undefined, map: MaterialMap): S
   return m ? materialLevel(m) : "out";
 }
 
-export const isVesselOption = (o: StepOption | VesselOption): o is VesselOption => "supportedSizeIds" in o;
+export const isVesselOption = (o: StepOption | VesselOption): o is VesselOption => "sizes" in o;
 
+const sizeOf = (o: VesselOption, sizeId: string) => o.sizes.find((s) => s.id === sizeId);
 // Mức tồn của hũ ở MỘT cỡ (mỗi cỡ là một mã hũ riêng trong Kho)
-export const vesselSizeLevel = (o: VesselOption, sizeId: string, map: MaterialMap) => optionLevel(o.sizeMaterials?.[sizeId]?.materialId, map);
+export const vesselSizeLevel = (o: VesselOption, sizeId: string, map: MaterialMap) => optionLevel(sizeOf(o, sizeId)?.materialId, map);
 // Nắp của cỡ đó — hết nắp chỉ khóa tuỳ chọn "thêm nắp", không khóa hũ
-export const lidLevel = (o: VesselOption, sizeId: string, map: MaterialMap) => optionLevel(o.sizeMaterials?.[sizeId]?.lidMaterialId, map);
+export const lidLevel = (o: VesselOption, sizeId: string, map: MaterialMap) => optionLevel(sizeOf(o, sizeId)?.lidMaterialId, map);
 
-// Cỡ khách đặt được với hũ này: cỡ đang bán, hũ đổ được và mã hũ cỡ đó còn hàng
-export const sellableSizes = (o: VesselOption, sizes: SizeOption[], map: MaterialMap) =>
-  sizes.filter((s) => s.available && o.supportedSizeIds.includes(s.id) && vesselSizeLevel(o, s.id, map) !== "out");
+// Cỡ khách đặt được với hũ này: cỡ đang bán và mã hũ cỡ đó còn hàng
+export const sellableSizes = (o: VesselOption, map: MaterialMap) => o.sizes.filter((s) => s.available && optionLevel(s.materialId, map) !== "out");
 
-// Mức tồn chung của hũ trên các cỡ đổ được: hết khi MỌI cỡ hết; sắp hết khi có cỡ hết hoặc sắp hết
+// Mức tồn chung của hũ trên các cỡ đang bán: hết khi MỌI cỡ hết; sắp hết khi có cỡ hết hoặc sắp hết
 export function vesselLevel(o: VesselOption, map: MaterialMap): StockLevel {
-  const levels = o.supportedSizeIds.map((id) => vesselSizeLevel(o, id, map));
+  const levels = o.sizes.filter((s) => s.available).map((s) => optionLevel(s.materialId, map));
+  if (!levels.length) return "out";
   if (levels.every((l) => l === "untracked")) return "untracked";
   if (levels.every((l) => l === "out")) return "out";
   return levels.some((l) => l === "out" || l === "low") ? "low" : "ok";
@@ -88,7 +89,19 @@ export type Usage = { step: CraftStep; label: string; target: { stepId: string; 
 
 // Mọi materialId một hũ đang trỏ tới (theo từng cỡ)
 export function vesselMaterialIds(o: VesselOption) {
-  return Object.values(o.sizeMaterials ?? {}).flatMap((x) => [x.materialId, x.lidMaterialId]).filter(Boolean) as string[];
+  return o.sizes.flatMap((x) => [x.materialId, x.lidMaterialId]).filter(Boolean) as string[];
+}
+
+// Hũ trong Kho: các loại hũ và mã hũ của từng loại, xếp theo dung tích
+export const jarTypes = (materials: Material[]) => [...new Set(materials.map((m) => m.jarType?.trim()).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "vi"));
+export const jarsOfType = (materials: Material[], type?: string) =>
+  type ? materials.filter((m) => m.category === "vessel" && m.jarType?.trim() === type.trim()).sort((a, b) => (a.capacity ?? 0) - (b.capacity ?? 0)) : [];
+
+// Bản lưu trước khi hũ có loại hũ, dung tích: "Hũ gốm trụ 150ml" → loại "Hũ gốm trụ", 150ml. Nắp chỉ lấy dung tích
+export function guessJar(name: string): Pick<Material, "jarType" | "capacity"> {
+  const m = /^(.*?)\s*(\d+)\s*ml\s*$/i.exec(name.trim());
+  if (!m) return {};
+  return { capacity: Number(m[2]), jarType: /^nắp/i.test(m[1]) || !m[1] ? undefined : m[1] };
 }
 
 // Nguyên liệu → nơi đang dùng trên trang Thủ công (lựa chọn, nắp hũ, tuỳ chọn thêm)
@@ -99,12 +112,10 @@ export function materialUsage(config: CraftConfig) {
     if (step.kind !== "inputs") {
       if (step.kind === "vessel") {
         for (const o of step.options)
-          for (const size of step.sizes) {
+          for (const size of o.sizes) {
             const target = { stepId: step.id, optionId: o.id };
-            const stock = o.sizeMaterials?.[size.id];
-            if (!o.supportedSizeIds.includes(size.id) || !stock) continue;
-            add(stock.materialId, { step, label: `${o.name.vi} ${sizeLabel(size)}`, target });
-            if (o.lid) add(stock.lidMaterialId, { step, label: `Nắp ${o.name.vi.toLowerCase()} ${sizeLabel(size)}`, target });
+            add(size.materialId, { step, label: `${o.name.vi} ${sizeLabel(size)}`, target });
+            if (o.lid) add(size.lidMaterialId, { step, label: `Nắp ${o.name.vi.toLowerCase()} ${sizeLabel(size)}`, target });
           }
         continue;
       }

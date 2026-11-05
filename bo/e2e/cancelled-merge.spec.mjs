@@ -7,7 +7,7 @@ test("E2E 12 — Hủy đơn: 1 dòng nến thủ công số lượng 2 = 1 sả
   const { ev, sleep, shot, click, clickText, byText, type, text, go, ok } = t;
   const D = ".ant-drawer-open";
   const M = ".ant-modal-wrap .ant-modal";
-  const KEY = "bo-cancelled-products-v3";
+  const KEY = "bo-cancelled-products-v4";
   const store = async () => (await ev(`JSON.parse(localStorage.getItem('${KEY}')||'[]')`));
   const of = async (code) => (await store()).filter((c) => c.orderCode === code);
 
@@ -19,7 +19,7 @@ test("E2E 12 — Hủy đơn: 1 dòng nến thủ công số lượng 2 = 1 sả
   await go(base + "/orders", 2500);
   // Lấy một đơn mẫu làm khuôn rồi tạo các đơn thử
   const seed = async (list) => {
-    await ev(`(async()=>{const list=${JSON.stringify(list)};const raw=localStorage.getItem('bo-orders-v3');window.__o=raw?JSON.parse(raw):null})()`);
+    await ev(`(async()=>{const list=${JSON.stringify(list)};const raw=localStorage.getItem('bo-orders-v4');window.__o=raw?JSON.parse(raw):null})()`);
   };
   const template = {
     customer: { name: "Khách Thử", phone: "0900000000", email: "a@b.c" }, shippingAddress: "x", shippingMethod: "standard",
@@ -33,7 +33,7 @@ test("E2E 12 — Hủy đơn: 1 dòng nến thủ công số lượng 2 = 1 sả
     { ...template, id: "t-4", code: "SHOP2", status: "ready", items: [shop("a", 1)] },
     { ...template, id: "t-5", code: "TWO", status: "ready", items: [custom("a", 2), custom("b", 1)] },
   ];
-  await ev(`localStorage.setItem('bo-orders-v3', ${JSON.stringify(JSON.stringify(orders))})`);
+  await ev(`localStorage.setItem('bo-orders-v4', ${JSON.stringify(JSON.stringify(orders))})`);
   const open = (id) => go(`${base}/orders?order=${id}`, 2600);
   const cancelBtn = async () => { await clickText(`${D} section button`, "Hủy đơn"); await sleep(600); };
   const reason = () => type(`document.querySelector('${M} textarea')`, "Khách đổi ý");
@@ -68,7 +68,7 @@ test("E2E 12 — Hủy đơn: 1 dòng nến thủ công số lượng 2 = 1 sả
   await shot("c12-1-no-question.png");
   await reason();
   await confirm();
-  const so = (await ev("JSON.parse(localStorage.getItem('bo-orders-v3'))")).find((o) => o.id === "t-3");
+  const so = (await ev("JSON.parse(localStorage.getItem('bo-orders-v4'))")).find((o) => o.id === "t-3");
   ok("C2 Hủy được, không sinh sản phẩm hủy đơn", so.status === "cancelled" && !so.cancelOutcome && (await of("SHOP1")).length === 0, JSON.stringify({ s: so.status, o: so.cancelOutcome }));
 
   await open("t-4");

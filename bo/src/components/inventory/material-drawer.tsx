@@ -1,6 +1,6 @@
 import { BuildOutlined, DeleteOutlined, EditOutlined, RightOutlined, ShoppingOutlined } from "@ant-design/icons";
-import { App, Button, Col, ColorPicker, Drawer, Empty, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Segmented, Select, Tag, Typography, type FormRule } from "antd";
-import { useDeferredValue, useState, type CSSProperties, type ReactNode } from "react";
+import { AutoComplete, App, Button, Col, ColorPicker, Drawer, Empty, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Segmented, Select, Tag, Typography, type FormRule } from "antd";
+import { useDeferredValue, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { BatchNeeds, BatchPriceInput } from "@/components/inventory/batch-inputs";
@@ -15,22 +15,10 @@ import { units, type Unit } from "@/lib/craft/types";
 import { averageCost, lotPreview, lotTotal, purchaseCost, purchaseFrom, purchaseUnits, unitPrice, type LotPrice, type Purchase } from "@/lib/costs";
 import { formatCostChange, formatMoney, formatNumber, formatUnitCost } from "@/lib/format";
 import { batchError, batchPlan, batchTotal, isMade, madeFrom, madeWith, type BatchPrice } from "@/lib/inventory/production";
-import {
-  categoryLabels,
-  DEFAULT_LOW_STOCK,
-  levelMeta,
-  lotPriceRequired,
-  manualMovements,
-  materialLevel,
-  movementLabels,
-  movementShort,
-  stockAfter,
-  toMap,
-  type ManualMovement,
-  type Usage,
-} from "@/lib/inventory/stock";
+import { categoryLabels, DEFAULT_LOW_STOCK, jarTypes, levelMeta, lotPriceRequired, type ManualMovement, manualMovements, materialLevel, movementLabels, movementShort, stockAfter, toMap, type Usage } from "@/lib/inventory/stock";
 import { materialCategories, type Material, type MaterialCategory } from "@/lib/inventory/types";
 import type { RecipeLine } from "@/lib/products/types";
+import { fold } from "@/lib/search";
 import { radius } from "@/theme";
 
 type Values = {
@@ -44,6 +32,9 @@ type Values = {
   name: string;
   sku?: string;
   category: MaterialCategory;
+  // Hũ: loại hũ và dung tích — các mã cùng loại là các cỡ của một hũ ở trang Thủ công
+  jarType?: string;
+  capacity?: number | null;
   unit: Unit;
   tracked: boolean;
   stock?: number;
@@ -80,6 +71,9 @@ export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
   const tracked = Form.useWatch("tracked", form);
   const unit = Form.useWatch("unit", form) ?? material?.unit ?? "pcs";
   const hasSwatch = Form.useWatch("hasSwatch", form);
+  const category = Form.useWatch("category", form);
+  // Tên tự điền gần nhất từ loại hũ + dung tích — admin đã sửa tên thì không ghi đè
+  const autoName = useRef(material?.jarType && material.capacity ? `${material.jarType} ${material.capacity}ml` : "");
   const openingStock = Form.useWatch("stock", form);
   const opening = Form.useWatch("opening", form) as LotPrice | undefined;
   const buy = Form.useWatch("buy", form) as Purchase | undefined;
@@ -132,6 +126,8 @@ export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
       name: v.name.trim(),
       sku: v.sku?.trim() || undefined,
       category: v.category,
+      jarType: v.category === "vessel" ? v.jarType?.trim() || undefined : undefined,
+      capacity: v.category === "vessel" && v.capacity ? Math.round(v.capacity) : undefined,
       unit: v.unit,
       tracked,
       // Nguyên liệu mới: tồn ban đầu; đã có: giữ nguyên (đổi qua phiếu kho)
@@ -212,6 +208,8 @@ export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
               name: material?.name ?? "",
               sku: material?.sku,
               category: material?.category ?? "other",
+              jarType: material?.jarType,
+              capacity: material?.capacity ?? null,
               unit: material?.unit ?? "pcs",
               tracked: material?.tracked ?? true,
               stock: 0,
@@ -229,6 +227,13 @@ export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
               if (changed.unit) form.setFieldValue("buy", { ...form.getFieldValue("buy"), unit: purchaseUnits[changed.unit][0].value });
               // Ô tiền đang báo lỗi thì đổi tồn ban đầu kiểm tra lại ngay — chưa báo thì chờ tới lúc bấm Thêm vào kho
               if (("stock" in changed || "opening" in changed) && form.getFieldError("opening").length) void form.validateFields(["opening"]).catch(() => undefined);
+              // Hũ: điền sẵn tên theo loại hũ + dung tích ("Hũ thạch cao 150ml") khi tên còn trống hoặc đang là tên tự điền
+              if ("jarType" in changed || "capacity" in changed) {
+                const { jarType, capacity, name } = form.getFieldsValue(["jarType", "capacity", "name"]) as Values;
+                const auto = jarType?.trim() && capacity ? `${jarType.trim()} ${capacity}ml` : "";
+                if (auto && (!name?.trim() || name === autoName.current)) form.setFieldValue("name", auto);
+                autoName.current = auto;
+              }
               // Chọn Sản xuất thì mở sẵn một dòng công thức
               if (changed.source === "made" && !form.getFieldValue("recipe")?.length) form.setFieldValue("recipe", [{}]);
               // Ô số lượng sản xuất đang báo lỗi thì sửa công thức hay giá là kiểm tra lại
@@ -263,6 +268,37 @@ export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
                       <Select options={materialCategories.map((c) => ({ value: c, label: categoryLabels[c] }))} />
                     </Form.Item>
                   </Col>
+                  {category === "vessel" && (
+                    <>
+                      <Col xs={24} sm={14}>
+                        <Form.Item name="jarType" label="Loại hũ" extra="Các mã cùng loại hũ là các cỡ của một hũ ở trang Thủ công. Nắp để trống.">
+                          <AutoComplete
+                            options={jarTypes(api.materials).map((t) => ({ value: t }))}
+                            filterOption={(input, o) => fold(String(o?.value ?? "")).includes(fold(input))}
+                            placeholder="VD: Hũ thạch cao"
+                            aria-label="Loại hũ"
+                            maxLength={40}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={10}>
+                        <Form.Item
+                          name="capacity"
+                          label="Dung tích"
+                          dependencies={["jarType"]}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator: async (_, v?: number | null) => {
+                                if (getFieldValue("jarType")?.trim() && !v) throw new Error("Nhập dung tích của hũ.");
+                              },
+                            }),
+                          ]}
+                        >
+                          <InputNumber min={1} precision={0} suffix="ml" placeholder="VD: 150" aria-label="Dung tích" style={{ width: "100%" }} />
+                        </Form.Item>
+                      </Col>
+                    </>
+                  )}
                   <Col xs={24} sm={12}>
                     <Form.Item
                       name="unit"

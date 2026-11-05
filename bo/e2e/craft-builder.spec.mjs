@@ -37,48 +37,43 @@ test("E2E 2 — Thủ công từ trống trên kho đã tạo ở E2E 1: thêm b
   };
   const tab = async (label) => { await clickText("main .ant-tabs-tab", label); await sleep(500); };
 
-  // TC-T1: bước Hũ + kích thước
+  // TC-T1: bước Hũ — kích thước thuộc từng hũ, lấy từ Kho (không còn tab Kích thước chung)
   await addStep("Hũ", "Hũ nến");
   ok("TC-T1 tạo bước hũ", (await stepOf("Hũ nến"))?.kind === "vessel", await t.loc());
-  await tab("Kích thước");
-  await clickText("main button", "Thêm kích thước");
-  await clickText("main button", "Thêm kích thước");
-  let sizes = (await stepOf("Hũ nến")).sizes;
-  ok("TC-T1 cỡ mới mặc định 150ml, 200ml, id không chứa ml", sizes.map((s) => s.ml).join() === "150,200" && sizes.every((s) => s.id.startsWith("size-")), sizes.map((s) => `${s.id}:${s.ml}ml/${s.grams}g`).join(", "));
-  const sizeRow = (i) => `document.querySelectorAll('main .ant-table-row')[${i}]`;
-  for (const [i, s] of [{ ml: 150, g: 120, price: 350000 }, { ml: 250, g: 200, price: 520000 }].entries()) {
-    await type(`${sizeRow(i)}.querySelectorAll('input')[0]`, s.ml);
-    await type(`${sizeRow(i)}.querySelectorAll('input')[1]`, s.g);
-    await type(`${sizeRow(i)}.querySelectorAll('input')[2]`, s.price);
-    await click(`${sizeRow(i)}.querySelector('.ant-switch')`);
-  }
-  sizes = (await stepOf("Hũ nến")).sizes;
-  ok("TC-T1 sửa 2 cỡ 150ml / 250ml", sizes.map((s) => `${s.ml}/${s.grams}/${s.basePrice}/${s.available}`).join() === "150/120/350000/true,250/200/520000/true", JSON.stringify(sizes));
-  await shot("t1-sizes.png");
+  const tabs = await text("main .ant-tabs-tab");
+  ok("TC-T1 bước hũ không có tab Kích thước chung", !tabs.some((x) => x.includes("Kích thước")) && !("sizes" in (await stepOf("Hũ nến"))), tabs.join(" | "));
 
   const t1Issues = await issues();
   ok("TC-T1 không báo trùng khi hũ chưa có lựa chọn", t1Issues.length === 1 && t1Issues[0].includes("chưa có lựa chọn nào"), t1Issues.join(" | "));
-  // TC-T2: lựa chọn hũ gắn kho theo cỡ
+  // TC-T2: lựa chọn hũ = loại hũ trong Kho; các cỡ tự lấy theo mã hũ cùng loại, mỗi cỡ có phụ thu riêng
   await tab("Hũ");
   await clickText("main button", "Thêm lựa chọn");
   await sleep(1200);
   await type(`document.querySelector('.ant-drawer-open input#nameVi')`, "Thủy tinh");
-  await type(`document.querySelector('.ant-drawer-open input#price')`, 30000);
+  await type(`document.querySelector('.ant-drawer-open input#price')`, 380000);
   await click(`document.querySelector('.ant-drawer-open #switch-hasLid')`);
   await sleep(300);
   const sel = (label) => `document.querySelector('.ant-drawer-open [aria-label="${label}"]').closest('.ant-select')`;
-  await pick(sel("Hũ trong kho 150ml"), "Hũ thủy tinh 150ml", true);
-  await pick(sel("Nắp trong kho 150ml"), "Nắp gỗ 150ml", true);
-  await pick(sel("Hũ trong kho 250ml"), "Hũ thủy tinh 250ml", true);
-  await pick(sel("Nắp trong kho 250ml"), "Không theo dõi");
+  await pick(sel("Loại hũ trong Kho"), "Hũ thủy tinh", true);
+  await sleep(400);
+  const rows = await text(".ant-drawer-open [role=group][aria-label^='Cỡ ']");
+  ok("TC-T2 chọn loại hũ → hiện đủ cỡ từ Kho, theo dung tích", rows.length === 2 && rows[0].startsWith("150ml") && rows[1].startsWith("250ml"), rows.map((r) => r.split("\n")[0]).join(" | "));
+  await type(`document.querySelector('.ant-drawer-open input[aria-label="Phụ thu cỡ 250ml"]')`, 170000);
+  await pick(sel("Nắp 150ml"), "Nắp gỗ 150ml", true);
   console.log("  thẻ xem trước:", (await text(".ant-drawer-open section[aria-label='Xem trước']"))[0]);
   await shot("t2-vessel-drawer.png");
   await clickText(".ant-drawer-open .ant-drawer-footer button", "Thêm lựa chọn");
   await sleep(900);
   const glass = (await stepOf("Hũ nến")).options[0];
-  ok("TC-T2 hũ gắn mã theo cỡ", glass?.sizeMaterials?.s150 === undefined
-    ? JSON.stringify(Object.values(glass.sizeMaterials)) === JSON.stringify([{ materialId: "hu-thuy-tinh-150ml", lidMaterialId: "nap-go-150ml" }, { materialId: "hu-thuy-tinh-250ml" }])
-    : false, JSON.stringify(glass?.sizeMaterials));
+  const sizes = glass?.sizes ?? [];
+  ok(
+    "TC-T2 hũ có loại hũ, giá hũ và các cỡ gắn mã theo Kho",
+    glass?.jarType === "Hũ thủy tinh" &&
+      glass.priceDelta === 380000 &&
+      sizes.map((s) => `${s.ml}/${s.grams}/${s.priceDelta}/${s.available}/${s.materialId}/${s.lidMaterialId ?? "-"}`).join() ===
+        "150/120/0/true/hu-thuy-tinh-150ml/nap-go-150ml,250/200/170000/true/hu-thuy-tinh-250ml/-",
+    JSON.stringify(glass),
+  );
   console.log("  bảng hũ:", await text("main .ant-table-row"));
 
   // Thêm lựa chọn cho bước không phải hũ

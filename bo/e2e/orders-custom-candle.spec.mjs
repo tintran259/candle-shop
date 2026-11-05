@@ -8,7 +8,7 @@ test("E2E 8 — Drawer tạo đơn bố cục mới + nến tự phối theo cá
   const { ev, sleep, shot, click, clickText, byText, type, pick, text, go, ok, press } = t;
   const D = ".ant-drawer-open";
   const M = ".ant-modal-wrap .ant-modal";
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const option = (step, name) => `[...document.querySelectorAll('${M} #cfg-step-${step} .cfg-option')].find(b=>b.innerText.includes(${JSON.stringify(name)}))`;
 
   await go(base + "/", 1000);
@@ -42,8 +42,10 @@ test("E2E 8 — Drawer tạo đơn bố cục mới + nến tự phối theo cá
   await click(option("fragrance", "Vanilla"));
   await click(option("fragrance", "Lavender"));
   await sleep(200);
-  await type(`document.querySelector('${M} input[aria-label="Tỉ lệ Vanilla"]')`, 70);
-  await type(`document.querySelector('${M} input[aria-label="Tỉ lệ Lavender"]')`, 30);
+  // Tỉ lệ phối chỉnh bằng lượng cho 1 hũ (ml): 7 + 3 = 70% + 30%
+  ok("C4b Chỉ còn ô Lượng cho 1 hũ, không còn ô Tỉ lệ phối", !(await ev(`document.querySelector('${M} #cfg-step-fragrance').innerText`)).includes("Tỉ lệ phối"));
+  await type(`document.querySelector('${M} input[aria-label="Lượng Vanilla"]')`, 7);
+  await type(`document.querySelector('${M} input[aria-label="Lượng Lavender"]')`, 3);
   await click(option("wick", "Bấc cotton"));
   await click(option("color", "Trắng kem"));
   await type(`document.querySelector('${M} #cfg-step-personalization input')`, "Sun");

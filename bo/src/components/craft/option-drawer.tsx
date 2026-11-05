@@ -1,22 +1,49 @@
 import { DeleteOutlined } from "@ant-design/icons";
 import { App, Button, Checkbox, Col, ColorPicker, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Select, Typography } from "antd";
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
+import { Link } from "react-router";
+import { CostCheck, SuggestButton } from "@/components/craft/margin";
 import { MaterialPreview } from "@/components/craft/material-preview";
-import { fromFormValues, NEW_MATERIAL, toFormValues, type OptionFormValues, type ResolvedMaterials } from "@/components/craft/option-form";
+import { MaterialStock } from "@/components/craft/material-view";
+import {
+  fromFormValues,
+  NEW_MATERIAL,
+  rowDefaults,
+  sizesFromForm,
+  toFormValues,
+  vesselRows,
+  type OptionFormValues,
+  type ResolvedMaterials,
+  type SizeRow,
+  type SizeValues,
+} from "@/components/craft/option-form";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { ImageUpload } from "@/components/form/image-upload";
 import { MaterialSelect } from "@/components/inventory/material-select";
 import { MoneyInput } from "@/components/money-input";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
-import { shapeLabels, sizeLabel, unitLabel, unitNames } from "@/lib/craft/groups";
-import { DEFAULT_LOW_STOCK } from "@/lib/inventory/stock";
+import { shapeLabels, sizeLabel, unitNames } from "@/lib/craft/groups";
+import { needsReview, optionCheck, suggestPrice, suggestUnitPrice, vesselSizeChecks, type SizeCheck } from "@/lib/craft/pricing";
+import { stepAmounts, vesselStep } from "@/lib/craft/selection";
+import { formatMoney } from "@/lib/format";
+import { DEFAULT_LOW_STOCK, jarTypes, jarsOfType, toMap } from "@/lib/inventory/stock";
 import type { Material, MaterialCategory } from "@/lib/inventory/types";
 import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
-import { isOptionStep, previewRoleMeta, uniqueId } from "@/lib/craft/steps";
-import { units, type CraftConfig, type OptionStep, type SizeOption, type StepOption, type Unit } from "@/lib/craft/types";
+import { amountBasis, basisLabel, isOptionStep, previewRoleMeta, uniqueId } from "@/lib/craft/steps";
+import { units, type CraftConfig, type OptionStep, type StepOption, type Unit, type VesselOption } from "@/lib/craft/types";
+import type { ShopSettings } from "@/lib/settings/types";
 
-type Props = { open: boolean; step: OptionStep; option?: StepOption; config: CraftConfig; api: CraftConfigApi; materials: Material[]; onClose: () => void };
+type Props = {
+  open: boolean;
+  step: OptionStep;
+  option?: StepOption;
+  config: CraftConfig;
+  api: CraftConfigApi;
+  materials: Material[];
+  pricing: Pick<ShopSettings, "minMargin" | "priceMarkup">;
+  onClose: () => void;
+};
 
 // Loại nguyên liệu gợi ý khi tạo mới từ bước (theo vai trò minh họa / component)
 const suggestCategory = (step: OptionStep): MaterialCategory =>
@@ -24,7 +51,7 @@ const suggestCategory = (step: OptionStep): MaterialCategory =>
 
 // Drawer thêm/sửa một lựa chọn: thẻ xem trước + các khối trường theo component của bước.
 // Mount lại theo key mỗi lần mở nên form luôn bắt đầu từ dữ liệu mới.
-export function OptionDrawer({ open, step, option, config, api, materials, onClose }: Props) {
+export function OptionDrawer({ open, step, option, config, api, materials, pricing, onClose }: Props) {
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
   // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp
@@ -34,6 +61,47 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
   const hasSwatch = Form.useWatch("hasSwatch", form);
   const hasImage = !!Form.useWatch("images", form)?.length;
   const [dirty, setDirty] = useState(false);
+  const price = Form.useWatch("price", form);
+  const isVessel = step.kind === "vessel";
+  // Sáp, màu, hương: giá bán mỗi 100 g / mỗi ml, khách trả theo lượng dùng cho hũ
+  const basis = amountBasis(step);
+  const perLabel = basis && basisLabel(basis);
+  const priceLabel = isVessel ? "Giá hũ" : perLabel ? `Giá bán / ${perLabel}` : "Phụ thu mỗi hũ";
+  const jarType = Form.useWatch("jarType", form);
+  const hasLid = Form.useWatch("hasLid", form);
+  const sizeValues = Form.useWatch("sizes", form) as Record<string, SizeValues> | undefined;
+  const map = useMemo(() => toMap(materials), [materials]);
+  // Hũ: các cỡ theo loại hũ đang chọn (cỡ đã có + mã hũ cùng loại trong Kho)
+  const rows = useMemo(() => (isVessel ? vesselRows(option as VesselOption | undefined, jarType, materials) : []), [isVessel, option, jarType, materials]);
+  // Giá vốn tối thiểu theo giá và nguyên liệu đang nhập (chưa cần Áp dụng)
+  const priceCheck = useMemo(() => {
+    if (isVessel) return null;
+    const draft = {
+      ...(option ?? { id: "__draft", name: { vi: "", en: "" }, available: true }),
+      ...(basis ? { priceDelta: 0, unitPrice: Math.round(price ?? 0) } : { priceDelta: Math.round(price ?? option?.priceDelta ?? 0) }),
+      materialId: materialId && materialId !== NEW_MATERIAL ? materialId : undefined,
+    } as StepOption;
+    return optionCheck(config, step, draft, map);
+  }, [isVessel, basis, step, option, price, materialId, config, map]);
+  // Ví dụ giá theo lượng ở cỡ hũ nhỏ nhất đang bán: "120 g × 18.000 ₫/100 g = 21.600 ₫"
+  const sample = useMemo(() => {
+    if (!basis) return null;
+    const sizes = (vesselStep(config)?.options ?? []).filter((v) => v.available).flatMap((v) => v.sizes.filter((s) => s.available).map((s) => ({ v, s })));
+    const first = sizes.sort((a, b) => a.s.grams - b.s.grams)[0];
+    if (!first) return null;
+    const sel = step.kind === "blend" ? { kind: "blend" as const, items: [{ optionId: "x", weight: 1 }], intensity: step.intensity ? ("medium" as const) : null } : { kind: step.kind as "cards", optionIds: ["x"] };
+    const amount = stepAmounts(step, sel, first.s.grams).get("x") ?? 0;
+    return { jar: `${first.v.name.vi} ${first.s.ml}ml`, grams: first.s.grams, amount: Math.round(amount * 10) / 10 };
+  }, [basis, config, step]);
+  const sizeChecks = useMemo(() => {
+    if (!isVessel) return new Map<string, SizeCheck>();
+    const draft = {
+      ...(option ?? { id: "__draft", name: { vi: "", en: "" }, available: true, shape: "jar", lid: null }),
+      priceDelta: Math.round(price ?? option?.priceDelta ?? 0),
+      sizes: sizesFromForm(rows, sizeValues, !!hasLid, !option),
+    } as VesselOption;
+    return vesselSizeChecks(config, step, draft, map);
+  }, [isVessel, step, option, price, rows, sizeValues, hasLid, config, map]);
   const role = step.kind === "cards" || step.kind === "swatches" ? step.previewRole : undefined;
   const looks = role ? previewRoleMeta[role].looks : undefined;
   // Bước khác có lựa chọn — để đặt quy tắc "chỉ dùng với"
@@ -68,16 +136,8 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
 
     const resolved: ResolvedMaterials = {};
     if (step.kind === "vessel") {
-      // Mỗi cỡ một mã hũ (và nắp) riêng: "Hũ gốm 150ml", "Nắp hũ gốm 150ml"
-      resolved.sizeMaterials = Object.fromEntries(
-        (values.supportedSizeIds ?? []).map((sizeId) => {
-          const ml = sizeLabel(step.sizes.find((x) => x.id === sizeId)!);
-          const row = values.sizeStock?.[sizeId];
-          const jar = pick(row?.jar, () => create(`jar ${en} ${ml}`, `${name} ${ml}`, "pcs", row?.jarStock, "vessel", swatch));
-          const lid = values.hasLid ? pick(row?.lid, () => create(`lid ${en} ${ml}`, `Nắp ${name.toLowerCase()} ${ml}`, "pcs", row?.lidStock, "vessel")) : undefined;
-          return [sizeId, { materialId: jar, lidMaterialId: lid }];
-        }),
-      );
+      // Mỗi cỡ là một mã hũ cùng Loại hũ trong Kho
+      resolved.sizes = sizesFromForm(rows, values.sizes, !!values.hasLid, !option);
     } else {
       resolved.materialId = pick(values.materialId, () => create(`${step.id} ${en}`, name, values.newUnit ?? "pcs", values.newStock, suggestCategory(step), swatch));
     }
@@ -137,13 +197,13 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
         <Form
           form={form}
           layout="vertical"
-          initialValues={toFormValues(step, option)}
+          initialValues={toFormValues(step, option, materials)}
           onFinish={finish}
           onValuesChange={() => setDirty(true)}
           scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
         >
           <Flex vertical gap={16}>
-            <MaterialPreview materials={materials} groupLabel={step.title.vi} sizes={step.kind === "vessel" ? step.sizes : undefined} />
+            <MaterialPreview materials={materials} groupLabel={step.title.vi} rows={isVessel ? rows : undefined} priceLabel={priceLabel} />
 
             <FormSection title="Thông tin cơ bản" description="Tên và mô tả khách thấy ở bước này.">
               <Row gutter={16}>
@@ -170,9 +230,49 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
               </Row>
             </FormSection>
 
-            <FormSection title="Giá & bán" description={step.kind === "blend" ? "Phụ thu tính theo tỉ lệ khách phối (vd 50% → một nửa phụ thu)." : "Phụ thu được cộng vào giá gốc theo kích thước."}>
-              <Form.Item name="price" label="Phụ thu mỗi hũ">
-                <MoneyInput />
+            <FormSection
+              title="Giá & bán"
+              description={
+                isVessel
+                  ? "Giá hũ ở cỡ nhỏ nhất. Mỗi cỡ cộng phụ thu cỡ riêng ở phần Loại hũ & kích thước bên dưới."
+                  : basis
+                    ? `Khách trả = lượng dùng cho hũ đã chọn × giá này, làm tròn tới 100 ₫. Chọn nhiều thì chia theo % lượng.${
+                        sample ? ` Vd ${sample.jar} (${sample.grams} g sáp): ${sample.amount.toLocaleString("vi-VN")} ${basis.unit} × ${formatMoney(Math.round(price ?? 0))}/${perLabel} = ${formatMoney(Math.round((sample.amount * Math.round(price ?? 0)) / basis.per / 100) * 100)}.` : ""
+                      }`
+                    : "Phụ thu được cộng vào giá hũ."
+              }
+            >
+              <Form.Item
+                name="price"
+                label={priceLabel}
+                extra={
+                  priceCheck && (
+                    <div role="group" aria-label="Giá vốn lựa chọn">
+                      <CostCheck
+                        c={priceCheck}
+                        min={pricing.minMargin}
+                        inline
+                        note={priceCheck.floor > 0 && priceCheck.size ? `cỡ ${sizeLabel(priceCheck.size)}` : undefined}
+                        free={priceCheck.isDefault ? "Tính trong giá hũ" : undefined}
+                      >
+                        {priceCheck.floor > 0 && needsReview(priceCheck, pricing.minMargin) && (
+                          <SuggestButton
+                            // Giá theo lượng: gợi ý giá mỗi 100 g / mỗi ml. Phụ thu: giá gợi ý − phần khách đã trả thêm ngoài phụ thu
+                            value={basis ? suggestUnitPrice(priceCheck.floor, pricing) : Math.max(0, suggestPrice(priceCheck.floor, pricing) - (priceCheck.price - Math.round(price ?? 0)))}
+                            current={Math.round(price ?? 0)}
+                            label={basis ? "Gợi ý giá bán" : "Gợi ý phụ thu"}
+                            onApply={(n) => {
+                              form.setFieldValue("price", n);
+                              setDirty(true);
+                            }}
+                          />
+                        )}
+                      </CostCheck>
+                    </div>
+                  )
+                }
+              >
+                <MoneyInput aria-label={priceLabel} />
               </Form.Item>
               <SwitchField name="available" label="Đang bán" description="Tắt để tạm ẩn với khách dù vẫn còn hàng." last />
             </FormSection>
@@ -232,7 +332,20 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
               </Flex>
             </FormSection>
 
-            {step.kind === "vessel" && <VesselFields sizes={step.sizes} materials={materials} />}
+            {isVessel && (
+              <VesselFields
+                rows={rows}
+                isNew={!option}
+                materials={materials}
+                checks={sizeChecks}
+                pricing={pricing}
+                jarPrice={Math.round(price ?? 0)}
+                onPrice={(key, n) => {
+                  form.setFieldValue(["sizes", key, "price"], n);
+                  setDirty(true);
+                }}
+              />
+            )}
 
             {looks && (
               <FormSection title="Ảnh minh họa" description={previewRoleMeta[role!].hint}>
@@ -269,9 +382,22 @@ export function OptionDrawer({ open, step, option, config, api, materials, onClo
   );
 }
 
-function VesselFields({ sizes, materials }: { sizes: SizeOption[]; materials: Material[] }) {
+type VesselProps = {
+  rows: SizeRow[];
+  isNew: boolean;
+  materials: Material[];
+  checks: Map<string, SizeCheck>;
+  pricing: Pick<ShopSettings, "minMargin" | "priceMarkup">;
+  jarPrice: number;
+  onPrice: (key: string, n: number) => void;
+};
+
+function VesselFields({ rows, isNew, materials, checks, pricing, jarPrice, onPrice }: VesselProps) {
   const hasLid = Form.useWatch("hasLid");
-  const supported: string[] = Form.useWatch("supportedSizeIds") ?? [];
+  const jarType = Form.useWatch("jarType");
+  const types = jarTypes(materials);
+  // Nắp: mã trong nhóm Hũ & nắp không có loại hũ
+  const lids = materials.filter((m) => m.category === "vessel" && !m.jarType);
   return (
     <>
       <FormSection title="Hũ & nắp" description="Dáng hũ (vẽ trong ảnh minh họa) và nắp khách chọn thêm.">
@@ -279,7 +405,7 @@ function VesselFields({ sizes, materials }: { sizes: SizeOption[]; materials: Ma
           <Radio.Group optionType="button" options={Object.entries(shapeLabels).map(([value, label]) => ({ value, label }))} />
         </Form.Item>
         <SwitchField name="translucent" label="Hũ trong suốt" description="Ảnh minh họa sẽ thấy được màu sáp bên trong." />
-        <SwitchField name="hasLid" label="Có nắp đi kèm" description="Nắp mỗi cỡ là một mã riêng trong Kho — chọn ở bảng bên dưới." last={!hasLid} />
+        <SwitchField name="hasLid" label="Có nắp đi kèm" description="Nắp mỗi cỡ là một mã riêng trong Kho — chọn ở từng cỡ bên dưới." last={!hasLid} />
         {hasLid && (
           <Form.Item name="lidPrice" label="Phụ thu nắp" style={{ marginTop: 16, marginBottom: 0 }}>
             <MoneyInput />
@@ -288,62 +414,135 @@ function VesselFields({ sizes, materials }: { sizes: SizeOption[]; materials: Ma
       </FormSection>
 
       <FormSection
-        title="Kích cỡ & tồn kho"
-        description="Mỗi dung tích là một mã hũ riêng trong Kho. Khách chỉ đặt được cỡ còn hàng — hết hũ 200ml thì web chỉ khóa cỡ 200ml."
+        title="Loại hũ & kích thước"
+        description="Các cỡ lấy từ Kho: mỗi mã hũ cùng Loại hũ là một cỡ. Giá khách trả = giá hũ + phụ thu cỡ. Hết hũ cỡ nào thì web chỉ khóa cỡ đó."
       >
         <Form.Item
-          name="supportedSizeIds"
-          rules={[{ required: true, type: "array", min: 1, message: "Chọn ít nhất một kích thước." }]}
-          extra="Sửa danh sách kích thước ở tab Kích thước."
-          style={{ marginBottom: 0 }}
+          name="jarType"
+          label="Loại hũ trong Kho"
+          rules={[{ required: true, message: "Chọn loại hũ trong Kho." }]}
+          extra={
+            types.length ? undefined : (
+              <>
+                Kho chưa có hũ nào có Loại hũ. <Link to="/inventory">Thêm ở Kho nguyên liệu</Link>: loại Hũ & nắp, điền Loại hũ và Dung tích.
+              </>
+            )
+          }
         >
-          <Checkbox.Group style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {sizes.map((size) => (
-              <SizeStockRow key={size.id} size={size} on={supported.includes(size.id)} hasLid={!!hasLid} materials={materials} />
-            ))}
-          </Checkbox.Group>
+          <Select
+            showSearch
+            placeholder="VD: Hũ thạch cao"
+            aria-label="Loại hũ trong Kho"
+            options={types.map((t) => ({ value: t, label: `${t} · ${jarsOfType(materials, t).length} cỡ` }))}
+          />
         </Form.Item>
+        <Flex vertical gap={8}>
+          {rows.map((row) => (
+            <SizeRowFields
+              key={row.key}
+              row={row}
+              isNew={isNew}
+              hasLid={!!hasLid}
+              materials={materials}
+              lids={lids}
+              check={checks.get(row.key)}
+              pricing={pricing}
+              jarPrice={jarPrice}
+              onPrice={onPrice}
+            />
+          ))}
+          {jarType && !rows.length && <Typography.Text type="secondary">Loại hũ này chưa có mã hũ nào trong Kho.</Typography.Text>}
+          {jarType && (
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              Thêm cỡ: tạo hũ cùng Loại hũ “{jarType}” với dung tích mới ở <Link to="/inventory">Kho nguyên liệu</Link>, mở lại hũ này là thấy.
+            </Typography.Text>
+          )}
+        </Flex>
       </FormSection>
     </>
   );
 }
 
-// Một cỡ của hũ: tích = hũ đổ được cỡ này; chọn mã hũ / nắp trong Kho hoặc tạo mới kèm tồn ban đầu
-function SizeStockRow({ size, on, hasLid, materials }: { size: SizeOption; on: boolean; hasLid: boolean; materials: Material[] }) {
-  const row = Form.useWatch(["sizeStock", size.id]);
-  const label = sizeLabel(size);
-  const field = (kind: "jar" | "lid", title: string) => (
-    <Col xs={24} sm={hasLid ? 12 : 24}>
-      <Typography.Text type="secondary" style={{ display: "block", fontSize: 12, marginBottom: 4 }}>
-        {title}
-      </Typography.Text>
-      <Flex gap={8}>
-        <Form.Item name={["sizeStock", size.id, kind]} noStyle>
-          <MaterialSelect materials={materials} allowCreate ariaLabel={`${title} ${label}`} style={{ flex: 1, minWidth: 0 }} />
+type RowProps = Omit<VesselProps, "rows" | "checks"> & { row: SizeRow; hasLid: boolean; lids: Material[]; check?: SizeCheck };
+
+// Một cỡ của hũ: bán hay không, phụ thu cỡ, sáp đổ, giờ cháy, nắp; kèm giá khách trả so với giá vốn
+function SizeRowFields({ row, isNew, hasLid, materials, lids, check, pricing, jarPrice, onPrice }: RowProps) {
+  const def = rowDefaults(row, isNew);
+  const v = { ...def, ...(Form.useWatch(["sizes", row.key]) as SizeValues | undefined) };
+  const label = `${row.ml}ml`;
+  const jar = row.materialId ? materials.find((m) => m.id === row.materialId) : undefined;
+  const name = (field: keyof SizeValues) => ["sizes", row.key, field];
+  return (
+    <div role="group" aria-label={`Cỡ ${label}`} style={{ border: "1px solid #f0f0f0", borderRadius: 12, padding: 12, background: v.on ? "#fff" : "#fafaf8" }}>
+      <Flex justify="space-between" align="center" gap={8} wrap>
+        <Form.Item name={name("on")} valuePropName="checked" initialValue={def.on} noStyle>
+          <Checkbox aria-label={`Bán cỡ ${label}`}>
+            <Typography.Text strong>{label}</Typography.Text>
+            {!row.existing && (
+              <Typography.Text type="warning" style={{ fontSize: 12, marginLeft: 6 }}>
+                mới trong Kho
+              </Typography.Text>
+            )}
+          </Checkbox>
         </Form.Item>
-        {row?.[kind] === NEW_MATERIAL && (
-          <Form.Item name={["sizeStock", size.id, `${kind}Stock`]} noStyle>
-            <InputNumber min={0} precision={0} placeholder="Tồn" suffix={unitLabel.pcs} aria-label={`Tồn ban đầu · ${title} ${label}`} style={{ width: 104 }} />
-          </Form.Item>
+        {jar ? (
+          <Flex gap={6} align="center">
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {jar.name}
+            </Typography.Text>
+            <MaterialStock material={jar} />
+          </Flex>
+        ) : (
+          <Typography.Text type={row.materialId ? "danger" : "secondary"} style={{ fontSize: 12 }}>
+            {row.materialId ? "Mã hũ đã xóa khỏi Kho" : "Không theo dõi tồn"}
+          </Typography.Text>
         )}
       </Flex>
-    </Col>
-  );
-  return (
-    <div style={{ border: "1px solid #f0f0f0", borderRadius: 12, padding: 12, background: on ? "#fff" : "#fafaf8" }}>
-      <Flex justify="space-between" align="center" gap={8}>
-        <Checkbox value={size.id}>
-          <Typography.Text strong>{label}</Typography.Text>
-        </Checkbox>
-        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          {on ? `${size.grams}g sáp` : "Không đổ cỡ này"}
-        </Typography.Text>
-      </Flex>
-      {on && (
-        <Row gutter={[12, 12]} style={{ marginTop: 10 }}>
-          {field("jar", "Hũ trong kho")}
-          {hasLid && field("lid", "Nắp trong kho")}
-        </Row>
+      {v.on && (
+        <>
+          <Row gutter={[12, 0]} style={{ marginTop: 10 }}>
+            <Col xs={12} sm={hasLid ? 6 : 8}>
+              <Form.Item name={name("price")} label="Phụ thu cỡ" initialValue={def.price} style={{ marginBottom: 8 }}>
+                <MoneyInput aria-label={`Phụ thu cỡ ${label}`} />
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={hasLid ? 6 : 8}>
+              <Form.Item name={name("grams")} label="Sáp đổ" initialValue={def.grams} style={{ marginBottom: 8 }}>
+                <InputNumber min={0} precision={0} suffix="g" aria-label={`Sáp đổ ${label}`} style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            <Col xs={12} sm={hasLid ? 5 : 8}>
+              <Form.Item name={name("burnHours")} label="Cháy (giờ)" initialValue={def.burnHours} style={{ marginBottom: 8 }}>
+                <InputNumber min={0} precision={0} placeholder="Chưa đo" aria-label={`Thời gian cháy ${label}`} style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
+            {hasLid && (
+              <Col xs={12} sm={7}>
+                <Form.Item name={name("lid")} label="Nắp" initialValue={def.lid} style={{ marginBottom: 8 }}>
+                  <MaterialSelect materials={lids} ariaLabel={`Nắp ${label}`} />
+                </Form.Item>
+              </Col>
+            )}
+          </Row>
+          {check && (
+            <Flex gap={8} wrap align="center" role="group" aria-label={`Giá vốn ${label}`} title={check.parts.map((p) => `${p.step}: ${p.name} ${formatMoney(p.cost)}`).join(" · ")}>
+              <Typography.Text className="tabular" style={{ fontSize: 13 }}>
+                Khách trả {formatMoney(check.price)} ·
+              </Typography.Text>
+              <CostCheck c={check} min={pricing.minMargin} inline>
+                {check.floor > 0 && needsReview(check, pricing.minMargin) && (
+                  <SuggestButton
+                    // Phụ thu cỡ gợi ý = giá gợi ý cả hũ − giá hũ
+                    value={Math.max(0, suggestPrice(check.floor, pricing) - jarPrice)}
+                    current={Math.round(v.price ?? 0)}
+                    label={`Gợi ý phụ thu cỡ ${label}`}
+                    onApply={(n) => onPrice(row.key, n)}
+                  />
+                )}
+              </CostCheck>
+            </Flex>
+          )}
+        </>
       )}
     </div>
   );

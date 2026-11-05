@@ -9,7 +9,13 @@ import { availableMap, heldNeeds, linesNeeds, shortages } from "@/lib/orders/mat
 import type { Order } from "@/lib/orders/types";
 import { applyFilters, defaultFilters } from "@/lib/products/filters";
 import { discountPercent } from "@/lib/products/labels";
-import { mockProducts } from "@/lib/products/mock";
+import { sampleProducts as mockProducts } from "@/lib/products/sample";
+import { mockInventory } from "@/lib/inventory/mock";
+import { emptyBuild, sizeFromCapacity } from "@/lib/products/build";
+
+const mats = mockInventory.materials;
+const cfg = defaultCraftConfig;
+const mmap = toMap(mats);
 import type { Product } from "@/lib/products/types";
 
 const names = (list: Product[]) => list.map((p) => p.name);
@@ -45,21 +51,54 @@ test.describe("Bộ lọc và sắp xếp", () => {
 
 test.describe("Chuyển form ↔ sản phẩm", () => {
   test("Sản phẩm mới: slug từ tên, làm tròn giá, bỏ khoảng trắng, chưa có công thức thì không lưu mảng rỗng", () => {
-    const p = fromFormValues({ ...toFormValues(), name: "  Nến Hoa Nhài ", slug: "", price: 500_400.6, salePrice: null, images: ["a.png"], scent: "  ", categoryId: "nature" });
+    const p = fromFormValues({ ...toFormValues(undefined, cfg), name: "  Nến Hoa Nhài ", slug: "", price: 500_400.6, salePrice: null, images: ["a.png"], scent: "  ", categoryId: "nature" }, undefined, cfg, mmap);
     expect(p).toMatchObject({ id: "nen-hoa-nhai", slug: "nen-hoa-nhai", name: "Nến Hoa Nhài", price: 500_401, salePrice: undefined, scent: undefined, recipe: undefined, status: "active", sold: 0 });
   });
   test("Sửa sản phẩm giữ id và số liệu dù đổi slug", () => {
     const old = mockProducts[0];
-    const p = fromFormValues({ ...toFormValues(old), slug: "brown-relac-2" }, old);
+    const p = fromFormValues({ ...toFormValues(old, cfg), slug: "brown-relac-2" }, old, cfg, mmap);
     expect(p).toMatchObject({ id: old.id, slug: "brown-relac-2", sold: old.sold, rating: old.rating, createdAt: old.createdAt });
   });
   test("Tạm ẩn khi tắt Đang bán", () => {
-    expect(fromFormValues({ ...toFormValues(mockProducts[0]), active: false }, mockProducts[0]).status).toBe("hidden");
+    expect(fromFormValues({ ...toFormValues(mockProducts[0], cfg), active: false }, mockProducts[0], cfg, mmap).status).toBe("hidden");
+  });
+  test("Sản phẩm cũ chỉ có công thức: công thức giữ ở phụ kiện khác, lưu lại không mất", () => {
+    const old = mockProducts[0];
+    const v = toFormValues(old, cfg);
+    expect(v.build.extras).toEqual(old.recipe);
+    expect(fromFormValues(v, old, cfg, mmap).recipe).toEqual(old.recipe);
   });
   test("Tạo từ nến hủy đơn: slug tự tránh slug đã có, điền công thức", () => {
     const item = { name: "Brown Relac", price: 700_000, images: ["x.png"], custom: "Hũ thủy tinh · Sáp dừa" } as CancelledProduct;
-    const v = fromCancelled(item, mockProducts, [{ materialId: "wax-soy", quantity: 100 }]);
-    expect(v).toMatchObject({ slug: "brown-relac-2", price: 700_000, description: "Hũ thủy tinh · Sáp dừa", recipe: [{ materialId: "wax-soy", quantity: 100 }] });
+    const recipe = [{ materialId: "jar-clear-glass-150", quantity: 1 }, { materialId: "wax-soy", quantity: 100 }];
+    const v = fromCancelled(item, mockProducts, recipe, cfg);
+    // Công thức của nến tự phối giữ ở phần phụ kiện khác
+    expect(v).toMatchObject({ slug: "brown-relac-2", price: 700_000, description: "Hũ thủy tinh · Sáp dừa", build: { extras: recipe } });
+  });
+  test("Chọn giống nến tự phối: công thức theo lựa chọn + phụ kiện, cỡ theo dung tích, loại sáp, giờ cháy theo cỡ", () => {
+    const build = emptyBuild(cfg);
+    expect(Object.keys(build.selection)).not.toContain("personalization");
+    const selection = {
+      ...build.selection,
+      container: { kind: "vessel" as const, optionId: "clear-glass", sizeId: "s200", withLid: false },
+      wax: { kind: "cards" as const, optionIds: ["soy", "coconut"] },
+      fragrance: { kind: "blend" as const, items: [{ optionId: "vanilla", weight: 1 }], intensity: "medium" as const },
+      wick: { kind: "cards" as const, optionIds: ["cotton"] },
+    };
+    const v = { ...toFormValues(undefined, cfg), name: "A", images: ["a.png"], categoryId: "nature", build: { selection, extras: [{ materialId: "box-gift", quantity: 1 }, {}] } };
+    const p = fromFormValues(v, undefined, cfg, mmap);
+    expect(p.recipe).toEqual([
+      { materialId: "jar-clear-glass-200", quantity: 1 },
+      { materialId: "wax-soy", quantity: 80 },
+      { materialId: "wax-coconut", quantity: 80 },
+      { materialId: "oil-vanilla", quantity: 13 },
+      { materialId: "wick-cotton", quantity: 1 },
+      { materialId: "box-gift", quantity: 1 },
+    ]);
+    expect(p).toMatchObject({ size: "medium", waxType: "Sáp đậu nành + Sáp dừa", burnTime: 35 });
+    expect(p.build?.extras).toEqual([{ materialId: "box-gift", quantity: 1 }]);
+    expect(sizeFromCapacity(150)).toBe("small");
+    expect(sizeFromCapacity(250)).toBe("big");
   });
 });
 

@@ -1,8 +1,8 @@
-// E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp ở Thủ công, phụ thu theo tỉ lệ gram và ml
+// E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp ở Thủ công, giá theo lượng gram và ml
 import { SF_URL, fixture, test } from "./support/harness.mjs";
 import fs from "node:fs";
 
-test("E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp ở Thủ công, phụ thu theo tỉ lệ gram và ml", async ({ t }) => {
+test("E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp ở Thủ công, giá theo lượng gram và ml", async ({ t }) => {
   const base = t.base;
   const bo = t.base;
   const sf = SF_URL;
@@ -20,6 +20,10 @@ test("E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp 
   const wax = old.steps.find((s) => s.id === "wax");
   wax.multiple = false;
   wax.options.push({ id: "blend", name: { vi: "Sáp pha trộn", en: "Wax blend" }, priceDelta: 10000, available: true, materialId: "wax-blend", swatch: "#f8f1e6" });
+  // Giá theo lượng: sáp mỗi 100 g, tinh dầu mỗi ml
+  const setUnit = (step, prices) => old.steps.find((s) => s.id === step).options.forEach((o) => prices[o.id] !== undefined && Object.assign(o, { priceDelta: 0, unitPrice: prices[o.id] }));
+  setUnit("wax", { soy: 10000, coconut: 20000 });
+  setUnit("fragrance", { vanilla: 1000, sandalwood: 2000 });
   await go(base + "/", 1000);
   await ev("Object.keys(localStorage).filter(k=>k.startsWith('bo-')).forEach(k=>localStorage.removeItem(k))");
   await ev(`localStorage.setItem('bo-craft-builder-v5', ${JSON.stringify(JSON.stringify(old))})`);
@@ -49,13 +53,14 @@ test("E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp 
   await sleep(300);
   ok("B1 Bản lưu cũ cũng chọn được nhiều sáp", (await ev(`[...document.querySelectorAll('${M} #cfg-step-wax .cfg-option[aria-checked=true]')].length`)) === 2);
   const even = await price();
-  ok("B2 Chia đều: phụ thu Sáp dừa 50% (13.000)", single.includes("500.000") && even.includes("513.000"), `${single} -> ${even}`);
+  // Hũ gốm 150ml = 120 g sáp. Một loại: 120 g × 10.000/100 g; chia đều 60 g + 60 g
+  ok("B2 Giá sáp theo lượng: 120 g đậu nành 12.000, chia đều 6.000 + 12.000", single.includes("512.000") && even.includes("518.000"), `${single} -> ${even}`);
   ok("B3 Hiện tỉ lệ từng loại", (await box()).includes("50%"), await box());
   await type(input("Sáp đậu nành"), "100");
   await type(input("Sáp dừa"), "60");
   await sleep(300);
   const ratio = await price();
-  ok("B4 Theo gram 100:60 thì phụ thu 9.000", ratio.includes("509.000"), ratio);
+  ok("B4 Điền 100 g + 60 g: 10.000 + 12.000", ratio.includes("522.000"), ratio);
   ok("B5 Hiện 63% và 37%", (await box()).includes("63%") && (await box()).includes("37%"), await box());
 
   await click(option("fragrance", "Vanilla"));
@@ -68,10 +73,11 @@ test("E2E 19 — Bỏ Sáp pha trộn trên bản lưu cũ, chọn nhiều sáp 
   await sleep(300);
   const ml = await price();
   const summary = await ev(`document.querySelector('${M} .cfg-summary').innerText`);
-  ok("C0 Đã điền ml thì ẩn ô Tỉ lệ phối", !(await ev(`document.querySelector('${M} #cfg-step-fragrance').innerText`)).includes("Tỉ lệ phối"));
+  ok("C0 Không có ô Tỉ lệ phối trùng với ô Lượng", !(await ev(`document.querySelector('${M} #cfg-step-fragrance').innerText`)).includes("Tỉ lệ phối"));
   await ev(`document.querySelector('#cfg-step-wax')?.scrollIntoView()`);
   await shot("d19-ratio.png");
-  ok("C1 Mùi hương theo ml: Sandalwood 10% còn 2.500 thay vì 12.500", half.includes("531.500") && ml.includes("521.500"), `${half} -> ${ml}`);
+  // 120 g × 8% = 9,6 ml: 4,8 ml mỗi mùi → 4.800 + 9.600; điền 9 ml + 1 ml → 9.000 + 2.000
+  ok("C1 Mùi hương theo ml × giá mỗi ml", half.includes("536.400") && ml.includes("533.000"), `${half} -> ${ml}`);
   ok("C2 Mô tả gửi xưởng theo tỉ lệ ml", summary.includes("Vanilla 90%") && summary.includes("Sandalwood 10%"), summary.slice(0, 120));
 
   console.log(t.logs.length ? "LOGS:\n" + t.logs.slice(0, 5).join("\n") : "Không có lỗi console");

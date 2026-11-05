@@ -9,7 +9,7 @@ test("Danh mục: thêm/sửa/sắp xếp/ẩn, chặn xóa khi còn sản phẩ
   await go(bo + "/", 800);
   await ev("Object.keys(localStorage).filter(k=>k.startsWith('bo-')).forEach(k=>localStorage.removeItem(k))");
   // Bản lưu cũ còn aromaType
-  await ev(`localStorage.setItem('bo-products-v1', JSON.stringify([{id:'old',name:'Nến cũ',slug:'old',price:500000,images:['/x.jpg'],aromaType:'fruits',aromaLevel:'soft',size:'small',status:'active',isNew:false,isFeatured:false,rating:0,reviewCount:0,sold:0,createdAt:'2026-01-01',updatedAt:'2026-01-01'}]))`);
+  await ev(`localStorage.setItem('bo-products-v2', JSON.stringify([{id:'old',name:'Nến cũ',slug:'old',price:500000,images:['/x.jpg'],aromaType:'fruits',aromaLevel:'soft',size:'small',status:'active',isNew:false,isFeatured:false,rating:0,reviewCount:0,sold:0,createdAt:'2026-01-01',updatedAt:'2026-01-01'}]))`);
   await go(bo + "/categories", 2000);
   let r = await rows();
   ok("A1 Có 3 danh mục mặc định", r.length === 3, r.join(" | "));
@@ -99,7 +99,7 @@ test("Danh mục: thêm/sửa/sắp xếp/ẩn, chặn xóa khi còn sản phẩ
   await shot("cat-form.png");
   await clickText(".ant-drawer-footer button", "Lưu thay đổi");
   await sleep(900);
-  const p = await ev("JSON.parse(localStorage.getItem('bo-products-v1'))[0]");
+  const p = await ev("JSON.parse(localStorage.getItem('bo-products-v2'))[0]");
   ok("F3 Lưu categoryId, bỏ aromaType", p.categoryId === "huong-go" && !("aromaType" in p), JSON.stringify(p).slice(0, 160));
 
   await go(bo + "/categories", 1500);

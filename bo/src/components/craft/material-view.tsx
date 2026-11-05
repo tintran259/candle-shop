@@ -1,7 +1,7 @@
 import { Avatar, Badge, Flex, Tag, Tooltip, Typography } from "antd";
 import { Link } from "react-router";
 import { sizeLabel, unitLabel } from "@/lib/craft/groups";
-import type { SizeOption, StepOption, VesselOption } from "@/lib/craft/types";
+import type { StepOption, VesselOption } from "@/lib/craft/types";
 import { formatNumber } from "@/lib/format";
 import { levelMeta, materialLevel, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
@@ -55,13 +55,13 @@ export function DraftMaterialTag() {
 }
 
 // Tồn kho của hũ theo từng cỡ: mỗi dòng là một mã hũ riêng trong Kho, bấm để mở
-export function VesselStock({ option, sizes, map }: { option: VesselOption; sizes: SizeOption[]; map: MaterialMap }) {
-  const rows = sizes.filter((s) => option.supportedSizeIds.includes(s.id));
-  if (!rows.length) return <Typography.Text type="secondary">Chưa chọn cỡ</Typography.Text>;
+export function VesselStock({ option, map }: { option: VesselOption; map: MaterialMap }) {
+  const rows = option.sizes.filter((s) => s.available);
+  if (!rows.length) return <Typography.Text type="secondary">Chưa có cỡ đang bán</Typography.Text>;
   return (
     <Flex vertical gap={4} style={{ minWidth: 150 }}>
       {rows.map((size) => {
-        const id = option.sizeMaterials?.[size.id]?.materialId;
+        const id = size.materialId;
         const m = id ? map.get(id) : undefined;
         const level = vesselSizeLevel(option, size.id, map);
         return (

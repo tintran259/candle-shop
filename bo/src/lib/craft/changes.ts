@@ -1,7 +1,7 @@
 // So bản nháp với bản đã lưu → danh sách thay đổi đọc được cho admin (bước nào, mục nào, trường nào, cũ → mới)
 import { formatDelta, shapeLabels, sizeLabel } from "@/lib/craft/groups";
 import { intensityLabels, kindMeta, previewRoleMeta } from "@/lib/craft/steps";
-import type { AddonDef, CraftConfig, CraftStep, IntensityLevel, SizeOption, StepOption, TextFieldDef, VesselOption } from "@/lib/craft/types";
+import type { AddonDef, CraftConfig, CraftStep, IntensityLevel, StepOption, TextFieldDef, VesselOption, VesselSize } from "@/lib/craft/types";
 import { formatMoney } from "@/lib/format";
 import type { MaterialMap } from "@/lib/inventory/stock";
 
@@ -15,7 +15,7 @@ export type ChangeItem = {
   // Lựa chọn để mở drawer sửa (nếu có)
   optionId?: string;
   // Tab của bước chứa thay đổi
-  view?: "sizes" | "settings";
+  view?: "settings";
 };
 export type StepChange = { step: CraftStep; kind: ChangeKind; items: ChangeItem[] };
 
@@ -24,7 +24,7 @@ const onOff = (v: unknown) => (v ? "Bật" : "Tắt");
 const text = (v: unknown) => (v === undefined || v === null || v === "" ? "(trống)" : String(v));
 const arrow = (label: string, before: string, after: string) => `${label}: ${before} → ${after}`;
 
-type Ctx = { map: MaterialMap; sizes: SizeOption[] };
+type Ctx = { map: MaterialMap };
 const material = (ctx: Ctx, id?: string) => (id ? (ctx.map.get(id)?.name ?? `${id} (đã xóa)`) : "Không theo dõi");
 
 // Trường của lựa chọn: nhãn + cách hiển thị giá trị
@@ -32,6 +32,7 @@ const optionFields: { key: keyof VesselOption; label: string; show: (v: never, c
   { key: "name", label: "Tên", show: (v: { vi: string; en: string }) => `${v.vi} / ${v.en}` },
   { key: "description", label: "Mô tả", show: (v?: { vi: string }) => text(v?.vi) },
   { key: "priceDelta", label: "Phụ thu", show: (v: number) => formatMoney(v) },
+  { key: "unitPrice", label: "Giá bán theo lượng", show: (v?: number) => (v === undefined ? "chưa đặt" : formatMoney(v)) },
   { key: "available", label: "Đang bán", show: (v: boolean) => onOff(v) },
   { key: "materialId", label: "Nguyên liệu", show: (v: string | undefined, ctx) => material(ctx, v) },
   { key: "swatch", label: "Màu", show: (v?: string) => v ?? "không màu" },
@@ -42,31 +43,37 @@ const optionFields: { key: keyof VesselOption; label: string; show: (v: never, c
   { key: "exclusive", label: "Đứng một mình", show: (v?: boolean) => onOff(v) },
   { key: "shape", label: "Dáng hũ", show: (v: VesselOption["shape"]) => shapeLabels[v] ?? v },
   { key: "translucent", label: "Trong suốt", show: (v?: boolean) => onOff(v) },
-  {
-    key: "supportedSizeIds",
-    label: "Cỡ đổ được",
-    show: (v: string[], ctx) => ctx.sizes.filter((s) => v.includes(s.id)).map((s) => sizeLabel(s)).join(", ") || "chưa chọn",
-  },
+  { key: "jarType", label: "Loại hũ", show: (v?: string) => text(v) },
   { key: "lid", label: "Nắp", show: (v: VesselOption["lid"]) => (v ? `có (${formatDelta(v.priceDelta)})` : "không") },
 ];
 
+const sizeFields = (ctx: Ctx) => (a: VesselSize, b: VesselSize) =>
+  [
+    a.ml !== b.ml && arrow("Dung tích", `${a.ml}ml`, `${b.ml}ml`),
+    a.grams !== b.grams && arrow("Sáp đổ", `${a.grams}g`, `${b.grams}g`),
+    a.priceDelta !== b.priceDelta && arrow("Phụ thu cỡ", formatMoney(a.priceDelta), formatMoney(b.priceDelta)),
+    a.burnHours !== b.burnHours && arrow("Thời gian cháy", a.burnHours ? `${a.burnHours} giờ` : "chưa đo", b.burnHours ? `${b.burnHours} giờ` : "chưa đo"),
+    a.available !== b.available && arrow("Đang bán", onOff(a.available), onOff(b.available)),
+    a.materialId !== b.materialId && arrow("Mã hũ", material(ctx, a.materialId), material(ctx, b.materialId)),
+    a.lidMaterialId !== b.lidMaterialId && arrow("Nắp", material(ctx, a.lidMaterialId), material(ctx, b.lidMaterialId)),
+  ].filter(Boolean) as string[];
+
 function optionChanges(before: StepOption, after: StepOption, ctx: Ctx): string[] {
   const out: string[] = [];
+  const vessel = "sizes" in after;
   for (const f of optionFields) {
     const a = before[f.key as keyof StepOption];
     const b = after[f.key as keyof StepOption];
-    if (!same(a, b)) out.push(arrow(f.label, f.show(a as never, ctx), f.show(b as never, ctx)));
+    // Bước hũ: phụ thu của hũ là giá hũ
+    const label = vessel && f.key === "priceDelta" ? "Giá hũ" : f.label;
+    if (!same(a, b)) out.push(arrow(label, f.show(a as never, ctx), f.show(b as never, ctx)));
   }
-  // Mã hũ / nắp theo từng cỡ
-  const vb = before as VesselOption;
-  const va = after as VesselOption;
-  if ("sizeMaterials" in va || "sizeMaterials" in vb) {
-    for (const size of ctx.sizes) {
-      const x = vb.sizeMaterials?.[size.id] ?? {};
-      const y = va.sizeMaterials?.[size.id] ?? {};
-      if (x.materialId !== y.materialId) out.push(arrow(`Hũ ${sizeLabel(size)}`, material(ctx, x.materialId), material(ctx, y.materialId)));
-      if (x.lidMaterialId !== y.lidMaterialId) out.push(arrow(`Nắp ${sizeLabel(size)}`, material(ctx, x.lidMaterialId), material(ctx, y.lidMaterialId)));
-    }
+  // Các cỡ của hũ: thêm / bỏ / sửa từng cỡ
+  if (vessel) {
+    const sb = (before as VesselOption).sizes ?? [];
+    const sa = (after as VesselOption).sizes;
+    for (const item of listChanges(sb, sa, (x) => `cỡ ${sizeLabel(x)}`, sizeFields(ctx)))
+      out.push(item.subject ? `${item.subject[0].toUpperCase()}${item.subject.slice(1)}: ${item.kind === "edited" ? item.text : item.kind === "added" ? "thêm" : "bỏ"}` : item.text);
   }
   return out;
 }
@@ -89,15 +96,6 @@ function listChanges<T extends { id: string }>(before: T[], after: T[], name: (x
   if (!same(order(before), order(after))) items.push({ kind: "edited", text: "Đổi thứ tự" });
   return items;
 }
-
-const sizeFields = (a: SizeOption, b: SizeOption) =>
-  [
-    a.ml !== b.ml && arrow("Dung tích", `${a.ml}ml`, `${b.ml}ml`),
-    a.grams !== b.grams && arrow("Sáp đổ", `${a.grams}g`, `${b.grams}g`),
-    a.basePrice !== b.basePrice && arrow("Giá gốc", formatMoney(a.basePrice), formatMoney(b.basePrice)),
-    a.burnHours !== b.burnHours && arrow("Thời gian cháy", a.burnHours ? `${a.burnHours} giờ` : "chưa đo", b.burnHours ? `${b.burnHours} giờ` : "chưa đo"),
-    a.available !== b.available && arrow("Đang bán", onOff(a.available), onOff(b.available)),
-  ].filter(Boolean) as string[];
 
 const fieldFields = (a: TextFieldDef, b: TextFieldDef) =>
   [
@@ -139,16 +137,13 @@ function stepFields(a: CraftStep, b: CraftStep): string[] {
     ["gramsPerGram", "Hệ số gram", (v?: number) => String(v ?? 1)],
     ["maxBlend", "Phối tối đa", (v: number) => `${v} mục`],
     ["intensity", "Độ đậm", (v: never) => intensityText(v)],
-    ["scentPrice", "Phụ thu hương", (v?: { basePrice: number; standardLoad: number }) => (v ? `${v.basePrice.toLocaleString("vi-VN")} ₫ tới ${Math.round(v.standardLoad * 1000) / 10}%` : "tắt")],
   ];
   return rows.filter(([k]) => !same(x[k], y[k])).map(([k, label, show]) => arrow(label, show(x[k] as never), show(y[k] as never)));
 }
 
 function stepItems(before: CraftStep, after: CraftStep, map: MaterialMap): ChangeItem[] {
-  const ctx: Ctx = { map, sizes: after.kind === "vessel" ? [...(before.kind === "vessel" ? before.sizes : []), ...after.sizes.filter((s) => before.kind !== "vessel" || !before.sizes.some((x) => x.id === s.id))] : [] };
+  const ctx: Ctx = { map };
   const items: ChangeItem[] = stepFields(before, after).map((t) => ({ kind: "edited", text: t, view: "settings" }));
-  if (before.kind === "vessel" && after.kind === "vessel")
-    items.push(...listChanges(before.sizes, after.sizes, (s) => `Cỡ ${sizeLabel(s)}`, sizeFields, () => ({ view: "sizes" })));
   if (before.kind === "inputs" && after.kind === "inputs") {
     items.push(...listChanges(before.fields, after.fields, (f) => `Ô “${f.label.vi}”`, fieldFields));
     items.push(...listChanges(before.addons, after.addons, (a) => `Tuỳ chọn “${a.name.vi}”`, addonFields(ctx)));

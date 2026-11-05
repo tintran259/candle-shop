@@ -231,7 +231,7 @@ Với hũ và nắp, chỉ xét mã **của cỡ đã chọn**. Web hiện "Ch�
 | `DELETE` | `/api/admin/inventory/:id` | Xóa nguyên liệu. Đang được lựa chọn dùng thì trả `409` kèm danh sách nơi dùng, trừ khi có `?force=true`. |
 | `POST` | `/api/admin/inventory/:id/movements` | Ghi phiếu `{ type: "in", amount, totalCost, note? }`, `{ type: "out" \| "adjust", amount, note? }` hoặc `{ type: "cost", unitCost }`. Trả nguyên liệu sau cập nhật và phiếu vừa ghi. |
 | `POST` | `/api/admin/inventory/:id/produce` | Sản xuất một mẻ `{ count, totalCost?, note? }`. Bỏ `totalCost` thì tính theo giá nhập bình quân của nguyên liệu, nguyên liệu nào chưa có giá thì từ chối. Trừ nguyên liệu, cộng thành phẩm, ghi các phiếu `make` chung `batch`, tất cả trong một transaction. `POST /api/admin/inventory` nhận thêm `recipe` và `count` để làm mẻ đầu khi tạo. |
-| `GET` | `/api/admin/inventory/movements` | Lịch sử phiếu, lọc `?materialId=`, `?type=`, `?orderCode=`, phân trang, mới nhất trước. |
+| `GET` | `/api/admin/inventory/movements` | Lịch sử phiếu, lọc `?materialId=`, `?type=`, `?orderCode=`, `?batch=`, `?from=lọc `?materialId=`, `?type=`, `?orderCode=`, phân trang, mới nhất trước.to=` (ngày), `?q=` (tên nguyên liệu, ghi chú, mã đơn, mã mẻ), phân trang, mới nhất trước. Trả kèm tổng theo bộ lọc (số phiếu, tiền nhập, số phiếu cộng / trừ tồn) cho trang Phiếu kho. |
 
 **Kiểm tra dữ liệu:**
 
@@ -309,7 +309,7 @@ Trang **Kho nguyên liệu** (`/inventory`):
 - **Cột Tồn kho hiện "Đang giữ · Dùng được"** khi có đơn Đã thanh toán đang giữ nguyên liệu.
 - **Tạo nguyên liệu có tồn ban đầu** (từ Kho hoặc từ trang Thủ công) tự ghi phiếu "Tồn ban đầu".
 - **Ô chọn nguyên liệu** tìm không phân biệt dấu ("sap dau" ra "Sáp đậu nành").
-- **Phiếu kho gần đây:** 8 phiếu mới nhất của cả kho.
+- **Phiếu kho:** trang riêng `/inventory/movements` (xem [pages/stock-movements.md](./pages/stock-movements.md)), không hiện trên trang Kho.
 - **Ở các chỗ khác:**
   - menu "Kho nguyên liệu" có badge số nguyên liệu hết hàng;
   - chuông thông báo báo hết hàng / sắp hết, bấm mở thẳng trang Kho đã lọc;

@@ -7,16 +7,18 @@ import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
 import { fromFormValues, toFormValues, type ProductFormValues } from "@/components/products/product-form";
 import { ProductPreview } from "@/components/products/product-preview";
-import { RecipeCost, RecipeField } from "@/components/products/recipe-field";
+import { BuildSummary, PriceCheckLine, ProductBuildFields } from "@/components/products/product-build";
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCategories } from "@/hooks/use-categories";
 import { useCraftConfig } from "@/hooks/use-craft-config";
+import { useInventory } from "@/hooks/use-inventory";
 import type { ProductsApi } from "@/hooks/use-products";
 import { slugify } from "@/lib/craft/groups";
 import { formatNumber } from "@/lib/format";
+import { toMap } from "@/lib/inventory/stock";
 import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
-import { aromaLevelLabels, discountPercent, sizeLabels, toOptions } from "@/lib/products/labels";
+import { aromaLevelLabels, discountPercent, toOptions } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 
 // prefill: giá trị điền sẵn khi tạo mới (từ nến hủy đơn); onCreated chạy sau khi tạo mới thành công
@@ -29,9 +31,9 @@ const withCategory = (v: ProductFormValues, fallback?: string) => (v.categoryId 
 export function ProductDrawer({ open, product, prefill, source, api, onCreated, onClose }: Props) {
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
-  // Loại sáp lấy từ bước "wax" của trang Thủ công (nếu admin còn giữ bước này)
-  const waxStep = useCraftConfig().config.steps.find((st) => st.id === "wax");
-  const waxes = waxStep && waxStep.kind !== "inputs" ? waxStep.options : [];
+  // Nguyên liệu chọn theo các bước Thủ công (giống nến tự phối); công thức, cỡ trên web, loại sáp suy ra từ đó
+  const { materials } = useInventory();
+  const { config } = useCraftConfig();
   const { categories } = useCategories();
   // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
   const ready = useDeferredValue(true, false);
@@ -56,7 +58,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
   };
 
   const finish = (values: ProductFormValues) => {
-    const next = fromFormValues(values, product);
+    const next = fromFormValues(values, product, config, toMap(materials));
     // Sản phẩm mới lấy slug làm id — trùng slug mà không chặn sẽ ghi đè sản phẩm cũ
     if (api.products.some((p) => p.id !== product?.id && (p.slug === next.slug || p.id === next.id))) {
       return form.setFields([{ name: "slug", errors: ["Slug đã được dùng cho sản phẩm khác."] }]);
@@ -116,7 +118,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
         <Form
           form={form}
           layout="vertical"
-          initialValues={withCategory(prefill ?? toFormValues(product), categories.find((c) => !c.hidden)?.id)}
+          initialValues={withCategory(prefill ?? toFormValues(product, config), categories.find((c) => !c.hidden)?.id)}
           onFinish={finish}
           onValuesChange={(changed: Partial<ProductFormValues>) => {
             setDirty(true);
@@ -149,7 +151,10 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
               </Form.Item>
             </FormSection>
 
-            <FormSection title="Giá" description="Để trống giá giảm nếu không khuyến mãi.">
+            <ProductBuildFields required={!product || !!product.recipe?.length} />
+            <BuildSummary />
+
+            <FormSection title="Giá" description="Để trống giá giảm nếu không khuyến mãi. Giá vốn tính theo nguyên liệu đã chọn ở trên.">
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item name="price" label="Giá bán" rules={[{ required: true, type: "number", min: 1000, message: "Nhập giá bán." }]} style={{ marginBottom: 0 }}>
@@ -174,9 +179,11 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
                   </Form.Item>
                 </Col>
               </Row>
+              <PriceCheckLine />
             </FormSection>
 
-            <FormSection title="Phân loại & đặc tính" description="Dùng cho bộ lọc trên web và thông tin trang chi tiết.">
+
+            <FormSection title="Phân loại & đặc tính" description="Dùng cho bộ lọc trên web và thông tin trang chi tiết. Cỡ, loại sáp và thời gian cháy (nếu để trống) tự lấy theo hũ và sáp ở trên.">
               <Form.Item
                 name="categoryId"
                 label="Danh mục"
@@ -194,11 +201,6 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
               </Form.Item>
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
-                  <Form.Item name="size" label="Kích thước">
-                    <Radio.Group optionType="button" options={toOptions(sizeLabels)} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
                   <Form.Item name="aromaLevel" label="Độ thơm">
                     <Radio.Group optionType="button" options={toOptions(aromaLevelLabels)} />
                   </Form.Item>
@@ -209,21 +211,11 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
-                  <Form.Item name="waxType" label="Loại sáp" extra="Lấy từ danh sách sáp ở trang Thủ công.">
-                    <Select allowClear placeholder="Chọn loại sáp" options={waxes.map((w) => ({ value: w.name.vi, label: w.name.vi }))} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
                   <Form.Item name="burnTime" label="Thời gian cháy" style={{ marginBottom: 0 }}>
                     <InputNumber min={1} precision={0} suffix="giờ" placeholder="Chưa đo" style={{ width: "100%" }} />
                   </Form.Item>
                 </Col>
               </Row>
-            </FormSection>
-
-            <FormSection title="Công thức nguyên liệu" description="Lượng cho 1 cây. Giữ nguyên liệu khi nhận cọc và trừ Kho khi bắt đầu làm.">
-              <RecipeField required={!product} />
-              <RecipeCost />
             </FormSection>
 
             <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ☆ để đổi.`}>

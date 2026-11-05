@@ -3,8 +3,8 @@ import { mockInventory } from "@/lib/inventory/mock";
 import { averageCost, unitPrice } from "@/lib/costs";
 import { unitLabel } from "@/lib/craft/groups";
 import { batchNeeds } from "@/lib/inventory/production";
-import type { ManualMovement } from "@/lib/inventory/stock";
 import type { Inventory, Material, StockMovement } from "@/lib/inventory/types";
+import { guessJar, type ManualMovement } from "@/lib/inventory/stock";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE: GET/POST/PATCH /api/admin/inventory,
@@ -18,7 +18,10 @@ const store = createLocalStore<Inventory>("bo-inventory-v2", mockInventory, (inv
     // Bản lưu cũ: màu nhuộm tính theo cái, giờ tính theo ml, giữ nguyên con số
     const unit = m.category === "dye" && m.unit === "pcs" ? "ml" : m.unit;
     // Bản lưu trước khi có giá nhập: lấy giá mẫu của nguyên liệu cùng id
-    return "unitCost" in m ? { ...m, unit } : { ...m, unit, unitCost: mockCost.get(m.id) };
+    const cost = "unitCost" in m ? {} : { unitCost: mockCost.get(m.id) };
+    // Bản lưu trước khi hũ có loại hũ, dung tích: đoán theo tên "Hũ gốm trụ 150ml"
+    const jar = m.category === "vessel" && !("capacity" in m) ? guessJar(m.name) : {};
+    return { ...m, unit, ...cost, ...jar };
   }),
 }));
 

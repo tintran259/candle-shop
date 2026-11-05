@@ -6,12 +6,15 @@
 |---|---|---|
 | Tổng quan | Dashboard | |
 | Bán hàng | Đơn hàng | Đơn Chờ thanh toán, Đã thanh toán, Giao không thành, Đã hoàn về |
-| | Sản phẩm trưng bày, Danh mục, Sản phẩm hủy đơn, Thủ công | |
-| | Kho nguyên liệu | Nguyên liệu đã hết hàng |
 | | Khách hàng, Đánh giá, Mã giảm giá | |
+| Sản phẩm | Sản phẩm trưng bày, Danh mục, Sản phẩm hủy đơn | |
+| Xưởng | Thủ công | |
+| | Kho nguyên liệu (mục con Phiếu kho) | Nguyên liệu đã hết hàng |
 | Hệ thống | Cài đặt | |
 
-Nút ở đầu trang thu gọn menu. Trên điện thoại, menu mở từ cạnh màn hình.
+Nút ở đầu trang thu gọn menu: còn icon, tên nhóm thay bằng vạch ngăn. Trên điện thoại, menu mở từ cạnh màn hình.
+
+Logo và khối tài khoản luôn đứng yên, chỉ phần menu cuộn khi màn hình thấp. Mục đang mở có nền sáng hơn và vạch màu nhấn bên trái; mục con (Phiếu kho) có đường nhánh nối lên mục cha.
 
 Cuối menu là tên tài khoản và nút **Đăng xuất**. Chưa đăng nhập thì mọi trang chuyển về [Đăng nhập](./login.md).
 

@@ -18,10 +18,13 @@ type Props = {
   id?: string;
   ariaLabel?: string;
   style?: CSSProperties;
+  // Ô lọc: có chữ gợi ý và nút xóa để quay về "tất cả"
+  placeholder?: string;
+  allowClear?: boolean;
 };
 
 // Chọn nguyên liệu trong Kho, gom theo loại, hiện luôn số tồn để admin chọn đúng
-export function MaterialSelect({ value, onChange, materials, allowCreate, allowNone = true, id, ariaLabel, style }: Props) {
+export function MaterialSelect({ value, onChange, materials, allowCreate, allowNone = true, id, ariaLabel, style, placeholder, allowClear }: Props) {
   const label = (m: Material) => {
     const level = materialLevel(m);
     return (
@@ -56,6 +59,8 @@ export function MaterialSelect({ value, onChange, materials, allowCreate, allowN
       showSearch
       value={value}
       onChange={onChange}
+      placeholder={placeholder}
+      allowClear={allowClear}
       // Tìm không phân biệt dấu: "sap dau" hay "sáp đậu" đều ra "Sáp đậu nành"
       filterOption={(input, option) => fold((option as { search?: string } | undefined)?.search ?? "").includes(fold(input.trim()))}
       options={[

@@ -80,20 +80,18 @@ test("E2E 6 — nguyên liệu tạo từ Thủ công chỉ vào Kho khi Lưu; B
   await t.press("Escape", "Escape", 27);
   await sleep(600);
 
-  // 5. Hũ: tạo mã cho từng cỡ → chỉ vào Kho khi Lưu
+  // 5. Hũ: các cỡ lấy từ Kho theo Loại hũ — không tạo mã hũ mới từ trang Thủ công
   await go(base + "/craft?step=container", 2600);
   await clickText("main button", "Thêm lựa chọn");
   await sleep(1200);
   await type(`document.querySelector('.ant-drawer-open input#nameVi')`, "Hũ sứ");
-  await type(`document.querySelector('.ant-drawer-open input[aria-label="Tồn ban đầu · Hũ trong kho 150ml"]')`, 12);
+  await type(`document.querySelector('.ant-drawer-open input#price')`, 300000);
+  await t.pick(`document.querySelector('.ant-drawer-open [aria-label="Loại hũ trong Kho"]').closest('.ant-select')`, "Hộp thiếc", true);
+  await sleep(400);
   await clickText(".ant-drawer-open .ant-drawer-footer button", "Thêm lựa chọn");
   await sleep(900);
-  ok("5 Hũ mới: Kho chưa có mã hũ theo cỡ", !(await inKho("Hũ sứ 150ml")));
   const vrow = (await text("main .ant-table-row")).find((r) => r.includes("Hũ sứ"));
-  ok("5 Bảng hũ: từng cỡ hiện 'Chờ lưu'", (vrow?.match(/Chờ lưu/g) ?? []).length === 3, vrow);
+  ok("5 Hũ mới theo Loại hũ: cỡ 150ml, 200ml từ Kho, không có nguyên liệu chờ tạo", /150ml\s*300\.000/.test(vrow ?? "") && /200ml\s*300\.000/.test(vrow ?? "") && !vrow.includes("Chờ lưu"), vrow);
   await shot("p5-vessel.png");
-  await clickText("main .save-bar button", "Lưu thay đổi");
-  await sleep(800);
-  ok("5 Lưu → 3 mã hũ vào Kho", (await inKho("Hũ sứ 150ml"))?.stock === 12 && !!(await inKho("Hũ sứ 200ml")) && !!(await inKho("Hũ sứ 250ml")));
   console.log("logs:", t.logs);
 });

@@ -6,16 +6,17 @@ test("E2E 10 — Sản phẩm hủy đơn: 2 cách xử lý (tạo sản phẩm 
   const bo = t.base;
   const { ev, sleep, shot, click, clickText, type, pick, text, go, ok } = t;
   const D = ".ant-drawer-open";
+  // Bản ghi hủy đơn chưa có công thức: thêm ở phần Phụ kiện khác
   const recipe = async () => {
-    await clickText(`${D} button`, "Thêm nguyên liệu");
+    await clickText(`${D} button`, "Thêm phụ kiện");
     await sleep(300);
-    await pick(`[...document.querySelectorAll('${D} form .ant-select')].at(-1)`, "Sáp dừa", true);
-    await type(`document.querySelector('${D} input[id*=recipe][id*=quantity]')`, "150");
+    await pick(`document.querySelector('${D} [aria-label="Phụ kiện dòng 1"]').closest('.ant-select')`, "Sáp dừa", true);
+    await type(`document.querySelector('${D} input[aria-label="Lượng phụ kiện dòng 1"]')`, "150");
   };
   const P = base + "/cancelled-products";
-  const KEY = "bo-cancelled-products-v3";
+  const KEY = "bo-cancelled-products-v4";
   const store = () => ev(`JSON.parse(localStorage.getItem('${KEY}')||'null')`);
-  const products = () => ev("JSON.parse(localStorage.getItem('bo-products-v1')||'null')");
+  const products = () => ev("JSON.parse(localStorage.getItem('bo-products-v2')||'null')");
   const rows = () => ev(`document.querySelectorAll('.ant-table-tbody tr.ant-table-row').length`);
   const rowText = () => text(".ant-table-tbody tr.ant-table-row");
   const val = (id) => ev(`document.querySelector('${D} input#${id}')?.value`);
@@ -48,7 +49,7 @@ test("E2E 10 — Sản phẩm hủy đơn: 2 cách xử lý (tạo sản phẩm 
   await click(`document.querySelector('${D} .ant-drawer-close, ${D} button[aria-label="Close"]')`);
   await sleep(900);
   const unsaved = (await store());
-  ok("C4 Đóng không tạo: nến vẫn chờ xử lý, không thêm sản phẩm", unsaved.filter((c) => c.status === "pending").length === 2 && !(await products()), String(unsaved.length));
+  ok("C4 Đóng không tạo: nến vẫn chờ xử lý, không thêm sản phẩm", unsaved.filter((c) => c.status === "pending").length === 2 && !(await products())?.some((p) => p.slug === "beach-sunshine-2"), String(unsaved.length));
 
   // Tạo thật
   await go(P, 2500);

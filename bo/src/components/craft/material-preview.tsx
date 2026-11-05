@@ -1,15 +1,14 @@
 import { Avatar, Flex, Form, Tag, Typography } from "antd";
-import { NEW_MATERIAL, type OptionFormValues } from "@/components/craft/option-form";
-import type { SizeOption } from "@/lib/craft/types";
+import { NEW_MATERIAL, rowDefaults, type OptionFormValues, type SizeRow } from "@/components/craft/option-form";
 import { formatDelta, unitLabel } from "@/lib/craft/groups";
-import { formatNumber } from "@/lib/format";
+import { formatMoney, formatNumber } from "@/lib/format";
 import { levelMeta, materialLevel, type StockLevel } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 import { brand, radius } from "@/theme";
 
 // Thẻ xem trước đầu drawer — cập nhật theo từng thay đổi trong form; tồn kho lấy từ nguyên liệu đang gắn.
-// sizes = bước hũ: tồn kho tính theo từng cỡ (mã hũ riêng mỗi dung tích)
-export function MaterialPreview({ materials, groupLabel, sizes }: { materials: Material[]; groupLabel: string; sizes?: SizeOption[] }) {
+// rows = bước hũ: tồn kho tính theo từng cỡ (mã hũ riêng mỗi dung tích)
+export function MaterialPreview({ materials, groupLabel, rows, priceLabel }: { materials: Material[]; groupLabel: string; rows?: SizeRow[]; priceLabel: string }) {
   const form = Form.useFormInstance<OptionFormValues>();
   const v = Form.useWatch([], { form, preserve: true }) as OptionFormValues | undefined;
   if (!v) return null;
@@ -24,13 +23,13 @@ export function MaterialPreview({ materials, groupLabel, sizes }: { materials: M
 
   let level: StockLevel;
   let figure: { label: string; value: string; unit?: string };
-  if (sizes) {
-    // Hũ: đếm số cỡ còn hàng trên các cỡ đổ được
-    const supported = sizes.filter((s) => v.supportedSizeIds?.includes(s.id));
-    const levels = supported.map((s) => levelFor(v.sizeStock?.[s.id]?.jar, v.sizeStock?.[s.id]?.jarStock));
+  if (rows) {
+    // Hũ: đếm số cỡ còn hàng trên các cỡ đang bán
+    const selling = rows.filter((r) => v.sizes?.[r.key]?.on ?? rowDefaults(r, false).on);
+    const levels = selling.map((r) => levelFor(r.materialId));
     const inStock = levels.filter((l) => l !== "out").length;
-    level = levels.every((l) => l === "untracked") ? "untracked" : levels.every((l) => l === "out") ? "out" : levels.some((l) => l === "out" || l === "low") ? "low" : "ok";
-    figure = { label: "Cỡ còn hàng", value: `${inStock}/${supported.length}` };
+    level = !levels.length ? "out" : levels.every((l) => l === "untracked") ? "untracked" : levels.every((l) => l === "out") ? "out" : levels.some((l) => l === "out" || l === "low") ? "low" : "ok";
+    figure = { label: "Cỡ còn hàng", value: `${inStock}/${selling.length}` };
   } else {
     const linked = materials.find((m) => m.id === v.materialId);
     const isNew = v.materialId === NEW_MATERIAL;
@@ -72,7 +71,8 @@ export function MaterialPreview({ materials, groupLabel, sizes }: { materials: M
       </Flex>
 
       <Flex gap={12} style={{ marginTop: 20 }}>
-        <Figure label="Phụ thu mỗi hũ" value={v.price ? formatDelta(v.price) : "0 ₫"} />
+        {/* Hũ, giá theo lượng: số tiền; phụ thu: +số tiền */}
+        <Figure label={priceLabel} value={priceLabel === "Phụ thu mỗi hũ" ? (v.price ? formatDelta(v.price) : "0 ₫") : formatMoney(v.price ?? 0)} />
         <Figure {...figure} />
       </Flex>
     </section>

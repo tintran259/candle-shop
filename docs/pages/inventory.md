@@ -34,14 +34,17 @@ Mỗi việc chỉ có một chỗ làm, để không nhầm giữa "sửa thôn
 
 Hũ và nắp: mỗi dung tích là một nguyên liệu riêng. Màu nhuộm tính theo ml. Sáp pha trộn không còn dùng ở Thủ công, nguyên liệu vẫn còn trong Kho để admin tự quyết định.
 
+**Hũ:** nguyên liệu loại **Hũ & nắp** có thêm ô **Loại hũ** (gợi ý từ các loại đã có) và **Dung tích** (ml, bắt buộc khi có Loại hũ). Điền hai ô thì tên tự gợi ý "Hũ thạch cao 150ml" (đã sửa tên thì không ghi đè). Các mã cùng Loại hũ là các cỡ của một hũ ở [Thủ công](./craft.md#hũ-và-kích-thước). Nắp để trống Loại hũ. Hũ tự sản xuất (vd hũ thạch cao làm từ thạch cao) cũng điền như vậy.
+
 ## Trang danh sách
 
 - **Thẻ thống kê:** Nguyên liệu (kèm giá trị tồn kho), Sắp hết, Hết hàng, Chưa dùng.
 - **Khối Cần nhập thêm:** nguyên liệu hết hoặc sắp hết, kèm bước đang dùng.
 - **Bộ lọc:** trạng thái, tìm theo tên hoặc mã không dấu, loại.
 - **Sắp xếp:** cần nhập trước, tên A–Z, mới cập nhật.
-- **Bảng:** tồn kho kèm thanh mức, ngưỡng, nơi dùng trên web, cập nhật, nút **+** nhập nhanh.
-- **Phiếu kho gần đây:** 8 phiếu mới nhất.
+- **Bảng:** tồn kho kèm thanh mức, **giá bình quân**, ngưỡng, nơi dùng trên web, cập nhật, nút **+** nhập nhanh.
+- **Giá bình quân** trên bảng: nguyên liệu tính theo gram hiện giá **100 g** (giá 1 g thường lẻ, khó đọc), ml và cái hiện giá 1 đơn vị. Vd sáp đậu nành 90 ₫/g hiện "9.000 ₫ / 100 g". Chưa có giá thì ghi "Chưa có giá".
+- **Phiếu kho:** không hiện trên trang này; xem ở trang [Phiếu kho](./stock-movements.md) (mục con dưới Kho nguyên liệu trên sidebar) hoặc lịch sử trong drawer từng nguyên liệu.
 
 ## Phiếu kho
 
@@ -61,6 +64,7 @@ Không sửa, không xóa phiếu. Ghi sai thì ghi phiếu ngược lại.
 ## Giá nhập
 
 - Mỗi nguyên liệu có **giá nhập bình quân** mỗi đơn vị (1 g, 1 ml, 1 cái), giữ 2 chữ số lẻ, ví dụ 59,8 ₫/g.
+- **Hiện giá:** từ 1.000 ₫ trở lên làm tròn tới 100 ₫, vd 16.064,52 ₫ hiện 16.100 ₫. Dưới 1.000 ₫ (giá mỗi gram, ml) giữ số lẻ, vd 59,8 ₫/g, vì làm tròn 100 ₫ sẽ lệch quá xa. Chỉ làm tròn lúc hiện; số lưu giữ 2 chữ số lẻ để giá bình quân và giá vốn không lệch dồn qua nhiều lần nhập.
 - **Giá đến từ tiền thật đã trả.** Phiếu **Nhập thêm** (trong thẻ tồn kho hoặc nút Phiếu kho) **bắt buộc** ghi **Tổng tiền lô**, hoặc tick **Không mất tiền** cho hàng tặng, mẫu thử. Thiếu cả hai thì không ghi được phiếu và báo đỏ ngay ô tiền.
 - Hệ thống chia tổng tiền cho lượng nhập ra giá lô, rồi tính lại giá bình quân: (tồn × giá cũ + lượng nhập × giá lô) ÷ tổng. Hết tồn hoặc chưa có giá thì lấy giá lô. Hàng không mất tiền tính giá lô 0 ₫, nên kéo giá bình quân xuống.
 - Phần còn lại trong kho luôn mang giá bình quân hiện tại, đã gộp mọi lần nhập trước. Xuất kho, trừ theo đơn, kiểm kê chỉ đổi số lượng, không đổi giá. Ví dụ:
@@ -78,7 +82,7 @@ Không sửa, không xóa phiếu. Ghi sai thì ghi phiếu ngược lại.
 - Lịch sử kho hiện tiền lô và giá lô của từng phiếu nhập, "Không mất tiền" với hàng tặng.
 - Nguyên liệu tạo nhanh từ trang Thủ công (kèm tồn ban đầu) chưa có giá. Thẻ tồn kho hiện "Chưa có giá nhập" kèm nút **Đặt giá**.
 - **Giá trị tồn kho** = tồn × giá nhập của các nguyên liệu có theo dõi tồn và có giá.
-- Giá nhập dùng tính giá vốn ở chi tiết đơn, form Sản phẩm trưng bày, popup Tự phối nến và thẻ Lãi gộp trên Dashboard.
+- Giá nhập dùng tính giá vốn ở chi tiết đơn, cột Giá vốn tối thiểu ở [Thủ công](./craft.md#giá-bán-và-giá-vốn), form Sản phẩm trưng bày, popup Tự phối nến và thẻ Lãi gộp trên Dashboard.
 - Dữ liệu cũ chưa có giá nhập được điền giá mẫu theo mã nguyên liệu. Giá mẫu chỉ để tham khảo, cần sửa theo giá thật của xưởng.
 
 ## Sản xuất
@@ -136,6 +140,6 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `workshop-cost`: Sửa giá theo lần mua (kg, g) tự chia ra giá mỗi gram, tổng tiền lô ở phiếu Nhập thêm và Phiếu kho tự ra giá lô và tính lại bình quân, lịch sử ghi tiền lô, giá trị tồn kho.
 - `logic/costs-capacity`: chia tổng tiền ra giá mỗi đơn vị, quy đổi kg/lít, điền lại theo 1 kg, tiền lô bắt buộc hoặc Không mất tiền, xem trước giá lô và bình quân, giá nhập bình quân, tiền nguyên liệu và nguyên liệu chưa có giá.
 - `inventory`: thêm nguyên liệu (chặn khi có tồn ban đầu mà chưa ghi tiền mua, tự ra giá mỗi gam, hàng không mất tiền, tồn 0 chưa có giá), đơn vị, ngưỡng mặc định, nhập (chặn thiếu tiền lô, giá từ lô đầu tiên), xuất (chặn quá tồn), kiểm kê, nhập nhanh từ bảng (chặn thiếu tiền lô, bình quân tính cả hàng tặng), tìm không dấu, lọc, sửa mã nội bộ không đụng giá.
-- `inventory-ui`: lọc Hết hàng và Chưa dùng từ đường dẫn, sắp xếp tên, nhập thêm và Phiếu kho gần đây, lựa chọn đang dùng nguyên liệu, hũ theo từng cỡ ở Thủ công, nguyên liệu không theo dõi tồn (sửa giá trong form, không có phiếu), Nhập thêm thiếu tiền lô bị chặn và Không mất tiền, ô Tổng tiền đã trả luôn hiện khi thêm nguyên liệu (có tồn thì bắt buộc, chưa bấm lưu thì chưa báo đỏ, tự ra giá mỗi gam), tồn 0 mà ghi tiền thì báo và hết báo khi ghi số tồn, để trống thì tạo chưa có giá, form nguyên liệu đã có không có ô giá kiểu mua hàng và Sửa giá ghi lịch sử, Lưu thông tin sau khi nhập kho giữ giá bình quân mới, phiếu gõ dở chặn lưu và hỏi khi đóng.
+- `inventory-ui`: lọc Hết hàng và Chưa dùng từ đường dẫn, sắp xếp tên, nhập thêm hiện ở trang Phiếu kho, lựa chọn đang dùng nguyên liệu, hũ theo từng cỡ ở Thủ công, nguyên liệu không theo dõi tồn (sửa giá trong form, không có phiếu), Nhập thêm thiếu tiền lô bị chặn và Không mất tiền, ô Tổng tiền đã trả luôn hiện khi thêm nguyên liệu (có tồn thì bắt buộc, chưa bấm lưu thì chưa báo đỏ, tự ra giá mỗi gam), tồn 0 mà ghi tiền thì báo và hết báo khi ghi số tồn, để trống thì tạo chưa có giá, form nguyên liệu đã có không có ô giá kiểu mua hàng và Sửa giá ghi lịch sử, Lưu thông tin sau khi nhập kho giữ giá bình quân mới, phiếu gõ dở chặn lưu và hỏi khi đóng.
 - `logic/inventory`: mức tồn, phiếu kho, bộ lọc gồm Không theo dõi và Chưa dùng, 3 cách sắp xếp.
 - Giữ nguyên liệu (Đang giữ, Dùng được) ở `orders-decisions` và `logic/products`.

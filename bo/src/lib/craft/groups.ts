@@ -1,6 +1,6 @@
 // Tiện ích chung cho trình dựng Thủ công (nhãn, tồn kho, định dạng)
 import { formatMoney } from "@/lib/format";
-import type { SizeOption, Unit, VesselShape } from "@/lib/craft/types";
+import type { Unit, VesselShape, VesselSize } from "@/lib/craft/types";
 
 // Thông báo đầu trang Thủ công (dùng cả trong skeleton để khung không đổi chiều cao)
 export const CRAFT_PREVIEW_NOTICE =
@@ -11,7 +11,7 @@ export const unitLabel: Record<Unit, string> = { g: "g", ml: "ml", pcs: "cái" }
 export const unitNames: Record<Unit, string> = { pcs: "Cái", g: "Gram", ml: "Mililít" };
 
 // Tên cỡ khách thấy: dung tích hũ (vd "150ml"); full = kèm lượng sáp
-export const sizeLabel = (s: Pick<SizeOption, "ml" | "grams">, full = false) => (full ? `${s.ml}ml · ${s.grams}g sáp` : `${s.ml}ml`);
+export const sizeLabel = (s: Pick<VesselSize, "ml" | "grams">, full = false) => (full ? `${s.ml}ml · ${s.grams}g sáp` : `${s.ml}ml`);
 
 export const shapeLabels: Record<VesselShape, string> = {
   tumbler: "Cốc",

@@ -23,6 +23,7 @@ const buildMenu = (badges: Record<NonNullable<NavItem["badge"]>, number>): MenuP
     children: group.items.map((item) => ({
       key: item.path,
       icon: item.icon,
+      className: item.sub ? "nav-sub" : undefined,
       label: (
         <Flex justify="space-between" align="center">
           {item.label}
@@ -76,21 +77,23 @@ export function AppLayout() {
           margin: mobile ? 0 : `${GAP}px 0 ${GAP}px ${GAP}px`,
           height: `calc(100vh - ${GAP * 2}px)`,
           borderRadius: radius.card,
-          overflow: "auto",
+          // Chỉ phần menu cuộn; logo và khối tài khoản đứng yên
+          overflow: "hidden",
           zIndex: 100,
           // Mobile khi ẩn: không chiếm chỗ, không để lộ góc bo
           visibility: mobile && !open ? "hidden" : undefined,
         }}
       >
         <Link to="/" aria-label="2510 Scented Candle — Back office">
-          <Flex vertical align="center" gap={8} style={{ padding: compact ? "20px 0 16px" : "28px 0 20px" }}>
+          <Flex vertical align="center" gap={6} className="sider-brand" style={{ padding: compact ? "20px 0 16px" : "24px 0 18px" }}>
+            {/* Thu gọn: chỉ chữ số 2510 có ngọn lửa; mở rộng: đủ logo kèm CANDLE */}
             <img
-              src="/logo-2510-vertical-light.png"
-              alt="2510 Scented Candle"
-              style={{ height: compact ? 32 : 60, width: "auto", transition: "height .2s ease-out" }}
+              src={compact ? "/logo-2510-mark-light.png" : "/logo-2510-light.png"}
+              alt="2510 Candle"
+              style={{ height: compact ? 30 : 64, width: "auto", transition: "height .2s ease-out" }}
             />
             {!compact && (
-              <Typography.Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, letterSpacing: "0.24em" }}>
+              <Typography.Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, letterSpacing: "0.3em" }}>
                 BACK OFFICE
               </Typography.Text>
             )}
@@ -106,14 +109,15 @@ export function AppLayout() {
             navigate(key);
             setOpen(false);
           }}
-          style={{ flex: 1, borderInlineEnd: 0 }}
+          className="sider-menu"
+          style={{ flex: 1, minHeight: 0, borderInlineEnd: 0 }}
         />
 
         <Flex
           align="center"
           gap={12}
           justify={compact ? "center" : "flex-start"}
-          style={{ margin: 12, padding: 12, borderRadius: radius.inner, background: "rgba(255,255,255,0.1)" }}
+          style={{ margin: 12, padding: compact ? 8 : "10px 8px 10px 12px", borderRadius: radius.inner, background: "rgba(255,255,255,0.1)", flexShrink: 0 }}
         >
           <Avatar style={{ background: brand.peanut, color: brand.ink, fontWeight: 600, flexShrink: 0 }}>AD</Avatar>
           {!compact && (

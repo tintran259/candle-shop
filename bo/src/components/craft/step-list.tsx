@@ -37,7 +37,7 @@ export function StepList({ steps, active, withIssues, changed, api, onSelect, on
     >
       {!steps.length && (
         <Typography.Paragraph type="secondary" style={{ margin: 4, fontSize: 13 }}>
-          Chưa có bước nào. Bắt đầu bằng bước <strong>Hũ & kích thước</strong> (bắt buộc, quyết định giá gốc), rồi thêm Sáp, Mùi hương…
+          Chưa có bước nào. Bắt đầu bằng bước <strong>Hũ & kích thước</strong> (bắt buộc, giá hũ và kích thước), rồi thêm Sáp, Mùi hương…
         </Typography.Paragraph>
       )}
       <Flex vertical gap={6} role="list" aria-label="Các bước">

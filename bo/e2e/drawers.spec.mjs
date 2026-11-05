@@ -16,7 +16,7 @@ test("Kiểm tra chức năng sau khi tối ưu drawer", async ({ t }) => {
   const ok = t.ok;
   await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await send("Page.navigate", { url: base + "/" }); await sleep(2500);
-  await ev("localStorage.removeItem('bo-products-v1');localStorage.removeItem('bo-discounts-v1');localStorage.removeItem('bo-craft-catalog-v2')");
+  await ev("localStorage.removeItem('bo-products-v2');localStorage.removeItem('bo-discounts-v1');localStorage.removeItem('bo-craft-catalog-v2')");
 
   // Đơn hàng: mở, skeleton rồi nội dung, Back đóng, đổi trang bảng sau khi đóng không mở lại drawer
   await send("Page.navigate", { url: base + "/orders?limit=10&page=1" }); await sleep(2500);
@@ -89,5 +89,5 @@ test("Kiểm tra chức năng sau khi tối ưu drawer", async ({ t }) => {
   await sleep(1800);
   ok("tìm kiếm: mở mã giảm giá", (await title()).includes("WELCOME"), await loc());
   if (out) { const r = await send("Page.captureScreenshot", { format: "png" }); fs.writeFileSync(out + "/func-last.png", Buffer.from(r.data, "base64")); }
-  await ev("localStorage.removeItem('bo-products-v1')");
+  await ev("localStorage.removeItem('bo-products-v2')");
 });

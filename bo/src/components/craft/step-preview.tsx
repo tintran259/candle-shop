@@ -1,10 +1,10 @@
-import { pickOption } from "@/lib/craft/selection";
+import { jarFrom, pickOption } from "@/lib/craft/selection";
 import { CheckOutlined } from "@ant-design/icons";
 import { Checkbox, Flex, Input, Slider, Tag, Typography } from "antd";
 import { useState } from "react";
-import { intensityLabels } from "@/lib/craft/steps";
+import { intensityLabels, optionPriceText } from "@/lib/craft/steps";
 import { sizeLabel } from "@/lib/craft/groups";
-import type { CraftStep, IntensityLevel, StepOption, VesselOption, VesselStep } from "@/lib/craft/types";
+import type { CraftStep, IntensityLevel, StepOption, VesselOption } from "@/lib/craft/types";
 import { formatMoney } from "@/lib/format";
 import { lidLevel, optionLevel, sellable as canSell, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import { brand } from "@/theme";
@@ -56,7 +56,7 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
                 {on && <CheckOutlined style={{ fontSize: 12 }} />}
               </span>
               <span style={{ fontSize: 12 }}>{o.name.vi}</span>
-              <span style={{ fontSize: 11, color: "#7a6a5c" }}>{out ? "Tạm hết" : price(o.priceDelta)}</span>
+              <span style={{ fontSize: 11, color: "#7a6a5c" }}>{out ? "Tạm hết" : optionPriceText(step, o)}</span>
             </button>
           );
         })}
@@ -91,7 +91,7 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
               )}
               <span style={{ fontWeight: 600, fontSize: 13 }}>{o.name.vi}</span>
               {o.description?.vi && <span style={{ fontSize: 11, color: "#7a6a5c" }}>{o.description.vi}</span>}
-              <span style={{ fontSize: 12 }}>{price(o.priceDelta)}</span>
+              <span style={{ fontSize: 12 }}>{vessel ? `từ ${formatMoney(jarFrom(o as VesselOption))}` : optionPriceText(step, o)}</span>
               {out && <Tag style={{ marginInlineEnd: 0, fontSize: 11 }}>Tạm hết</Tag>}
             </button>
           );
@@ -100,7 +100,7 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
 
       {step.kind === "vessel" && (() => {
         const vessel = options.find((o) => o.id === picked[0]) as VesselOption | undefined;
-        return vessel && <VesselSizes key={vessel.id} step={step} vessel={vessel} map={map} />;
+        return vessel && <VesselSizes key={vessel.id} vessel={vessel} map={map} />;
       })()}
 
       {step.kind === "blend" && <BlendBody step={step} picked={picked.filter((id) => options.some((o) => o.id === id))} options={options} />}
@@ -109,8 +109,8 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
 }
 
 // Cỡ của hũ đang chọn: cỡ hết mã hũ trong Kho thì khóa riêng cỡ đó; nắp cũng tính theo cỡ
-function VesselSizes({ step, vessel, map }: { step: VesselStep; vessel: VesselOption; map: MaterialMap }) {
-  const sizes = step.sizes.filter((s) => s.available && vessel.supportedSizeIds.includes(s.id));
+function VesselSizes({ vessel, map }: { vessel: VesselOption; map: MaterialMap }) {
+  const sizes = vessel.sizes.filter((s) => s.available);
   const open = (id: string) => vesselSizeLevel(vessel, id, map) !== "out";
   const [size, setSize] = useState(() => sizes.find((s) => open(s.id))?.id);
   const [lid, setLid] = useState(false);
@@ -127,7 +127,7 @@ function VesselSizes({ step, vessel, map }: { step: VesselStep; vessel: VesselOp
             return (
               <button key={s.id} type="button" role="radio" aria-checked={s.id === size} disabled={out} className="sf-chip" data-on={s.id === size} onClick={() => setSize(s.id)}>
                 {sizeLabel(s)}
-                {out ? " · Hết hàng" : `${s.burnHours ? ` · ~${s.burnHours} giờ` : ""} · ${formatMoney(s.basePrice)}`}
+                {out ? " · Hết hàng" : `${s.burnHours ? ` · ~${s.burnHours} giờ` : ""} · ${formatMoney(vessel.priceDelta + s.priceDelta)}`}
               </button>
             );
           })}
@@ -177,7 +177,6 @@ function BlendBody({ step, picked, options }: { step: Extract<CraftStep, { kind:
             {(Object.keys(intensityLabels) as IntensityLevel[]).map((l) => (
               <button key={l} type="button" className="sf-chip" data-on={l === level} onClick={() => setLevel(l)}>
                 {intensityLabels[l]}
-                {step.intensity!.priceDelta[l] ? ` ${price(step.intensity!.priceDelta[l])}` : ""}
               </button>
             ))}
           </Flex>

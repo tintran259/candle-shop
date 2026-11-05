@@ -9,9 +9,20 @@ const rows = (page) => page.locator("main tr.ant-table-row");
 const rowNames = (page) => rows(page).evaluateAll((list) => list.map((r) => r.querySelector("td strong")?.textContent?.trim()));
 const stat = (page, label) => page.locator("main .ant-card").filter({ hasText: label }).first().locator(".ant-statistic-content");
 const drawer = (page) => page.locator(".ant-drawer-open");
-const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-products-v1") ?? "null"));
+const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-products-v2") ?? "null"));
 // antd Select: bấm vào ô; có search thì gõ để lọc (danh sách ảo chỉ dựng các mục đang hiện) rồi chọn
 // Danh sách lọc lại sau khi gõ có lúc làm cú bấm trượt khỏi option — thử lại tới khi ô hiện đúng lựa chọn
+// Chọn nguyên liệu giống nến tự phối: hũ + cỡ, sáp, không mùi, bấc, không màu (các bước bắt buộc ở cấu hình mẫu)
+const pickBasics = async (d, jar = "Thủy tinh trong", wax = "Sáp đậu nành") => {
+  const step = (name: string) => d.getByRole("region", { name, exact: true });
+  await step("Hũ nến").getByRole("radio", { name: new RegExp(jar) }).click();
+  await step("Hũ nến").getByRole("radio", { name: /^150ml/ }).click();
+  await step("Sáp").getByRole("checkbox", { name: new RegExp(wax) }).click();
+  await step("Mùi hương").getByRole("checkbox", { name: /Không mùi/ }).click();
+  await step("Bấc").getByRole("radio", { name: /Bấc cotton/ }).click();
+  await step("Màu sáp").getByRole("checkbox", { name: /Không màu/ }).click();
+};
+
 const pickOption = async (page, select, text, search = false) => {
   const field = select.locator("xpath=ancestor::*[contains(concat(' ', normalize-space(@class), ' '), ' ant-select ')][1]");
   await expect(async () => {
@@ -100,7 +111,7 @@ test("Thao tác hàng loạt: ẩn, hiện, xóa", async ({ page }) => {
   expect((await saved(page)).map((p) => p.id)).not.toContain("brown-relac");
 });
 
-test("Thêm sản phẩm: slug theo tên, kiểm tra giá, danh mục, công thức, ảnh", async ({ page }) => {
+test("Thêm sản phẩm: slug theo tên, nguyên liệu chọn giống nến tự phối, giá dưới nguyên liệu, danh mục, ảnh", async ({ page }) => {
   await page.getByRole("button", { name: "Thêm sản phẩm" }).click();
   const d = drawer(page);
   await expect(d.getByText("Thêm sản phẩm").first()).toBeVisible();
@@ -108,7 +119,13 @@ test("Thêm sản phẩm: slug theo tên, kiểm tra giá, danh mục, công th�
   // Bỏ trống: báo từng ô
   await d.locator(".ant-drawer-footer").getByRole("button", { name: "Thêm sản phẩm" }).click();
   await expect(d.getByText("Nhập tên sản phẩm.")).toBeVisible();
-  await expect(d.getByText("Thêm ít nhất một nguyên liệu.")).toBeVisible();
+  await expect(d.getByText(/Còn \d+ bước cần chọn lại\./)).toBeVisible();
+  // Lỗi từng bước hiện ngay dưới bước đó
+  await expect(d.getByRole("region", { name: "Hũ nến", exact: true }).getByRole("alert")).toContainText("Chọn hũ.");
+  // Giá nằm dưới phần nguyên liệu
+  const order = await d.locator("section[aria-label]").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+  expect(order.indexOf("Giá")).toBeGreaterThan(order.indexOf("Tóm tắt nguyên liệu"));
+  expect(order.indexOf("Tóm tắt nguyên liệu")).toBeGreaterThan(order.indexOf("Nguyên liệu"));
   await expect(d.getByText("Thêm ít nhất một ảnh.")).toBeVisible();
 
   await d.locator("#name").fill("Nến Hoa Nhài");
@@ -128,16 +145,14 @@ test("Thêm sản phẩm: slug theo tên, kiểm tra giá, danh mục, công th�
   await d.locator("#salePrice").fill("400000");
   await expect(d.getByText("Giảm 20% so với giá bán")).toBeVisible();
 
-  // Công thức: không cho trùng nguyên liệu
-  await d.getByRole("button", { name: "Thêm nguyên liệu" }).click();
-  await d.getByRole("button", { name: "Thêm nguyên liệu" }).click();
-  await pickOption(page, d.getByLabel("Nguyên liệu dòng 1"), "Sáp đậu nành", true);
-  await d.getByLabel("Lượng dòng 1").fill("150");
-  await pickOption(page, d.getByLabel("Nguyên liệu dòng 2"), "Sáp đậu nành", true);
-  await d.getByLabel("Lượng dòng 2").fill("10");
-  await d.locator(".ant-drawer-footer").getByRole("button", { name: "Thêm sản phẩm" }).click();
-  await expect(d.getByText("Nguyên liệu này đã có trong công thức.").first()).toBeVisible();
-  await d.getByRole("button", { name: "Xóa dòng 2" }).click();
+  // Nguyên liệu chọn giống nến tự phối; tóm tắt hiện công thức trừ Kho, cỡ trên web, số cây Kho đủ làm
+  await pickBasics(d);
+  const summary = d.getByRole("group", { name: "Tóm tắt nguyên liệu" });
+  await expect(summary).toContainText("Thủy tinh trong 150ml");
+  await expect(summary).toContainText("Cỡ trên web: Nhỏ (150ml, 120 g sáp");
+  await expect(summary.getByRole("list", { name: "Công thức 1 cây" })).toContainText("Sáp đậu nành");
+  await expect(summary.getByRole("status")).toContainText("Kho đủ làm");
+  await expect(d.getByRole("group", { name: "Giá vốn 1 cây" })).toContainText("Vốn");
 
   await d.locator("input[type=file]").setInputFiles({ name: "nen.png", mimeType: "image/png", buffer: PNG });
   await expect(d.getByRole("button", { name: "Ảnh 1 đang là ảnh chính" })).toBeVisible();
@@ -148,7 +163,23 @@ test("Thêm sản phẩm: slug theo tên, kiểm tra giá, danh mục, công th�
   await d.locator(".ant-drawer-footer").getByRole("button", { name: "Thêm sản phẩm" }).click();
   await expect(page.getByText("Đã thêm Nến Hoa Nhài Trắng")).toBeVisible();
   const created = (await saved(page)).find((p) => p.slug === "hoa-nhai");
-  expect(created).toMatchObject({ id: "hoa-nhai", price: 500_000, salePrice: 400_000, categoryId: "nature", recipe: [{ materialId: "wax-soy", quantity: 150 }], status: "active", isNew: true });
+  expect(created).toMatchObject({
+    id: "hoa-nhai",
+    price: 500_000,
+    salePrice: 400_000,
+    categoryId: "nature",
+    // Công thức suy ra từ lựa chọn; cỡ trên web theo dung tích, loại sáp theo tên sáp, giờ cháy theo cỡ
+    recipe: [
+      { materialId: "jar-clear-glass-150", quantity: 1 },
+      { materialId: "wax-soy", quantity: 120 },
+      { materialId: "wick-cotton", quantity: 1 },
+    ],
+    size: "small",
+    waxType: "Sáp đậu nành",
+    burnTime: 25,
+    status: "active",
+    isNew: true,
+  });
   await expect(stat(page, "Sản phẩm")).toHaveText("9");
 });
 
@@ -158,9 +189,7 @@ test("Slug trùng sản phẩm khác bị chặn", async ({ page }) => {
   await d.locator("#name").fill("Moon Morning");
   await d.locator(".ant-drawer-footer").getByRole("button", { name: "Thêm sản phẩm" }).click();
   // Thiếu ảnh và công thức báo trước; slug trùng báo khi các ô khác hợp lệ
-  await d.getByRole("button", { name: "Thêm nguyên liệu" }).click();
-  await pickOption(page, d.getByLabel("Nguyên liệu dòng 1"), "Sáp dừa", true);
-  await d.getByLabel("Lượng dòng 1").fill("100");
+  await pickBasics(d, "Hũ thiếc", "Sáp dừa");
   await d.locator("#price").fill("300000");
   await d.locator("input[type=file]").setInputFiles({ name: "nen.png", mimeType: "image/png", buffer: PNG });
   await d.locator(".ant-drawer-footer").getByRole("button", { name: "Thêm sản phẩm" }).click();
@@ -169,15 +198,15 @@ test("Slug trùng sản phẩm khác bị chặn", async ({ page }) => {
 
 test("Sản phẩm cũ chưa có công thức: có nhãn, sửa không bắt buộc công thức", async ({ page }) => {
   await page.evaluate(() => {
-    const list = JSON.parse(localStorage.getItem("bo-products-v1") ?? "null");
-    if (list) localStorage.setItem("bo-products-v1", JSON.stringify(list.map((p) => (p.id === "citrus-bloom" ? { ...p, recipe: undefined } : p))));
+    const list = JSON.parse(localStorage.getItem("bo-products-v2") ?? "null");
+    if (list) localStorage.setItem("bo-products-v2", JSON.stringify(list.map((p) => (p.id === "citrus-bloom" ? { ...p, recipe: undefined } : p))));
   });
   // Lần đầu chưa có bản lưu: tạo bản lưu bằng một thay đổi rồi bỏ công thức
   if (!(await saved(page))) {
     await page.getByRole("switch", { name: "Đang bán: Lavender Dream" }).click();
     await page.evaluate(() => {
-      const list = JSON.parse(localStorage.getItem("bo-products-v1"));
-      localStorage.setItem("bo-products-v1", JSON.stringify(list.map((p) => (p.id === "citrus-bloom" ? { ...p, recipe: undefined } : p))));
+      const list = JSON.parse(localStorage.getItem("bo-products-v2"));
+      localStorage.setItem("bo-products-v2", JSON.stringify(list.map((p) => (p.id === "citrus-bloom" ? { ...p, recipe: undefined } : p))));
     });
   }
   await page.reload();
@@ -205,4 +234,33 @@ test("Sửa: đổi ảnh chính, xóa sản phẩm trong drawer", async ({ page
   await page.locator(".ant-popconfirm").getByRole("button", { name: "Xóa" }).click();
   await expect(page.getByText("Đã xóa Moon Morning")).toBeVisible();
   await expect(rows(page).filter({ hasText: "Moon Morning" })).toHaveCount(0);
+});
+
+test("Phụ kiện khác có giá bán riêng: so với vốn, gợi ý giá, cộng vào giá tham khảo", async ({ page }) => {
+  await page.getByRole("button", { name: "Thêm sản phẩm" }).click();
+  const d = drawer(page);
+  await pickBasics(d);
+  const summary = d.getByRole("group", { name: "Tóm tắt nguyên liệu" });
+  const craft = (await summary.getByText("Giá theo Thủ công").locator("..").innerText()).replace(/\D/g, "");
+
+  await d.getByRole("button", { name: "Thêm phụ kiện" }).click();
+  await pickOption(page, d.getByRole("combobox", { name: "Phụ kiện dòng 1" }), "Hộp quà cứng", true);
+  await d.getByLabel("Lượng phụ kiện dòng 1").fill("1");
+  const check = d.getByRole("group", { name: "Giá vốn phụ kiện dòng 1" });
+  await expect(check).toContainText("Vốn 25.000");
+  await expect(check).toContainText("Chưa tính tiền khách");
+
+  // Giá bán thấp hơn vốn: báo đỏ, có gợi ý theo hệ số và lãi tối thiểu ở Cài đặt
+  await d.getByLabel("Giá bán phụ kiện dòng 1").fill("20000");
+  await expect(check).toContainText("Thấp hơn vốn 5.000");
+  await check.getByRole("button", { name: /Gợi ý giá phụ kiện dòng 1/ }).click();
+  await expect(d.getByLabel("Giá bán phụ kiện dòng 1")).toHaveValue("65.000");
+  await expect(check).toContainText("lãi 62%");
+
+  // Giá tham khảo = giá theo Thủ công + phụ kiện; Dùng giá này điền vào giá bán
+  await expect(summary).toContainText(/Phụ kiện khác\s*65\.000/);
+  const total = Number(craft) + 65_000;
+  await expect(summary.getByText("Giá tham khảo").locator("..")).toContainText(total.toLocaleString("vi-VN"));
+  await summary.getByRole("button", { name: "Dùng giá này" }).click();
+  await expect(d.locator("#price")).toHaveValue(total.toLocaleString("vi-VN"));
 });

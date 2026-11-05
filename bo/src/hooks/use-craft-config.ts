@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { defaultCraftConfig } from "@/lib/craft/default-config";
-import { DEFAULT_SCENT_PRICE, DYE_RATIO } from "@/lib/craft/steps";
+import { DYE_RATIO } from "@/lib/craft/steps";
 import { isOptionStep, newStep } from "@/lib/craft/steps";
+import { splitSharedSizes, toAmountPricing } from "@/lib/craft/legacy";
 import type { CraftConfig, CraftStep, StepKind, StepOption } from "@/lib/craft/types";
 import { createMaterials } from "@/hooks/use-inventory";
 import { materialUsage } from "@/lib/inventory/stock";
@@ -21,17 +22,16 @@ function dropWaxBlend(config: CraftConfig): CraftConfig {
   return { ...config, steps };
 }
 
-// Bản lưu cũ: thêm phụ thu hương chuẩn; màu sáp cho chọn nhiều, tính theo ml; trang trí cho chọn nhiều; Không màu, Không trang trí đứng một mình
+// Bản lưu cũ: màu sáp cho chọn nhiều, tính theo ml; trang trí cho chọn nhiều; Không màu, Không trang trí đứng một mình
 const upgrade = (config: CraftConfig): CraftConfig => ({
   ...dropWaxBlend(config),
-  steps: dropWaxBlend(config).steps.map((s) => {
-    if (s.kind === "blend" && s.id === "fragrance" && s.scentPrice === undefined) return { ...s, scentPrice: DEFAULT_SCENT_PRICE };
+  steps: dropWaxBlend(config).steps.map(splitSharedSizes).map((s) => {
     if (s.kind === "swatches" && s.multiple === undefined)
       return { ...s, multiple: s.id === "color", gramsPerGram: s.gramsPerGram ?? DYE_RATIO, options: s.options.map((o) => (o.materialId ? o : { ...o, exclusive: true })) };
     if (s.kind === "cards" && s.id === "decoration" && s.options.some((o) => o.id === "none" && !o.exclusive))
       return { ...s, multiple: true, options: s.options.map((o) => (o.id === "none" ? { ...o, exclusive: true } : o)) };
     return s;
-  }),
+  }).map(toAmountPricing),
 });
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE: GET /api/shop-config/craft để tải,

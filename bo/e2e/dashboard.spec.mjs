@@ -29,7 +29,7 @@ test("E2E 23 — Dashboard số thật: doanh thu theo tiền thực nhận, k�
     make("h", { createdAt: ago(9), payments: pay("h", 1000000, 9), customer: { name: "Khách a", email: "", phone: "0970000097" } }),
     make("l", { status: "producing", readyDate: "2020-01-01", createdAt: ago(20), payments: pay("l", 1000000, 20) }),
   ];
-  await ev(`localStorage.setItem('bo-orders-v3', ${JSON.stringify(JSON.stringify(list))})`);
+  await ev(`localStorage.setItem('bo-orders-v4', ${JSON.stringify(JSON.stringify(list))})`);
 
   await go(base + "/?days=7", 2600);
   const page = () => ev("document.querySelector('main').innerText.replace(/\\s+/g,' ')");
@@ -63,7 +63,7 @@ test("E2E 23 — Dashboard số thật: doanh thu theo tiền thực nhận, k�
   await sleep(1600);
   ok("C2 Link Giao lỗi mở đúng tab", (await text("main .ant-table-row")).length === 1 && (await text(".ant-tabs-tab-active")).join().includes("Giao không thành"), (await text(".ant-tabs-tab-active")).join());
 
-  await ev("localStorage.setItem('bo-orders-v3','[]')");
+  await ev("localStorage.setItem('bo-orders-v4','[]')");
   await go(base + "/", 2400);
   const empty = await page();
   await shot("d23-empty.png", true);

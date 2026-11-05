@@ -4,6 +4,8 @@
 
 **Mục đích:** theo dõi đơn từ lúc đặt tới khi giao xong. Quy trình đầy đủ ở [Workflow](../workflow.md).
 
+**Bắt đầu trống:** không còn đơn mẫu, bỏ nút Dữ liệu mẫu. Chưa có đơn thì trang ghi "Chưa có đơn hàng nào." kèm nút **Tạo đơn hàng đầu tiên**.
+
 ## Trạng thái
 
 | Trạng thái | Nghĩa | Nút bước tiếp | Hủy được |
@@ -44,8 +46,8 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 - **Số lựa chọn mỗi bước:** chọn 1 hoặc nhiều mục, trong giới hạn Tối đa, theo cài đặt ở Thủ công. Chọn Không màu hoặc Không trang trí thì bỏ các mục khác.
 - **Lượng cho 1 hũ:** mỗi nguyên liệu đã chọn (sáp, mùi hương, bấc, màu, trang trí, tuỳ chọn thêm) có ô nhập lượng theo đơn vị của nguyên liệu. Để trống thì theo mặc định, hiện mờ trong ô. Hũ và nắp luôn 1 cái nên không có ô này.
 - **Mặc định khi chọn nhiều:** sáp và màu chia đều cho số loại, ví dụ hũ 150ml đổ 120g sáp, chọn 2 loại thì mỗi loại 60g. Tổng sáp có thể khác mặc định, hệ thống chỉ hiện để đối chiếu, không chặn.
-- **Giá:** phụ thu tính theo tỉ lệ. Sáp theo gram, làm tròn tới nghìn đồng, ví dụ Sáp dừa +25.000 ₫ chiếm 60g trong 160g thì cộng 9.000 ₫. Màu sáp theo ml tương tự. Mùi hương theo ml nếu admin điền, khi đó ô Tỉ lệ phối được ẩn, không điền thì theo tỉ lệ phối.
-- **Phụ thu hương:** lượng hương tới mức chuẩn tính phụ thu mặc định, vượt thì tăng theo tỉ lệ ml. Ví dụ chuẩn 10% với hũ 120g sáp là 12 ml, phụ thu 10.000 ₫: điền 18 ml thành 15.000 ₫. Ô lượng hiện % từng loại.
+- **Giá sáp, màu, mùi hương theo lượng:** lượng dùng cho 1 hũ × giá bán mỗi 100 g / mỗi ml ở Thủ công, làm tròn tới 100 ₫. Ví dụ sáp đậu nành 2.000 ₫/100 g, hũ 150ml đổ 120 g → 2.400 ₫; chọn 2 loại sáp thì mỗi loại 60 g, cộng hai dòng. Xem [Thủ công](./craft.md#giá-theo-lượng-sáp-màu-mùi-hương).
+- **Phối nhiều mùi:** chỉnh bằng ô **Lượng cho 1 hũ** (ml), ô hiện % từng mùi; không còn ô Tỉ lệ phối riêng. Để trống thì chia đều lượng hương của hũ (lượng sáp × tỉ lệ độ đậm). Tinh dầu không theo dõi kho thì không có ô lượng, khi đó mới hiện ô Tỉ lệ phối.
 - **Công thức:** lưu riêng cho nến đó trên đơn, hiện ở chi tiết đơn. Giữ và trừ Kho theo đúng công thức này, đổi Thủ công sau đó không ảnh hưởng.
 
 **Công thức tiền:**

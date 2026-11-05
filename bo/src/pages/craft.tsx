@@ -8,7 +8,6 @@ import { InputsEditor } from "@/components/craft/inputs-editor";
 import { OptionDrawer } from "@/components/craft/option-drawer";
 import { OptionTable } from "@/components/craft/option-table";
 import { ChangesDrawer, SaveBar } from "@/components/craft/save-bar";
-import { SizeTable } from "@/components/craft/size-table";
 import { StepIconView } from "@/components/craft/step-icon";
 import { StepList } from "@/components/craft/step-list";
 import { StepPreview } from "@/components/craft/step-preview";
@@ -16,10 +15,13 @@ import { StepSettings } from "@/components/craft/step-settings";
 import { CraftSkeleton } from "@/components/skeletons";
 import { useCraftDraft } from "@/hooks/use-craft-config";
 import { useInventory } from "@/hooks/use-inventory";
+import { useSettings } from "@/hooks/use-settings";
 import { describeChanges, orderChanged } from "@/lib/craft/changes";
 import { CRAFT_PREVIEW_NOTICE } from "@/lib/craft/groups";
+import { needsReview, optionCheck, sizeCheck } from "@/lib/craft/pricing";
+import { emptySelection, priceSelection, type StepSelection } from "@/lib/craft/selection";
 import { isOptionStep, kindMeta, optionRows, validateConfig } from "@/lib/craft/steps";
-import type { CraftConfig, CraftStep, StepOption, VesselOption } from "@/lib/craft/types";
+import type { CraftConfig, CraftStep, OptionStep, StepOption, VesselOption } from "@/lib/craft/types";
 import { formatMoneyShort } from "@/lib/format";
 import { sellable, sellableSizes, toMap, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import { useDrawerTarget } from "@/lib/use-open-param";
@@ -38,21 +40,28 @@ function downloadJson(data: unknown) {
   URL.revokeObjectURL(url);
 }
 
-// Giá một hũ rẻ nhất (ước tính): kích thước + lựa chọn rẻ nhất còn bán ở mỗi bước bắt buộc đang hiện
+// Giá một hũ rẻ nhất (ước tính): hũ và cỡ rẻ nhất còn đặt được + lựa chọn rẻ nhất còn bán ở mỗi bước bắt buộc đang hiện
 function cheapestPrice(config: CraftConfig, map: MaterialMap) {
   const vessel = config.steps.find((s) => s.kind === "vessel");
   if (!vessel || vessel.kind !== "vessel") return 0;
-  // Chỉ tính cỡ mà ít nhất một hũ đang bán còn mã hũ cỡ đó
-  const sizes = vessel.sizes.filter((x) => vessel.options.some((o) => sellable(o, map) && sellableSizes(o, [x], map).length)).map((x) => x.basePrice);
-  if (!sizes.length) return 0;
-  let total = Math.min(...sizes);
-  for (const step of config.steps) {
-    if (!step.enabled || !step.required || step.kind === "inputs") continue;
-    const prices = (step.options as StepOption[]).filter((o) => sellable(o, map)).map((o) => o.priceDelta);
-    if (prices.length) total += Math.min(...prices);
-    if (step.kind === "blend" && step.intensity) total += Math.min(...Object.values(step.intensity.priceDelta));
-  }
-  return total;
+  const empty = emptySelection(config);
+  const totals = vessel.options
+    .filter((o) => sellable(o, map))
+    .flatMap((o) => sellableSizes(o, map).map((size) => ({ [vessel.id]: { kind: "vessel" as const, optionId: o.id, sizeId: size.id, withLid: false } })))
+    .map((jar) => {
+      let total = priceSelection(config, jar).unit;
+      for (const step of config.steps) {
+        if (!step.enabled || !step.required || step.kind === "inputs" || step.kind === "vessel" || !empty[step.id]) continue;
+        const pick = (id: string): StepSelection => {
+          const sel = empty[step.id];
+          return sel.kind === "blend" ? { ...sel, items: [{ optionId: id, weight: 1 }] } : { ...(sel as Extract<StepSelection, { optionIds: string[] }>), optionIds: [id] };
+        };
+        const prices = (step.options as StepOption[]).filter((o) => sellable(o, map)).map((o) => priceSelection(config, { ...jar, [step.id]: pick(o.id) }).unit - priceSelection(config, jar).unit);
+        if (prices.length) total += Math.min(...prices);
+      }
+      return total;
+    });
+  return totals.length ? Math.min(...totals) : 0;
 }
 
 // Trình dựng trang Thủ công: admin tạo các bước, mỗi bước dùng một component, web dựng theo đúng thứ tự
@@ -62,6 +71,7 @@ export function CraftPage() {
   // Trang sửa bản nháp — web chỉ nhận khi bấm Lưu
   const api = useCraftDraft();
   const inventory = useInventory();
+  const { settings } = useSettings();
   const { config } = api;
   // Kho + nguyên liệu chờ tạo của bản nháp (tạo từ drawer lựa chọn, vào Kho khi Lưu)
   const materials = useMemo(() => [...inventory.materials, ...api.pending], [inventory.materials, api.pending]);
@@ -101,6 +111,20 @@ export function CraftPage() {
   const editing = editShown && editShown !== "new" ? options.find((o) => o.id === editShown) : undefined;
 
   const issues = useMemo(() => validateConfig(config, materials), [config, materials]);
+  // Số cỡ và lựa chọn đang bán cần xem lại giá: thấp hơn giá vốn, hoặc lãi dưới mức tối thiểu ở Cài đặt
+  const lowMargins = useMemo(() => {
+    // Hũ đếm từng cỡ, lựa chọn khác đếm theo cỡ tệ nhất
+    const vessel = config.steps.find((s) => s.kind === "vessel");
+    const sizes =
+      vessel?.kind === "vessel"
+        ? vessel.options.filter((o) => o.available).flatMap((o) => o.sizes.filter((s) => s.available && needsReview(sizeCheck(config, o, s, map), settings.minMargin))).length
+        : 0;
+    const options = config.steps
+      .filter((s): s is OptionStep => s.enabled && isOptionStep(s) && s.kind !== "vessel")
+      .flatMap((s) => (s.options as StepOption[]).filter((o) => o.available).map((o) => optionCheck(config, s, o, map)))
+      .filter((c) => c && needsReview(c, settings.minMargin)).length;
+    return sizes + options;
+  }, [config, map, settings.minMargin]);
   const withIssues = new Set(issues.filter((i) => i.level === "error" || i.level === "warning").map((i) => i.stepId).filter(Boolean) as string[]);
 
   if (api.loading || inventory.loading) return <CraftSkeleton />;
@@ -111,7 +135,7 @@ export function CraftPage() {
     if (!option.available) return [];
     if (s.kind !== "vessel") return sellable(option, map) ? [] : [option.id];
     const v = option as VesselOption;
-    return s.sizes.filter((size) => size.available && v.supportedSizeIds.includes(size.id) && vesselSizeLevel(v, size.id, map) === "out").map((size) => `${v.id}:${size.id}`);
+    return v.sizes.filter((size) => size.available && vesselSizeLevel(v, size.id, map) === "out").map((size) => `${v.id}:${size.id}`);
   });
   const cheapest = cheapestPrice(config, map);
   const errors = issues.filter((i) => i.level === "error");
@@ -155,6 +179,7 @@ export function CraftPage() {
       note: blocked.length ? <Link to="/inventory?status=out">Mở Kho nguyên liệu</Link> : undefined,
     },
     { label: "Giá thấp nhất", value: cheapest ? formatMoneyShort(cheapest) : "—", note: <span style={{ color: "#6b6b6b" }}>Hũ rẻ nhất có thể đặt</span> },
+
   ];
 
   return (
@@ -206,6 +231,19 @@ export function CraftPage() {
               ))}
               {issues.length > 6 && <li>và {issues.length - 6} điểm khác…</li>}
             </ul>
+          }
+        />
+      )}
+
+      {lowMargins > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          title={`${lowMargins} cỡ hoặc lựa chọn cần xem lại giá bán`}
+          description={
+            <>
+              Giá bán thấp hơn giá vốn hoặc lãi dưới {settings.minMargin}% — xem từng cỡ trong drawer hũ và cột Giá vốn tối thiểu ở tab Lựa chọn của từng bước. <Link to="/settings">Đổi mức lãi tối thiểu</Link>
+            </>
           }
         />
       )}
@@ -281,10 +319,9 @@ export function CraftPage() {
                       step.kind === "inputs" ? (
                         <InputsEditor step={step} api={api} materials={materials} />
                       ) : (
-                        <OptionTable step={step} config={config} api={api} map={map} onEdit={(id) => go({ step: step.id, view: null, edit: id })} />
+                        <OptionTable step={step} config={config} api={api} map={map} pricing={settings} onEdit={(id) => go({ step: step.id, view: null, edit: id })} />
                       ),
                   },
-                  ...(step.kind === "vessel" ? [{ key: "sizes", label: "Kích thước", children: <SizeTable step={step} api={api} /> }] : []),
                   { key: "settings", label: "Cài đặt", children: <StepSettings step={step} api={api} onRemoved={() => go({ step: null, view: null, edit: null })} /> },
                   {
                     key: "preview",
@@ -324,6 +361,7 @@ export function CraftPage() {
           config={config}
           api={api}
           materials={materials}
+          pricing={settings}
           onClose={() => go({ step: step.id, view: null, edit: null })}
         />
       )}

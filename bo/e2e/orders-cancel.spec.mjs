@@ -8,7 +8,7 @@ test("E2E 9 — Bắt đầu làm trừ kho; hủy đơn đang làm hỏi đã l
   const { ev, sleep, shot, click, clickText, byText, type, pick, text, go, ok } = t;
   const D = ".ant-drawer-open";
   const M = ".ant-modal-wrap .ant-modal";
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const inv = () => ev("JSON.parse(localStorage.getItem('bo-inventory-v2')||'null')");
   const wax = async () => (await inv())?.materials.find((m) => m.name === "Sáp đậu nành").stock ?? 9000;
   const option = (step, name) => `[...document.querySelectorAll('${M} #cfg-step-${step} .cfg-option')].find(b=>b.innerText.includes(${JSON.stringify(name)}))`;
@@ -38,7 +38,7 @@ test("E2E 9 — Bắt đầu làm trừ kho; hủy đơn đang làm hỏi đã l
   await sleep(1800);
 
   // Nhân thành 4 đơn "Đã thanh toán", mã khác nhau
-  await ev(`(()=>{const list=JSON.parse(localStorage.getItem('bo-orders-v3'));const a=list[0];const copies=['A','B','C','D'].map(x=>({...a,id:'t-'+x,code:'TEST'+x,status:'paid'}));localStorage.setItem('bo-orders-v3',JSON.stringify([...copies,...list.slice(1)]))})()`);
+  await ev(`(()=>{const list=JSON.parse(localStorage.getItem('bo-orders-v4'));const a=list[0];const copies=['A','B','C','D'].map(x=>({...a,id:'t-'+x,code:'TEST'+x,status:'paid'}));localStorage.setItem('bo-orders-v4',JSON.stringify([...copies,...list.slice(1)]))})()`);
   const before = await wax();
   const open = async (x) => { await go(`${base}/orders?order=t-${x}`, 2800); };
   const startMaking = async () => { await clickText(`${D} section button`, "Bắt đầu làm"); await sleep(600); };
@@ -101,7 +101,7 @@ test("E2E 9 — Bắt đầu làm trừ kho; hủy đơn đang làm hỏi đã l
   ok("D1 Kho thiếu: chặn và nêu nguyên liệu thiếu", warn.includes("Sáp đậu nành: cần 120, còn 50") && (await status("D")).status === "paid" && (await wax()) === 50, warn);
   await shot("c9-4-short.png");
 
-  const cp = await ev("JSON.parse(localStorage.getItem('bo-cancelled-products-v3')||'[]')");
+  const cp = await ev("JSON.parse(localStorage.getItem('bo-cancelled-products-v4')||'[]')");
   ok("E1 Đã làm (B, C) sinh nến ở Sản phẩm hủy đơn; Chưa làm (A) thì không", cp.filter((c) => ["TESTB", "TESTC"].includes(c.orderCode)).length === 2 && !cp.some((c) => c.orderCode === "TESTA"), String(cp.length));
   ok("E1 Nến có chữ riêng được gắn nhãn", cp.find((c) => c.orderCode === "TESTB")?.personalized === true);
   await t.viewport(390, 844, true);

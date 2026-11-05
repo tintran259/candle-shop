@@ -17,11 +17,22 @@ const icons: Record<MovementType, { node: ReactNode; color: string; bg: string }
   make: { node: <BuildOutlined />, color: "#531dab", bg: "#f9f0ff" },
 };
 
-// Lịch sử nhập / xuất / kiểm kê; showMaterial = hiện tên nguyên liệu (danh sách chung)
-export function MovementList({ items, materials, showMaterial, onOpenMaterial }: { items: StockMovement[]; materials: Material[]; showMaterial?: boolean; onOpenMaterial?: (id: string) => void }) {
-  if (!items.length) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có phiếu kho nào." />;
+type Props = {
+  items: StockMovement[];
+  materials: Material[];
+  // Hiện tên nguyên liệu (danh sách chung)
+  showMaterial?: boolean;
+  onOpenMaterial?: (id: string) => void;
+  // Bấm mã mẻ (vd lọc các phiếu cùng mẻ)
+  onBatch?: (batch: string) => void;
+  empty?: string;
+};
+
+// Lịch sử nhập / xuất / kiểm kê / sản xuất / theo đơn / sửa giá
+export function MovementList({ items, materials, showMaterial, onOpenMaterial, onBatch, empty = "Chưa có phiếu kho nào." }: Props) {
+  if (!items.length) return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={empty} />;
   return (
-    <Flex vertical gap={2} role="list">
+    <Flex vertical gap={2} role="list" aria-label="Phiếu kho">
       {items.map((mv) => {
         const m = materials.find((x) => x.id === mv.materialId);
         const unit = m ? unitLabel[m.unit] : "";
@@ -49,7 +60,17 @@ export function MovementList({ items, materials, showMaterial, onOpenMaterial }:
                     <Link to={`/orders`}>Đơn {mv.orderCode}</Link>
                   </>
                 )}
-                {mv.batch && ` · Mẻ ${mv.batch}`}
+                {mv.batch &&
+                  (onBatch ? (
+                    <>
+                      {" · "}
+                      <Typography.Link style={{ fontSize: 12 }} onClick={() => onBatch(mv.batch!)}>
+                        Mẻ {mv.batch}
+                      </Typography.Link>
+                    </>
+                  ) : (
+                    ` · Mẻ ${mv.batch}`
+                  ))}
               </Typography.Text>
               {mv.note && <Typography.Text style={{ fontSize: 13 }}>{mv.note}</Typography.Text>}
               {mv.totalCost !== undefined && (

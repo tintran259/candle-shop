@@ -29,7 +29,7 @@ const seed = (id: string, over: Record<string, unknown>) => ({
   updatedAt: now,
   ...over,
 });
-const orders = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v3") ?? "[]"));
+const orders = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v4") ?? "[]"));
 const find = async (page, id: string) => (await orders(page)).find((o) => o.id === id);
 const drawer = (page) => page.locator(".ant-drawer-open").last();
 const modal = (page) => page.locator(".ant-modal-wrap:not([style*='none']) .ant-modal");
@@ -37,7 +37,7 @@ const modal = (page) => page.locator(".ant-modal-wrap:not([style*='none']) .ant-
 test.beforeEach(async ({ page, t }) => {
   void t;
   await page.goto("/");
-  await page.evaluate((list) => localStorage.setItem("bo-orders-v3", JSON.stringify(list)), [
+  await page.evaluate((list) => localStorage.setItem("bo-orders-v4", JSON.stringify(list)), [
     seed("paid-full", {}),
     seed("making", { status: "producing", history: [{ at: now, status: "producing", by: "x" }] }),
     seed("done", { status: "completed", readyDate: inDays(-5), history: [{ at: now, status: "completed", by: "x" }] }),

@@ -19,9 +19,9 @@ export async function inventoryFromScratch(t) {
 
   // TC-K1: thêm nguyên liệu qua drawer (đủ loại & đơn vị)
   const seeds = [
-    { name: "Hũ thủy tinh 150ml", sku: "HU-TT-150", cat: "Hũ & nắp", unit: "Cái", stock: 20, low: 5, paid: 360000 },
-    { name: "Hũ thủy tinh 250ml", sku: "HU-TT-250", cat: "Hũ & nắp", unit: "Cái", stock: 4, low: 5, paid: 100000 },
-    { name: "Nắp gỗ 150ml", cat: "Hũ & nắp", unit: "Cái", stock: 10, paid: 50000 },
+    { name: "Hũ thủy tinh 150ml", sku: "HU-TT-150", cat: "Hũ & nắp", jar: "Hũ thủy tinh", ml: 150, unit: "Cái", stock: 20, low: 5, paid: 360000 },
+    { name: "Hũ thủy tinh 250ml", sku: "HU-TT-250", cat: "Hũ & nắp", jar: "Hũ thủy tinh", ml: 250, unit: "Cái", stock: 4, low: 5, paid: 100000 },
+    { name: "Nắp gỗ 150ml", cat: "Hũ & nắp", ml: 150, unit: "Cái", stock: 10, paid: 50000 },
     { name: "Sáp đậu nành", sku: "SAP-DN", cat: "Sáp", unit: "Gram", stock: 5000, low: 1000, paid: 300000 },
     { name: "Tinh dầu Vanilla", cat: "Tinh dầu", unit: "Mililít", stock: 300, paid: 540000 },
     { name: "Tinh dầu Oải hương", cat: "Tinh dầu", unit: "Mililít", stock: 0 },
@@ -37,6 +37,9 @@ export async function inventoryFromScratch(t) {
     await type(`document.querySelector('.ant-drawer-open input#name')`, s.name);
     if (s.sku) await type(`document.querySelector('.ant-drawer-open input#sku')`, s.sku);
     await pick(`document.querySelector('.ant-drawer-open input#category').closest('.ant-select')`, s.cat);
+    // Hũ: loại hũ + dung tích (các mã cùng loại là các cỡ ở trang Thủ công); nắp chỉ có dung tích
+    if (s.jar) await type(`document.querySelector('.ant-drawer-open input#jarType')`, s.jar);
+    if (s.ml) await type(`document.querySelector('.ant-drawer-open input#capacity')`, s.ml);
     await clickText(".ant-drawer-open .ant-radio-button-wrapper", s.unit, true);
     await type(`document.querySelector('.ant-drawer-open input#stock')`, s.stock);
     if (s.low !== undefined) await type(`document.querySelector('.ant-drawer-open input#lowStock')`, s.low);

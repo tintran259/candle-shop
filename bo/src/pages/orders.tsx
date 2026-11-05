@@ -1,5 +1,5 @@
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Button, Card, Col, Empty, Flex, Popconfirm, Row, Statistic, Tabs, Typography } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Empty, Flex, Row, Statistic, Tabs, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { OrderCreateDrawer } from "@/components/orders/order-create-drawer";
@@ -91,9 +91,6 @@ export function OrdersPage() {
           <Typography.Text type="secondary">Theo dõi từ lúc khách thanh toán, xưởng làm (2–3 ngày) tới khi giao xong.</Typography.Text>
         </div>
         <Flex gap={8} wrap>
-          <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
-            <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
-          </Popconfirm>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpenId("new")}>
             Tạo đơn hàng
           </Button>
@@ -130,9 +127,15 @@ export function OrdersPage() {
       <Card styles={{ body: { padding: 12 } }}>
         {items.length ? (
           <OrderTable items={items} onOpen={setOpenId} pagination={pagination} />
-        ) : (
+        ) : api.orders.length ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đơn hàng khớp bộ lọc.">
             <Button onClick={() => setFilters(defaultOrderFilters)}>Xóa bộ lọc</Button>
+          </Empty>
+        ) : (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Chưa có đơn hàng nào.">
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setOpenId("new")}>
+              Tạo đơn hàng đầu tiên
+            </Button>
           </Empty>
         )}
       </Card>

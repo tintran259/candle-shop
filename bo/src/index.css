@@ -110,7 +110,63 @@ body {
 }
 
 .app-sider .ant-menu {
-  padding: 0 8px;
+  padding: 0 8px 8px;
+}
+
+/* Logo và khối tài khoản đứng yên, vạch mảnh ngăn với menu */
+.app-sider .sider-brand {
+  flex-shrink: 0;
+  margin: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Chỉ menu cuộn, thanh cuộn mảnh cùng tông nền (không còn thanh cuộn trắng của trình duyệt) */
+.app-sider .sider-menu {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+/* Tiêu đề nhóm: chữ hoa nhỏ, giãn chữ — tách bậc rõ với mục menu */
+.app-sider .ant-menu-item-group-title {
+  padding: 16px 16px 6px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.app-sider .ant-menu-item-group:first-child .ant-menu-item-group-title {
+  padding-top: 12px !important;
+}
+/* Thu gọn còn icon: tên nhóm bị cắt ("SÁ…") nên thay bằng vạch ngăn mảnh */
+.app-sider .ant-menu-inline-collapsed .ant-menu-item-group-title {
+  font-size: 0;
+  height: 1px;
+  padding: 0 !important;
+  margin: 10px 20px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.app-sider .ant-menu-inline-collapsed .ant-menu-item-group:first-child .ant-menu-item-group-title {
+  background: none;
+  margin-block: 4px;
+}
+
+/* Mục đang mở: vạch màu nhấn bên trái ngoài nền sáng hơn */
+.app-sider .ant-menu-item-selected {
+  position: relative;
+  font-weight: 600;
+}
+.app-sider .ant-menu-item-selected::before {
+  content: "";
+  position: absolute;
+  inset-block: 10px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #e8b48a;
+}
+.app-sider .ant-menu-item .ant-menu-item-icon {
+  font-size: 16px;
 }
 
 /* Dòng danh sách: nền màu nhấn nhạt khi rê chuột */
@@ -884,4 +940,28 @@ button.change-row:focus-visible {
 /* Nút chuyển trong khối nền xám (Mẻ đầu tiên, Ghi phiếu kho) cần nền đậm hơn khối để còn thấy */
 .sub-panel .ant-segmented {
   background: #e9e8e2;
+}
+
+/* Mục con trên sidebar (Phiếu kho dưới Kho nguyên liệu): thụt vào, chữ nhỏ hơn. Thu gọn còn icon thì giữ như mục thường */
+.app-sider .ant-menu-inline:not(.ant-menu-inline-collapsed) .nav-sub {
+  position: relative;
+  padding-inline-start: 48px !important;
+  font-size: 13px;
+}
+/* Đường nhánh nối lên mục cha */
+.app-sider .ant-menu-inline:not(.ant-menu-inline-collapsed) .nav-sub::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  inset-inline-start: 24px;
+  width: 12px;
+  height: 22px;
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-end-start-radius: 6px;
+}
+
+/* Form sản phẩm (drawer ~600px): thẻ chọn nguyên liệu 3 cột, tên không bị cắt */
+.product-craft .cfg-grid {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
 }

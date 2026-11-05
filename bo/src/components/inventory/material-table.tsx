@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 import { memo } from "react";
 import { MaterialAvatar, MaterialStock } from "@/components/craft/material-view";
 import { unitLabel } from "@/lib/craft/groups";
-import { formatNumber } from "@/lib/format";
+import { costBasis } from "@/lib/costs";
+import { formatNumber, formatUnitCost } from "@/lib/format";
 import { isMade } from "@/lib/inventory/production";
 import { categoryLabels, materialLevel, type Usage } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
@@ -64,6 +65,27 @@ function MaterialTableView({ items, usage, held, pagination, onOpen, onReceive }
           </Flex>
         );
       },
+    },
+    {
+      title: "Giá bình quân",
+      key: "cost",
+      align: "right",
+      responsive: ["sm"],
+      render: (_, m) =>
+        m.unitCost === undefined ? (
+          <Typography.Text type="secondary" style={{ whiteSpace: "nowrap", fontSize: 13 }}>
+            Chưa có giá
+          </Typography.Text>
+        ) : (
+          <Typography.Text className="tabular" style={{ whiteSpace: "nowrap" }}>
+            {formatUnitCost(m.unitCost * costBasis[m.unit])}
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {" "}
+              / {costBasis[m.unit] > 1 ? `${costBasis[m.unit]} ` : ""}
+              {unitLabel[m.unit]}
+            </Typography.Text>
+          </Typography.Text>
+        ),
     },
     {
       title: "Ngưỡng sắp hết",

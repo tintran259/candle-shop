@@ -1,8 +1,8 @@
-// E2E 20 — Phụ thu hương theo mức chuẩn, màu sáp theo ml và chọn nhiều, cài đặt Chọn 1 / Chọn nhiều ở Thủ công
+// E2E 20 — Hương và màu tính giá theo ml, màu sáp chọn nhiều, cài đặt Chọn 1 / Chọn nhiều ở Thủ công
 import { SF_URL, fixture, test } from "./support/harness.mjs";
 import fs from "node:fs";
 
-test("E2E 20 — Phụ thu hương theo mức chuẩn, màu sáp theo ml và chọn nhiều, cài đặt Chọn 1 / Chọn nhiều ở Thủ công", async ({ t }) => {
+test("E2E 20 — Hương và màu tính giá theo ml, màu sáp chọn nhiều, cài đặt Chọn 1 / Chọn nhiều ở Thủ công", async ({ t }) => {
   const base = t.base;
   const bo = t.base;
   const sf = SF_URL;
@@ -28,6 +28,10 @@ test("E2E 20 — Phụ thu hương theo mức chuẩn, màu sáp theo ml và ch�
   delete color.gramsPerGram;
   for (const o of color.options) delete o.exclusive;
   for (const m of inv.materials) if (m.category === "dye") m.unit = "pcs";
+  // Giá theo lượng: mỗi ml
+  const setUnit = (step, prices) => cfg.steps.find((s) => s.id === step).options.forEach((o) => prices[o.id] !== undefined && Object.assign(o, { priceDelta: 0, unitPrice: prices[o.id] }));
+  setUnit("fragrance", { vanilla: 1000 });
+  setUnit("color", { cream: 2000, beige: 5000 });
 
   await go(base + "/", 1000);
   await ev("Object.keys(localStorage).filter(k=>k.startsWith('bo-')).forEach(k=>localStorage.removeItem(k))");
@@ -48,18 +52,19 @@ test("E2E 20 — Phụ thu hương theo mức chuẩn, màu sáp theo ml và ch�
   await click(option("fragrance", "Vanilla"));
   await sleep(300);
   const atStd = await price();
-  ok("A1 Hương mặc định cộng 10.000", noScent.includes("500.000") && atStd.includes("510.000"), `${noScent} -> ${atStd}`);
+  // Hũ gốm 150ml = 120 g sáp × 8% = 9,6 ml × 1.000 ₫/ml
+  ok("A1 Hương tính theo ml: 9,6 ml × 1.000", noScent.includes("500.000") && atStd.includes("509.600"), `${noScent} -> ${atStd}`);
   await type(input("Vanilla"), "12");
   await sleep(300);
-  ok("A2 Đúng mức chuẩn 12 ml vẫn +10.000", (await price()).includes("510.000"), await price());
+  ok("A2 Điền 12 ml → 12.000", (await price()).includes("512.000"), await price());
   await type(input("Vanilla"), "18");
   await sleep(300);
   const over = await price();
-  ok("A3 Vượt 18 ml thành +15.000", over.includes("515.000"), over);
-  ok("A4 Tóm tắt ghi Hương 15%", (await summary()).includes("Hương 15%"), (await summary()).slice(0, 200));
+  ok("A3 Điền 18 ml → 18.000, không còn phụ thu hương theo mức chuẩn", over.includes("518.000"), over);
+  ok("A4 Tóm tắt ghi lượng hương", (await summary()).includes("Vanilla 18 ml"), (await summary()).slice(0, 200));
   await click(option("fragrance", "Không mùi"));
   await sleep(300);
-  ok("A5 Không mùi thì không phụ thu hương", (await price()).includes("500.000"), await price());
+  ok("A5 Không mùi thì không tính tiền hương", (await price()).includes("500.000"), await price());
   await click(option("fragrance", "Không mùi"));
   await sleep(200);
 
@@ -70,7 +75,8 @@ test("E2E 20 — Phụ thu hương theo mức chuẩn, màu sáp theo ml và ch�
   ok("B1 Chọn được nhiều màu (bản lưu cũ)", (await checked("color")).length === 2, (await checked("color")).join());
   const box = await stepBox("color");
   ok("B2 Màu tính theo ml, có tỉ lệ", /ml/.test(box) && !/cái/.test(box) && box.includes("50%"), box);
-  ok("B3 Phụ thu màu theo tỉ lệ: Be 50% = 5.000", (await price()).includes("505.000"), await price());
+  // 120 g × 1 ml/100 g = 1,2 ml chia đều: 0,6 ml × 2.000 + 0,6 ml × 5.000
+  ok("B3 Màu theo ml: 1.200 + 3.000", (await price()).includes("504.200"), await price());
   await shot("d20-color.png");
   await click(option("color", "Không màu"));
   await sleep(300);
@@ -115,7 +121,7 @@ test("E2E 20 — Phụ thu hương theo mức chuẩn, màu sáp theo ml và ch�
   await clickText("main .ant-tabs-tab", "Cài đặt");
   await sleep(500);
   const fr = await ev("document.querySelector('main').innerText");
-  ok("D3 Mùi hương có cài đặt Phụ thu hương", fr.includes("Phụ thu hương"));
+  ok("D3 Mùi hương không còn Phụ thu hương, độ đậm chỉ còn tỉ lệ", !fr.includes("Phụ thu hương") && fr.includes("Cho chọn độ đậm"));
   await shot("d20-scent.png", true);
 
   console.log(t.logs.length ? "LOGS:\n" + t.logs.slice(0, 5).join("\n") : "Không có lỗi console");

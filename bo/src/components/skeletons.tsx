@@ -562,6 +562,8 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname.startsWith("/discounts")) return <DiscountsSkeleton />;
   if (pathname.startsWith("/categories")) return <CategoriesSkeleton />;
   if (pathname.startsWith("/customers")) return <CustomersSkeleton />;
+  if (pathname.startsWith("/inventory/movements"))
+    return <ListPageSkeleton label="Đang tải phiếu kho…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 160 }, { width: 200 }, { width: 240 }] }]} />} />;
   if (pathname.startsWith("/inventory")) return <InventorySkeleton />;
   return <ListPageSkeleton label="Đang tải trang…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 150 }] }]} />} />;
 }

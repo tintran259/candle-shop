@@ -4,7 +4,7 @@ import { expect, test } from "./support/harness.mjs";
 
 const rows = (page) => page.locator("main tr.ant-table-row");
 const drawer = (page) => page.locator(".ant-drawer-open");
-const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v3") ?? "null"));
+const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v4") ?? "null"));
 const pick = async (page, label, option) => {
   await page.locator("main").getByLabel(label, { exact: true }).click();
   await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: option }).first().click();
@@ -45,7 +45,7 @@ test("Lọc theo khoảng ngày đặt", async ({ page }) => {
   await page.keyboard.press("Enter");
   // Chỉ còn đơn đặt hôm nay (đơn mẫu đầu tiên đặt hôm nay)
   await expect(rows(page)).not.toHaveCount(0);
-  const all = await page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v3") ?? "null"));
+  const all = await page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v4") ?? "null"));
   if (all) expect(await rows(page).count()).toBe(all.filter((o) => o.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10)).length);
 });
 

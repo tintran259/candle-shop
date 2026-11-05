@@ -35,7 +35,7 @@ test.beforeEach(async ({ page, t }) => {
   await page.goto("/");
   await page.evaluate(
     ([orders]) => {
-      localStorage.setItem("bo-orders-v3", JSON.stringify(orders));
+      localStorage.setItem("bo-orders-v4", JSON.stringify(orders));
       localStorage.setItem(
         "bo-settings-v1",
         JSON.stringify({ depositPercent: 50, maxDeliveryAttempts: 3, resendFee: 30000, shippingOptions: [{ id: "standard", name: "Tiêu chuẩn", fee: 0, days: 3, enabled: true }], dailyCapacity: 3, leadDays: 3 }),
@@ -82,7 +82,7 @@ test("Đổi ngày làm xong sang ngày đã đầy: vẫn đổi, báo vượt 
   await picker.fill(ddmm(5));
   await page.keyboard.press("Enter");
   await expect(page.getByText(`Đã đổi sang ${ddmm(5).slice(0, 5)} — ngày này vượt công suất: 5/3 cây`)).toBeVisible();
-  expect((await stored(page, "bo-orders-v3")).find((o) => o.id === "a").readyDate).toBe(day(5));
+  expect((await stored(page, "bo-orders-v4")).find((o) => o.id === "a").readyDate).toBe(day(5));
   // Ngày còn chỗ thì báo thành công bình thường
   await picker.click();
   await picker.fill(ddmm(6));
@@ -99,13 +99,13 @@ test("Giá vốn: chi tiết đơn ước tính rồi chốt khi Bắt đầu l�
   await expect(costs).toContainText("901.600");
   await page.getByRole("button", { name: "Bắt đầu làm" }).click();
   await expect(costs).toContainText("đã chốt");
-  expect((await stored(page, "bo-orders-v3")).find((o) => o.id === "a").materialCost).toBe(98_400);
+  expect((await stored(page, "bo-orders-v4")).find((o) => o.id === "a").materialCost).toBe(98_400);
 });
 
 test("Giá vốn: form sản phẩm và nhập kho có giá tính lại bình quân", async ({ page }) => {
   await page.goto("/products?edit=vanilla-relax");
-  await expect(page.getByLabel("Giá vốn 1 cây")).toContainText("49.200");
-  await expect(page.getByLabel("Giá vốn 1 cây")).toContainText("lãi 90% trên giá bán");
+  await expect(page.getByLabel("Giá vốn 1 cây")).toContainText("Vốn 49.200");
+  await expect(page.getByLabel("Giá vốn 1 cây")).toContainText("lãi 90%");
 
   await page.goto("/inventory?material=wax-soy");
   const card = page.getByRole("region", { name: "Tồn kho hiện tại" });

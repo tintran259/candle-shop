@@ -163,7 +163,7 @@ function BrandPanel({ mobile }: { mobile: boolean }) {
       }}
     >
       <Flex vertical align={mobile ? "center" : "flex-start"} gap={10}>
-        <img src="/logo-2510-vertical-light.png" alt="2510 Scented Candle" style={{ height: mobile ? 56 : 84, width: "auto" }} />
+        <img src="/logo-2510-light.png" alt="2510 Candle" style={{ height: mobile ? 64 : 88, width: "auto" }} />
         <Typography.Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, letterSpacing: "0.28em" }}>BACK OFFICE</Typography.Text>
       </Flex>
       {!mobile && (

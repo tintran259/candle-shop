@@ -4,9 +4,10 @@ const number = new Intl.NumberFormat("vi-VN");
 const short = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 });
 
 export const formatMoney = (n: number) => currency.format(Math.round(n));
-// Giá mỗi gram, ml có thể lẻ: 59,8 ₫
+// Giá nhập hiện làm tròn tới 100 ₫: 16.064,52 → 16.100 ₫. Dưới 1.000 ₫ (giá mỗi gram, ml) giữ số lẻ: 59,8 ₫ — làm tròn 100 sẽ lệch quá xa.
+// Chỉ làm tròn lúc hiện; số lưu vẫn giữ 2 chữ số lẻ để tính bình quân, giá vốn không bị lệch dồn
 const unitCurrency = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 2 });
-export const formatUnitCost = (n: number) => unitCurrency.format(n);
+export const formatUnitCost = (n: number) => (Math.abs(n) >= 1000 ? formatMoney(Math.round(n / 100) * 100) : unitCurrency.format(n));
 // Giá nhập trước → sau một phiếu: "90 ₫ → 93 ₫"; chưa có giá hoặc không đổi thì chỉ giá sau
 export const formatCostChange = (before: number | undefined, after: number) =>
   before === undefined || before === after ? formatUnitCost(after) : `${formatUnitCost(before)} → ${formatUnitCost(after)}`;

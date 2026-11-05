@@ -1,5 +1,5 @@
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
-import { Button, Card, Col, Empty, Flex, Grid, Pagination, Popconfirm, Row, Statistic, Typography } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Empty, Flex, Grid, Pagination, Row, Statistic, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { ProductDrawer } from "@/components/products/product-drawer";
@@ -10,6 +10,7 @@ import { ProductToolbar } from "@/components/products/product-toolbar";
 import { ProductsSkeleton } from "@/components/skeletons";
 import { useCancelledProducts } from "@/hooks/use-cancelled-products";
 import { useProducts } from "@/hooks/use-products";
+import { useCraftConfig } from "@/hooks/use-craft-config";
 import { applyFilters, defaultFilters, type ProductFilters, type ViewMode } from "@/lib/products/filters";
 import { discountPercent } from "@/lib/products/labels";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
@@ -41,6 +42,8 @@ export function ProductsPage() {
   const [editing, setEditing] = useOpenParam("edit");
 
   const { products } = api;
+  // Nến hủy đơn: công thức của nến tự phối điền sẵn ở phần phụ kiện khác
+  const { config } = useCraftConfig();
   // Mobile mặc định xem dạng lưới cho dễ bấm
   const mode: ViewMode = view ?? (screens.md === false ? "grid" : "table");
   // Đóng drawer thì URL bỏ ?edit= ngay — giữ mục cũ (cùng key) để drawer trượt ra có hiệu ứng
@@ -52,7 +55,7 @@ export function ProductsPage() {
 
   if (api.loading || cancelled.loading) return <ProductsSkeleton />;
 
-  const prefill = fromItem && fromCancelled(fromItem, api.products, fromItem.recipe ?? []);
+  const prefill = fromItem && fromCancelled(fromItem, api.products, fromItem.recipe ?? [], config);
 
   const stats = [
     { label: "Sản phẩm", value: products.length },
@@ -68,12 +71,9 @@ export function ProductsPage() {
           <Typography.Title level={3} style={{ marginBottom: 4 }}>
             Sản phẩm trưng bày
           </Typography.Title>
-          <Typography.Text type="secondary">Mẫu nến hiện trên web để khách đặt, xưởng làm trong 2–3 ngày. Không phụ thuộc số tồn ở Kho.</Typography.Text>
+          <Typography.Text type="secondary">Mẫu nến hiện trên web để khách đặt, xưởng làm trong 2–3 ngày. Dựng từ nguyên liệu trong Kho, giữ và trừ Kho theo công thức.</Typography.Text>
         </div>
         <Flex gap={8}>
-          <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
-            <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
-          </Popconfirm>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditing("new")}>
             Thêm sản phẩm
           </Button>

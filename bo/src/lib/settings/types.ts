@@ -23,6 +23,10 @@ export type ShopSettings = {
   dailyCapacity: number;
   // Số ngày làm tối thiểu: ngày làm xong mặc định sớm nhất là hôm nay + số này
   leadDays: number;
+  // Lãi tối thiểu trên giá bán (%): cỡ, lựa chọn ở Thủ công lãi thấp hơn thì cảnh báo
+  minMargin: number;
+  // Hệ số gợi ý giá bán: giá vốn × hệ số
+  priceMarkup: number;
 };
 
 export const defaultSettings: ShopSettings = {
@@ -35,6 +39,8 @@ export const defaultSettings: ShopSettings = {
   ],
   dailyCapacity: 20,
   leadDays: 3,
+  minMargin: 50,
+  priceMarkup: 2.5,
 };
 
 export const shippingOptionLabel = (o: Pick<ShippingOption, "name" | "days">) => `${o.name} (${o.days} ngày)`;

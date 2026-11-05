@@ -22,6 +22,9 @@ export type Material = {
   lowStock: number;
   // Giá nhập bình quân cho 1 đơn vị (1 g, 1 ml, 1 cái), VNĐ. Chưa nhập giá thì không có
   unitCost?: number;
+  // Hũ: loại hũ (vd "Hũ thạch cao") và dung tích (ml). Các mã cùng loại là các cỡ của một hũ ở trang Thủ công. Nắp để trống loại hũ
+  jarType?: string;
+  capacity?: number;
   // Xưởng tự sản xuất (vd hũ gốm): định mức nguyên liệu cho 1 đơn vị. Không có = nguyên liệu mua về
   recipe?: RecipeLine[];
   swatch?: string;

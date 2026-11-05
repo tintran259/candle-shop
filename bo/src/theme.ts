@@ -57,7 +57,9 @@ export const theme: ThemeConfig = {
       darkItemSelectedColor: "#ffffff",
       darkGroupTitleColor: "rgba(255,255,255,0.7)",
       itemBorderRadius: radius.inner,
-      itemHeight: 44,
+      itemHeight: 40,
+      itemMarginBlock: 2,
+      groupTitleFontSize: 11,
     },
     // Thẻ trắng, không viền, không vạch dưới tiêu đề
     Card: { colorBorderSecondary: "transparent", headerFontSize: 18, bodyPadding: 24, headerPadding: 24 },

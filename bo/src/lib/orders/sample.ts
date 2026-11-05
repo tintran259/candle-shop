@@ -1,15 +1,15 @@
-// ⚠️ DỮ LIỆU MẪU — ngày tính theo hôm nay để luôn có đơn sắp tới hạn / trễ hạn khi thử.
-// Bản thật lấy từ BE: GET /api/orders.
+// ⚠️ ĐƠN MẪU — không nạp vào trang Đơn hàng (app bắt đầu không có đơn). Chỉ dùng cho test và hồ sơ khách mẫu.
+// Ngày tính theo hôm nay để luôn có đơn sắp tới hạn / trễ hạn. Bản thật lấy từ BE: GET /api/orders.
 import dayjs from "dayjs";
 import { orderFlow, type Order, type OrderEvent, type OrderItem, type OrderStatus, type PaymentPlan, type ShippingMethod } from "@/lib/orders/types";
 import { DEPOSIT_RATE, SHIPPING_FEE } from "@/lib/orders/labels";
-import { mockProducts } from "@/lib/products/mock";
+import { sampleProducts } from "@/lib/products/sample";
 
 const DISCOUNTS: Record<string, number> = { WELCOME10: 0.1, CANDLE2510: 0.15 };
 
 const custom = (desc: string, price: number): Omit<OrderItem, "id" | "quantity"> => ({ name: "Nến tự phối", price, custom: desc });
 const product = (id: string): Omit<OrderItem, "id" | "quantity"> => {
-  const p = mockProducts.find((x) => x.id === id)!;
+  const p = sampleProducts.find((x) => x.id === id)!;
   return { productId: p.id, name: p.name, image: p.images[0], price: p.salePrice ?? p.price };
 };
 
@@ -125,4 +125,4 @@ function build(s: Seed, index: number): Order {
   };
 }
 
-export const mockOrders: Order[] = seeds.map(build);
+export const sampleOrders: Order[] = seeds.map(build);

@@ -27,8 +27,10 @@ export type StepOption = {
   id: string;
   name: Localized;
   description?: Localized;
-  // Phụ thu mỗi hũ
+  // Phụ thu mỗi hũ. Bước hũ: giá hũ. Bước tính theo lượng (sáp, màu, hương) không dùng, xem unitPrice
   priceDelta: Money;
+  // Bước tính theo lượng: giá bán mỗi 100 g (sáp) hoặc mỗi ml (màu, tinh dầu). Khách trả = lượng dùng cho hũ × giá này
+  unitPrice?: Money;
   // Shop tạm ẩn dù còn hàng
   available: boolean;
   // Nguyên liệu trong Kho bị trừ khi khách chọn mục này. Bỏ trống = không theo dõi tồn (vd "Không mùi")
@@ -49,33 +51,34 @@ export type StepOption = {
 
 export type VesselShape = "tumbler" | "jar" | "tin" | "bowl";
 
-// Mã hũ (và nắp) trong Kho của MỘT kích cỡ — hũ 150ml và hũ 250ml là hai nguyên liệu khác nhau
-export type VesselSizeStock = { materialId?: string; lidMaterialId?: string };
-
-// Hũ không có materialId chung: tồn kho tính riêng từng cỡ qua sizeMaterials
-export type VesselOption = Omit<StepOption, "materialId"> & {
-  materialId?: never;
-  shape: VesselShape;
-  translucent?: boolean;
-  // Kích thước đổ được (id trong sizes của bước)
-  supportedSizeIds: string[];
-  // { [sizeId]: mã hũ/nắp trong Kho }. Cỡ không có mã hũ = không theo dõi tồn
-  sizeMaterials: Record<string, VesselSizeStock>;
-  // null = không có nắp (khách tự chọn thêm nắp, trừ nắp theo đúng cỡ)
-  lid: { priceDelta: Money } | null;
-};
-
-export type SizeOption = {
+// Một cỡ của loại hũ — mỗi cỡ là một mã hũ riêng trong Kho (hũ 150ml và hũ 250ml là hai nguyên liệu khác nhau)
+export type VesselSize = {
+  // Duy nhất trong hũ, dùng trong lựa chọn của khách. Cỡ lấy từ Kho dùng luôn mã hũ
   id: string;
-  // Dung tích hũ — tên cỡ khách thấy (vd 150ml)
+  // Dung tích hũ — tên cỡ khách thấy (vd 150ml), lấy theo Dung tích của mã hũ trong Kho
   ml: number;
   // Lượng sáp đổ vào (gram) — dùng tính nguyên liệu tiêu hao
   grams: number;
   // Chỉ hiện khi xưởng đã đo thực tế
   burnHours?: number;
-  // Giá gốc của cây nến — mọi phụ thu cộng thêm vào đây
-  basePrice: Money;
+  // Phụ thu cỡ, cộng vào giá hũ (cỡ nhỏ nhất thường +0)
+  priceDelta: Money;
   available: boolean;
+  // Mã hũ / nắp trong Kho của cỡ này. Không có mã hũ = không theo dõi tồn
+  materialId?: string;
+  lidMaterialId?: string;
+};
+
+// Loại hũ: giá hũ (priceDelta) + các cỡ, mỗi cỡ có phụ thu riêng. Không có materialId chung: tồn kho tính riêng từng cỡ
+export type VesselOption = Omit<StepOption, "materialId"> & {
+  materialId?: never;
+  // Loại hũ trong Kho (Material.jarType) — các mã hũ cùng loại là các cỡ của hũ này
+  jarType?: string;
+  shape: VesselShape;
+  translucent?: boolean;
+  sizes: VesselSize[];
+  // null = không có nắp (khách tự chọn thêm nắp, trừ nắp theo đúng cỡ)
+  lid: { priceDelta: Money } | null;
 };
 
 export type TextFieldDef = {
@@ -114,7 +117,7 @@ type StepBase = {
   required: boolean;
 };
 
-export type VesselStep = StepBase & { kind: "vessel"; options: VesselOption[]; sizes: SizeOption[] };
+export type VesselStep = StepBase & { kind: "vessel"; options: VesselOption[] };
 
 export type CardsStep = StepBase & {
   kind: "cards";
@@ -145,10 +148,8 @@ export type BlendStep = StepBase & {
   options: StepOption[];
   // Số mục phối tối đa trong 1 hũ (1 = chọn một)
   maxBlend: number;
-  // null = không cho chọn độ đậm. load = tỉ lệ (gram tinh dầu / gram sáp)
-  intensity: { priceDelta: Record<IntensityLevel, Money>; load: Record<IntensityLevel, number> } | null;
-  // Phụ thu hương: basePrice khi lượng hương tới mức standardLoad (ml hương / gram sáp), vượt thì tăng theo tỉ lệ ml
-  scentPrice?: { basePrice: Money; standardLoad: number };
+  // null = không cho chọn độ đậm. load = tỉ lệ (ml tinh dầu / gram sáp) — đậm hơn thì nhiều ml hơn, giá theo lượng tự tăng
+  intensity: { load: Record<IntensityLevel, number> } | null;
 };
 
 export type InputsStep = StepBase & { kind: "inputs"; fields: TextFieldDef[]; addons: AddonDef[] };

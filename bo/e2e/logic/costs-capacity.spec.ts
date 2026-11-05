@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { candleCount, dayLoad, productionLoad, suggestReadyDate, workshopSchedule } from "@/lib/capacity";
 import { averageCost, goodsValue, lotPreview, lotTotal, margin, needsCost, orderCost, purchaseCost, purchaseFrom, purchaseUnits, unitPrice } from "@/lib/costs";
 import { defaultCraftConfig } from "@/lib/craft/default-config";
+import { formatUnitCost } from "@/lib/format";
 import { toMap } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 import type { Order } from "@/lib/orders/types";
@@ -114,4 +115,13 @@ test.describe("Công suất xưởng", () => {
     expect(rows[0].date).toBe("2026-11-03");
     expect(rows.find((r) => r.date === "2026-11-07")).toMatchObject({ load: 20, free: 0, over: false });
   });
+});
+
+test("Giá nhập hiện làm tròn tới 100 ₫, dưới 1.000 ₫ giữ số lẻ", () => {
+  const plain = (s: string) => s.replace(/\s/g, " ");
+  expect(plain(formatUnitCost(16_064.52))).toBe("16.100 ₫");
+  expect(plain(formatUnitCost(14_166.67))).toBe("14.200 ₫");
+  expect(plain(formatUnitCost(2_254.55))).toBe("2.300 ₫");
+  expect(plain(formatUnitCost(59.8))).toBe("59,8 ₫");
+  expect(plain(formatUnitCost(78.33))).toBe("78,33 ₫");
 });

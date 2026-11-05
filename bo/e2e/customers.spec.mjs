@@ -19,7 +19,7 @@ test("Kiểm tra trang Khách hàng", async ({ t }) => {
 
   await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
   await send("Page.navigate", { url: base + "/" }); await sleep(2000);
-  await ev("['bo-customers-v1','bo-orders-v3'].forEach(k=>localStorage.removeItem(k))");
+  await ev("['bo-customers-v1','bo-orders-v4'].forEach(k=>localStorage.removeItem(k))");
   await send("Page.navigate", { url: base + "/customers" }); await sleep(3000);
   console.log("stats:", await ev(`[...document.querySelectorAll('main .ant-row')[0].querySelectorAll('.ant-card')].map(c=>c.innerText.split(String.fromCharCode(10)).join(' / '))`));
   console.log("segments:", await ev(`[...document.querySelectorAll('main .ant-segmented-item')].map(x=>x.innerText).join(', ')`));

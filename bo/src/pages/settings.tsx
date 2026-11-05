@@ -58,7 +58,7 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
             <Typography.Title level={3} style={{ marginBottom: 4 }}>
               Cài đặt
             </Typography.Title>
-            <Typography.Text type="secondary">Tiền cọc, công suất xưởng, giao hàng và phí vận chuyển. Đổi ở đây chỉ áp dụng cho đơn mới, đơn cũ giữ nguyên.</Typography.Text>
+            <Typography.Text type="secondary">Tiền cọc, công suất xưởng, giá bán, giao hàng và phí vận chuyển. Đổi ở đây chỉ áp dụng cho đơn mới, đơn cũ giữ nguyên.</Typography.Text>
           </div>
           <Flex gap={8} align="center" wrap>
             {dirty && (
@@ -120,6 +120,33 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
                       style={{ marginBottom: 0 }}
                     >
                       <InputNumber min={0} max={30} precision={0} suffix="ngày" aria-label="Số ngày làm tối thiểu" style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </FormSection>
+
+              <FormSection title="Giá bán" description="So giá bán ở trang Thủ công với giá vốn nguyên liệu trong Kho. Chỉ cảnh báo và gợi ý, không tự đổi giá.">
+                <Row gutter={16}>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name="minMargin"
+                      label="Lãi tối thiểu"
+                      extra="Cỡ hoặc lựa chọn lãi thấp hơn mức này có cảnh báo ở Thủ công."
+                      rules={[{ required: true, type: "number", min: 0, max: 95, message: "Nhập từ 0 đến 95%." }]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <InputNumber min={0} max={95} precision={0} suffix="%" aria-label="Lãi tối thiểu" style={{ width: "100%" }} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name="priceMarkup"
+                      label="Hệ số gợi ý giá"
+                      extra="Gợi ý giá bán = giá vốn × hệ số, không thấp hơn mức lãi tối thiểu, làm tròn lên 5.000 ₫."
+                      rules={[{ required: true, type: "number", min: 1, max: 20, message: "Nhập từ 1 đến 20." }]}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <InputNumber min={1} max={20} step={0.1} precision={1} prefix="×" aria-label="Hệ số gợi ý giá" style={{ width: "100%" }} />
                     </Form.Item>
                   </Col>
                 </Row>

@@ -5,7 +5,7 @@ test("E2E 13 — Cột Xử lý luôn thấy đủ 2 nút ở mọi bề ngang c
   const base = t.base;
   const bo = t.base;
   const { ev, shot, go, ok } = t;
-  const KEY = "bo-cancelled-products-v3";
+  const KEY = "bo-cancelled-products-v4";
   await go(base + "/", 1000);
   await ev("Object.keys(localStorage).filter(k=>k.startsWith('bo-')).forEach(k=>localStorage.removeItem(k))");
   const row = { id: "r", name: "Nến tự phối", custom: "Hũ thủy tinh hổ phách 200ml · Sáp đậu nành · Vanilla 70% + Lavender 30% · Bấc gỗ · Hoa khô", personalized: true, images: [], price: 1045000, quantity: 2, orderId: "ord-24", orderCode: "SC261013024", customerName: "Trương Văn Lực", cancelReason: "Khách không nghe máy khi giao, trả hàng về.", cancelledAt: new Date().toISOString(), status: "pending", updatedAt: new Date().toISOString() };

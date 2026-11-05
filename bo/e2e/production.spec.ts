@@ -132,7 +132,8 @@ test("Mẻ sau: tab Sản xuất trên thẻ tồn kho, gộp giá bình quân, 
   await expect(c.getByRole("list", { name: "Nguyên liệu cần cho mẻ" })).toContainText("trừ 3.500 g · còn 12.000");
   // 3.500 g × 40 ₫ = 140.000 ₫ → 14.000 ₫/cái; bình quân (2 × 15.000 + 10 × 14.000) ÷ 12
   await expect(c.getByRole("status")).toContainText("Sau phiếu: 12 cái · chi phí mẻ 140.000 ₫ = 14.000 ₫/cái");
-  await expect(c.getByRole("status")).toContainText("14.166,67");
+  // Bình quân 14.166,67 ₫ hiện làm tròn tới 100 ₫
+  await expect(c.getByRole("status")).toContainText("14.200 ₫");
   await c.getByLabel("Ghi chú phiếu").fill("Mẻ tuần 45");
   await c.getByRole("button", { name: "Ghi nhận" }).click();
   await expect(c.locator(".big-number")).toContainText("12");

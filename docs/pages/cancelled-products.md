@@ -4,6 +4,8 @@
 
 **Mục đích:** quản lý nến thủ công đã làm xong nhưng đơn bị hủy. Chỉ có ở BO, không hiện trên web.
 
+**Bắt đầu trống:** không còn bản ghi mẫu (bản ghi mẫu lấy từ đơn mẫu đã hủy), bỏ nút Dữ liệu mẫu.
+
 ## Khi nào có bản ghi
 
 Tự tạo khi hủy đơn có nến thủ công và:

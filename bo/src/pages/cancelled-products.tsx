@@ -1,5 +1,5 @@
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
-import { App, Button, Card, Col, Empty, Flex, Input, Popconfirm, Row, Segmented, Statistic, Typography } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import { App, Button, Card, Col, Empty, Flex, Input, Row, Segmented, Statistic, Typography } from "antd";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { CancelledDrawer } from "@/components/cancelled/cancelled-drawer";
@@ -59,9 +59,6 @@ export function CancelledProductsPage() {
           </Typography.Title>
           <Typography.Text type="secondary">Nến thủ công đã làm xong nhưng đơn bị hủy. Chỉ quản lý ở BO, không hiện trên web.</Typography.Text>
         </div>
-        <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
-          <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
-        </Popconfirm>
       </Flex>
 
       <Row gutter={[16, 16]}>

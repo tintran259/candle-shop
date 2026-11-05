@@ -1,5 +1,6 @@
 // Danh mục component cho bước + các hàm thao tác/kiểm tra cấu hình trình dựng Thủ công
-import { sizeLabel, slugify } from "@/lib/craft/groups";
+import { formatDelta, sizeLabel, slugify } from "@/lib/craft/groups";
+import { formatMoney } from "@/lib/format";
 import type {
   CraftConfig,
   CraftStep,
@@ -10,7 +11,7 @@ import type {
   StepKind,
   StepOption,
 } from "@/lib/craft/types";
-import { sellable, toMap, vesselMaterialIds } from "@/lib/inventory/stock";
+import { jarsOfType, sellable, toMap, vesselMaterialIds } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 
 export const kindMeta: Record<
@@ -19,7 +20,7 @@ export const kindMeta: Record<
 > = {
   vessel: {
     label: "Hũ & kích thước",
-    description: "Thẻ hũ có ảnh minh họa dáng hũ, kèm chọn nắp và kích thước. Quyết định giá gốc của cây nến.",
+    description: "Thẻ hũ có ảnh minh họa dáng hũ, kèm chọn nắp và kích thước. Mỗi hũ có giá riêng và các cỡ lấy từ Kho.",
     example: "Hũ nến",
     icon: "vessel",
     roles: [],
@@ -78,13 +79,24 @@ export const previewRoleMeta: Record<PreviewRole, { label: string; hint: string;
 
 export const intensityLabels: Record<IntensityLevel, string> = { light: "Nhẹ", medium: "Vừa", strong: "Đậm" };
 export const DEFAULT_INTENSITY: NonNullable<Extract<CraftStep, { kind: "blend" }>["intensity"]> = {
-  priceDelta: { light: 0, medium: 0, strong: 10_000 },
   load: { light: 0.06, medium: 0.08, strong: 0.1 },
 };
 
 // Màu nhuộm mặc định: 1 ml cho mỗi 100 g sáp
 export const DYE_RATIO = 0.01;
-export const DEFAULT_SCENT_PRICE = { basePrice: 10_000, standardLoad: 0.1 };
+// Bước tính giá theo lượng nguyên liệu dùng cho hũ: sáp (cards có hệ số gram) theo 100 g, màu và tinh dầu theo ml
+export function amountBasis(step: CraftStep): { unit: "g" | "ml"; per: number } | null {
+  if (step.kind === "blend" || step.kind === "swatches") return { unit: "ml", per: 1 };
+  if (step.kind === "cards" && step.gramsPerGram) return { unit: "g", per: 100 };
+  return null;
+}
+export const basisLabel = (b: { unit: string; per: number }) => (b.per > 1 ? `${b.per} ${b.unit}` : b.unit);
+// Giá của lựa chọn để hiện: tính theo lượng "18.000 ₫/100 g", còn lại phụ thu "+25.000 ₫"
+export function optionPriceText(step: CraftStep, o: StepOption) {
+  const basis = amountBasis(step);
+  if (!basis) return formatDelta(o.priceDelta);
+  return o.unitPrice ? `${formatMoney(o.unitPrice)}/${basisLabel(basis)}` : "Đã gồm";
+}
 
 export const isOptionStep = (s: CraftStep): s is OptionStep => s.kind !== "inputs";
 
@@ -108,7 +120,7 @@ export function newStep(kind: StepKind, title: string, takenIds: string[]): Craf
   };
   switch (kind) {
     case "vessel":
-      return { ...base, kind, options: [], sizes: [] };
+      return { ...base, kind, options: [] };
     case "cards":
       return { ...base, kind, options: [], multiple: false };
     case "swatches":
@@ -139,7 +151,7 @@ export function validateConfig(config: CraftConfig, materials: Material[]): Conf
   const map = toMap(materials);
   const missing = (materialId: string | undefined) => !!materialId && !map.has(materialId);
   const vessels = config.steps.filter((s) => s.kind === "vessel");
-  if (vessels.length !== 1) issues.push({ level: "error", message: "Cần đúng 1 bước “Hũ & kích thước” để tính giá gốc." });
+  if (vessels.length !== 1) issues.push({ level: "error", message: "Cần đúng 1 bước “Hũ & kích thước” để tính giá hũ." });
 
   const ids = config.steps.map((s) => s.id);
   ids.filter((id, i) => ids.indexOf(id) !== i).forEach((id) => issues.push({ stepId: id, level: "error", message: `Trùng mã bước “${id}”.` }));
@@ -149,16 +161,20 @@ export function validateConfig(config: CraftConfig, materials: Material[]): Conf
     const name = step.title.vi;
     if (step.kind === "vessel") {
       if (!step.enabled) issues.push({ stepId: step.id, level: "error", message: `${name}: bước hũ phải luôn bật.` });
-      if (!step.sizes.some((s) => s.available)) issues.push({ stepId: step.id, level: "error", message: `${name}: chưa có kích thước nào đang bán.` });
+      if (step.options.length && !step.options.some((o) => o.available && o.sizes.some((s) => s.available)))
+        issues.push({ stepId: step.id, level: "error", message: `${name}: chưa có hũ nào có kích thước đang bán.` });
       for (const o of step.options) {
-        if (o.available && !o.supportedSizeIds.length)
-          issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa chọn kích thước đổ được.` });
+        if (o.available && !o.sizes.some((s) => s.available))
+          issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa có kích thước nào đang bán.` });
         if (vesselMaterialIds(o).some(missing)) issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” có cỡ gắn với mã hũ/nắp đã xóa khỏi kho.` });
         // Theo dõi tồn vài cỡ nhưng quên gắn mã cho cỡ khác → cỡ đó bán không giới hạn
-        const sizes = step.sizes.filter((s) => o.supportedSizeIds.includes(s.id));
-        const untracked = sizes.filter((s) => !o.sizeMaterials?.[s.id]?.materialId);
-        if (untracked.length && untracked.length < sizes.length)
+        const untracked = o.sizes.filter((s) => !s.materialId);
+        if (untracked.length && untracked.length < o.sizes.length)
           issues.push({ stepId: step.id, level: "warning", message: `${name}: “${o.name.vi}” chưa gắn mã hũ cho cỡ ${untracked.map((s) => sizeLabel(s)).join(", ")} — cỡ này bán không giới hạn.` });
+        // Kho có thêm cỡ của loại hũ này mà hũ chưa có
+        const added = jarsOfType(materials, o.jarType).filter((m) => !o.sizes.some((s) => s.materialId === m.id));
+        if (added.length)
+          issues.push({ stepId: step.id, level: "warning", message: `${name}: Kho có cỡ mới của “${o.name.vi}” (${added.map((m) => (m.capacity ? `${m.capacity}ml` : m.name)).join(", ")}) — mở hũ để đặt giá và bán.` });
       }
     }
     if (step.kind === "inputs") {

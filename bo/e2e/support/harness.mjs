@@ -5,6 +5,7 @@ import { test as base, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { sampleStorage } from "./samples.ts";
 
 export { expect };
 
@@ -30,8 +31,14 @@ export const test = base.extend({
   autoLogin: [true, { option: true }],
   // true: cho BO gửi cấu hình sang web thật (mặc định chặn để test không ghi đè cấu hình web đang dev)
   storefront: [false, { option: true }],
+  // true: nạp đơn hàng, sản phẩm trưng bày, sản phẩm hủy đơn mẫu khi khóa còn trống (app thật bắt đầu trống)
+  samples: [true, { option: true }],
 
-  t: async ({ page, baseURL, autoLogin, storefront }, use, testInfo) => {
+  t: async ({ page, baseURL, autoLogin, storefront, samples }, use, testInfo) => {
+    if (samples)
+      await page.addInitScript((data) => {
+        for (const [key, value] of Object.entries(data)) if (localStorage.getItem(key) === null) localStorage.setItem(key, value);
+      }, sampleStorage);
     if (autoLogin)
       await page.addInitScript(
         ([key]) => {

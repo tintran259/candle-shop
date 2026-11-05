@@ -8,7 +8,7 @@ test("E2E 16 — 6 quyết định: công thức, giữ nguyên liệu, thu đ�
   const { ev, sleep, shot, click, clickText, byText, type, pick, text, go, ok, send, viewport, overflow } = t;
   const D = ".ant-drawer-open";
   const M = ".ant-modal-wrap:not([style*=none]) .ant-modal";
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const inv = () => ev("JSON.parse(localStorage.getItem('bo-inventory-v2')||'null')");
   const stock = async (id) => (await inv())?.materials.find((m) => m.id === id)?.stock;
   const order = async (id) => (await orders()).find((o) => o.id === id);
@@ -49,22 +49,17 @@ test("E2E 16 — 6 quyết định: công thức, giữ nguyên liệu, thu đ�
     make("late", { status: "shipping", items: [custom] }),
     make("resend", { status: "shipping", paymentPlan: "full" }),
   ];
-  await ev(`localStorage.setItem('bo-orders-v3', ${JSON.stringify(JSON.stringify(list))})`);
+  await ev(`localStorage.setItem('bo-orders-v4', ${JSON.stringify(JSON.stringify(list))})`);
 
   // --- Công thức
   await go(base + "/products?edit=new", 2600);
   await click(byText(`${D} .ant-drawer-footer button`, "Thêm sản phẩm"));
   await sleep(700);
-  ok("Recipe: sản phẩm mới bắt buộc có công thức", (await ev("document.querySelector('.ant-drawer-open').innerText")).includes("Thêm ít nhất một nguyên liệu."));
-  await clickText(`${D} button`, "Thêm nguyên liệu");
-  await sleep(300);
-  await pick(`document.querySelector('${D} [aria-label="Nguyên liệu dòng 1"]')?.closest('.ant-select') ?? document.querySelector('${D} .ant-select[aria-label], ${D} form .ant-form-item .ant-select:last-of-type')`, "Sáp dừa", true).catch((e) => console.log("pick:", e.message));
-  await sleep(300);
-  await ev(`document.querySelector('${D} .ant-input-number-input') && 0`);
+  ok("Recipe: sản phẩm mới bắt buộc chọn nguyên liệu", /Còn \d+ bước cần chọn lại/.test(await ev("document.querySelector('.ant-drawer-open').innerText")));
   await shot("d16-recipe.png");
   await go(base + "/products?edit=brown-relac", 2600);
   const recipeText = await ev(`document.querySelector('${D}').innerText`);
-  ok("Recipe: sản phẩm mẫu hiện công thức", recipeText.includes("Công thức nguyên liệu") && recipeText.includes("Sáp đậu nành"));
+  ok("Recipe: sản phẩm mẫu hiện công thức", recipeText.includes("Nguyên liệu cho 1 cây") && recipeText.includes("Sáp đậu nành"));
 
   // --- Giữ nguyên liệu
   await go(base + "/inventory", 3500);
@@ -193,7 +188,7 @@ test("E2E 16 — 6 quyết định: công thức, giữ nguyên liệu, thu đ�
   await radio("Lỗi do khách");
   await sleep(200);
   await modalBtn("Hủy đơn");
-  const cp = await ev("JSON.parse(localStorage.getItem('bo-cancelled-products-v3')||'[]')");
+  const cp = await ev("JSON.parse(localStorage.getItem('bo-cancelled-products-v4')||'[]')");
   ok("Delivery: nến tốt vào Sản phẩm hủy đơn", (await order("late")).cancelOutcome === "stocked" && cp.some((c) => c.orderId === "late" && c.quantity === 2));
 
   // Gửi lại: cộng phí, đếm lại, hoàn tất thu nốt

@@ -107,10 +107,14 @@ test("Bước Cá nhân hóa: thêm ô nhập, thêm tuỳ chọn, ẩn ô", asy
   expect((await step(page, "personalization")).fields[0].enabled).toBe(!first.enabled);
 });
 
-test("Bước Hũ có bảng kích thước 3 cỡ", async ({ page }) => {
+test("Bước Hũ: mỗi hũ có cỡ và giá riêng, không còn tab Kích thước chung", async ({ page }) => {
   await openStep(page, "Hũ nến");
-  await tab(page, "Kích thước");
-  await expect(page.locator("main [role=tabpanel]:not([aria-hidden=true]) tr.ant-table-row")).toHaveCount(3);
+  await expect(page.locator("main .ant-tabs-tab").filter({ hasText: "Kích thước" })).toHaveCount(0);
+  // Hũ gốm: giá hũ 500.000, 200ml +100.000, 250ml +250.000
+  const row = page.getByRole("row").filter({ hasText: "Hũ gốm" });
+  await expect(row).toContainText(/150ml\s*500\.000/);
+  await expect(row).toContainText(/200ml\s*600\.000/);
+  await expect(row).toContainText(/250ml\s*750\.000/);
 });
 
 test("Cấu hình mẫu đưa về bản nháp, phải Lưu mới có hiệu lực", async ({ page }) => {

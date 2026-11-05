@@ -48,17 +48,20 @@ Trong thư mục `bo`:
 | [Sản phẩm trưng bày](./pages/products.md) | `products`, `logic/products` | 10 test | 13 | Tốt |
 | [Danh mục](./pages/categories.md) | `categories`, `misc-extra` | 21 mục + 1 test | | Tốt |
 | [Sản phẩm hủy đơn](./pages/cancelled-products.md) | `cancelled-*` | 41 mục + 2 test | | Tốt |
-| [Thủ công](./pages/craft.md) | `craft-*`, `orders-pending`, `storefront-sync` | 103 mục + 9 test | | Tốt |
+| [Thủ công](./pages/craft.md) | `craft-*`, `orders-pending`, `storefront-sync`, `logic/craft-pricing` | 103 mục + 13 test | 7 | Tốt |
 | [Kho nguyên liệu](./pages/inventory.md) | `inventory`, `inventory-ui`, `production`, `workshop-cost`, `logic/inventory`, `logic/costs-capacity`, `logic/production` | 34 mục + 17 test | 23 | Tốt |
+| [Phiếu kho](./pages/stock-movements.md) | `stock-movements` | 3 test | 2 | Tốt |
 | [Khách hàng](./pages/customers.md) | `customers`, `customers-list`, `logic/customers` | 9 mục + 7 test | 13 | Tốt |
 | [Mã giảm giá](./pages/discounts.md) | `discounts`, `logic/discounts` | 8 test | 21 | Tốt |
-| [Cài đặt](./pages/settings.md) | `settings`, `misc-extra`, `workshop-cost` | 24 mục + 2 test | | Tốt |
+| [Cài đặt](./pages/settings.md) | `settings`, `misc-extra`, `workshop-cost`, `craft-pricing` | 24 mục + 2 test | | Tốt |
 
 Mỗi trang ghi chi tiết test đang có ở mục **Kiểm thử** cuối tài liệu trang.
 
+**Dữ liệu mẫu trong test:** app bắt đầu không có đơn hàng, sản phẩm trưng bày, sản phẩm hủy đơn. Bộ khung test (`e2e/support/harness.mjs`) nạp đơn, sản phẩm và bản ghi hủy đơn mẫu (`e2e/support/samples.ts`, lấy từ `src/lib/*/sample.ts`) khi các khóa này còn trống, để các kịch bản viết trên dữ liệu mẫu chạy như trước. Test cần trạng thái trống thì đặt `test.use({ samples: false })`, vd `start-empty`.
+
 ## Kết quả lần chạy gần nhất
 
-Ngày 04/11/2026, chạy cả bộ trên Edge: **220 đạt, 0 trượt, 1 bỏ qua** (`storefront-sync`, vì web không chạy), mất 26 phút.
+Ngày 04/11/2026, chạy cả bộ trên Edge: **250 đạt, 0 trượt, 1 bỏ qua** (`storefront-sync`, vì web không chạy), mất 26 phút. Gồm hũ theo từng loại, giá theo lượng, trang Phiếu kho, dữ liệu bắt đầu trống và form sản phẩm chọn giống nến tự phối.
 
 Trong lúc viết test đã phát hiện và sửa:
 

@@ -2,9 +2,8 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Flex, Form, Input, InputNumber, Popconfirm, Radio, Row, Switch, Typography } from "antd";
 import type { ReactNode } from "react";
 import { IconPicker } from "@/components/craft/step-icon";
-import { MoneyInput } from "@/components/money-input";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
-import { DEFAULT_INTENSITY, DEFAULT_SCENT_PRICE, intensityLabels, kindMeta, previewRoleMeta } from "@/lib/craft/steps";
+import { DEFAULT_INTENSITY, intensityLabels, kindMeta, previewRoleMeta } from "@/lib/craft/steps";
 import type { BlendStep, CraftStep, IntensityLevel, Localized } from "@/lib/craft/types";
 
 const levels: IntensityLevel[] = ["light", "medium", "strong"];
@@ -71,7 +70,7 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
       </Card>
 
       <Card title="Cách hoạt động" size="small" className="inner-card" styles={{ body: { paddingTop: 0, paddingBottom: 4 } }}>
-        <Setting label="Hiện trên web" description={isVessel ? "Bước hũ quyết định giá gốc nên luôn hiện." : "Tắt để ẩn bước khỏi trang Thủ công, giữ nguyên dữ liệu."}>
+        <Setting label="Hiện trên web" description={isVessel ? "Bước hũ quyết định giá hũ và kích thước nên luôn hiện." : "Tắt để ẩn bước khỏi trang Thủ công, giữ nguyên dữ liệu."}>
           <Switch checked={step.enabled} disabled={isVessel} onChange={(enabled) => set({ enabled })} aria-label="Hiện trên web" />
         </Setting>
         <Setting
@@ -145,7 +144,7 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
         <Flex justify="space-between" align="center" gap={16} wrap>
           <Typography.Text type="secondary" style={{ flex: 1, minWidth: 220 }}>
             {isVessel
-              ? "Không xóa được bước hũ — mỗi cấu hình cần đúng một bước hũ để tính giá gốc."
+              ? "Không xóa được bước hũ — mỗi cấu hình cần đúng một bước hũ để tính giá hũ."
               : "Xóa cả bước và các lựa chọn bên trong. Đơn hàng cũ vẫn giữ mô tả đã lưu."}
           </Typography.Text>
           <Popconfirm
@@ -172,7 +171,6 @@ export function StepSettings({ step, api, onRemoved }: { step: CraftStep; api: C
 
 function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<BlendStep>) => void }) {
   const { intensity } = step;
-  const scent = step.scentPrice ?? { basePrice: 0, standardLoad: DEFAULT_SCENT_PRICE.standardLoad };
   return (
     <>
       <Setting label="Số mục phối tối đa mỗi hũ" description="1 = khách chỉ chọn một mục, không có thanh chỉnh tỉ lệ.">
@@ -183,25 +181,7 @@ function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<Bl
           options={[1, 2, 3, 4].map((n) => ({ value: n, label: n === 1 ? "1 mục" : `Tối đa ${n}` }))}
         />
       </Setting>
-      <Setting label="Phụ thu hương" description="Lượng hương tới mức chuẩn tính phụ thu mặc định, vượt mức thì phụ thu tăng theo tỉ lệ ml. Phụ thu 0 là tắt. Mức chuẩn tính trên lượng sáp của cỡ.">
-        <Flex gap={8} align="center" wrap>
-          <InputNumber
-            aria-label="Mức hương chuẩn"
-            min={1}
-            max={30}
-            step={0.5}
-            prefix="Chuẩn"
-            suffix="%"
-            value={Math.round((scent.standardLoad || 0) * 1000) / 10}
-            onChange={(n) => n !== null && set({ scentPrice: { ...scent, standardLoad: n / 100 } })}
-            style={{ width: 130 }}
-          />
-          <div style={{ width: 150 }}>
-            <MoneyInput value={scent.basePrice} onChange={(n) => n !== null && set({ scentPrice: { ...scent, basePrice: n } })} />
-          </div>
-        </Flex>
-      </Setting>
-      <Setting label="Cho chọn độ đậm" description="Nhẹ / Vừa / Đậm — tỉ lệ (gram tinh dầu / gram sáp) quyết định lượng trừ kho.">
+      <Setting label="Cho chọn độ đậm" description="Nhẹ / Vừa / Đậm — tỉ lệ (ml tinh dầu / gram sáp) quyết định lượng trừ kho và giá: đậm hơn thì nhiều ml hơn.">
         <Switch checked={!!intensity} onChange={(v) => set({ intensity: v ? DEFAULT_INTENSITY : null })} aria-label="Cho chọn độ đậm" />
       </Setting>
       {intensity && (
@@ -210,7 +190,7 @@ function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<Bl
             <Col key={level} xs={24} sm={8}>
               <Card size="small" title={intensityLabels[level]} className="inner-card">
                 <Form layout="vertical" component="div">
-                  <Form.Item label="Tỉ lệ hương">
+                  <Form.Item label="Tỉ lệ hương" style={{ marginBottom: 0 }}>
                     <InputNumber
                       min={0}
                       step={0.5}
@@ -218,12 +198,6 @@ function BlendSettings({ step, set }: { step: BlendStep; set: (patch: Partial<Bl
                       style={{ width: "100%" }}
                       value={Math.round(intensity.load[level] * 1000) / 10}
                       onChange={(n) => n !== null && set({ intensity: { ...intensity, load: { ...intensity.load, [level]: n / 100 } } })}
-                    />
-                  </Form.Item>
-                  <Form.Item label="Phụ thu" style={{ marginBottom: 0 }}>
-                    <MoneyInput
-                      value={intensity.priceDelta[level]}
-                      onChange={(n) => n !== null && set({ intensity: { ...intensity, priceDelta: { ...intensity.priceDelta, [level]: n } } })}
                     />
                   </Form.Item>
                 </Form>

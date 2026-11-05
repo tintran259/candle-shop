@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { fromOrder } from "@/lib/cancelled/labels";
-import { mockCancelled } from "@/lib/cancelled/mock";
 import type { CancelledProduct } from "@/lib/cancelled/types";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 import type { Order } from "@/lib/orders/types";
@@ -8,7 +7,7 @@ import type { Order } from "@/lib/orders/types";
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE: GET/PATCH /api/admin/cancelled-products,
 // bản ghi do BE tạo trong cùng transaction hủy đơn (xem docs/inventory.md mục 7).
 // v3: mỗi dòng nến tự phối một bản ghi kèm số lượng, không còn nến có sẵn
-const store = createLocalStore<CancelledProduct[]>("bo-cancelled-products-v3", mockCancelled);
+const store = createLocalStore<CancelledProduct[]>("bo-cancelled-products-v4", []);
 
 // Hủy đơn đã làm: thêm nến tự phối vào danh sách. Trả về số sản phẩm vừa thêm
 export const addFromOrder = (order: Order, reason: string) => {

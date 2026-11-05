@@ -8,7 +8,7 @@ test("E2E 18 — Tự phối nến: chọn nhiều sáp, chỉnh lượng từng
   const { ev, sleep, shot, click, clickText, byText, type, pick, text, go, ok, viewport, overflow } = t;
   const D = ".ant-drawer-open";
   const M = ".ant-modal-wrap .ant-modal";
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const inv = () => ev("JSON.parse(localStorage.getItem('bo-inventory-v2')||'null')");
   const stock = async (id) => (await inv())?.materials.find((m) => m.id === id)?.stock;
   const option = (step, name) => `[...document.querySelectorAll('${M} #cfg-step-${step} .cfg-option')].find(b=>b.innerText.includes(${JSON.stringify(name)}))`;

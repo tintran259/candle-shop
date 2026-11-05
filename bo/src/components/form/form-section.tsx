@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { radius } from "@/theme";
 
 // Một khối trắng bo tròn trong drawer — mỗi khối gom một nhóm trường liên quan
-export function FormSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+export function FormSection({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
   return (
     <section style={{ background: "#fff", borderRadius: radius.card, padding: 20 }} aria-label={title}>
       <Typography.Title level={5} style={{ margin: 0 }}>

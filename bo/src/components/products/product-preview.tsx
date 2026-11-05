@@ -2,6 +2,8 @@ import { Flex, Form, Typography } from "antd";
 import { CategoryTag } from "@/components/products/category-tag";
 import type { ProductFormValues } from "@/components/products/product-form";
 import { PriceText, ProductBadges, ProductThumb } from "@/components/products/product-view";
+import { useCraftConfig } from "@/hooks/use-craft-config";
+import { buildSize, sizeFromCapacity } from "@/lib/products/build";
 import { aromaLevelLabels, sizeLabels } from "@/lib/products/labels";
 import { radius } from "@/theme";
 
@@ -9,7 +11,10 @@ import { radius } from "@/theme";
 export function ProductPreview() {
   const form = Form.useFormInstance<ProductFormValues>();
   const v = Form.useWatch([], { form, preserve: true }) as ProductFormValues | undefined;
+  const { config } = useCraftConfig();
   if (!v) return null;
+  // Cỡ trên web theo dung tích hũ đã chọn
+  const capacity = v.build?.selection ? buildSize({ selection: v.build.selection, extras: [] }, config)?.ml : undefined;
   const status = v.active ? "active" : "hidden";
 
   return (
@@ -24,7 +29,7 @@ export function ProductPreview() {
           <Flex gap={6} align="center" wrap>
             <CategoryTag id={v.categoryId} />
             <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-              Cỡ {sizeLabels[v.size].toLowerCase()} · Hương {aromaLevelLabels[v.aromaLevel].toLowerCase()}
+              {capacity ? `${capacity}ml · cỡ ${sizeLabels[sizeFromCapacity(capacity)].toLowerCase()}` : "Chưa chọn hũ"} · Hương {aromaLevelLabels[v.aromaLevel].toLowerCase()}
               {v.burnTime ? ` · ~${v.burnTime} giờ` : ""}
             </Typography.Text>
           </Flex>

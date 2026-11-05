@@ -8,7 +8,7 @@ test("E2E 15 — Trang Cài đặt và áp dụng vào tạo đơn", async ({ t 
   const D = ".ant-drawer-open";
   const S = base + "/settings";
   const saved = () => ev("JSON.parse(localStorage.getItem('bo-settings-v1')||'null')");
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const input = (id) => `document.querySelector('input#${id}')`;
   const preview = async () => (await text("aside.settings-preview")).join(" ");
   const saveBtn = () => byText("button", "Lưu cài đặt");

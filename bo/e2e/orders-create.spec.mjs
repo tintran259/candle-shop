@@ -5,7 +5,7 @@ test("E2E 7 — Tạo đơn hàng tại BO: khách có sẵn / khách mới / kh
   const base = t.base;
   const bo = t.base;
   const { ev, sleep, shot, click, clickText, byText, type, pick, text, go, ok, press } = t;
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const customers = () => ev("JSON.parse(localStorage.getItem('bo-customers-v1')||'null')");
   const D = ".ant-drawer-open";
   const help = () => ev(`[...document.querySelectorAll('${D} .ant-form-item')].find(f=>f.innerText.includes('Mã giảm giá'))?.querySelector('.ant-form-item-explain')?.innerText ?? ''`);
@@ -13,7 +13,7 @@ test("E2E 7 — Tạo đơn hàng tại BO: khách có sẵn / khách mới / kh
   const money = (s, label) => Number((s.match(new RegExp(label + "\\s*−?([\\d.]+)")) ?? [])[1]?.replace(/\./g, "") ?? NaN);
 
   await go(base + "/", 1000);
-  await ev("['bo-orders-v3','bo-customers-v1','bo-discounts-v1','bo-products-v1'].forEach(k=>localStorage.removeItem(k))");
+  await ev("['bo-orders-v4','bo-customers-v1','bo-discounts-v1','bo-products-v2'].forEach(k=>localStorage.removeItem(k))");
   await go(base + "/orders", 2600);
   const before = (await text("main .ant-tabs-tab"))[0];
 

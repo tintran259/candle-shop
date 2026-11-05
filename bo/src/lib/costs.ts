@@ -24,6 +24,9 @@ export const purchaseUnits: Record<Unit, { value: string; label: string; factor:
   pcs: [{ value: "pcs", label: "cái", factor: 1 }],
 };
 
+// Bảng Kho hiện giá bình quân theo 100 g cho dễ đọc (giá 1 g thường lẻ), ml và cái theo 1 đơn vị
+export const costBasis: Record<Unit, number> = { g: 100, ml: 1, pcs: 1 };
+
 // Giá nhập bình quân sau một lần nhập: (tồn × giá cũ + lượng nhập × giá mới) ÷ tổng. Chưa có giá hoặc hết tồn thì lấy giá mới
 export function averageCost(stock: number, cost: number | undefined, quantity: number, price: number) {
   if (cost === undefined || stock <= 0) return price;

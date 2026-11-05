@@ -7,11 +7,11 @@ test("E2E 17 — Đơn toàn nến có sẵn hủy lúc Đang làm: đã trừ K
   const { ev, sleep, shot, click, clickText, byText, type, text, go, ok } = t;
   const D = ".ant-drawer-open";
   const M = ".ant-modal-wrap:not([style*=none]) .ant-modal";
-  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v3')||'null')");
+  const orders = () => ev("JSON.parse(localStorage.getItem('bo-orders-v4')||'null')");
   const inv = () => ev("JSON.parse(localStorage.getItem('bo-inventory-v2')||'null')");
   const wax = async () => (await inv())?.materials.find((m) => m.id === "wax-soy").stock ?? 9000;
   const order = async (id) => (await orders()).find((o) => o.id === id);
-  const cancelled = () => ev("JSON.parse(localStorage.getItem('bo-cancelled-products-v3')||'null')");
+  const cancelled = () => ev("JSON.parse(localStorage.getItem('bo-cancelled-products-v4')||'null')");
 
   await go(base + "/", 1000);
   await ev("Object.keys(localStorage).filter(k=>k.startsWith('bo-')).forEach(k=>localStorage.removeItem(k))");
@@ -22,7 +22,7 @@ test("E2E 17 — Đơn toàn nến có sẵn hủy lúc Đang làm: đã trừ K
     payments: [{ id: "p-" + id, provider: "cod", amount: 1000000, status: "success", createdAt: new Date().toISOString() }],
     readyDate: "2026-12-30", history: [{ at: new Date().toISOString(), status: "pending", by: "x" }], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   });
-  await ev(`localStorage.setItem('bo-orders-v3', ${JSON.stringify(JSON.stringify([make("a", "vanilla-relax", "paid"), make("b", "vanilla-relax", "paid"), make("c", "khong-co", "producing")]))})`);
+  await ev(`localStorage.setItem('bo-orders-v4', ${JSON.stringify(JSON.stringify([make("a", "vanilla-relax", "paid"), make("b", "vanilla-relax", "paid"), make("c", "khong-co", "producing")]))})`);
   const open = (id) => go(`${base}/orders?order=${id}`, 2800);
   const btn = (s) => clickText(`${D} section button`, s).then(() => sleep(600));
   const submit = () => click(byText(`${M} .ant-modal-footer button`, "Hủy đơn")).then(() => sleep(900));

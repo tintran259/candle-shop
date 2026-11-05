@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
-import { mockProducts } from "@/lib/products/mock";
 import type { Product } from "@/lib/products/types";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/products (GET/POST/PATCH/DELETE).
@@ -10,7 +9,7 @@ const migrate = (list: Product[]) =>
     const { aromaType, ...rest } = p as Product & { aromaType?: string };
     return p.categoryId ? p : { ...rest, categoryId: aromaType ?? "" };
   });
-const store = createLocalStore<Product[]>("bo-products-v1", mockProducts, migrate);
+const store = createLocalStore<Product[]>("bo-products-v2", [], migrate);
 
 const today = () => new Date().toISOString().slice(0, 10);
 

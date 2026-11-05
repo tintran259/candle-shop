@@ -23,7 +23,7 @@ export function AddStepModal({ open, hasVessel, onCancel, onCreate }: Props) {
       onCancel={onCancel}
       onOk={() => form.submit()}
       destroyOnHidden
-      // Chưa có bước hũ thì gợi ý tạo hũ trước (bước bắt buộc, quyết định giá gốc)
+      // Chưa có bước hũ thì gợi ý tạo hũ trước (bước bắt buộc, quyết định giá hũ)
       afterOpenChange={(o) => o && setKind(hasVessel ? "cards" : "vessel")}
     >
       <Typography.Paragraph type="secondary">

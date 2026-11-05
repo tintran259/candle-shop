@@ -27,7 +27,7 @@ const returned = (id: string, returnCondition: "good" | "damaged") => ({
   createdAt: now,
   updatedAt: now,
 });
-const cancelled = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-cancelled-products-v3") ?? "[]"));
+const cancelled = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-cancelled-products-v4") ?? "[]"));
 
 const cancelOrder = async (page, id: string) => {
   await page.goto(`/orders?order=${id}`);
@@ -43,7 +43,7 @@ const cancelOrder = async (page, id: string) => {
 test("Đơn Đã hoàn về: nến còn tốt vào Sản phẩm hủy đơn, nến hỏng thì không", async ({ page, t }) => {
   void t;
   await page.goto("/");
-  await page.evaluate((list) => localStorage.setItem("bo-orders-v3", JSON.stringify(list)), [returned("good", "good"), returned("bad", "damaged")]);
+  await page.evaluate((list) => localStorage.setItem("bo-orders-v4", JSON.stringify(list)), [returned("good", "good"), returned("bad", "damaged")]);
   await cancelOrder(page, "good");
   await cancelOrder(page, "bad");
   const list = await cancelled(page);

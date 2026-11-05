@@ -8,9 +8,20 @@ const at = (days: number, hour = 9) => dayjs().subtract(days, "day").hour(hour).
 
 type Seed = Omit<Material, "tracked" | "lowStock" | "updatedAt"> & { lowStock?: number; tracked?: boolean; days?: number };
 
-// Một nguyên liệu cho mỗi dung tích: { 150: tồn, 250: tồn } → jar-ceramic-150 "Hũ gốm trụ 150ml"
+// Một nguyên liệu cho mỗi dung tích: { 150: tồn, 250: tồn } → jar-ceramic-150 "Hũ gốm trụ 150ml", loại hũ "Hũ gốm trụ". Nắp không có loại hũ
 const sized = (id: string, name: string, sku: string | undefined, stock: Record<number, number>, swatch?: string): Seed[] =>
-  Object.entries(stock).map(([ml, n]) => ({ id: `${id}-${ml}`, name: `${name} ${ml}ml`, sku: sku && `${sku}-${ml}`, category: "vessel", unit: "pcs", stock: n, lowStock: 5, swatch }));
+  Object.entries(stock).map(([ml, n]) => ({
+    id: `${id}-${ml}`,
+    name: `${name} ${ml}ml`,
+    sku: sku && `${sku}-${ml}`,
+    category: "vessel",
+    unit: "pcs",
+    stock: n,
+    lowStock: 5,
+    swatch,
+    jarType: id.startsWith("jar-") ? name : undefined,
+    capacity: Number(ml),
+  }));
 
 const seeds: Seed[] = [
   // Hũ & nắp — mỗi cỡ một mã riêng (hũ 150ml không thay được hũ 250ml)

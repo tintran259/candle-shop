@@ -1,14 +1,13 @@
 import { useMemo } from "react";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 import { cancelOutcomeLabels, faultLabels, nextStatus, refundFor, remaining, returnConditionLabels } from "@/lib/orders/labels";
-import { mockOrders } from "@/lib/orders/mock";
 import { recordComplaint } from "@/lib/orders/complaint";
 import { applyEdit, type EditOrderInput } from "@/lib/orders/edit";
 import type { CancelFault, CancelOutcome, ComplaintResolution, Order, OrderEvent, OrderStatus, Refund, ReturnCondition } from "@/lib/orders/types";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/orders (GET, PATCH status/payment/note).
-// v3: thêm đơn cũ cho trang Khách hàng — bỏ dữ liệu mẫu v2
-const store = createLocalStore<Order[]>("bo-orders-v3", mockOrders);
+// v4: bắt đầu không có đơn (bỏ đơn mẫu và mọi đơn lưu trước đó)
+const store = createLocalStore<Order[]>("bo-orders-v4", []);
 
 const STAFF = "Admin 2510";
 const now = () => new Date().toISOString();

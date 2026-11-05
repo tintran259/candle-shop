@@ -1,9 +1,9 @@
-// ⚠️ DỮ LIỆU MẪU — hồ sơ lấy từ khách trong đơn mẫu (gộp theo số điện thoại) + vài tài khoản chưa đặt đơn.
+// ⚠️ DỮ LIỆU MẪU — hồ sơ lấy từ khách trong đơn mẫu (gộp theo số điện thoại) + vài tài khoản chưa đặt đơn. Đơn mẫu không nạp vào trang Đơn hàng.
 // Bản thật lấy từ BE: GET /api/customers.
 import dayjs from "dayjs";
 import { phoneKey } from "@/lib/customers/stats";
 import type { Customer } from "@/lib/customers/types";
-import { mockOrders } from "@/lib/orders/mock";
+import { sampleOrders } from "@/lib/orders/sample";
 
 // Thông tin shop tự ghi cho một số khách (theo số điện thoại)
 const extras: Record<string, Partial<Customer>> = {
@@ -17,7 +17,7 @@ const extras: Record<string, Partial<Customer>> = {
 const guests = new Set(["0966334455", "0911990011", "0973787909", "0936778112"]);
 
 const fromOrders = new Map<string, Customer>();
-for (const o of [...mockOrders].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
+for (const o of [...sampleOrders].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
   const key = phoneKey(o.customer.phone);
   if (fromOrders.has(key)) continue;
   const hasAccount = !guests.has(key);

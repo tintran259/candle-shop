@@ -33,7 +33,7 @@ test("Sắp xếp Tên A–Z", async ({ page }) => {
   expect(list).toEqual([...list].sort((a, b) => a.localeCompare(b, "vi")));
 });
 
-test("Nhập thêm trong drawer: hết Sắp hết, hiện ở Phiếu kho gần đây", async ({ page }) => {
+test("Nhập thêm trong drawer: hết Sắp hết, hiện ở trang Phiếu kho", async ({ page }) => {
   await page.goto("/inventory?material=wax-beeswax");
   const d = drawer(page);
   await expect(d.getByRole("region", { name: "Tồn kho hiện tại" })).toContainText("Sáp ong");
@@ -45,9 +45,10 @@ test("Nhập thêm trong drawer: hết Sắp hết, hiện ở Phiếu kho gần
   await expect(d.getByRole("region", { name: "Tồn kho hiện tại" })).toContainText("1.450");
   await expect(d.getByRole("region", { name: "Tồn kho hiện tại" })).toContainText("Còn hàng");
   await d.locator(".ant-drawer-close").first().click();
-  const recent = page.locator("main .ant-card").filter({ hasText: "Phiếu kho gần đây" });
-  await expect(recent).toContainText("Sáp ong");
-  await expect(recent).toContainText("Nhập lô mới");
+  await page.goto("/inventory/movements");
+  const first = page.getByRole("list", { name: "Phiếu kho" }).getByRole("listitem").first();
+  await expect(first).toContainText("Sáp ong");
+  await expect(first).toContainText("Nhập lô mới");
 });
 
 test("Drawer liệt kê lựa chọn Thủ công đang dùng nguyên liệu, bấm mở đúng lựa chọn", async ({ page }) => {

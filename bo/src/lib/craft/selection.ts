@@ -1,7 +1,7 @@
 // Lựa chọn của khách trên trình dựng Thủ công (CraftSelection) → giá, mô tả, nguyên liệu tiêu hao, kiểm tra hợp lệ.
 // Đúng công thức ở docs/craft-builder.md (mục 6–8) và docs/inventory.md (mục 6) — web và BE dùng cùng cách tính.
 import { sizeLabel } from "@/lib/craft/groups";
-import { intensityLabels } from "@/lib/craft/steps";
+import { amountBasis, intensityLabels } from "@/lib/craft/steps";
 import type { BlendStep, CraftConfig, CraftStep, IntensityLevel, StepOption, VesselOption, VesselStep } from "@/lib/craft/types";
 import { lidLevel, optionLevel, sellable, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import type { RecipeLine } from "@/lib/products/types";
@@ -53,22 +53,6 @@ export function blendRatios(step: BlendStep, sel: Extract<StepSelection, { kind:
   return blendShares(shares.map((i) => ({ optionId: i.optionId, weight: sel.amounts?.[i.optionId] ?? (grams * load * i.percent) / 100 })));
 }
 
-// Lượng hương cho 1 hũ so với mức chuẩn
-export function scentVolume(step: BlendStep, sel: Extract<StepSelection, { kind: "blend" }>, grams: number) {
-  const load = step.intensity && sel.intensity ? step.intensity.load[sel.intensity] : DEFAULT_LOAD;
-  const shares = blendShares(sel.items).filter((i) => !optionsOf(step).find((o) => o.id === i.optionId)?.exclusive);
-  return { items: shares.length, ml: shares.reduce((s, i) => s + (sel.amounts?.[i.optionId] ?? (grams * load * i.percent) / 100), 0), standard: grams * (step.scentPrice?.standardLoad ?? 0) };
-}
-
-// Phụ thu hương: tới mức chuẩn là giá mặc định, vượt thì tăng theo tỉ lệ ml, làm tròn tới nghìn đồng. percent chỉ có khi vượt
-function scentCharge(step: BlendStep, sel: Extract<StepSelection, { kind: "blend" }>, grams: number) {
-  const base = step.scentPrice?.basePrice;
-  const { items, ml, standard } = scentVolume(step, sel, grams);
-  if (!base || !items) return null;
-  if (!standard || ml <= standard) return { amount: base };
-  return { amount: Math.round((base * ml) / standard / 1000) * 1000, percent: Math.round((ml / grams) * 100) };
-}
-
 // Chọn hoặc bỏ một mục: mục đứng riêng (Không màu) xóa các mục khác và ngược lại
 export function pickOption(ids: string[], option: StepOption, options: StepOption[], multi: boolean, max?: number) {
   if (ids.includes(option.id)) return ids.filter((x) => x !== option.id);
@@ -89,10 +73,18 @@ function chosenIds(sel?: StepSelection): string[] {
   return sel.optionIds;
 }
 
+// Giá thấp nhất của hũ trong các cỡ đang bán (giá hũ + phụ thu cỡ)
+export function jarFrom(o: VesselOption) {
+  const deltas = o.sizes.filter((s) => s.available).map((s) => s.priceDelta);
+  return o.priceDelta + (deltas.length ? Math.min(...deltas) : 0);
+}
+
+// Cỡ đang chọn — cỡ thuộc từng loại hũ nên tìm trong hũ đang chọn
 export function selectedSize(config: CraftConfig, selection: CraftSelection) {
   const vessel = vesselStep(config);
   const sel = vessel && selection[vessel.id];
-  return vessel && sel?.kind === "vessel" ? vessel.sizes.find((s) => s.id === sel.sizeId) : undefined;
+  if (!vessel || sel?.kind !== "vessel") return undefined;
+  return vessel.options.find((o) => o.id === sel.optionId)?.sizes.find((s) => s.id === sel.sizeId);
 }
 
 // Lựa chọn có dùng được không: còn bán, còn nguyên liệu, hợp quy tắc "chỉ dùng với", không quá lượng sáp tối đa
@@ -110,9 +102,31 @@ export function optionBlock(config: CraftConfig, selection: CraftSelection, step
   return null;
 }
 
-export type PriceLine = { stepId: string; label: string; amount: number };
+// base: dòng giá hũ theo cỡ (không phải phụ thu)
+// Lượng nguyên liệu của từng lựa chọn đã chọn ở bước tính theo lượng: { id lựa chọn: g hoặc ml cho 1 hũ }.
+// Sáp, màu: lượng sáp đổ × hệ số gram, chia đều khi chọn nhiều (admin điền lượng thì theo lượng đó). Hương: lượng sáp × tỉ lệ hương × % phối
+export function stepAmounts(step: CraftStep, sel: StepSelection, grams: number): Map<string, number> {
+  const out = new Map<string, number>();
+  if (step.kind === "blend" && sel.kind === "blend") {
+    const load = step.intensity && sel.intensity ? step.intensity.load[sel.intensity] : DEFAULT_LOAD;
+    for (const i of blendShares(sel.items)) out.set(i.optionId, sel.amounts?.[i.optionId] ?? (grams * load * i.percent) / 100);
+  } else if ((step.kind === "cards" || step.kind === "swatches") && (sel.kind === "cards" || sel.kind === "swatches")) {
+    for (const id of sel.optionIds) out.set(id, sel.amounts?.[id] ?? (grams * (step.gramsPerGram ?? 1)) / Math.max(1, sel.optionIds.length));
+  }
+  return out;
+}
 
-// Giá 1 hũ = giá gốc theo cỡ + phụ thu từng bước
+// Giá theo lượng làm tròn tới 100 ₫: 120 g × 2.000 ₫/100 g = 2.400 ₫
+const round100 = (n: number) => Math.round(n / 100) * 100;
+export function amountPrice(step: CraftStep, option: StepOption, amount: number) {
+  const basis = amountBasis(step);
+  return basis && option.unitPrice ? round100((amount * option.unitPrice) / basis.per) : 0;
+}
+const amountText = (n: number) => (Math.round(n * 10) / 10).toLocaleString("vi-VN");
+
+export type PriceLine = { stepId: string; label: string; amount: number; base?: boolean };
+
+// Giá 1 hũ = giá hũ + phụ thu cỡ của hũ đó + phụ thu từng bước
 export function priceSelection(config: CraftConfig, selection: CraftSelection): { unit: number; lines: PriceLine[] } {
   const lines: PriceLine[] = [];
   const grams = selectedSize(config, selection)?.grams ?? 0;
@@ -120,29 +134,32 @@ export function priceSelection(config: CraftConfig, selection: CraftSelection): 
     const sel = selection[step.id];
     if (!sel) continue;
     if (step.kind === "vessel" && sel.kind === "vessel") {
-      const size = step.sizes.find((s) => s.id === sel.sizeId);
       const o = findOption(step, sel.optionId) as VesselOption | undefined;
-      if (size) lines.push({ stepId: step.id, label: `Giá gốc ${sizeLabel(size)}`, amount: size.basePrice });
-      if (o) lines.push({ stepId: step.id, label: o.name.vi, amount: o.priceDelta });
+      const size = o?.sizes.find((s) => s.id === sel.sizeId);
+      if (o) lines.push({ stepId: step.id, label: size ? `${o.name.vi} ${sizeLabel(size)}` : o.name.vi, amount: o.priceDelta + (size?.priceDelta ?? 0), base: true });
       if (o?.lid && sel.withLid) lines.push({ stepId: step.id, label: "Nắp", amount: o.lid.priceDelta });
     } else if (step.kind === "blend" && sel.kind === "blend") {
-      const shares = blendRatios(step, sel, grams);
-      const sum = Math.round(shares.reduce((s, i) => s + (findOption(step, i.optionId)?.priceDelta ?? 0) * i.percent, 0) / 100);
-      if (shares.length) lines.push({ stepId: step.id, label: step.title.vi, amount: sum });
-      const scent = scentCharge(step, sel, grams);
-      if (scent) lines.push({ stepId: step.id, label: scent.percent ? `Hương ${scent.percent}%` : "Hương chuẩn", amount: scent.amount });
-      if (step.intensity && sel.intensity) lines.push({ stepId: step.id, label: `Độ đậm ${intensityLabels[sel.intensity].toLowerCase()}`, amount: step.intensity.priceDelta[sel.intensity] });
+      // Mỗi mùi: ml dùng cho hũ (lượng sáp × tỉ lệ hương × % phối) × giá mỗi ml
+      for (const [id, ml] of stepAmounts(step, sel, grams)) {
+        const o = findOption(step, id);
+        if (o && !o.exclusive) lines.push({ stepId: step.id, label: `${o.name.vi} ${amountText(ml)} ml`, amount: amountPrice(step, o, ml) });
+      }
     } else if (step.kind === "inputs" && sel.kind === "inputs") {
       for (const f of step.fields) if (f.enabled && sel.values[f.id]?.trim()) lines.push({ stepId: step.id, label: f.label.vi, amount: f.priceDelta });
       for (const a of step.addons) if (a.enabled && sel.addons.includes(a.id)) lines.push({ stepId: step.id, label: a.name.vi, amount: a.priceDelta });
     } else if ((step.kind === "cards" || step.kind === "swatches") && (sel.kind === "cards" || sel.kind === "swatches")) {
-      // Nhiều loại sáp hoặc màu: phụ thu theo tỉ lệ lượng, làm tròn tới nghìn đồng. Chưa chọn cỡ thì coi như chia đều
-      const gramsOf = (id: string) => sel.amounts?.[id] ?? ((grams || 1) * (step.gramsPerGram ?? 1)) / sel.optionIds.length;
-      const total = sel.optionIds.reduce((s, id) => s + gramsOf(id), 0);
-      for (const id of sel.optionIds) {
-        const o = findOption(step, id);
-        if (o) lines.push({ stepId: step.id, label: o.name.vi, amount: isMixStep(step) ? Math.round((o.priceDelta * gramsOf(id)) / total / 1000) * 1000 : o.priceDelta });
-      }
+      const basis = amountBasis(step);
+      if (basis) {
+        // Sáp, màu: lượng dùng cho hũ (chia theo % khi chọn nhiều) × giá mỗi 100 g / mỗi ml
+        for (const [id, amount] of stepAmounts(step, sel, grams)) {
+          const o = findOption(step, id);
+          if (o) lines.push({ stepId: step.id, label: o.exclusive || !o.unitPrice ? o.name.vi : `${o.name.vi} ${amountText(amount)} ${basis.unit}`, amount: amountPrice(step, o, amount) });
+        }
+      } else
+        for (const id of sel.optionIds) {
+          const o = findOption(step, id);
+          if (o) lines.push({ stepId: step.id, label: o.name.vi, amount: o.priceDelta });
+        }
     }
   }
   return { unit: lines.reduce((s, l) => s + l.amount, 0), lines };
@@ -156,8 +173,8 @@ export function describeSelection(config: CraftConfig, selection: CraftSelection
     const sel = selection[step.id];
     if (!sel) continue;
     if (step.kind === "vessel" && sel.kind === "vessel") {
-      const o = findOption(step, sel.optionId);
-      const size = step.sizes.find((s) => s.id === sel.sizeId);
+      const o = findOption(step, sel.optionId) as VesselOption | undefined;
+      const size = o?.sizes.find((s) => s.id === sel.sizeId);
       if (o) parts.push([o.name.vi, size && sizeLabel(size)].filter(Boolean).join(" "));
       if (sel.withLid) parts.push("Có nắp");
     } else if (step.kind === "blend" && sel.kind === "blend" && sel.items.length) {
@@ -227,9 +244,9 @@ export function materialNeeds(config: CraftConfig, selection: CraftSelection, ma
   const sel = vessel?.enabled ? selection[vessel.id] : undefined;
   if (vessel && sel?.kind === "vessel") {
     const o = findOption(vessel, sel.optionId) as VesselOption | undefined;
-    const stock = sel.sizeId ? o?.sizeMaterials?.[sel.sizeId] : undefined;
-    add(stock?.materialId, 1);
-    if (o?.lid && sel.withLid) add(stock?.lidMaterialId, 1);
+    const size = o?.sizes.find((s) => s.id === sel.sizeId);
+    add(size?.materialId, 1);
+    if (o?.lid && sel.withLid) add(size?.lidMaterialId, 1);
   }
   for (const line of materialLines(config, selection, map)) add(line.materialId, line.amount ?? line.fallback);
   return needs;

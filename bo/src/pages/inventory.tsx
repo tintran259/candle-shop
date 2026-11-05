@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { MaterialDrawer } from "@/components/inventory/material-drawer";
 import { MaterialTable } from "@/components/inventory/material-table";
-import { MovementList } from "@/components/inventory/movement-list";
 import { MovementModal, type ManualMovement } from "@/components/inventory/movement-modal";
 import { RestockPanel } from "@/components/inventory/restock-panel";
 import { InventorySkeleton } from "@/components/skeletons";
@@ -180,10 +179,6 @@ export function InventoryPage() {
             </Button>
           </Empty>
         )}
-      </Card>
-
-      <Card title="Phiếu kho gần đây" styles={{ body: { paddingTop: 4 } }}>
-        <MovementList items={api.movements.slice(0, 8)} materials={materials} showMaterial onOpenMaterial={setOpenId} />
       </Card>
 
       <MaterialDrawer

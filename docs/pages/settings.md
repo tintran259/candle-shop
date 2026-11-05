@@ -11,6 +11,8 @@
 | Mức cọc | 1–99% | 50% | Tạo đơn, chi tiết đơn | Đang dùng |
 | Số cây làm được mỗi ngày | 0–1.000 cây, 0 = không giới hạn | 20 | Gợi ý ngày làm xong, cảnh báo ngày quá tải, lịch xưởng trên Dashboard | Đang dùng |
 | Số ngày làm tối thiểu | 0–30 ngày | 3 | Ngày làm xong gợi ý sớm nhất = hôm nay + số này | Đang dùng |
+| Lãi tối thiểu | 0–95% | 50% | Thủ công: cỡ, lựa chọn lãi dưới mức có cảnh báo cam và giá gợi ý (thấp hơn giá vốn luôn báo đỏ) | Đang dùng |
+| Hệ số gợi ý giá | ×1–×20 | ×2,5 | Thủ công: giá gợi ý = giá vốn × hệ số, không thấp hơn mức lãi tối thiểu | Đang dùng |
 | Số lần giao tối đa | 1–10 lần | 3 | Giao hàng lỗi: hết số lần thì đơn tự hoàn về | Đang dùng |
 | Phí gửi lại đơn | Từ 0 ₫ | 30.000 ₫, số tạm | Gửi lại đơn: phí mặc định, sửa được | Đang dùng |
 | Phương thức giao | Tên, phí, số ngày, bật/tắt | Tiêu chuẩn miễn phí 3 ngày; Nhanh 50.000 ₫ 1 ngày | Tạo đơn, chi tiết đơn | Đang dùng |
@@ -62,4 +64,5 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `workshop-cost`: lưu số cây mỗi ngày và số ngày làm tối thiểu; `logic/costs-capacity`: tính tải xưởng, ngày gợi ý, lịch 7 ngày.
 - `settings`: giá trị mặc định, xem trước, hỏi khi rời trang chưa lưu, chặn tên trùng và tắt hết phương thức, lưu, tải lại, áp dụng vào tạo đơn, đơn cũ không lỗi, nút Mặc định.
 - `misc-extra`: mức cọc ngoài 1–99% không lưu được.
+- `craft-pricing`: Lãi tối thiểu và Hệ số gợi ý giá có giá trị mặc định, lưu được.
 - Số lần giao tối đa và Phí gửi lại đơn được dùng trong `orders-decisions`.

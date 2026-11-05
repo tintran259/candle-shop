@@ -51,7 +51,7 @@ BO · Kho      ──phiếu kho─────▶ BE ◀──────POST 
 | Bước | `CraftStep` | Một mục khách đi qua, vd "Sáp". `kind` quyết định giao diện và cách chọn. |
 | Component | `kind` | `vessel`, `cards`, `swatches`, `blend`, `inputs`. |
 | Lựa chọn | `StepOption` | Một mục trong bước, vd "Sáp đậu nành". Có phụ thu, trỏ tới nguyên liệu trong kho. |
-| Kích thước | `SizeOption` | Một cỡ hũ, vd 150ml. Quyết định giá gốc. |
+| Kích thước | `VesselSize` | Một cỡ của một loại hũ, vd Hũ thạch cao 150ml. Mỗi cỡ là một mã hũ trong Kho, có phụ thu cỡ riêng. |
 | Lựa chọn của khách | `CraftSelection` | Những gì khách đã chọn, gửi lên khi thêm giỏ và đặt đơn. |
 
 ## 2. Cấu hình và bước
@@ -86,9 +86,10 @@ BO · Kho      ──phiếu kho─────▶ BE ◀──────POST 
 | `id` | `string` | Duy nhất trong bước. **Cố định sau khi tạo.** |
 | `name` | `{ vi, en }` | |
 | `description` | `{ vi, en }?` | |
-| `priceDelta` | `number` | Phụ thu mỗi hũ, ≥ 0. |
+| `priceDelta` | `number` | Phụ thu mỗi hũ, ≥ 0. Bước hũ: giá hũ. Bước tính theo lượng không dùng (để 0). |
+| `unitPrice?` | `number` | Bước tính theo lượng (sáp, màu, hương): **giá bán mỗi 100 g** (sáp) hoặc **mỗi ml** (màu, tinh dầu). Khách trả = lượng dùng cho hũ × giá này (mục 7). |
 | `available` | `boolean` | `false` = shop tạm ẩn, web không hiện. |
-| `materialId` | `string?` | Nguyên liệu trong kho bị trừ khi khách chọn mục này. **Bỏ trống = không theo dõi tồn** (vd "Không mùi"). **Hũ không dùng trường này** mà dùng `sizeMaterials` (mục 4.1). |
+| `materialId` | `string?` | Nguyên liệu trong kho bị trừ khi khách chọn mục này. **Bỏ trống = không theo dõi tồn** (vd "Không mùi"). **Hũ không dùng trường này** mà gắn mã hũ theo từng cỡ trong `sizes` (mục 4.1). |
 | `swatch` | `string?` | Mã màu hex, dùng khi không có ảnh. Ở `swatches`, không có màu = "không pha màu" (web vẽ ô sọc). |
 | `images` | `string[]?` | Ảnh thật, ảnh đầu là ảnh chính. Hiện là `data:` URL, khi có BE đổi sang URL (mục 9.4). |
 | `look` | `string?` | Kiểu vẽ trên ảnh minh họa khi bước có `previewRole` (mục 5). |
@@ -108,47 +109,51 @@ BO · Kho      ──phiếu kho─────▶ BE ◀──────POST 
 
 ### 4.1 `vessel`: Hũ & kích thước
 
-Mỗi cấu hình có **đúng 1** bước loại này. Bước luôn bật, luôn bắt buộc và **quyết định giá gốc**.
-
-**Kích thước** (`sizes: SizeOption[]` của bước):
-
-| Trường | Ghi chú |
-|---|---|
-| `id` | Vd `s150`. |
-| `ml` | **Dung tích hũ**, cũng là tên cỡ khách thấy ("150ml"). |
-| `grams` | **Lượng sáp đổ** vào hũ. Dùng để tính nguyên liệu tiêu hao và so với `maxGrams`. |
-| `burnHours?` | Chỉ điền khi xưởng đã đo thực tế. |
-| `basePrice` | **Giá gốc của cây nến** ở cỡ này. |
-| `available` | Cỡ đang bán. |
+Mỗi cấu hình có **đúng 1** bước loại này. Bước luôn bật và luôn bắt buộc. **Mỗi loại hũ có giá riêng và các cỡ riêng**, không có danh sách kích thước chung của bước.
 
 **Lựa chọn hũ** (`VesselOption`, mở rộng `StepOption`):
 
 | Trường | Ghi chú |
 |---|---|
+| `priceDelta` | **Giá hũ**, thường là giá ở cỡ nhỏ nhất. |
+| `jarType?` | Loại hũ trong Kho (`Material.jarType`, vd "Hũ thạch cao"). Các mã hũ cùng loại là các cỡ của hũ này. |
 | `shape` | `tumbler \| jar \| tin \| bowl`: dáng hũ để vẽ ảnh minh họa. |
 | `translucent?` | Hũ trong suốt, ảnh minh họa thấy màu sáp. |
-| `supportedSizeIds` | Các cỡ hũ này đổ được. |
-| `sizeMaterials` | `{ [sizeId]: { materialId?, lidMaterialId? } }`: **mã hũ và mã nắp trong kho của từng cỡ**. Cỡ không có `materialId` thì không theo dõi tồn. Chỉ chứa cỡ có trong `supportedSizeIds`. |
+| `sizes` | `VesselSize[]`: các cỡ của hũ (bảng dưới). |
 | `lid` | `{ priceDelta }`: khách được chọn thêm nắp. `null` = hũ không có nắp. |
 
-> **Vì sao tồn kho hũ tính theo cỡ:** hũ 150ml và hũ 250ml là hai món hàng khác nhau trong xưởng, không thay được cho nhau. Nếu gộp chung một số tồn, web sẽ nhận đơn cỡ 250ml dù xưởng chỉ còn hũ 150ml. Vì vậy mỗi cỡ trỏ tới một nguyên liệu riêng trong kho, và nắp cũng vậy.
+**Một cỡ** (`VesselSize`):
+
+| Trường | Ghi chú |
+|---|---|
+| `id` | Duy nhất trong hũ, nằm trong lựa chọn của khách. Cỡ thêm từ Kho dùng luôn mã hũ. |
+| `ml` | **Dung tích hũ**, lấy theo `Material.capacity` của mã hũ, cũng là tên cỡ khách thấy ("150ml"). |
+| `grams` | **Lượng sáp đổ** vào hũ. Dùng để tính nguyên liệu tiêu hao và so với `maxGrams`. Mặc định 80% dung tích. |
+| `burnHours?` | Chỉ điền khi xưởng đã đo thực tế. |
+| `priceDelta` | **Phụ thu cỡ**, cộng vào giá hũ (cỡ nhỏ nhất thường +0). |
+| `available` | Cỡ đang bán. |
+| `materialId?` | Mã hũ trong Kho của cỡ này. Không có = không theo dõi tồn. |
+| `lidMaterialId?` | Mã nắp trong Kho của cỡ này (khi hũ có `lid`). |
+
+> **Vì sao cỡ thuộc từng hũ:** mỗi loại hũ có dáng, giá nhập và các cỡ khác nhau (hũ thạch cao 200ml và 250ml, hộp thiếc 150ml và 200ml), chênh giá giữa các cỡ cũng khác nhau. Hũ 150ml và hũ 250ml là hai món hàng khác nhau trong xưởng nên mỗi cỡ trỏ tới một mã riêng trong Kho, nắp cũng vậy. Thêm cỡ mới = tạo hũ cùng Loại hũ với dung tích mới ở Kho.
 
 ```json
 {
-  "id": "ceramic",
-  "name": { "vi": "Hũ gốm", "en": "Ceramic" },
-  "priceDelta": 100000,
+  "id": "plaster",
+  "name": { "vi": "Hũ thạch cao", "en": "Plaster" },
+  "priceDelta": 575000,
   "available": true,
-  "shape": "tumbler",
-  "supportedSizeIds": ["s150", "s200", "s250"],
-  "sizeMaterials": {
-    "s150": { "materialId": "jar-ceramic-150", "lidMaterialId": "lid-ceramic-150" },
-    "s200": { "materialId": "jar-ceramic-200", "lidMaterialId": "lid-ceramic-200" },
-    "s250": { "materialId": "jar-ceramic-250", "lidMaterialId": "lid-ceramic-250" }
-  },
-  "lid": { "priceDelta": 25000 }
+  "jarType": "Bát thạch cao",
+  "shape": "bowl",
+  "sizes": [
+    { "id": "s200", "ml": 200, "grams": 160, "burnHours": 35, "priceDelta": 0, "available": true, "materialId": "jar-plaster-200" },
+    { "id": "s250", "ml": 250, "grams": 200, "burnHours": 45, "priceDelta": 150000, "available": true, "materialId": "jar-plaster-250" }
+  ],
+  "lid": null
 }
 ```
+
+**Cấu hình cũ** (kích thước chung `sizes` của bước có `basePrice`, hũ có `supportedSizeIds` và `sizeMaterials`) tự chuyển khi tải: giá hũ = phụ thu hũ cũ + giá bán gốc của cỡ nhỏ nhất hũ đổ được, phụ thu cỡ = phần chênh. Giá khách trả không đổi.
 
 **Web hiển thị** theo thứ tự: thẻ hũ, rồi các cỡ theo dung tích, rồi ô "Thêm nắp" (chỉ khi hũ có `lid`). Trạng thái khóa xem mục 8.
 
@@ -174,8 +179,7 @@ Giống `cards`: có `multiple`, `maxSelect?`, `gramsPerGram?`. `previewRole?` c
 | Trường | Ghi chú |
 |---|---|
 | `maxBlend` | Số mục phối tối đa trong 1 hũ, từ 1 đến 4. `1` = chọn một, không có thanh tỉ lệ. |
-| `intensity` | `null` = không cho chọn độ đậm. Nếu có: `{ priceDelta: { light, medium, strong }, load: { light, medium, strong } }`. `load` = lượng tinh dầu trên mỗi gram sáp (mặc định 0.06 / 0.08 / 0.10). |
-| `scentPrice?` | `{ basePrice, standardLoad }`: phụ thu hương và mức chuẩn, mặc định 10.000 ₫ và 0.10. `basePrice = 0` là tắt (mục 7). |
+| `intensity` | `null` = không cho chọn độ đậm. Nếu có: `{ load: { light, medium, strong } }`, ml tinh dầu trên mỗi gram sáp (mặc định 0.06 / 0.08 / 0.10). Đậm hơn thì nhiều ml hơn nên giá theo lượng tự tăng, không có phụ thu riêng. |
 
 **Web hiển thị:** lưới thẻ chọn nhiều. Từ 2 mục trở lên thì hiện thanh tỉ lệ cho từng mục (10–100, bước 5). Có `intensity` thì hiện 3 nút Nhẹ / Vừa / Đậm. Chọn mục `exclusive` thì bỏ các mục khác và ẩn độ đậm.
 
@@ -244,17 +248,18 @@ type Amounts = Record<string, number>;
 BE tính lại đúng công thức này khi tạo đơn; web tính y hệt để hiện giá ước tính.
 
 ```
-giá 1 hũ = size.basePrice
-         + hũ:            option.priceDelta + (withLid ? option.lid.priceDelta : 0)
+giá 1 hũ = hũ:            option.priceDelta + size.priceDelta (cỡ của chính hũ đó) + (withLid ? option.lid.priceDelta : 0)
          + cards/swatches: Σ priceDelta các mục đã chọn
-         + bước Sáp, swatches: Σ round1000( priceDelta × lượng loại đó / tổng lượng )
-         + blend:          round( Σ(priceDelta × percent) / 100 ) + (intensity ? intensity.priceDelta[level] : 0)
-                           + phụ thu hương (scentPrice)
+         + cards (không có gramsPerGram): Σ priceDelta các mục đã chọn
+         + tính theo lượng: Σ round100( lượng mục đó × unitPrice / đơn vị )
+             sáp (cards có gramsPerGram): lượng = amounts[id] ?? grams × gramsPerGram ÷ số mục đã chọn,  đơn vị = 100 g
+             màu (swatches):              lượng = amounts[id] ?? grams × gramsPerGram ÷ số mục đã chọn,  đơn vị = 1 ml
+             hương (blend):               lượng = amounts[id] ?? grams × load[intensity] × percent / 100, đơn vị = 1 ml
          + inputs:         Σ field.priceDelta (ô có chữ sau khi trim) + Σ addon.priceDelta (tuỳ chọn đã tích)
 tổng dòng = giá 1 hũ × số lượng
 ```
 
-Phụ thu hương (`BlendStep.scentPrice = { basePrice, standardLoad }`): `chuẩn = grams × standardLoad`. Lượng hương ≤ chuẩn thì cộng `basePrice`, vượt thì cộng `round1000(basePrice × ml / chuẩn)`. Chọn mục `exclusive` (Không mùi) thì không tính.
+`grams` là sáp đổ của cỡ hũ đang chọn. Vd sáp đậu nành bán 2.000 ₫/100 g, hũ 150ml đổ 120 g → 120 × 2.000 / 100 = 2.400 ₫. Chọn 2 loại sáp thì mỗi loại 60 g, cộng hai dòng. Mục `exclusive` (Không mùi, Không màu) và mục chưa có `unitPrice` thì 0 ₫. Cấu hình cũ có phụ thu cố định thì đổi ra `unitPrice` theo lượng của hũ 160 g sáp (gần đúng), bỏ `scentPrice` và phụ thu độ đậm.
 
 Bước Sáp và `swatches` chọn được nhiều loại theo `multiple`, `maxSelect`. Không điền lượng thì lượng mặc định chia đều cho các loại. Mục `exclusive` (Không màu) đứng một mình. Mùi hương có `amounts` thì `percent` tính theo ml đã điền thay vì `weight`.
 
@@ -278,7 +283,6 @@ Code tham chiếu: `fragranceShares` trong `fe/src/lib/customizer/options.ts`.
 | Hũ: mã hũ của **một cỡ** ở mức `out` | Chỉ khóa cỡ đó, nhãn "Hết hàng". Các cỡ khác vẫn chọn được. |
 | Hũ: **mọi** cỡ đổ được đều `out` | Khóa thẻ hũ, nhãn "Tạm hết". |
 | Hũ: mã nắp của cỡ đang chọn ở mức `out` | Khóa ô "Thêm nắp", ghi "Hết nắp cỡ này". Hũ vẫn bán. |
-| Cỡ không có trong `supportedSizeIds` của hũ | Làm mờ, ghi "Không hợp với hũ này". |
 | Tuỳ chọn thêm (`addon`) có `materialId` ở mức `out` | Khóa checkbox, ghi "Tạm hết". |
 | Đủ nguyên liệu cho N hũ, N ≤ 5 | Hiện "Chỉ còn đủ làm N hũ". N = 0 thì khóa nút thêm giỏ. |
 
@@ -300,7 +304,7 @@ Web **không nhận id kho**: BE thay id bằng mức tồn trước khi trả c
 
 - bỏ bước `enabled: false`, lựa chọn `available: false`, ô nhập và tuỳ chọn `enabled: false`, cỡ `available: false`;
 - thay `materialId` bằng `stock: { level, unit, available }`, với `available` là số hũ còn làm được tính từ nguyên liệu đó;
-- với hũ, thay `sizeMaterials` bằng `sizeStock: { [sizeId]: { jar: stock, lid: stock } }`.
+- với hũ, thay `materialId` / `lidMaterialId` của từng cỡ trong `sizes` bằng `stock` / `lidStock`; bỏ `jarType`.
 
 Hiện fe gọi `GET /api/shop-config` trả `{ customizer, production, payment, contact }` (`fe/src/lib/shop-config.ts`). Chọn một trong hai cách và cập nhật cả fe: giữ endpoint gộp và thay khóa `customizer` bằng `CraftConfig`, hoặc tách riêng `/craft` như bảng trên.
 
@@ -337,15 +341,14 @@ model ShopSettingRevision {
 - `previewRole` hợp lệ theo `kind`: `cards` nhận `waxColor`, `wick`, `decoration`; `swatches` chỉ nhận `waxColor`; các loại khác không có.
 - Id bước dạng `^[a-z0-9]+(-[a-z0-9]+)*$`; id lựa chọn, ô nhập, tuỳ chọn dạng `^[A-Za-z0-9-]+$`.
 - Không trùng id bước trong cấu hình; không trùng id lựa chọn, ô nhập, tuỳ chọn trong cùng bước.
-- Mọi số tiền là số nguyên ≥ 0. `maxLength` 1–500, `maxBlend` 1–4, `load` 0–0.3, `scentPrice.standardLoad` 0.01–0.3, `maxSelect` ≥ 2.
-- Mỗi kích thước có `ml > 0` và `grams > 0`.
-- `supportedSizeIds` chỉ chứa id có trong `sizes`; khóa của `sizeMaterials` nằm trong `supportedSizeIds`.
-- Hũ không có `materialId` (dùng `sizeMaterials`).
+- Mọi số tiền là số nguyên ≥ 0. `maxLength` 1–500, `maxBlend` 1–4, `load` 0–0.3, `maxSelect` ≥ 2.
+- Mỗi cỡ của hũ có `ml > 0` và `grams > 0`; không trùng id cỡ trong cùng hũ.
+- Hũ không có `materialId` (gắn mã hũ theo từng cỡ trong `sizes`).
 
 **Lỗi nghiệp vụ** (từ chối `400`, giống các lỗi mức `error` của `validateConfig`):
 
 - Có đúng 1 bước `vessel`, bước đó `enabled` và `required`.
-- Bước `vessel` có ít nhất 1 cỡ `available`.
+- Khi bước `vessel` có lựa chọn: ít nhất 1 hũ đang bán có cỡ `available`.
 - Có ít nhất 1 bước `enabled`.
 - Bước `enabled` + `required` còn ít nhất 1 lựa chọn đang bán và còn hàng **theo tồn kho hiện tại**.
 
@@ -354,7 +357,8 @@ model ShopSettingRevision {
 - `onlyWith` trỏ tới bước hoặc lựa chọn không còn. Nên tự gỡ khi lưu.
 - `materialId`, mã hũ / nắp theo cỡ, hoặc `materialId` của addon trỏ tới nguyên liệu không còn trong kho.
 - Hũ đã gắn mã cho vài cỡ nhưng bỏ trống cỡ khác: cỡ bỏ trống bán không giới hạn.
-- Hũ đang bán mà chưa chọn cỡ nào.
+- Hũ đang bán mà chưa có cỡ nào đang bán.
+- Kho có mã hũ cùng `jarType` mà hũ chưa có trong `sizes` (cỡ mới, cần đặt giá).
 - Bước `enabled` chưa có lựa chọn nào; bước `inputs` chưa bật ô nhập hay tuỳ chọn nào.
 
 **Không cho đổi id** bước và lựa chọn đã có, vì đơn hàng và link đã lưu đang dùng. Muốn bỏ thì tắt `enabled` / `available`, hoặc xóa.
@@ -372,7 +376,7 @@ Với mỗi dòng nến tự phối, BE tải cấu hình **hiện tại** rồi
 1. Mỗi bước `enabled` + `required` có lựa chọn.
 2. Mọi `optionId`, `sizeId`, `fieldId`, `addonId` tồn tại và đang bán.
 3. **Hũ:**
-   - cỡ đã chọn `available` và nằm trong `supportedSizeIds` của hũ;
+   - cỡ đã chọn nằm trong `sizes` của hũ và `available`;
    - mã hũ **của cỡ đó** đủ tồn cho số lượng đặt;
    - `withLid` chỉ hợp lệ khi hũ có `lid` và nắp **của cỡ đó** đủ tồn.
 4. **`cards`, `swatches`:** `multiple: false` thì tối đa 1 mục; `multiple: true` thì không vượt `maxSelect`; mục `exclusive` đứng một mình.
@@ -397,7 +401,7 @@ Mã lỗi: `required`, `unavailable`, `incompatible`, `tooLong`, `tooMany`, `out
    - `customization-progress.tsx`, `configuration-summary.tsx` theo `steps`;
    - tên và mô tả bước lấy từ cấu hình, không lấy từ file dịch.
 3. **Bước hũ:** hiển thị cỡ theo `ml`; khóa cỡ và nắp theo `sizeStock` (mục 8).
-   **Chọn nhiều:** `swatches` có `multiple`, xử lý mục `exclusive` ở `cards`, `swatches`; tính phụ thu sáp, màu theo tỉ lệ và phụ thu hương theo mục 7.
+   **Chọn nhiều:** `swatches` có `multiple`, xử lý mục `exclusive` ở `cards`, `swatches`; tính giá sáp, màu, hương theo lượng (mục 7).
 4. **Giỏ hàng cũ** lưu theo `CandleConfiguration` cần bỏ: tăng `version` của store trong `fe/src/stores/cart-store.ts`.
 5. **Link `?config=` định dạng cũ** giải mã không được thì bỏ qua và dùng lựa chọn mặc định.
 6. **Lựa chọn mặc định khi mở trang:**
@@ -433,10 +437,9 @@ Trang **Trình dựng Thủ công** (`/craft`, URL giữ trạng thái `?step=&v
   - **Lựa chọn:** bảng (bật/tắt bán ngay trên bảng) và drawer sửa.
     - Cột "Tồn kho" lấy từ nguyên liệu gắn kèm; bước hũ hiện "Tồn kho theo cỡ".
     - Ô "Nguyên liệu trong kho": chọn nguyên liệu có sẵn, chọn "Không theo dõi", hoặc **tạo nguyên liệu mới** kèm tồn ban đầu (đơn vị Cái / Gram / Mililít). Nguyên liệu mới mang nhãn "Chờ lưu" và chỉ vào Kho khi bấm Lưu.
-    - Riêng hũ: khối **"Kích cỡ & tồn kho"**, mỗi cỡ một dòng để tích cỡ đổ được, chọn hoặc tạo mã hũ và mã nắp ("Hũ sứ 150ml", "Nắp hũ sứ 150ml"…).
+    - Riêng hũ: ô **Giá hũ** và khối **"Loại hũ & kích thước"**: chọn Loại hũ trong Kho, các cỡ hiện theo mã hũ cùng loại (xếp theo dung tích). Mỗi cỡ: tích Bán, phụ thu cỡ, sáp đổ, giờ cháy, nắp, kèm "Khách trả … · Vốn …". Không tạo mã hũ từ trang này; thêm cỡ thì tạo hũ cùng loại ở Kho.
     - Các trường khác hiện theo component: dáng hũ, nắp, kiểu minh họa, "đứng một mình", `onlyWith`, `maxGrams`.
-  - **Kích thước** (chỉ bước hũ): dung tích (ml), sáp đổ (g), giá gốc, thời gian cháy, đang bán.
   - **Ô nhập & tuỳ chọn** (chỉ bước `inputs`): tuỳ chọn thêm cũng gắn nguyên liệu.
-  - **Cài đặt:** tên, mô tả, icon, bắt buộc, số lựa chọn (Tối đa, Chọn 1, Chọn nhiều), vai trò minh họa, hệ số gram, phối tối đa, phụ thu hương, độ đậm, xóa bước.
+  - **Cài đặt:** tên, mô tả, icon, bắt buộc, số lựa chọn (Tối đa, Chọn 1, Chọn nhiều), vai trò minh họa, hệ số gram, phối tối đa, độ đậm (tỉ lệ hương), xóa bước.
   - **Xem trước:** mô phỏng giao diện web, bấm thử được, khóa đúng như mục 8.
 - **Xuất JSON** tải file đúng định dạng `CraftConfig`; **Cấu hình mẫu** khôi phục cấu hình mặc định.
