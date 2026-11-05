@@ -53,7 +53,7 @@ Trong thư mục `bo`:
 | [Phiếu kho](./pages/stock-movements.md) | `stock-movements` | 4 test | 2 | Tốt |
 | [Khách hàng](./pages/customers.md) | `customers`, `customers-list`, `logic/customers` | 9 mục + 7 test | 13 | Tốt |
 | [Mã giảm giá](./pages/discounts.md) | `discounts`, `logic/discounts` | 10 test | 24 | Tốt |
-| [Cài đặt](./pages/settings.md) | `settings`, `misc-extra`, `workshop-cost`, `craft-pricing`, `shipping` | 24 mục + 4 test | | Tốt |
+| [Cài đặt](./pages/settings.md) | `settings`, `backup`, `misc-extra`, `workshop-cost`, `craft-pricing`, `shipping` | 24 mục + 7 test | | Tốt |
 
 Mỗi trang ghi chi tiết test đang có ở mục **Kiểm thử** cuối tài liệu trang.
 

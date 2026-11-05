@@ -38,7 +38,7 @@ Yêu cầu dữ liệu đơn hàng cho BE nằm ở [orders.md](./pages/orders.m
 
 ## Giới hạn hiện tại
 
-- **Dữ liệu lưu trên trình duyệt:** chưa có BE, xóa dữ liệu trình duyệt là mất. Máy khác không thấy.
+- **Dữ liệu lưu trên trình duyệt:** chưa có BE, xóa dữ liệu trình duyệt là mất. Máy khác không thấy. Sao lưu / khôi phục bằng file ở [Cài đặt › Sao lưu dữ liệu](./pages/settings.md#sao-lưu-dữ-liệu).
 - **Web (`fe`) nối tạm với BO:** trang Thủ công chạy theo cấu hình BO. BO chạy trên máy tự đẩy cấu hình đã lưu và tồn dùng được sang web qua `fe/src/app/api/craft-config`, chỉ dùng khi dev. Web chưa đọc Cài đặt, đơn trên web chưa vào BO.
 - **Ô lượng cho 1 hũ:** chỉ có ở popup Tự phối nến của BO, web không có.
 - **Đăng nhập:** một tài khoản quản trị, không phân quyền. Chưa có BE nên mật khẩu được so trên trình duyệt: chỉ chặn người lạ mở BO, chưa phải bảo mật thật.

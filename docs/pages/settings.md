@@ -24,7 +24,7 @@ Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh"
 ## Bố cục
 
 - **Đầu trang:** dòng "Có thay đổi chưa lưu", nút Mặc định, nút Lưu cài đặt.
-- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển.
+- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển, Sao lưu dữ liệu.
 - **Bên phải:** Xem trước tiền trên đơn mẫu 1.000.000 ₫, cập nhật theo số đang nhập.
 
 ## Quy tắc
@@ -55,6 +55,16 @@ Chọn phương thức thì ô Phí vận chuyển tự điền. Admin sửa đ�
 - Tắt Bắt buộc mã cho đơn vị không có mã (Shop tự giao, xe ôm, Grab).
 - Phải có ít nhất một đơn vị đang dùng, tên không trùng. Đơn đã giao giữ tên và link lúc giao.
 
+## Sao lưu dữ liệu
+
+Chưa có BE nên mọi dữ liệu nằm trên trình duyệt đang dùng: xóa dữ liệu trình duyệt hoặc đổi máy là mất. Khối **Sao lưu dữ liệu** cuối trang:
+
+- **Sao lưu (tải file):** tải về `2510-bo-sao-luu-YYYY-MM-DD-HHmm.json` gồm toàn bộ dữ liệu BO (đơn, sản phẩm, danh mục, sản phẩm hủy đơn, kho và phiếu kho, khách, mã giảm giá, Thủ công, cài đặt, đơn nháp). Không gồm phiên đăng nhập. Cất file ở nơi an toàn (Google Drive, máy khác).
+- **Khôi phục từ file:** chọn file sao lưu → hiện ngày sao lưu và số đơn, sản phẩm, khách, nguyên liệu, mã giảm giá → bấm **Khôi phục** thì **thay toàn bộ** dữ liệu hiện tại bằng dữ liệu trong file rồi tải lại trang. Nên sao lưu dữ liệu hiện tại trước khi khôi phục.
+- File không phải file sao lưu của BO, hoặc hỏng, thì báo lỗi và không đổi gì. Trình duyệt hết chỗ lưu khi khôi phục thì giữ nguyên dữ liệu cũ.
+- Hiện **Sao lưu gần nhất** và nhắc (cam) khi chưa sao lưu lần nào hoặc đã quá 7 ngày.
+- Có BE thì bỏ chức năng này.
+
 ## Việc của BE
 
 `ShopSettings` là một bản ghi duy nhất, gồm `depositPercent`, `maxDeliveryAttempts`, `resendFee`, `shippingOptions[]`, `dailyCapacity`, `leadDays`, `minMargin`, `priceMarkup`, `sender` (`name`, `phone`, `address`), `carriers[]`. Mỗi phương thức gồm `id`, `name`, `fee`, `days`, `enabled`. Mỗi đơn vị vận chuyển gồm `id`, `name`, `trackingUrl?`, `requireCode`, `enabled`. `sender` và `carriers` chỉ BO dùng, không trả cho web.
@@ -76,4 +86,5 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `misc-extra`: mức cọc ngoài 1–99% không lưu được.
 - `craft-pricing`: Lãi tối thiểu và Hệ số gợi ý giá có giá trị mặc định, lưu được.
 - Số lần giao tối đa và Phí gửi lại đơn được dùng trong `orders-decisions`.
+- `backup`: tải file sao lưu (đủ dữ liệu bo-, không có phiên đăng nhập), nhớ lần sao lưu, khôi phục thay dữ liệu và tải lại trang, từ chối file sai hoặc hỏng.
 - `shipping`: người gửi in lên nhãn; thêm đơn vị vận chuyển, chặn link thiếu `{code}`, đơn vị mới dùng được khi giao.
