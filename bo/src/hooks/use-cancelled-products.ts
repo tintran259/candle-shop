@@ -27,4 +27,3 @@ export function useCancelledProducts() {
   return useMemo(() => ({ items, loading, save, reset }), [items, loading]);
 }
 
-export type CancelledApi = ReturnType<typeof useCancelledProducts>;

@@ -57,14 +57,16 @@ export function OptionTable({ step, config, api, map, pricing, onEdit }: Props) 
         isVessel ? (
           // Hũ: giá khách trả từng cỡ = giá hũ + phụ thu cỡ
           <Flex vertical gap={2} className="tabular" style={{ whiteSpace: "nowrap", fontSize: 13 }}>
-            {(o as VesselOption).sizes.filter((s) => s.available).map((s) => (
-              <span key={s.id}>
-                <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                  {sizeLabel(s)}
-                </Typography.Text>{" "}
-                {formatMoney(v + s.priceDelta)}
-              </span>
-            ))}
+            {(o as VesselOption).sizes
+              .filter((s) => s.available)
+              .map((s) => (
+                <span key={s.id}>
+                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                    {sizeLabel(s)}
+                  </Typography.Text>{" "}
+                  {formatMoney(v + s.priceDelta)}
+                </span>
+              ))}
             {!(o as VesselOption).sizes.some((s) => s.available) && <Typography.Text type="secondary">Chưa có cỡ đang bán</Typography.Text>}
           </Flex>
         ) : (
@@ -88,7 +90,12 @@ export function OptionTable({ step, config, api, map, pricing, onEdit }: Props) 
       key: "cost",
       render: (_, o) => {
         const c = checks.get(o.id);
-        if (!c) return <Typography.Text type="secondary" style={{ fontSize: 13 }}>—</Typography.Text>;
+        if (!c)
+          return (
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              —
+            </Typography.Text>
+          );
         return (
           <div role="group" aria-label={`Giá vốn ${o.name.vi}`}>
             <CostCheck c={c} min={pricing.minMargin} note={c.floor > 0 && c.size ? `cỡ ${sizeLabel(c.size)}` : undefined} free={c.isDefault ? "Tính trong giá hũ" : undefined} />
@@ -105,9 +112,7 @@ export function OptionTable({ step, config, api, map, pricing, onEdit }: Props) 
       title: "Đang bán",
       dataIndex: "available",
       align: "center",
-      render: (v: boolean, o) => (
-        <Switch size="small" checked={v} onChange={(checked) => api.patchOption(step.id, o.id, { available: checked })} aria-label={`Đang bán: ${o.name.vi}`} />
-      ),
+      render: (v: boolean, o) => <Switch size="small" checked={v} onChange={(checked) => api.patchOption(step.id, o.id, { available: checked })} aria-label={`Đang bán: ${o.name.vi}`} />,
     },
     {
       key: "actions",
@@ -120,9 +125,7 @@ export function OptionTable({ step, config, api, map, pricing, onEdit }: Props) 
   return (
     <Flex vertical gap={12}>
       <Flex justify="space-between" align="center" gap={12} wrap>
-        <Typography.Text type="secondary">
-          {isVessel ? "Mỗi cỡ của hũ là một mã riêng trong Kho — hết cỡ nào web chỉ khóa cỡ đó." : "Khách chọn trong các mục đang bán và còn hàng."}
-        </Typography.Text>
+        <Typography.Text type="secondary">{isVessel ? "Mỗi cỡ của hũ là một mã riêng trong Kho — hết cỡ nào web chỉ khóa cỡ đó." : "Khách chọn trong các mục đang bán và còn hàng."}</Typography.Text>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => onEdit("new")}>
           Thêm lựa chọn
         </Button>

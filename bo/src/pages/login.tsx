@@ -82,13 +82,7 @@ export function LoginPage() {
           </Typography.Paragraph>
 
           {error && (
-            <Alert
-              type="error"
-              showIcon
-              role="alert"
-              title={error === "locked" ? `Sai quá nhiều lần. Thử lại sau ${wait} giây.` : error}
-              style={{ marginBottom: 20, borderRadius: radius.inner }}
-            />
+            <Alert type="error" showIcon role="alert" title={error === "locked" ? `Sai quá nhiều lần. Thử lại sau ${wait} giây.` : error} style={{ marginBottom: 20, borderRadius: radius.inner }} />
           )}
 
           <Form form={form} layout="vertical" requiredMark={false} initialValues={{ email: "", password: "", remember: true }} onFinish={finish} disabled={busy}>
@@ -171,9 +165,7 @@ function BrandPanel({ mobile }: { mobile: boolean }) {
           <Typography.Title level={3} style={{ color: "#fff", fontWeight: 500, lineHeight: 1.35, margin: 0 }}>
             Mỗi ngọn nến được đổ tay theo đơn.
           </Typography.Title>
-          <Typography.Paragraph style={{ color: "rgba(255,255,255,0.8)", margin: "10px 0 0" }}>
-            Theo dõi đơn, giữ nguyên liệu và cấu hình nến tự phối ở một nơi.
-          </Typography.Paragraph>
+          <Typography.Paragraph style={{ color: "rgba(255,255,255,0.8)", margin: "10px 0 0" }}>Theo dõi đơn, giữ nguyên liệu và cấu hình nến tự phối ở một nơi.</Typography.Paragraph>
         </div>
       )}
     </Flex>

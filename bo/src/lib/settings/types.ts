@@ -67,8 +67,10 @@ export const defaultSettings: ShopSettings = {
   priceMarkup: 2.5,
 };
 
+// Phí giao của phương thức mặc định (đang bật đầu tiên) — dùng khi chưa có đơn, vd kiểm tra giá sản phẩm khi khách bỏ cọc
+export const defaultShippingFee = (s: Pick<ShopSettings, "shippingOptions">) => s.shippingOptions.find((o) => o.enabled)?.fee ?? 0;
+
 export const shippingOptionLabel = (o: Pick<ShippingOption, "name" | "days">) => `${o.name} (${o.days} ngày)`;
 
 // Link tra cứu mã vận đơn, không có mẫu thì undefined
-export const trackingLink = (template: string | undefined, code: string | undefined) =>
-  template?.includes("{code}") && code ? template.replace(/\{code\}/g, encodeURIComponent(code)) : undefined;
+export const trackingLink = (template: string | undefined, code: string | undefined) => (template?.includes("{code}") && code ? template.replace(/\{code\}/g, encodeURIComponent(code)) : undefined);

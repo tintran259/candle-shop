@@ -4,14 +4,14 @@ import { memo, useState } from "react";
 import { CategoryTag } from "@/components/products/category-tag";
 import { PriceFlag, PriceText, ProductBadges, ProductThumb, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
-import type { PriceCheck } from "@/lib/craft/pricing";
+import type { ProductReview } from "@/lib/products/pricing";
 import { formatNumber } from "@/lib/format";
 import { aromaLevelLabels, sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand } from "@/theme";
 
 // review: sản phẩm cần xem lại giá (thấp hơn vốn / lãi dưới mức)
-type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig; review: ReadonlyMap<string, PriceCheck> };
+type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig; review: ReadonlyMap<string, ProductReview> };
 
 // Bảng sản phẩm: chọn nhiều để ẩn/hiện/xóa hàng loạt; bật/tắt bán và nổi bật ngay trên dòng
 function ProductTableView({ items, api, onEdit, pagination, review }: Props) {
@@ -91,12 +91,7 @@ function ProductTableView({ items, api, onEdit, pagination, review }: Props) {
       dataIndex: "status",
       align: "center",
       render: (s: Product["status"], p) => (
-        <Switch
-          size="small"
-          checked={s === "active"}
-          onChange={(on) => api.patch([p.id], { status: on ? "active" : "hidden" })}
-          aria-label={`Đang bán: ${p.name}`}
-        />
+        <Switch size="small" checked={s === "active"} onChange={(on) => api.patch([p.id], { status: on ? "active" : "hidden" })} aria-label={`Đang bán: ${p.name}`} />
       ),
     },
     {
@@ -109,14 +104,7 @@ function ProductTableView({ items, api, onEdit, pagination, review }: Props) {
   return (
     <>
       {picked.length > 0 && (
-        <Flex
-          align="center"
-          gap={8}
-          wrap
-          role="region"
-          aria-label="Thao tác hàng loạt"
-          style={{ padding: "10px 16px", margin: "0 0 8px", borderRadius: 12, background: brand.emberLight }}
-        >
+        <Flex align="center" gap={8} wrap role="region" aria-label="Thao tác hàng loạt" style={{ padding: "10px 16px", margin: "0 0 8px", borderRadius: 12, background: brand.emberLight }}>
           <Typography.Text strong>Đã chọn {picked.length} sản phẩm</Typography.Text>
           <Button size="small" icon={<EyeOutlined />} onClick={() => api.patch(picked, { status: "active" })} style={{ marginLeft: "auto" }}>
             Hiện

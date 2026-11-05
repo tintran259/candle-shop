@@ -25,7 +25,10 @@ export const orderNeeds = (order: Order, source: Source) => linesNeeds(order.ite
 
 // Đơn Đã thanh toán đang giữ nguyên liệu: chưa trừ Kho nhưng đơn khác không được dùng. Bắt đầu làm hoặc hủy thì tự nhả
 export function heldNeeds(orders: Order[], source: Source) {
-  return linesNeeds(orders.filter((o) => o.status === "paid").flatMap((o) => o.items), source);
+  return linesNeeds(
+    orders.filter((o) => o.status === "paid").flatMap((o) => o.items),
+    source,
+  );
 }
 
 // Tồn còn dùng được sau khi trừ phần đang giữ
@@ -33,5 +36,4 @@ export function availableMap(map: MaterialMap, held: Map<string, number>): Mater
   return new Map([...map].map(([id, m]) => [id, { ...m, stock: m.stock - (held.get(id) ?? 0) }]));
 }
 
-export const shortages = (needs: Map<string, number>, map: MaterialMap) =>
-  [...needs].map(([id, need]) => ({ m: map.get(id)!, need })).filter(({ m, need }) => m && m.stock < need);
+export const shortages = (needs: Map<string, number>, map: MaterialMap) => [...needs].map(([id, need]) => ({ m: map.get(id)!, need })).filter(({ m, need }) => m && m.stock < need);

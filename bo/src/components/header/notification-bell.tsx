@@ -90,14 +90,7 @@ function NotificationPanel({ api, onClose }: { api: NotificationsApi; onClose: (
         <Typography.Text strong style={{ fontSize: 16 }}>
           Thông báo
         </Typography.Text>
-        <Button
-          type="link"
-          size="small"
-          icon={<CheckOutlined />}
-          disabled={!api.unread.length}
-          onClick={() => api.markRead(api.unread.map((n) => n.id))}
-          style={{ paddingInline: 0 }}
-        >
+        <Button type="link" size="small" icon={<CheckOutlined />} disabled={!api.unread.length} onClick={() => api.markRead(api.unread.map((n) => n.id))} style={{ paddingInline: 0 }}>
           Đánh dấu đã đọc hết
         </Button>
       </Flex>
@@ -121,11 +114,7 @@ function NotificationPanel({ api, onClose }: { api: NotificationsApi; onClose: (
             <Skeleton avatar active paragraph={{ rows: 1 }} />
           </div>
         ) : list.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={filter === "unread" ? "Bạn đã xem hết thông báo." : "Chưa có thông báo nào."}
-            style={{ padding: "24px 0" }}
-          >
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={filter === "unread" ? "Bạn đã xem hết thông báo." : "Chưa có thông báo nào."} style={{ padding: "24px 0" }}>
             {filter === "unread" && api.items.length > 0 && (
               <Button size="small" onClick={() => setFilter("all")}>
                 Xem tất cả
@@ -143,17 +132,7 @@ function NotificationPanel({ api, onClose }: { api: NotificationsApi; onClose: (
   );
 }
 
-function Section({
-  title,
-  items,
-  api,
-  onOpen,
-}: {
-  title: string;
-  items: AppNotification[];
-  api: NotificationsApi;
-  onOpen: (n: AppNotification) => void;
-}) {
+function Section({ title, items, api, onOpen }: { title: string; items: AppNotification[]; api: NotificationsApi; onOpen: (n: AppNotification) => void }) {
   if (!items.length) return null;
   return (
     <section>
@@ -167,12 +146,7 @@ function Section({
           return (
             <li key={n.id}>
               <button type="button" className={`notif-row${read ? "" : " is-unread"}`} onClick={() => onOpen(n)}>
-                <Flex
-                  aria-hidden
-                  align="center"
-                  justify="center"
-                  style={{ width: 36, height: 36, borderRadius: "50%", background: tone.bg, color: tone.fg, fontSize: 16, flexShrink: 0 }}
-                >
+                <Flex aria-hidden align="center" justify="center" style={{ width: 36, height: 36, borderRadius: "50%", background: tone.bg, color: tone.fg, fontSize: 16, flexShrink: 0 }}>
                   {kindIcons[n.kind]}
                 </Flex>
                 <Flex vertical gap={2} style={{ minWidth: 0, flex: 1, textAlign: "left" }}>

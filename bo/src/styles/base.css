@@ -1,0 +1,104 @@
+/* Chỉ giữ vài quy tắc nền — còn lại theo token của antd (xem theme.ts) */
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+/* Luôn chừa chỗ thanh cuộn: trang ngắn (skeleton) → trang dài không làm nội dung co lại ~15px */
+html {
+  scrollbar-gutter: stable;
+}
+/* Mở drawer/modal: antd khoá cuộn và tự trừ bề rộng thanh cuộn khỏi body. Chỗ thanh cuộn đã được chừa
+   sẵn ở trên nên trừ thêm sẽ làm nội dung phía sau co lại ~15px — giữ nguyên bề rộng */
+html body {
+  width: auto !important;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  background: #f6f6f3;
+}
+
+/* Chữ chỉ dành cho trình đọc màn hình */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Thanh skeleton đặt trong dòng chữ thật (xem Bar trong skeletons.tsx) */
+.skel-bar {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06) 25%, rgba(0, 0, 0, 0.12) 37%, rgba(0, 0, 0, 0.06) 63%);
+  background-size: 400% 100%;
+  animation: skel-shimmer 1.4s ease infinite;
+}
+@keyframes skel-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0 50%;
+  }
+}
+/* Dòng mô tả thứ 2 chỉ có trên mobile (mô tả thật xuống dòng) */
+.skel-mobile-line {
+  display: none;
+}
+@media (max-width: 575px) {
+  .skel-mobile-line {
+    display: block;
+  }
+}
+
+/* Khung giả lần đầu mở app — cùng kích thước với layout thật (app-layout.tsx) để không nhảy khi tải xong */
+.shell-sider {
+  width: 256px;
+  margin: 16px 0 16px 16px;
+}
+.shell-content {
+  padding: 88px 24px 24px;
+}
+@media (max-width: 767px) {
+  .shell-sider {
+    display: none;
+  }
+  .shell-content {
+    padding: 88px 16px 16px;
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Số lớn nét mảnh — điểm nhấn của mỗi widget */
+.ant-statistic-content,
+.big-number {
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Màn hẹp: số lớn nhỏ lại để không tràn thẻ nửa màn hình */
+@media (max-width: 575px) {
+  .ant-statistic-content {
+    font-size: 28px !important;
+    overflow-wrap: anywhere;
+  }
+  /* Thẻ thống kê nửa màn hình: bớt padding để số tiền (vd "765.000 ₫") không rơi xuống 2 dòng */
+  .ant-card-body:has(> .ant-statistic) {
+    padding: 16px;
+  }
+}

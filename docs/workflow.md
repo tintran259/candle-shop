@@ -150,7 +150,7 @@ Hủy được trước khi giao, hoặc sau khi hàng đã hoàn về shop. M�
 | Khách | Trả đủ | Tổng tiền − tiền cọc |
 | Shop | Đặt cọc hoặc trả đủ | Toàn bộ tiền đã thu |
 
-Tiền cọc tính theo % lưu trên đơn, trên tổng trước phí gửi lại.
+Tiền cọc tính theo % lưu trên đơn, trên **tiền hàng** (tạm tính − giảm giá), không gồm phí giao và phí gửi lại.
 
 Sau khi hủy, đơn có số phải hoàn sẽ hiện **Chờ hoàn tiền** và có thông báo trên chuông. Admin chuyển tiền cho khách ngoài hệ thống, rồi bấm **Ghi nhận đã hoàn tiền** ở khối Thanh toán:
 

@@ -7,7 +7,8 @@ import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
 import { fromFormValues, toFormValues, type ProductFormValues } from "@/components/products/product-form";
 import { ProductPreview } from "@/components/products/product-preview";
-import { BuildSummary, PriceCheckLine, ProductBuildFields } from "@/components/products/product-build";
+import { ProductBuildFields } from "@/components/products/product-build";
+import { BuildSummary, PriceCheckLine } from "@/components/products/product-price";
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCategories } from "@/hooks/use-categories";
@@ -169,8 +170,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
                     extra={off ? `Giảm ${off}% so với giá bán` : undefined}
                     rules={[
                       ({ getFieldValue }) => ({
-                        validator: (_, v?: number | null) =>
-                          !v || v < getFieldValue("price") ? Promise.resolve() : Promise.reject(new Error("Giá giảm phải thấp hơn giá bán.")),
+                        validator: (_, v?: number | null) => (!v || v < getFieldValue("price") ? Promise.resolve() : Promise.reject(new Error("Giá giảm phải thấp hơn giá bán."))),
                       }),
                     ]}
                     style={{ marginBottom: 0 }}
@@ -181,7 +181,6 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
               </Row>
               <PriceCheckLine />
             </FormSection>
-
 
             <FormSection title="Phân loại & đặc tính" description="Dùng cho bộ lọc trên web và thông tin trang chi tiết. Cỡ, loại sáp và thời gian cháy (nếu để trống) tự lấy theo hũ và sáp ở trên.">
               <Form.Item
@@ -194,10 +193,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
                 }
                 rules={[{ required: true, message: "Chọn danh mục." }]}
               >
-                <Select
-                  placeholder="Chọn danh mục"
-                  options={categories.map((c) => ({ value: c.id, label: c.hidden ? `${c.name.vi} (đang ẩn trên web)` : c.name.vi }))}
-                />
+                <Select placeholder="Chọn danh mục" options={categories.map((c) => ({ value: c.id, label: c.hidden ? `${c.name.vi} (đang ẩn trên web)` : c.name.vi }))} />
               </Form.Item>
               <Row gutter={16}>
                 <Col xs={24} sm={12}>

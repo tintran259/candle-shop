@@ -133,7 +133,13 @@ export function fromFormValues(step: OptionStep, v: OptionFormValues, resolved: 
   const onlyWith = Object.fromEntries(Object.entries(v.onlyWith ?? {}).filter(([, ids]) => ids?.length));
   const base: StepOption = {
     // Id cố định sau khi tạo — đơn hàng và quy tắc tương thích dùng nó
-    id: previous?.id ?? uniqueId(v.nameEn?.trim() || vi, (step.options as StepOption[]).map((o) => o.id), "option"),
+    id:
+      previous?.id ??
+      uniqueId(
+        v.nameEn?.trim() || vi,
+        (step.options as StepOption[]).map((o) => o.id),
+        "option",
+      ),
     name: { vi, en: v.nameEn?.trim() || vi },
     description: descVi ? { vi: descVi, en: v.descEn?.trim() || descVi } : undefined,
     priceDelta: amountBasis(step) ? 0 : Math.round(v.price ?? 0),

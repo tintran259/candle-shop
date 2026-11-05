@@ -25,25 +25,35 @@ const products = [{ id: "moon", name: "Moon", categoryId: "parfum", images: [] }
 const label = (id?: string) => ({ parfum: "Nước hoa đổi tên" })[id ?? ""] ?? "Chưa phân loại";
 const stats = (orders: Order[], days = 7) => dashboardStats(orders, products, label, days, today);
 
-test("Doanh thu tính theo ngày thu tiền, không theo ngày đặt", () => {
-  // Đặt 10 ngày trước (ngoài kỳ 7 ngày) nhưng thu nốt hôm nay
+test("Doanh thu ghi nhận vào ngày hoàn tất, không theo ngày đặt hay ngày thu cọc", () => {
+  // Đặt và cọc 10 ngày trước (ngoài kỳ 7 ngày), thu nốt và hoàn tất hôm nay: cả 500.000 tính hôm nay
   const o = order("1", 10, {
+    updatedAt: at(0),
     payments: [
       { status: "success", amount: 200_000, createdAt: at(10) },
       { status: "success", amount: 300_000, createdAt: at(0) },
     ] as Order["payments"],
   });
   const s = stats([o]);
-  expect(s.kpis.revenue.value).toBe(300_000);
+  expect(s.kpis.revenue.value).toBe(500_000);
+  expect(s.daily.at(-1)?.revenue).toBe(500_000);
   expect(s.kpis.orders.value).toBe(0);
 });
 
-test("Đơn hủy: chỉ tính phần shop giữ lại, ngày hoàn tiền thành cột âm", () => {
+test("Đơn chưa xong (đã cọc, đang giao, giao lỗi, đã hoàn về Kho) chưa tính doanh thu, ghi riêng số đã thu", () => {
+  const open = (["paid", "shipping", "delivery_failed", "returned"] as const).map((status, i) => order(`o${i}`, 2, { status, payments: [{ status: "success", amount: 150_000, createdAt: at(2) }] as Order["payments"] }));
+  const s = stats(open);
+  expect(s.kpis.revenue.value).toBe(0);
+  expect(s.kpis.revenue.pending).toEqual({ amount: 600_000, count: 4 });
+});
+
+test("Đơn hủy: chỉ tính phần shop giữ lại, vào ngày hủy", () => {
   const cancelled = order("2", 3, { status: "cancelled", refund: { amount: 400_000, at: at(1) } as Order["refund"] });
   const s = stats([cancelled]);
   expect(s.kpis.revenue.value).toBe(100_000);
   expect(s.kpis.orders.value).toBe(0);
-  expect(s.daily.find((d) => d.date === today.subtract(1, "day").format("YYYY-MM-DD"))?.revenue).toBe(-400_000);
+  expect(s.daily.find((d) => d.date === today.subtract(3, "day").format("YYYY-MM-DD"))?.revenue).toBe(100_000);
+  expect(s.daily.find((d) => d.date === today.subtract(1, "day").format("YYYY-MM-DD"))?.revenue).toBe(0);
   // Chưa hoàn mà đang chờ hoàn: trừ trước số phải hoàn
   expect(stats([order("2", 3, { status: "cancelled", refundDue: 500_000 })]).kpis.revenue.value).toBe(0);
 });

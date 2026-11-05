@@ -8,16 +8,16 @@
 
 | Mục | Khoảng cho phép | Mặc định | Dùng ở đâu | Tình trạng |
 |---|---|---|---|---|
-| Mức cọc | 1–99% | 50% | Tạo đơn, chi tiết đơn | Đang dùng |
+| Mức cọc | 1–99% | 50% | Tạo đơn, chi tiết đơn. Tính trên tiền hàng (sau giảm giá), không gồm phí vận chuyển | Đang dùng |
 | Số cây làm được mỗi ngày | 0–1.000 cây, 0 = không giới hạn | 20 | Gợi ý ngày làm xong, cảnh báo ngày quá tải, lịch xưởng trên Dashboard | Đang dùng |
 | Số ngày làm tối thiểu | 0–30 ngày | 3 | Ngày làm xong gợi ý sớm nhất = hôm nay + số này | Đang dùng |
 | Lãi tối thiểu | 0–95% | 50% | Thủ công: cỡ, lựa chọn lãi dưới mức có cảnh báo cam và giá gợi ý (thấp hơn giá vốn luôn báo đỏ) | Đang dùng |
 | Hệ số gợi ý giá | ×1–×20 | ×2,5 | Thủ công: giá gợi ý = giá vốn × hệ số, không thấp hơn mức lãi tối thiểu | Đang dùng |
 | Số lần giao tối đa | 1–10 lần | 3 | Giao hàng lỗi: hết số lần thì đơn tự hoàn về | Đang dùng |
 | Phí gửi lại đơn | Từ 0 ₫ | 30.000 ₫, số tạm | Gửi lại đơn: phí mặc định, sửa được | Đang dùng |
-| Phương thức giao | Tên, phí, số ngày, bật/tắt | Tiêu chuẩn miễn phí 3 ngày; Nhanh 50.000 ₫ 1 ngày | Tạo đơn, chi tiết đơn | Đang dùng |
+| Phương thức giao | Tên, phí, số ngày, bật/tắt | Tiêu chuẩn miễn phí 3 ngày; Nhanh 50.000 ₫ 1 ngày | Tạo đơn, chi tiết đơn. Phí phương thức đang bật đầu tiên dùng để kiểm tra giá sản phẩm khi khách bỏ cọc | Đang dùng |
 | Người gửi | Tên shop (bắt buộc), SĐT, địa chỉ lấy hàng | 2510 Candle, SĐT và địa chỉ trống | Nhãn giao hàng, phiếu đơn | Đang dùng |
-| Đơn vị vận chuyển | Tên, link tra cứu, bắt buộc mã, bật/tắt | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Giao cho vận chuyển, Tra cứu | Đang dùng |
+| Đơn vị vận chuyển | Tên, link tra cứu, bắt buộc mã, bật/tắt | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Tạo đơn (chọn đơn vị), Giao cho vận chuyển, Tra cứu | Đang dùng |
 
 Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh" để tính phí theo khu vực.
 

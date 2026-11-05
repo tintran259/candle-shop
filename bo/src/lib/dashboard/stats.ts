@@ -2,7 +2,7 @@
 import dayjs, { type Dayjs } from "dayjs";
 import { goodsValue } from "@/lib/costs";
 import { deadline, isDeliveryIssue, isReplacement } from "@/lib/orders/labels";
-import { orderMoney, orderProfit } from "@/lib/orders/money";
+import { orderMoney, orderProfit, type MoneyEntry } from "@/lib/orders/money";
 import type { Order, OrderStatus } from "@/lib/orders/types";
 import type { Product } from "@/lib/products/types";
 
@@ -15,8 +15,27 @@ export type DailyRevenue = { date: string; revenue: number; orders: number };
 export type TypeSales = { type: string; revenue: number };
 export type ProductSales = { id: string; name: string; image?: string; sold: number; revenue: number };
 
-// Doanh thu theo ngày phát sinh: chỉ tiền hàng, không gồm phí vận chuyển khách trả (lib/orders/money)
-const moneyEntries = (o: Order) => orderMoney(o).entries;
+// Doanh thu ghi nhận khi đơn chốt, vào ngày chốt (docs/pages/dashboard.md#quy-tắc-doanh-thu). Chỉ tiền hàng, không gồm phí vận chuyển.
+// - Hoàn tất: tiền hàng đã thu tới lúc hoàn tất; khoản hoàn sau đó (khiếu nại) trừ vào ngày hoàn.
+// - Đã hủy: tiền hàng shop giữ lại (vd tiền cọc), đã trừ số hoàn / số đang chờ hoàn.
+// - Đơn chưa xong (đang làm, đang giao, giao lỗi, đang hoàn, đã hoàn về Kho): chưa tính, kể cả tiền cọc đã thu.
+function moneyEntries(o: Order): MoneyEntry[] {
+  const at = closedAt(o);
+  if (!at) return [];
+  const { entries, goods } = orderMoney(o);
+  if (o.status === "cancelled") return goods ? [{ at, amount: goods }] : [];
+  const until = entries.filter((e) => e.at <= at).reduce((s, e) => s + e.amount, 0);
+  return [{ at, amount: until }, ...entries.filter((e) => e.at > at)];
+}
+
+// Tiền hàng đã thu của đơn chưa chốt (tiền cọc, đã thu đủ nhưng chưa giao xong) — chưa tính vào doanh thu
+export function pendingRevenue(orders: Order[]) {
+  const open = orders
+    .filter((o) => o.status !== "cancelled" && !closedAt(o))
+    .map((o) => orderMoney(o).goods)
+    .filter((n) => n > 0);
+  return { amount: open.reduce((s, n) => s + n, 0), count: open.length };
+}
 
 const phoneKey = (o: Order) => o.customer.phone.replace(/\D/g, "");
 // So với kỳ trước; kỳ trước không có số thì không so được
@@ -120,7 +139,7 @@ export function dashboardStats(orders: Order[], products: Product[], categoryLab
 
   return {
     kpis: {
-      revenue: { value: now.revenue, delta: change(now.revenue, prev.revenue) },
+      revenue: { value: now.revenue, delta: change(now.revenue, prev.revenue), pending: pendingRevenue(orders) },
       orders: { value: now.count, delta: change(now.count, prev.count) },
       average: { value: now.average, delta: change(now.average, prev.average), completed: now.completed },
       customers: { value: customers, delta: change(customers, prevCustomers) },

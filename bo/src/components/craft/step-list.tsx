@@ -20,8 +20,7 @@ type Props = {
   onAdd: () => void;
 };
 
-const count = (s: CraftStep) =>
-  s.kind === "inputs" ? `${s.fields.filter((f) => f.enabled).length} ô nhập · ${s.addons.filter((a) => a.enabled).length} tuỳ chọn` : `${s.options.length} lựa chọn`;
+const count = (s: CraftStep) => (s.kind === "inputs" ? `${s.fields.filter((f) => f.enabled).length} ô nhập · ${s.addons.filter((a) => a.enabled).length} tuỳ chọn` : `${s.options.length} lựa chọn`);
 
 // Danh sách bước theo đúng thứ tự khách thấy trên web; kéo tay nắm để đổi thứ tự
 export function StepList({ steps, active, withIssues, changed, api, onSelect, onAdd }: Props) {

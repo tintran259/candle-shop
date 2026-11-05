@@ -45,23 +45,7 @@ export function SuggestButton({ value, current, label, onApply }: { value: numbe
 }
 
 // "Vốn 16.000 ₫ · cỡ 200ml" rồi trạng thái so với giá bán. inline: một hàng (dưới ô nhập trong drawer). status: thay trạng thái mặc định
-export function CostCheck({
-  c,
-  min,
-  note,
-  free,
-  inline,
-  status,
-  children,
-}: {
-  c: PriceCheck;
-  min: number;
-  note?: string;
-  free?: string;
-  inline?: boolean;
-  status?: ReactNode;
-  children?: ReactNode;
-}) {
+export function CostCheck({ c, min, note, free, inline, status, children }: { c: PriceCheck; min: number; note?: string; free?: string; inline?: boolean; status?: ReactNode; children?: ReactNode }) {
   return (
     <Flex vertical={!inline} wrap={inline} gap={inline ? 8 : 2} align={inline ? "center" : undefined} style={{ fontSize: 13 }}>
       <Typography.Text className="tabular" style={{ whiteSpace: "nowrap", fontSize: 13 }}>

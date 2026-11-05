@@ -70,7 +70,7 @@ function build(s: Seed, index: number): Order {
   const discount = s.code ? Math.round((subtotal * DISCOUNTS[s.code]) / 1000) * 1000 : 0;
   const shipping = s.shipping ?? "standard";
   const total = subtotal - discount + SHIPPING_FEE[shipping];
-  const dueNow = s.plan === "deposit" ? Math.round((total * DEPOSIT_RATE) / 1000) * 1000 : total;
+  const dueNow = s.plan === "deposit" ? Math.round(((subtotal - discount) * DEPOSIT_RATE) / 1000) * 1000 : total;
 
   // Lịch sử đi theo quy trình tới trạng thái hiện tại
   const reached = s.status === "cancelled" ? ["pending", "paid"] : orderFlow.slice(0, orderFlow.indexOf(s.status as (typeof orderFlow)[number]) + 1);

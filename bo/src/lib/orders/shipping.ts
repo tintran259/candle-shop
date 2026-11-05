@@ -7,6 +7,12 @@ export const shipmentText = (s: Shipment) => (s.trackingCode ? `${s.carrier} · 
 // Ghi lịch sử: kèm phí trả đơn vị vận chuyển
 export const shipmentNote = (s: Shipment) => (s.cost !== undefined ? `${shipmentText(s)} · phí vận chuyển ${formatMoney(s.cost)}` : shipmentText(s));
 
+// Đơn vị vận chuyển của đơn: đã giao thì theo lượt giao, chưa giao thì đơn vị chọn lúc tạo đơn
+export const carrierName = (o: Order) => o.shipment?.carrier ?? o.carrier?.name;
+
+// Tổng phí trả đơn vị vận chuyển so với phí khách trả: dương = shop chịu thêm, âm = shop dư
+export const shippingGap = (customerFee: number, carrierCost: number) => Math.round(carrierCost) - Math.round(customerFee);
+
 // Mã vận đơn: bỏ khoảng trắng, viết hoa
 export const normalizeTrackingCode = (s = "") => s.replace(/\s+/g, "").toUpperCase();
 

@@ -220,3 +220,50 @@ test("Cài đặt: thêm đơn vị vận chuyển, link tra cứu phải có {c
   await expect(m).toBeHidden();
   expect((await saved(page, "a")).shipment.trackingUrl).toBe("https://ahamove.com/track/AHA1");
 });
+
+test("Chọn đơn vị vận chuyển lúc tạo đơn; lúc giao không chọn lại, phí trả đơn vị cao hơn phí khách trả thì báo shop chịu thêm", async ({ page }) => {
+  await page.goto("/orders");
+  await page.getByRole("button", { name: /Tạo đơn hàng|Tiếp tục đơn nháp/ }).click();
+  const d = drawer(page);
+  await d.locator("#name").fill("Khách Ship");
+  await d.locator("#phone").fill("0912 345 678");
+  await d.locator("#address").fill("5 Lê Lợi, Huế");
+  await d.getByRole("button", { name: "Nến có sẵn" }).click();
+  await d.getByLabel("Chọn sản phẩm").last().click();
+  await page.keyboard.type("Moon Morning");
+  await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
+  await expect(d.locator("aside.order-summary")).toContainText("Moon Morning");
+  await d.getByLabel("Phí vận chuyển", { exact: true }).fill("30000");
+  await d.getByLabel("Đơn vị vận chuyển", { exact: true }).click();
+  await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Giao Hàng Tiết Kiệm" }).click();
+  await d.locator(".ant-drawer-footer").getByRole("button", { name: /^Tạo đơn/ }).click();
+  await expect(page.getByText(/Đã tạo đơn SC/)).toBeVisible();
+  const created = await page.evaluate(() => JSON.parse(localStorage.getItem("bo-orders-v4")!).find((o) => o.customer.name === "Khách Ship"));
+  expect(created.carrier).toEqual({ id: "ghtk", name: "Giao Hàng Tiết Kiệm" });
+  expect(created.shippingFee).toBe(30_000);
+
+  // Đưa đơn tới Chờ giao rồi giao: đơn vị chọn sẵn GHTK, phí mặc định 30.000 = phí khách trả
+  await page.evaluate((id) => {
+    const list = JSON.parse(localStorage.getItem("bo-orders-v4")!);
+    localStorage.setItem("bo-orders-v4", JSON.stringify(list.map((o) => (o.id === id ? { ...o, status: "ready" } : o))));
+  }, created.id);
+  await page.goto(`/orders?order=${created.id}`);
+  await expect(drawer(page)).toContainText("Giao Hàng Tiết Kiệm");
+  await drawer(page).getByRole("button", { name: "Giao cho vận chuyển" }).click();
+  const m = modal(page);
+  // Đã chọn đơn vị lúc tạo đơn: chỉ hiện tên, không có ô chọn lại
+  await expect(m.getByTestId("ship-carrier")).toHaveText("Giao Hàng Tiết Kiệm");
+  await expect(m.getByLabel("Đơn vị vận chuyển", { exact: true })).toHaveCount(0);
+  await expect(m).toContainText("Đã chọn lúc tạo đơn — muốn đổi thì Sửa đơn.");
+  await expect(m.getByLabel("Phí trả đơn vị vận chuyển")).toHaveValue(/30[.,]000/);
+  await expect(m.getByRole("status")).toHaveCount(0);
+  await m.getByLabel("Phí trả đơn vị vận chuyển").fill("35000");
+  await expect(m.getByRole("status")).toContainText("Shop chịu thêm 5.000");
+  await m.getByLabel("Mã vận đơn").fill("S999.GHTK");
+  await m.getByRole("button", { name: "Giao cho vận chuyển" }).click();
+  await expect(m).toBeHidden();
+  const shipped = await saved(page, created.id);
+  expect(shipped.shipment).toMatchObject({ carrierId: "ghtk", cost: 35_000 });
+  expect(shipped.shippingCost).toBe(35_000);
+  await expect(drawer(page).getByRole("group", { name: "Giá vốn và lãi gộp" })).toContainText("khách trả 30.000");
+});

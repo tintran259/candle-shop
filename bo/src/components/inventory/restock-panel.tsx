@@ -17,12 +17,7 @@ type Props = { out: Material[]; low: Material[]; usage: Map<string, Usage[]>; on
 // Thẻ "Cần nhập thêm": mỗi nguyên liệu một ô (kèm nơi đang dùng trên web), bấm để mở nguyên liệu
 export function RestockPanel({ out, low, usage, onOpen }: Props) {
   // Hết hàng trước, rồi tới mục còn ít nhất so với ngưỡng
-  const rows = [
-    ...out.map((r) => ({ ...r, level: "out" as const, ratio: 0 })),
-    ...low
-      .map((r) => ({ ...r, level: "low" as const, ratio: r.stock / r.lowStock }))
-      .sort((a, b) => a.ratio - b.ratio),
-  ];
+  const rows = [...out.map((r) => ({ ...r, level: "out" as const, ratio: 0 })), ...low.map((r) => ({ ...r, level: "low" as const, ratio: r.stock / r.lowStock })).sort((a, b) => a.ratio - b.ratio)];
 
   return (
     <Card styles={{ body: { padding: 20 } }}>
@@ -58,12 +53,7 @@ export function RestockPanel({ out, low, usage, onOpen }: Props) {
           const s = status[level];
           return (
             <Col key={item.id} xs={24} sm={12} lg={8} xxl={6}>
-              <button
-                type="button"
-                onClick={() => onOpen(item.id)}
-                aria-label={`${item.name}: ${s.label}, mở nguyên liệu`}
-                className="restock-tile"
-              >
+              <button type="button" onClick={() => onOpen(item.id)} aria-label={`${item.name}: ${s.label}, mở nguyên liệu`} className="restock-tile">
                 <Flex align="center" gap={12}>
                   <MaterialAvatar item={item} />
                   <Flex vertical style={{ flex: 1, minWidth: 0, textAlign: "left" }}>

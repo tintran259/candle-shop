@@ -48,7 +48,7 @@ export function usePageQuery(total?: number) {
 
   // Cắt danh sách theo trang; trang vượt quá thì lùi về trang cuối
   const paginate = useCallback(
-    <T,>(items: T[]) => {
+    <T>(items: T[]) => {
       const pages = Math.max(1, Math.ceil(items.length / limit));
       const current = Math.min(page, pages);
       return { current, pageItems: items.slice((current - 1) * limit, current * limit) };

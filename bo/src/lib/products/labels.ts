@@ -3,12 +3,10 @@ import type { AromaLevel, Product, ProductSize } from "@/lib/products/types";
 export const aromaLevelLabels: Record<AromaLevel, string> = { soft: "Nhẹ", medium: "Vừa", strong: "Đậm" };
 export const sizeLabels: Record<ProductSize, string> = { small: "Nhỏ", medium: "Vừa", big: "Lớn" };
 
-export const toOptions = <K extends string>(labels: Record<K, string>) =>
-  (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }));
+export const toOptions = <K extends string>(labels: Record<K, string>) => (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }));
 
 // Phần trăm giảm, làm tròn — 0 khi không giảm
-export const discountPercent = (p: Pick<Product, "price" | "salePrice">) =>
-  p.salePrice && p.salePrice < p.price ? Math.round((1 - p.salePrice / p.price) * 100) : 0;
+export const discountPercent = (p: Pick<Product, "price" | "salePrice">) => (p.salePrice && p.salePrice < p.price ? Math.round((1 - p.salePrice / p.price) * 100) : 0);
 
 export const sortOptions = [
   { value: "newest", label: "Mới nhất" },

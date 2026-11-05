@@ -26,9 +26,7 @@ export function AddStepModal({ open, hasVessel, onCancel, onCreate }: Props) {
       // Chưa có bước hũ thì gợi ý tạo hũ trước (bước bắt buộc, quyết định giá hũ)
       afterOpenChange={(o) => o && setKind(hasVessel ? "cards" : "vessel")}
     >
-      <Typography.Paragraph type="secondary">
-        Mỗi bước dùng một component. Khách đi qua các bước theo thứ tự bạn sắp xếp. Bước mới sẽ ẩn cho tới khi bạn bật lên.
-      </Typography.Paragraph>
+      <Typography.Paragraph type="secondary">Mỗi bước dùng một component. Khách đi qua các bước theo thứ tự bạn sắp xếp. Bước mới sẽ ẩn cho tới khi bạn bật lên.</Typography.Paragraph>
       <Row gutter={[12, 12]} role="radiogroup" aria-label="Component của bước">
         {stepKinds.map((k) => {
           const meta = kindMeta[k];
@@ -57,9 +55,7 @@ export function AddStepModal({ open, hasVessel, onCancel, onCreate }: Props) {
                 <Typography.Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 2 }}>
                   {disabled ? "Đã có bước hũ — mỗi cấu hình chỉ có một." : meta.description}
                 </Typography.Text>
-                <Typography.Text style={{ fontSize: 12, display: "block", marginTop: 6, color: brand.emberDark }}>
-                  VD: {meta.example}
-                </Typography.Text>
+                <Typography.Text style={{ fontSize: 12, display: "block", marginTop: 6, color: brand.emberDark }}>VD: {meta.example}</Typography.Text>
               </button>
             </Col>
           );

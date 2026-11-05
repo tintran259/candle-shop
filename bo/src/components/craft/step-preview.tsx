@@ -50,7 +50,15 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
           const on = picked.includes(o.id);
           const out = !sellable(o);
           return (
-            <button key={o.id} type="button" disabled={out} className="sf-swatch" aria-checked={on} role={step.multiple ? "checkbox" : "radio"} onClick={() => setPicked((p) => pickOption(p, o, options, step.multiple, step.maxSelect))}>
+            <button
+              key={o.id}
+              type="button"
+              disabled={out}
+              className="sf-swatch"
+              aria-checked={on}
+              role={step.multiple ? "checkbox" : "radio"}
+              onClick={() => setPicked((p) => pickOption(p, o, options, step.multiple, step.maxSelect))}
+            >
               {/* Có ảnh thì ưu tiên ảnh, không thì màu, không màu thì ô sọc */}
               <span className="sf-dot" style={{ background: o.images?.[0] ? `center / cover no-repeat url("${o.images[0]}")` : (o.swatch ?? striped) }}>
                 {on && <CheckOutlined style={{ fontSize: 12 }} />}
@@ -98,10 +106,11 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
         })}
       </div>
 
-      {step.kind === "vessel" && (() => {
-        const vessel = options.find((o) => o.id === picked[0]) as VesselOption | undefined;
-        return vessel && <VesselSizes key={vessel.id} vessel={vessel} map={map} />;
-      })()}
+      {step.kind === "vessel" &&
+        (() => {
+          const vessel = options.find((o) => o.id === picked[0]) as VesselOption | undefined;
+          return vessel && <VesselSizes key={vessel.id} vessel={vessel} map={map} />;
+        })()}
 
       {step.kind === "blend" && <BlendBody step={step} picked={picked.filter((id) => options.some((o) => o.id === id))} options={options} />}
     </Flex>
@@ -199,11 +208,7 @@ function InputsBody({ step, map }: { step: Extract<CraftStep, { kind: "inputs" }
               {f.label.vi}
               {f.priceDelta > 0 && <span style={{ fontWeight: 400, color: "#7a6a5c" }}>{price(f.priceDelta)}</span>}
             </Flex>
-            {f.multiline ? (
-              <Input.TextArea rows={3} maxLength={f.maxLength} showCount placeholder={f.placeholder?.vi} />
-            ) : (
-              <Input maxLength={f.maxLength} showCount placeholder={f.placeholder?.vi} />
-            )}
+            {f.multiline ? <Input.TextArea rows={3} maxLength={f.maxLength} showCount placeholder={f.placeholder?.vi} /> : <Input maxLength={f.maxLength} showCount placeholder={f.placeholder?.vi} />}
           </label>
         ))}
       </div>

@@ -85,7 +85,11 @@ function CancelledTableView({ items, onOpen, onCreate, onDiscard, pagination }: 
       key: "price",
       align: "right",
       responsive: ["xl"],
-      render: (_, c) => <span className="tabular" style={{ whiteSpace: "nowrap" }}>{formatMoney(c.price)}</span>,
+      render: (_, c) => (
+        <span className="tabular" style={{ whiteSpace: "nowrap" }}>
+          {formatMoney(c.price)}
+        </span>
+      ),
     },
     {
       title: "Trạng thái",
@@ -106,7 +110,14 @@ function CancelledTableView({ items, onOpen, onCreate, onDiscard, pagination }: 
             <Button size="small" type="primary" onClick={() => onCreate(c.id)}>
               Tạo sản phẩm trưng bày
             </Button>
-            <Popconfirm title={c.quantity > 1 ? `Bỏ ${c.quantity} cây “${c.name}”?` : `Bỏ “${c.name}”?`} description="Không thể hoàn tác." okText="Bỏ" okButtonProps={{ danger: true }} cancelText="Hủy" onConfirm={() => onDiscard(c)}>
+            <Popconfirm
+              title={c.quantity > 1 ? `Bỏ ${c.quantity} cây “${c.name}”?` : `Bỏ “${c.name}”?`}
+              description="Không thể hoàn tác."
+              okText="Bỏ"
+              okButtonProps={{ danger: true }}
+              cancelText="Hủy"
+              onConfirm={() => onDiscard(c)}
+            >
               <Button size="small" danger>
                 Bỏ
               </Button>

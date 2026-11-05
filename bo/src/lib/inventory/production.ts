@@ -37,8 +37,7 @@ export type BatchPlan = ReturnType<typeof batchPlan>;
 // Giá mẻ: theo tiền nguyên liệu tiêu tốn, hoặc tự nhập tổng chi phí (thêm điện nung, tiền công…)
 export type BatchPrice = { manual?: boolean; total?: number | null };
 
-export const batchTotal = (plan: BatchPlan, price?: BatchPrice) =>
-  price?.manual ? (price.total ?? undefined) : plan.missing.length || plan.gone.length ? undefined : plan.cost;
+export const batchTotal = (plan: BatchPlan, price?: BatchPrice) => (price?.manual ? (price.total ?? undefined) : plan.missing.length || plan.gone.length ? undefined : plan.cost);
 
 // Lý do chưa ghi được mẻ (null = ghi được)
 export function batchError(plan: BatchPlan, price: BatchPrice | undefined, count: number | null | undefined) {

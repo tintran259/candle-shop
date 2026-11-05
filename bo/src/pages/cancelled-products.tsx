@@ -45,10 +45,7 @@ export function CancelledProductsPage() {
   if (api.loading) return <CancelledSkeleton />;
 
   const count = (s: (typeof cancelledStatuses)[number]) => api.items.filter((c) => c.status === s).length;
-  const stats = [
-    { label: "Tổng sản phẩm", value: api.items.length },
-    ...cancelledStatuses.map((s) => ({ label: statusMeta[s].label, value: count(s) })),
-  ];
+  const stats = [{ label: "Tổng sản phẩm", value: api.items.length }, ...cancelledStatuses.map((s) => ({ label: statusMeta[s].label, value: count(s) }))];
 
   return (
     <Flex vertical gap={16}>
@@ -78,10 +75,7 @@ export function CancelledProductsPage() {
               value={filters.status}
               onChange={(status) => setFilters({ ...filters, status })}
               aria-label="Trạng thái"
-              options={[
-                { value: "all", label: `Tất cả · ${api.items.length}` },
-                ...cancelledStatuses.map((s) => ({ value: s, label: `${statusMeta[s].label} · ${count(s)}` })),
-              ]}
+              options={[{ value: "all", label: `Tất cả · ${api.items.length}` }, ...cancelledStatuses.map((s) => ({ value: s, label: `${statusMeta[s].label} · ${count(s)}` }))]}
             />
           </div>
           <Input
@@ -98,10 +92,7 @@ export function CancelledProductsPage() {
 
       {items.length === 0 ? (
         <Card>
-          <Empty
-            description={api.items.length ? "Không có sản phẩm khớp bộ lọc." : "Chưa có sản phẩm nào. Hủy đơn có nến thủ công đã làm thì nến sẽ tự vào đây."}
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
+          <Empty description={api.items.length ? "Không có sản phẩm khớp bộ lọc." : "Chưa có sản phẩm nào. Hủy đơn có nến thủ công đã làm thì nến sẽ tự vào đây."} image={Empty.PRESENTED_IMAGE_SIMPLE}>
             {api.items.length > 0 && <Button onClick={() => setFilters(defaultFilters)}>Xóa bộ lọc</Button>}
           </Empty>
         </Card>

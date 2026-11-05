@@ -1,0 +1,41 @@
+/* Lựa chọn Nguồn ở drawer nguyên liệu: hai dòng (tên + mô tả), cao theo nội dung */
+.source-choice .ant-segmented-item-label {
+  min-height: auto;
+  line-height: normal;
+  white-space: normal;
+  overflow: visible;
+}
+.source-choice .ant-segmented-item-selected {
+  box-shadow: inset 0 0 0 1.5px var(--ant-color-primary);
+}
+.source-choice .ant-segmented-item-selected .anticon {
+  color: var(--ant-color-primary);
+}
+/* Nút chuyển trong khối nền xám (Mẻ đầu tiên, Ghi phiếu kho) cần nền đậm hơn khối để còn thấy */
+.sub-panel .ant-segmented {
+  background: #e9e8e2;
+}
+
+/* Mục con trên sidebar (Phiếu kho dưới Kho nguyên liệu): thụt vào, chữ nhỏ hơn. Thu gọn còn icon thì giữ như mục thường */
+.app-sider .ant-menu-inline:not(.ant-menu-inline-collapsed) .nav-sub {
+  position: relative;
+  padding-inline-start: 48px !important;
+  font-size: 13px;
+}
+/* Đường nhánh nối lên mục cha */
+.app-sider .ant-menu-inline:not(.ant-menu-inline-collapsed) .nav-sub::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  inset-inline-start: 24px;
+  width: 12px;
+  height: 22px;
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-end-start-radius: 6px;
+}
+
+/* Form sản phẩm (drawer ~600px): thẻ chọn nguyên liệu 3 cột, tên không bị cắt */
+.product-craft .cfg-grid {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}

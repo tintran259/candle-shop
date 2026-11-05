@@ -114,7 +114,13 @@ function OrderTableView({ items, onOpen, pagination, selected, onSelect }: Props
       dataSource={items}
       pagination={pagination}
       scroll={{ x: "max-content" }}
-      rowSelection={{ selectedRowKeys: selected, onChange: (keys) => onSelect(keys as string[]), preserveSelectedRowKeys: true, columnWidth: 40, getCheckboxProps: (o) => ({ "aria-label": `Chọn đơn ${o.code}` }) }}
+      rowSelection={{
+        selectedRowKeys: selected,
+        onChange: (keys) => onSelect(keys as string[]),
+        preserveSelectedRowKeys: true,
+        columnWidth: 40,
+        getCheckboxProps: (o) => ({ "aria-label": `Chọn đơn ${o.code}` }),
+      }}
       onRow={(o) => ({
         // Bấm ô chọn thì không mở đơn
         onClick: (e) => !(e.target as HTMLElement).closest(".ant-table-selection-column") && onOpen(o.id),

@@ -26,7 +26,7 @@ test("E2E 15 — Trang Cài đặt và áp dụng vào tạo đơn", async ({ t 
   await type(input("depositPercent"), 30);
   await sleep(300);
   const pv = await preview();
-  ok("V1 Xem trước đổi ngay", pv.includes("Cọc 30% khi đặt") && pv.includes("300.000") && pv.includes("700.000"), pv.slice(0, 160));
+  ok("V1 Xem trước đổi ngay", pv.includes("Cọc 30% tiền hàng khi đặt") && pv.includes("300.000") && pv.includes("700.000"), pv.slice(0, 160));
   ok("V1 Chưa lưu thì chưa ghi", !(await saved()));
 
   // Rời trang khi chưa lưu
@@ -97,13 +97,14 @@ test("E2E 15 — Trang Cài đặt và áp dụng vào tạo đơn", async ({ t 
   await type(`document.querySelector('${D} input#shippingFee')`, 15000);
   await sleep(300);
   const sum = (await text(`${D} aside.order-summary`)).join(" ");
-  ok("O4 Sửa phí tay: tóm tắt cập nhật, cọc 30%", sum.includes("15.000") && sum.includes("Cọc 30% khi đặt"), sum.slice(0, 200));
+  ok("O4 Sửa phí tay: tóm tắt cập nhật, cọc 30%", sum.includes("15.000") && sum.includes("Cọc 30% tiền hàng khi đặt"), sum.slice(0, 200));
   await shot("c15-3-order.png");
   await clickText(`${D} .ant-drawer-footer button`, "Tạo đơn");
   await sleep(1800);
   const o = (await orders())[0];
   ok("O5 Đơn lưu phí sửa tay, tên phương thức, % cọc", o.shippingFee === 15000 && o.shippingName === "Nội thành (2 ngày)" && o.shippingDays === 2 && o.depositPercent === 30, JSON.stringify({ f: o.shippingFee, n: o.shippingName, d: o.depositPercent }));
-  ok("O5 Tiền cọc đúng 30%", o.payments[0].amount === Math.round((o.total * 0.3) / 1000) * 1000, `${o.total} -> ${o.payments[0].amount}`);
+  // Cọc trên tiền hàng, không gồm phí giao
+  ok("O5 Tiền cọc đúng 30% tiền hàng", o.payments[0].amount === Math.round(((o.total - o.shippingFee) * 0.3) / 1000) * 1000, `${o.total} -> ${o.payments[0].amount}`);
 
   // Đổi cài đặt: đơn đã tạo giữ nguyên, đơn cũ vẫn 50%
   await ev(`(()=>{const s=JSON.parse(localStorage.getItem('bo-settings-v1'));s.depositPercent=70;localStorage.setItem('bo-settings-v1',JSON.stringify(s))})()`);

@@ -28,10 +28,7 @@ export const formatMoneyAxis = (n: number): string => {
 export const formatNumber = (n: number) => number.format(n);
 export const formatPercent = (n: number) => `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}%`;
 
-export const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
-export const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+export const formatDate = (iso: string) => new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
 
 // Chữ viết tắt cho avatar: 2 chữ cuối của tên Việt ("Trần Bảo Ngọc" → "BN")
 export const initials = (name: string) =>

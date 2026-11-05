@@ -3,7 +3,7 @@
 import { sizeLabel } from "@/lib/craft/groups";
 import { amountBasis, intensityLabels } from "@/lib/craft/steps";
 import type { BlendStep, CraftConfig, CraftStep, IntensityLevel, StepOption, VesselOption, VesselStep } from "@/lib/craft/types";
-import { lidLevel, optionLevel, sellable, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
+import { sellable, type MaterialMap } from "@/lib/inventory/stock";
 import type { RecipeLine } from "@/lib/products/types";
 
 // Lượng admin tự điền cho 1 hũ theo id lựa chọn; không có thì dùng lượng mặc định
@@ -62,10 +62,10 @@ export function pickOption(ids: string[], option: StepOption, options: StepOptio
 }
 
 const optionsOf = (step: CraftStep) => (step.kind === "inputs" ? [] : (step.options as StepOption[]));
-const findOption = (step: CraftStep, id?: string) => optionsOf(step).find((o) => o.id === id);
+export const findOption = (step: CraftStep, id?: string) => optionsOf(step).find((o) => o.id === id);
 
 // Các lựa chọn khách đang chọn ở một bước (để kiểm tra onlyWith)
-function chosenIds(sel?: StepSelection): string[] {
+export function chosenIds(sel?: StepSelection): string[] {
   if (!sel) return [];
   if (sel.kind === "vessel") return sel.optionId ? [sel.optionId] : [];
   if (sel.kind === "blend") return sel.items.map((i) => i.optionId);
@@ -262,40 +262,3 @@ export function maxJars(needs: Map<string, number>, map: MaterialMap) {
   for (const [id, need] of needs) n = Math.min(n, Math.floor((map.get(id)?.stock ?? 0) / need));
   return n;
 }
-
-export type SelectionIssue = { stepId: string; message: string };
-
-// Kiểm tra trước khi thêm vào đơn — giống BE kiểm tra lúc tạo đơn (docs/craft-builder.md mục 9.5)
-export function validateSelection(config: CraftConfig, selection: CraftSelection, map: MaterialMap): SelectionIssue[] {
-  const issues: SelectionIssue[] = [];
-  for (const step of activeSteps(config)) {
-    const sel = selection[step.id];
-    const push = (message: string) => issues.push({ stepId: step.id, message });
-    if (step.kind === "vessel" && sel?.kind === "vessel") {
-      const o = findOption(step, sel.optionId) as VesselOption | undefined;
-      if (!o) push("Chọn hũ.");
-      else if (!sel.sizeId) push("Chọn kích thước.");
-      else if (vesselSizeLevel(o, sel.sizeId, map) === "out") push("Cỡ này đã hết hũ.");
-      else if (sel.withLid && lidLevel(o, sel.sizeId, map) === "out") push("Nắp cỡ này đã hết.");
-      continue;
-    }
-    if (step.kind === "inputs" && sel?.kind === "inputs") {
-      if (step.required && !Object.values(sel.values).some((v) => v.trim()) && !sel.addons.length) push("Nhập ít nhất một ô hoặc chọn tuỳ chọn.");
-      for (const f of step.fields) if ((sel.values[f.id]?.trim().length ?? 0) > f.maxLength) push(`${f.label.vi} quá ${f.maxLength} ký tự.`);
-      for (const f of step.fields) if (f.enabled && sel.values[f.id]?.trim() && optionLevel(f.materialId, map) === "out") push(`${f.label.vi}: nguyên liệu đã hết.`);
-      for (const a of step.addons) if (sel.addons.includes(a.id) && (!a.available || optionLevel(a.materialId, map) === "out")) push(`${a.name.vi} đã hết.`);
-      continue;
-    }
-    const ids = chosenIds(sel);
-    if (step.required && !ids.length) push("Chưa chọn.");
-    for (const id of ids) {
-      const o = findOption(step, id);
-      const block = o ? optionBlock(config, selection, step, o, map) : "Không còn";
-      if (block) push(`${o?.name.vi ?? id}: ${block.toLowerCase()}.`);
-    }
-    if (step.kind === "blend" && sel?.kind === "blend" && sel.items.length > 1 && sel.items.some((i) => findOption(step, i.optionId)?.exclusive))
-      push("Mục “không phối thêm” phải chọn riêng.");
-  }
-  return issues;
-}
-

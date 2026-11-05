@@ -20,22 +20,8 @@ export function CategoryModal({ open, category, api, onClose }: Props) {
   };
 
   return (
-    <Modal
-      open={open}
-      title={category ? "Sửa danh mục" : "Thêm danh mục"}
-      okText={category ? "Lưu" : "Thêm danh mục"}
-      cancelText="Hủy"
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      destroyOnHidden
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={{ vi: category?.name.vi ?? "", en: category?.name.en ?? "", color: category?.color ?? "default" }}
-        onFinish={finish}
-        style={{ marginTop: 16 }}
-      >
+    <Modal open={open} title={category ? "Sửa danh mục" : "Thêm danh mục"} okText={category ? "Lưu" : "Thêm danh mục"} cancelText="Hủy" onCancel={onClose} onOk={() => form.submit()} destroyOnHidden>
+      <Form form={form} layout="vertical" initialValues={{ vi: category?.name.vi ?? "", en: category?.name.en ?? "", color: category?.color ?? "default" }} onFinish={finish} style={{ marginTop: 16 }}>
         <Row gutter={16}>
           <Col xs={24} sm={12}>
             <Form.Item
@@ -45,9 +31,7 @@ export function CategoryModal({ open, category, api, onClose }: Props) {
                 { required: true, whitespace: true, message: "Nhập tên danh mục." },
                 {
                   validator: (_, v?: string) =>
-                    api.categories.some((c) => c.id !== category?.id && slugify(c.name.vi) === slugify(v ?? ""))
-                      ? Promise.reject(new Error("Đã có danh mục tên này."))
-                      : Promise.resolve(),
+                    api.categories.some((c) => c.id !== category?.id && slugify(c.name.vi) === slugify(v ?? "")) ? Promise.reject(new Error("Đã có danh mục tên này.")) : Promise.resolve(),
                 },
               ]}
             >

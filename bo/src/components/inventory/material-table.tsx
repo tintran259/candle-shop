@@ -149,14 +149,7 @@ function MaterialTableView({ items, usage, held, pagination, onOpen, onReceive }
   ];
 
   return (
-    <Table
-      rowKey="id"
-      columns={columns}
-      dataSource={items}
-      pagination={pagination}
-      scroll={{ x: "max-content" }}
-      onRow={(m) => ({ onClick: () => onOpen(m.id), style: { cursor: "pointer" } })}
-    />
+    <Table rowKey="id" columns={columns} dataSource={items} pagination={pagination} scroll={{ x: "max-content" }} onRow={(m) => ({ onClick: () => onOpen(m.id), style: { cursor: "pointer" } })} />
   );
 }
 

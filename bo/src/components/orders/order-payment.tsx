@@ -76,7 +76,10 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
   const methods = [...new Set(order.payments.filter((p) => p.status === "success").map((p) => providerLabels[p.provider]))].join(" + ");
 
   return (
-    <FormSection title="Thanh toán" description={`${order.paymentPlan === "deposit" ? `${depositLabel(order)} khi đặt, phần còn lại thu khi giao` : "Khách trả đủ khi đặt"} · ${providerLabels[order.paymentMethod]}`}>
+    <FormSection
+      title="Thanh toán"
+      description={`${order.paymentPlan === "deposit" ? `${depositLabel(order)} khi đặt, phần còn lại thu khi giao` : "Khách trả đủ khi đặt"} · ${providerLabels[order.paymentMethod]}`}
+    >
       {/* Tiến độ thu tiền trên tổng đơn */}
       <Flex justify="space-between" align="baseline">
         <Typography.Text type="secondary">Tổng đơn</Typography.Text>
@@ -84,13 +87,7 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
           {formatMoney(order.total)}
         </Typography.Text>
       </Flex>
-      <Progress
-        percent={cancelled ? 0 : percent}
-        showInfo={false}
-        strokeColor={left ? "#fa8c16" : "#52c41a"}
-        aria-label={`Đã thu ${percent}% tổng đơn`}
-        style={{ margin: "4px 0 2px" }}
-      />
+      <Progress percent={cancelled ? 0 : percent} showInfo={false} strokeColor={left ? "#fa8c16" : "#52c41a"} aria-label={`Đã thu ${percent}% tổng đơn`} style={{ margin: "4px 0 2px" }} />
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>
         {cancelled ? "Đơn đã hủy" : `Đã thu ${percent}% tổng đơn`}
       </Typography.Text>

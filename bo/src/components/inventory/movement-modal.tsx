@@ -34,15 +34,7 @@ export function MovementModal({ open, materials, preset, onCancel, onSubmit }: P
   const preview = m && type === "in" ? lotPreview(m.stock, m.unitCost, amount, lot) : undefined;
 
   return (
-    <Modal
-      open={open}
-      title="Ghi nhận kho"
-      okText="Ghi nhận"
-      cancelText="Hủy"
-      onCancel={onCancel}
-      onOk={() => form.submit()}
-      destroyOnHidden
-    >
+    <Modal open={open} title="Ghi nhận kho" okText="Ghi nhận" cancelText="Hủy" onCancel={onCancel} onOk={() => form.submit()} destroyOnHidden>
       <Form
         form={form}
         layout="vertical"
@@ -51,10 +43,7 @@ export function MovementModal({ open, materials, preset, onCancel, onSubmit }: P
         onFinish={(v) => onSubmit({ ...v, amount: Math.round(v.amount) })}
       >
         <Form.Item name="type" label="Loại phiếu">
-          <Segmented<ManualMovement>
-            block
-            options={manualMovements.map((t) => ({ value: t, label: movementShort[t] }))}
-          />
+          <Segmented<ManualMovement> block options={manualMovements.map((t) => ({ value: t, label: movementShort[t] }))} />
         </Form.Item>
         <Form.Item name="materialId" label="Nguyên liệu" rules={[{ required: true, message: "Chọn nguyên liệu." }]}>
           <MaterialSelect materials={tracked} allowNone={false} />
@@ -66,7 +55,10 @@ export function MovementModal({ open, materials, preset, onCancel, onSubmit }: P
           rules={[
             { required: true, type: "number", min: type === "adjust" ? 0 : 1, message: type === "adjust" ? "Nhập số đếm được." : "Nhập số lượng lớn hơn 0." },
             // Không cho xuất quá số đang có (trước đây tự về 0, mất dấu hao hụt thật)
-            { validator: (_, v: number | undefined) => (m && type === "out" && (v ?? 0) > m.stock ? Promise.reject(new Error(`Chỉ còn ${formatNumber(m.stock)} ${unitLabel[m.unit]} — đếm lại thực tế thì dùng Kiểm kê.`)) : Promise.resolve()) },
+            {
+              validator: (_, v: number | undefined) =>
+                m && type === "out" && (v ?? 0) > m.stock ? Promise.reject(new Error(`Chỉ còn ${formatNumber(m.stock)} ${unitLabel[m.unit]} — đếm lại thực tế thì dùng Kiểm kê.`)) : Promise.resolve(),
+            },
           ]}
           extra={type === "adjust" ? "Đặt lại tồn kho bằng số đếm được khi kiểm kê." : undefined}
         >

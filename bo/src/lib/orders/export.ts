@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { depositLabel, itemCount, paidAmount, paymentState, paymentStateMeta, providerLabels, shippingName, statusMeta } from "@/lib/orders/labels";
-import { codAmount } from "@/lib/orders/shipping";
+import { carrierName, codAmount } from "@/lib/orders/shipping";
 import type { Order } from "@/lib/orders/types";
 import { downloadXlsx, type XlsxSheet } from "@/lib/xlsx";
 
@@ -59,7 +59,7 @@ export function ordersSheets(orders: Order[]): XlsxSheet[] {
         `${providerLabels[o.paymentMethod]} · ${o.paymentPlan === "deposit" ? depositLabel(o) : "Trả đủ"}`,
         day(o.readyDate),
         shippingName(o),
-        o.shipment?.carrier,
+        carrierName(o),
         o.shipment?.trackingCode,
         o.shippingCost,
         o.note,

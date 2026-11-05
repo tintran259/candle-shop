@@ -1,6 +1,7 @@
 import { StarFilled, WarningOutlined } from "@ant-design/icons";
 import { Avatar, Flex, Tag, Tooltip, Typography } from "antd";
-import { belowCost, type PriceCheck } from "@/lib/craft/pricing";
+import { belowCost, depositLoss } from "@/lib/craft/pricing";
+import type { ProductReview } from "@/lib/products/pricing";
 import { discountPercent } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { formatMoney } from "@/lib/format";
@@ -33,14 +34,18 @@ export function PriceText({ product, size = 14 }: { product: Pick<Product, "pric
   );
 }
 
-// Dưới giá: sản phẩm đang bán thấp hơn giá vốn (đỏ) hoặc lãi dưới mức tối thiểu (cam), theo giá nhập hiện tại trong Kho
-export function PriceFlag({ check }: { check?: PriceCheck }) {
+// Dưới giá: sản phẩm đang bán thấp hơn giá vốn (đỏ), lãi dưới mức tối thiểu hoặc khách bỏ cọc thì lỗ (cam), theo giá nhập hiện tại trong Kho
+export function PriceFlag({ check }: { check?: ProductReview }) {
   if (!check) return null;
   const below = belowCost(check);
+  const d = check.deposit;
+  const label = below ? `Thấp hơn vốn ${formatMoney(check.floor - check.price)}` : depositLoss(d) ? `Bỏ cọc lỗ ${formatMoney(-d.left)}` : `Lãi thấp ${Math.round((check.margin ?? 0) * 100)}%`;
   return (
-    <Tooltip title={`Giá vốn công thức hiện tại ${formatMoney(check.floor)}, đang bán ${formatMoney(check.price)}. Mở sản phẩm để xem gợi ý giá.`}>
+    <Tooltip
+      title={`Giá vốn công thức hiện tại ${formatMoney(check.floor)}, đang bán ${formatMoney(check.price)}. Khách chỉ cọc rồi không nhận: cọc ${formatMoney(d.deposit)} − nguyên liệu ${formatMoney(d.cost)} − ship ${formatMoney(d.shipping)} = ${formatMoney(d.left)}. Mở sản phẩm để xem gợi ý giá.`}
+    >
       <Tag color={below ? "error" : "warning"} icon={<WarningOutlined />} style={{ marginInlineEnd: 0, marginTop: 4, width: "fit-content" }}>
-        {below ? `Thấp hơn vốn ${formatMoney(check.floor - check.price)}` : `Lãi thấp ${Math.round((check.margin ?? 0) * 100)}%`}
+        {label}
       </Tag>
     </Tooltip>
   );
@@ -48,13 +53,7 @@ export function PriceFlag({ check }: { check?: PriceCheck }) {
 
 export function ProductThumb({ product, size = 48 }: { product: Pick<Product, "images" | "status">; size?: number }) {
   return (
-    <Avatar
-      shape="square"
-      size={size}
-      src={product.images[0]}
-      alt=""
-      style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight, opacity: product.status === "hidden" ? 0.55 : 1 }}
-    />
+    <Avatar shape="square" size={size} src={product.images[0]} alt="" style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight, opacity: product.status === "hidden" ? 0.55 : 1 }} />
   );
 }
 

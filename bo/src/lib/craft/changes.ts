@@ -148,13 +148,20 @@ function stepItems(before: CraftStep, after: CraftStep, map: MaterialMap): Chang
     items.push(...listChanges(before.fields, after.fields, (f) => `Ô “${f.label.vi}”`, fieldFields));
     items.push(...listChanges(before.addons, after.addons, (a) => `Tuỳ chọn “${a.name.vi}”`, addonFields(ctx)));
   } else if (before.kind !== "inputs" && after.kind !== "inputs") {
-    items.push(...listChanges(before.options as StepOption[], after.options as StepOption[], (o) => o.name.vi, (a, b) => optionChanges(a, b, ctx), (o) => ({ optionId: o.id })));
+    items.push(
+      ...listChanges(
+        before.options as StepOption[],
+        after.options as StepOption[],
+        (o) => o.name.vi,
+        (a, b) => optionChanges(a, b, ctx),
+        (o) => ({ optionId: o.id }),
+      ),
+    );
   }
   return items;
 }
 
-const summary = (s: CraftStep) =>
-  s.kind === "inputs" ? `${s.fields.length} ô nhập · ${s.addons.length} tuỳ chọn` : `${kindMeta[s.kind].label} · ${s.options.length} lựa chọn`;
+const summary = (s: CraftStep) => (s.kind === "inputs" ? `${s.fields.length} ô nhập · ${s.addons.length} tuỳ chọn` : `${kindMeta[s.kind].label} · ${s.options.length} lựa chọn`);
 
 // Danh sách thay đổi theo thứ tự bước trên bản nháp (bước bị xóa xếp cuối)
 export function describeChanges(saved: CraftConfig, draft: CraftConfig, map: MaterialMap): StepChange[] {

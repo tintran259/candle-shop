@@ -25,8 +25,8 @@ test("E2E 23 — Dashboard số thật: doanh thu theo tiền thực nhận, k�
     make("d", { status: "cancelled", payments: pay("d", 1000000, 3), refundDue: 1000000, cancelFault: "shop", createdAt: ago(3), updatedAt: ago(1) }), // chờ hoàn: 0
     make("e", { status: "cancelled", paymentPlan: "deposit", payments: pay("e", 500000, 3), cancelFault: "customer", createdAt: ago(3) }), // giữ cọc 500.000
     make("f", { status: "delivery_failed", createdAt: ago(4), payments: pay("f", 1000000, 4), items: [{ id: "c", name: "Nến tự phối", custom: "Hũ gốm", price: 1000000, quantity: 3 }], total: 1000000 }), // 1.000.000
-    make("g", { createdAt: ago(10), payments: pay("g", 2000000, 10), total: 2000000 }), // ngoài kỳ 7 ngày
-    make("h", { createdAt: ago(9), payments: pay("h", 1000000, 9), customer: { name: "Khách a", email: "", phone: "0970000097" } }),
+    make("g", { createdAt: ago(10), updatedAt: ago(10), payments: pay("g", 2000000, 10), total: 2000000 }), // hoàn tất ngoài kỳ 7 ngày
+    make("h", { createdAt: ago(9), updatedAt: ago(9), payments: pay("h", 1000000, 9), customer: { name: "Khách a", email: "", phone: "0970000097" } }),
     make("l", { status: "producing", readyDate: "2020-01-01", createdAt: ago(20), payments: pay("l", 1000000, 20) }),
   ];
   await ev(`localStorage.setItem('bo-orders-v4', ${JSON.stringify(JSON.stringify(list))})`);
@@ -35,8 +35,8 @@ test("E2E 23 — Dashboard số thật: doanh thu theo tiền thực nhận, k�
   const page = () => ev("document.querySelector('main').innerText.replace(/\\s+/g,' ')");
   const p7 = await page();
   await shot("d23-7.png", true);
-  const expected = "3,5 tr"; // 1 + 0,5 + 0,5 + 0 + 0,5 + 1 = 3,5
-  ok("A1 Doanh thu theo tiền thực nhận", p7.includes(expected), p7.slice(0, 400));
+  // Chỉ đơn đã chốt: a hoàn tất 1 + c giữ 0,5 + d chờ hoàn 0 + e giữ cọc 0,5 = 2. Đơn b (cọc), f (giao lỗi), l (đang làm) chưa tính
+  ok("A1 Doanh thu chỉ tính đơn đã chốt", p7.includes("Doanh thu 2 tr") && /Chưa tính 2,5 tr ₫ đã thu của 3 đơn chưa hoàn tất/.test(p7), p7.slice(0, 600));
   ok("A2 Đơn hàng không tính đơn hủy (3)", /Đơn hàng 3/.test(p7), p7.match(/Đơn hàng \S+/)?.[0]);
   ok("A3 Việc cần xử lý: trễ hạn 1, giao lỗi 1, chờ hoàn 1 tr", /Đơn trễ hạn 1/.test(p7) && /Giao lỗi cần xử lý 1/.test(p7) && /Chờ hoàn tiền 1 tr/.test(p7) && p7.includes("1 đơn"), p7.slice(0, 260));
   ok("A4 Bán chạy: Nến tự phối 3 cái đứng đầu", /1 Nến tự phối 3 đã bán/.test(p7), p7.match(/Sản phẩm bán chạy.{0,120}/)?.[0]);

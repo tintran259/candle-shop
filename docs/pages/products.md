@@ -19,11 +19,15 @@ Sản phẩm trưng bày **không có số tồn thành phẩm**. Khách đặt 
 
 ## Giá vốn
 
-Giá bán (hoặc giá giảm nếu có) so với giá vốn công thức 1 cây theo **giá nhập bình quân hiện tại** trong Kho, không phải giá lúc tạo sản phẩm. Giá nhập tăng làm sản phẩm thấp hơn vốn hoặc lãi dưới mức tối thiểu ở [Cài đặt](./settings.md) thì:
+Giá bán (hoặc giá giảm nếu có) so với giá vốn công thức 1 cây theo **giá nhập bình quân hiện tại** trong Kho, không phải giá lúc tạo sản phẩm. Giá nhập tăng làm sản phẩm thấp hơn vốn, lãi dưới mức tối thiểu ở [Cài đặt](./settings.md), hoặc khách bỏ cọc thì lỗ (xem dưới) thì:
 
 - Đầu trang có thông báo **N sản phẩm cần xem lại giá bán**, nút **Chỉ xem các sản phẩm này** để lọc (bấm lại **Xem tất cả**).
-- Dưới giá trên bảng và thẻ lưới có nhãn **Thấp hơn vốn X ₫** (đỏ) hoặc **Lãi thấp Y%** (cam), rê chuột xem giá vốn.
+- Dưới giá trên bảng và thẻ lưới có nhãn **Thấp hơn vốn X ₫** (đỏ), **Bỏ cọc lỗ X ₫** hoặc **Lãi thấp Y%** (cam), rê chuột xem giá vốn và phép tính khi bỏ cọc.
 - Không tự đổi giá; mở sản phẩm để xem gợi ý giá dưới ô Giá bán. Sản phẩm chưa có công thức không kiểm tra.
+- Dưới ô giá có dòng "Khách cọc 50% rồi không nhận: cọc … − nguyên liệu … − ship … = còn / lỗ …", lỗ thì ghi giá thấp nhất để không lỗ.
+- **Gợi ý giá** lấy mức cao nhất của: giá vốn × hệ số, mức đạt lãi tối thiểu, mức đủ bù khi khách bỏ cọc.
+
+**Khách chỉ cọc rồi không nhận hàng:** cọc (% ở Cài đặt, trên giá bán) − nguyên liệu − **phí giao của phương thức mặc định** (phương thức đang bật đầu tiên ở Cài đặt › Phí vận chuyển) phải ≥ 0. Kiểm tra lúc đặt giá sản phẩm, không báo lúc tạo đơn (giá trên đơn đã theo giá sản phẩm). Giá thấp nhất để không lỗ = (nguyên liệu + phí ship) ÷ % cọc, làm tròn lên 5.000 ₫. Vd nguyên liệu 90.000 ₫, cọc 50%, phí giao 30.000 ₫ → bán 200.000 ₫ thì lỗ 20.000 ₫ khi khách bỏ cọc, cần từ 240.000 ₫. Chỉ áp cho giá trọn một cây, không áp cho phụ thu lẻ ở Thủ công (hương, nắp, ô nhập).
 
 ## Drawer thêm, sửa
 

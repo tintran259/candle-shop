@@ -129,12 +129,7 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
             <Button size="small" icon={<CopyOutlined />} onClick={() => copy(`${customer.name} – ${customer.phone} – ${order.shippingAddress}`, "thông tin giao hàng")}>
               Sao chép
             </Button>
-            <Button
-              size="small"
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.shippingAddress)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <Button size="small" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.shippingAddress)}`} target="_blank" rel="noopener noreferrer">
               Mở bản đồ
             </Button>
           </Flex>
@@ -143,9 +138,9 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
           <InfoRow icon={null} label="Hình thức">
             <Typography.Text>{shippingName(order)}</Typography.Text>
           </InfoRow>
-          {shipment && (
+          {(shipment || order.carrier) && (
             <InfoRow icon={null} label="Vận chuyển">
-              <Typography.Text>{shipment.carrier}</Typography.Text>
+              <Typography.Text>{shipment?.carrier ?? order.carrier?.name}</Typography.Text>
             </InfoRow>
           )}
           <InfoRow icon={null} label="Ngày làm xong">

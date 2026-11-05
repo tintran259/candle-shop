@@ -2,7 +2,6 @@ import { DeleteOutlined, ThunderboltOutlined } from "@ant-design/icons";
 import { App, Button, Col, DatePicker, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Segmented, Select, Typography } from "antd";
 import dayjs from "dayjs";
 import { useDeferredValue, useState } from "react";
-import { Link } from "react-router";
 import { fromFormValues, toFormValues, type DiscountFormValues } from "@/components/discounts/discount-form";
 import { DiscountTicket } from "@/components/discounts/discount-ticket";
 import { FormSection, SwitchField } from "@/components/form/form-section";
@@ -10,12 +9,11 @@ import { MoneyInput } from "@/components/money-input";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCustomers } from "@/hooks/use-customers";
 import type { DiscountsApi } from "@/hooks/use-discounts";
-import { useOrders } from "@/hooks/use-orders";
 import { normalizeCode, randomCode, scopeLabels, typeLabels } from "@/lib/discounts/labels";
 import type { Discount, DiscountType } from "@/lib/discounts/types";
 import { phoneKey } from "@/lib/customers/stats";
-import { formatMoney } from "@/lib/format";
 import { fold } from "@/lib/search";
+import { Performance } from "@/components/discounts/discount-performance";
 
 // presetCustomerId: mở từ hồ sơ khách (Tạo mã riêng) thì chọn sẵn khách đó
 type Props = { open: boolean; discount?: Discount; api: DiscountsApi; presetCustomerId?: string; onClose: () => void };
@@ -183,9 +181,7 @@ export function DiscountDrawer({ open, discount, api, presetCustomerId, onClose 
                 rules={[
                   ({ getFieldValue }) => ({
                     validator: (_, v?: number | null) =>
-                      getFieldValue("type") === "fixed" && v && getFieldValue("amount") >= v
-                        ? Promise.reject(new Error("Đơn tối thiểu phải lớn hơn số tiền giảm."))
-                        : Promise.resolve(),
+                      getFieldValue("type") === "fixed" && v && getFieldValue("amount") >= v ? Promise.reject(new Error("Đơn tối thiểu phải lớn hơn số tiền giảm.")) : Promise.resolve(),
                   }),
                 ]}
               >
@@ -238,8 +234,7 @@ export function DiscountDrawer({ open, discount, api, presetCustomerId, onClose 
                     extra="Để trống = không hết hạn"
                     rules={[
                       ({ getFieldValue }) => ({
-                        validator: (_, v?: dayjs.Dayjs | null) =>
-                          !v || !v.isBefore(getFieldValue("startsAt"), "day") ? Promise.resolve() : Promise.reject(new Error("Phải sau ngày bắt đầu.")),
+                        validator: (_, v?: dayjs.Dayjs | null) => (!v || !v.isBefore(getFieldValue("startsAt"), "day") ? Promise.resolve() : Promise.reject(new Error("Phải sau ngày bắt đầu."))),
                       }),
                     ]}
                   >
@@ -270,48 +265,5 @@ export function DiscountDrawer({ open, discount, api, presetCustomerId, onClose 
         <DrawerFormSkeleton />
       )}
     </Drawer>
-  );
-}
-
-// Hiệu quả của mã — tính từ đơn hàng đã dùng mã (không tính đơn hủy)
-function Performance({ code }: { code: string }) {
-  const { orders } = useOrders();
-  const used = orders.filter((o) => o.discountCode === code && o.status !== "cancelled").sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const saved = used.reduce((s, o) => s + o.discount, 0);
-  const revenue = used.reduce((s, o) => s + o.total, 0);
-
-  return (
-    <FormSection title="Hiệu quả" description="Tính từ các đơn có dùng mã này trong hệ thống.">
-      <Flex gap={12}>
-        {[
-          { label: "Đơn dùng mã", value: String(used.length) },
-          { label: "Đã giảm cho khách", value: formatMoney(saved) },
-          { label: "Doanh thu từ đơn", value: formatMoney(revenue) },
-        ].map((f) => (
-          <Flex key={f.label} vertical style={{ flex: 1, minWidth: 0, background: "#f6f6f3", borderRadius: 14, padding: "10px 14px" }}>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-              {f.label}
-            </Typography.Text>
-            <span className="big-number" style={{ fontSize: 18 }}>
-              {f.value}
-            </span>
-          </Flex>
-        ))}
-      </Flex>
-      {used.length > 0 && (
-        <Flex vertical gap={6} style={{ marginTop: 12 }}>
-          {used.slice(0, 5).map((o) => (
-            <Flex key={o.id} justify="space-between" gap={12}>
-              <Link to={`/orders?order=${o.id}`} className="tabular">
-                {o.code} · {o.customer.name}
-              </Link>
-              <Typography.Text type="secondary" className="tabular">
-                −{formatMoney(o.discount)} · {dayjs(o.createdAt).format("DD/MM")}
-              </Typography.Text>
-            </Flex>
-          ))}
-        </Flex>
-      )}
-    </FormSection>
   );
 }

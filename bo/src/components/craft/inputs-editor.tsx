@@ -92,7 +92,13 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
                     {/* Có chữ cạnh switch — trước đây switch trơn nằm cạnh checkbox, admin không rõ nó bật/tắt gì */}
                     <Switch size="small" checked={f.enabled} onChange={(enabled) => patchField(f.id, { enabled })} aria-label={`Hiện ô ${f.label.vi}`} />
                     <Typography.Text style={{ fontSize: 13 }}>{f.enabled ? "Hiện trên web" : "Đang ẩn"}</Typography.Text>
-                    <Popconfirm title={`Xóa ô “${f.label.vi}”?`} okText="Xóa" okButtonProps={{ danger: true }} cancelText="Hủy" onConfirm={() => update((s) => ({ ...s, fields: s.fields.filter((x) => x.id !== f.id) }))}>
+                    <Popconfirm
+                      title={`Xóa ô “${f.label.vi}”?`}
+                      okText="Xóa"
+                      okButtonProps={{ danger: true }}
+                      cancelText="Hủy"
+                      onConfirm={() => update((s) => ({ ...s, fields: s.fields.filter((x) => x.id !== f.id) }))}
+                    >
                       <Button type="text" danger size="small" icon={<DeleteOutlined />} aria-label={`Xóa ô ${f.label.vi}`} />
                     </Popconfirm>
                   </Flex>
@@ -125,12 +131,7 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
                 <Form layout="vertical" component="div">
                   <Row gutter={12}>
                     <LocalizedInputs label="Tên" value={a.name} onChange={(name) => patchAddon(a.id, { name })} />
-                    <LocalizedInputs
-                      label="Mô tả"
-                      value={a.description ?? { vi: "", en: "" }}
-                      onChange={(d) => patchAddon(a.id, { description: d.vi || d.en ? d : undefined })}
-                      optional
-                    />
+                    <LocalizedInputs label="Mô tả" value={a.description ?? { vi: "", en: "" }} onChange={(d) => patchAddon(a.id, { description: d.vi || d.en ? d : undefined })} optional />
                     <Col xs={12} md={6}>
                       <Form.Item label="Phụ thu">
                         <MoneyInput value={a.priceDelta} onChange={(n) => n !== null && patchAddon(a.id, { priceDelta: n })} />
@@ -146,7 +147,10 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
                   <Flex justify="space-between" align="center" gap={12} wrap>
                     <Flex gap={16} wrap>
                       <Checkbox checked={a.available} onChange={(e) => patchAddon(a.id, { available: e.target.checked })}>
-                        Đang bán <Typography.Text type="secondary" style={{ fontSize: 12 }}>(tắt = hiện “Tạm hết”)</Typography.Text>
+                        Đang bán{" "}
+                        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                          (tắt = hiện “Tạm hết”)
+                        </Typography.Text>
                       </Checkbox>
                     </Flex>
                     <Flex gap={8} align="center">
@@ -155,7 +159,13 @@ export function InputsEditor({ step, api, materials }: { step: InputsStep; api: 
                       </Typography.Text>
                       <Switch size="small" checked={a.enabled} onChange={(enabled) => patchAddon(a.id, { enabled })} aria-label={`Hiện ${a.name.vi}`} />
                       <Typography.Text style={{ fontSize: 13 }}>{a.enabled ? "Hiện trên web" : "Đang ẩn"}</Typography.Text>
-                      <Popconfirm title={`Xóa “${a.name.vi}”?`} okText="Xóa" okButtonProps={{ danger: true }} cancelText="Hủy" onConfirm={() => update((s) => ({ ...s, addons: s.addons.filter((x) => x.id !== a.id) }))}>
+                      <Popconfirm
+                        title={`Xóa “${a.name.vi}”?`}
+                        okText="Xóa"
+                        okButtonProps={{ danger: true }}
+                        cancelText="Hủy"
+                        onConfirm={() => update((s) => ({ ...s, addons: s.addons.filter((x) => x.id !== a.id) }))}
+                      >
                         <Button type="text" danger size="small" icon={<DeleteOutlined />} aria-label={`Xóa ${a.name.vi}`} />
                       </Popconfirm>
                     </Flex>

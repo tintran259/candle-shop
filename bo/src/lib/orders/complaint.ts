@@ -71,14 +71,21 @@ export function recordComplaint(
   };
   const refund =
     input.resolution === "refund" && input.refundAmount
-      ? [{ id: `pay-${at.valueOf().toString(36)}`, provider: "cod" as const, amount: -Math.round(input.refundAmount), status: "success" as const, kind: "refund" as const, images: input.refundImages ?? [], note: input.refundNote?.trim() || undefined, createdAt: iso }]
+      ? [
+          {
+            id: `pay-${at.valueOf().toString(36)}`,
+            provider: "cod" as const,
+            amount: -Math.round(input.refundAmount),
+            status: "success" as const,
+            kind: "refund" as const,
+            images: input.refundImages ?? [],
+            note: input.refundNote?.trim() || undefined,
+            createdAt: iso,
+          },
+        ]
       : [];
   const result =
-    input.resolution === "resend" && input.replacement
-      ? `gửi bù đơn ${input.replacement.code}`
-      : input.resolution === "refund"
-        ? `hoàn ${formatMoney(input.refundAmount ?? 0)}`
-        : "chỉ ghi nhận";
+    input.resolution === "resend" && input.replacement ? `gửi bù đơn ${input.replacement.code}` : input.resolution === "refund" ? `hoàn ${formatMoney(input.refundAmount ?? 0)}` : "chỉ ghi nhận";
   return {
     ...order,
     complaints: [...(order.complaints ?? []), complaint],

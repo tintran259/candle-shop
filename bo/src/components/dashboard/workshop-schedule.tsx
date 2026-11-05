@@ -10,11 +10,7 @@ export function WorkshopSchedule({ rows }: { rows: DayLoad[] }) {
   const capacity = rows[0]?.capacity ?? 0;
   const over = rows.filter((r) => r.over).length;
   return (
-    <Card
-      title="Lịch xưởng"
-      extra={<MoreLink to="/orders?sort=ready-soon">Đơn sắp tới hạn</MoreLink>}
-      styles={{ body: { paddingTop: 12 } }}
-    >
+    <Card title="Lịch xưởng" extra={<MoreLink to="/orders?sort=ready-soon">Đơn sắp tới hạn</MoreLink>} styles={{ body: { paddingTop: 12 } }}>
       {capacity ? (
         <Typography.Paragraph type={over ? "danger" : "secondary"} style={{ marginBottom: 12 }}>
           7 ngày tới · {over ? `${over} ngày vượt công suất ${capacity} cây/ngày` : `công suất ${capacity} cây/ngày`}
