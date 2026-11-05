@@ -2,7 +2,7 @@
 
 **Đường dẫn:** `/settings`
 
-**Mục đích:** để admin tự đổi các con số về tiền cọc, giao hàng và phí vận chuyển.
+**Mục đích:** để admin tự đổi các con số về tiền cọc, giao hàng, phí vận chuyển, người gửi và đơn vị vận chuyển.
 
 ## Các mục cài đặt
 
@@ -16,13 +16,15 @@
 | Số lần giao tối đa | 1–10 lần | 3 | Giao hàng lỗi: hết số lần thì đơn tự hoàn về | Đang dùng |
 | Phí gửi lại đơn | Từ 0 ₫ | 30.000 ₫, số tạm | Gửi lại đơn: phí mặc định, sửa được | Đang dùng |
 | Phương thức giao | Tên, phí, số ngày, bật/tắt | Tiêu chuẩn miễn phí 3 ngày; Nhanh 50.000 ₫ 1 ngày | Tạo đơn, chi tiết đơn | Đang dùng |
+| Người gửi | Tên shop (bắt buộc), SĐT, địa chỉ lấy hàng | 2510 Candle, SĐT và địa chỉ trống | Nhãn giao hàng, phiếu đơn | Đang dùng |
+| Đơn vị vận chuyển | Tên, link tra cứu, bắt buộc mã, bật/tắt | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Giao cho vận chuyển, Tra cứu | Đang dùng |
 
 Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh" để tính phí theo khu vực.
 
 ## Bố cục
 
 - **Đầu trang:** dòng "Có thay đổi chưa lưu", nút Mặc định, nút Lưu cài đặt.
-- **Bên trái:** 4 khối Đặt cọc, Xưởng, Giao hàng, Phí vận chuyển.
+- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển.
 - **Bên phải:** Xem trước tiền trên đơn mẫu 1.000.000 ₫, cập nhật theo số đang nhập.
 
 ## Quy tắc
@@ -45,9 +47,17 @@ Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh"
 
 Chọn phương thức thì ô Phí vận chuyển tự điền. Admin sửa được cho riêng đơn đó, đơn lưu số cuối cùng.
 
+## Đơn vị vận chuyển
+
+- Mỗi đơn vị: công tắc Dùng, tên, **link tra cứu**, công tắc **Bắt buộc mã**.
+- Link tra cứu có `{code}` ở chỗ mã vận đơn, vd `https://donhang.ghn.vn/?order_code={code}`. Để trống thì đơn chỉ sao chép được mã. Link không bắt đầu bằng http hoặc thiếu `{code}` thì không lưu được.
+- Link mặc định của GHN và GHTK chỉ là gợi ý, nên mở thử một mã thật để kiểm tra; Viettel Post và J&T để trống.
+- Tắt Bắt buộc mã cho đơn vị không có mã (Shop tự giao, xe ôm, Grab).
+- Phải có ít nhất một đơn vị đang dùng, tên không trùng. Đơn đã giao giữ tên và link lúc giao.
+
 ## Việc của BE
 
-`ShopSettings` là một bản ghi duy nhất, gồm `depositPercent`, `maxDeliveryAttempts`, `resendFee`, `shippingOptions[]`, `dailyCapacity`, `leadDays`. Mỗi phương thức gồm `id`, `name`, `fee`, `days`, `enabled`.
+`ShopSettings` là một bản ghi duy nhất, gồm `depositPercent`, `maxDeliveryAttempts`, `resendFee`, `shippingOptions[]`, `dailyCapacity`, `leadDays`, `minMargin`, `priceMarkup`, `sender` (`name`, `phone`, `address`), `carriers[]`. Mỗi phương thức gồm `id`, `name`, `fee`, `days`, `enabled`. Mỗi đơn vị vận chuyển gồm `id`, `name`, `trackingUrl?`, `requireCode`, `enabled`. `sender` và `carriers` chỉ BO dùng, không trả cho web.
 
 API đề xuất: `GET /api/settings` cho web, `GET` và `PUT /api/admin/settings` cho BO. Khi tạo đơn, lưu vào đơn `depositPercent`, `shippingName`, `shippingDays`, `shippingFee`.
 
@@ -66,3 +76,4 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `misc-extra`: mức cọc ngoài 1–99% không lưu được.
 - `craft-pricing`: Lãi tối thiểu và Hệ số gợi ý giá có giá trị mặc định, lưu được.
 - Số lần giao tối đa và Phí gửi lại đơn được dùng trong `orders-decisions`.
+- `shipping`: người gửi in lên nhãn; thêm đơn vị vận chuyển, chặn link thiếu `{code}`, đơn vị mới dùng được khi giao.

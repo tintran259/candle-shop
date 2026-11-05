@@ -127,9 +127,11 @@ test("Giá vốn: form sản phẩm và nhập kho có giá tính lại bình qu
 });
 
 test("Dashboard: thẻ Lãi gộp và lịch xưởng 7 ngày tới báo ngày vượt công suất", async ({ page, t }) => {
+  // Lãi gộp chỉ tính đơn đã chốt: thêm một đơn Hoàn tất
+  await page.evaluate((o) => localStorage.setItem("bo-orders-v4", JSON.stringify([...JSON.parse(localStorage.getItem("bo-orders-v4")!), o])), order("done", -2, 1, "completed"));
   await page.goto("/");
   const profit = page.locator("main .ant-card").filter({ hasText: "Lãi gộp" }).first();
-  await expect(profit).toContainText("Tỉ lệ lãi");
+  await expect(profit).toContainText("Từ 1 đơn đã chốt (hoàn tất, đã hủy) · tỉ lệ lãi");
   const schedule = page.locator("main .ant-card").filter({ hasText: "Lịch xưởng" });
   await expect(schedule.getByRole("listitem")).toHaveCount(7);
   await expect(schedule).toContainText("1 ngày vượt công suất 3 cây/ngày");

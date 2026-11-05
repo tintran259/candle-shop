@@ -55,9 +55,14 @@ test("So với kỳ trước cùng độ dài; kỳ trước không có số th�
   expect(stats([order("3", 1)]).kpis.orders.delta).toBeNull();
 });
 
-test("Giá trị đơn trung bình không tính đơn hủy", () => {
-  const s = stats([order("6", 1, { total: 300_000 }), order("7", 1, { total: 700_000 }), order("8", 1, { status: "cancelled", total: 9_000_000 })]);
-  expect(s.kpis.average.value).toBe(500_000);
+test("Giá trị đơn trung bình: tiền hàng của đơn Hoàn tất trong kỳ, không tính đơn hủy, đơn đang xử lý, phí vận chuyển", () => {
+  const s = stats([
+    order("6", 1, { subtotal: 300_000, discount: 0, shippingFee: 30_000, total: 330_000 }),
+    order("7", 1, { subtotal: 700_000, discount: 0, shippingFee: 0, total: 700_000 }),
+    order("8", 1, { status: "cancelled", subtotal: 9_000_000, discount: 0, total: 9_000_000 }),
+    order("9", 1, { status: "shipping", subtotal: 5_000_000, discount: 0, total: 5_000_000 }),
+  ]);
+  expect(s.kpis.average).toMatchObject({ value: 500_000, completed: 2 });
 });
 
 test("Khách mới: đơn hợp lệ đầu tiên của số điện thoại rơi vào kỳ", () => {

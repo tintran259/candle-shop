@@ -6,8 +6,10 @@ import { formatMoney } from "@/lib/format";
 import { depositLabel, itemCount, providerLabels } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 
-// Bảng đơn hàng — bấm cả dòng để mở chi tiết
-function OrderTableView({ items, onOpen, pagination }: { items: Order[]; onOpen: (id: string) => void; pagination: TablePaginationConfig }) {
+type Props = { items: Order[]; onOpen: (id: string) => void; pagination: TablePaginationConfig; selected: string[]; onSelect: (ids: string[]) => void };
+
+// Bảng đơn hàng — bấm cả dòng để mở chi tiết, ô chọn ở đầu dòng để in nhiều đơn
+function OrderTableView({ items, onOpen, pagination, selected, onSelect }: Props) {
   const columns: TableProps<Order>["columns"] = [
     {
       title: "Mã đơn",
@@ -79,7 +81,20 @@ function OrderTableView({ items, onOpen, pagination }: { items: Order[]; onOpen:
         </Flex>
       ),
     },
-    { title: "Trạng thái", key: "status", render: (_, o) => <StatusTag status={o.status} /> },
+    {
+      title: "Trạng thái",
+      key: "status",
+      render: (_, o) => (
+        <Flex vertical gap={2} align="flex-start">
+          <StatusTag status={o.status} />
+          {o.shipment && o.status !== "cancelled" && (
+            <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+              {o.shipment.trackingCode ? `${o.shipment.carrier} · ${o.shipment.trackingCode}` : o.shipment.carrier}
+            </Typography.Text>
+          )}
+        </Flex>
+      ),
+    },
     {
       title: "Tổng tiền",
       dataIndex: "total",
@@ -99,7 +114,12 @@ function OrderTableView({ items, onOpen, pagination }: { items: Order[]; onOpen:
       dataSource={items}
       pagination={pagination}
       scroll={{ x: "max-content" }}
-      onRow={(o) => ({ onClick: () => onOpen(o.id), style: { cursor: "pointer", opacity: o.status === "cancelled" ? 0.6 : 1 } })}
+      rowSelection={{ selectedRowKeys: selected, onChange: (keys) => onSelect(keys as string[]), preserveSelectedRowKeys: true, columnWidth: 40, getCheckboxProps: (o) => ({ "aria-label": `Chọn đơn ${o.code}` }) }}
+      onRow={(o) => ({
+        // Bấm ô chọn thì không mở đơn
+        onClick: (e) => !(e.target as HTMLElement).closest(".ant-table-selection-column") && onOpen(o.id),
+        style: { cursor: "pointer", opacity: o.status === "cancelled" ? 0.6 : 1 },
+      })}
     />
   );
 }

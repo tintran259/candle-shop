@@ -43,17 +43,17 @@ Trong thư mục `bo`:
 |---|---|---|---|---|
 | [Đăng nhập](./pages/login.md) | `login`, `login-extra` | 19 mục + 2 test | | Tốt |
 | [Phần chung](./pages/common.md) | `common`, `drawers`, `chunk-reload`, `layout-width` | 23 mục + 7 test | | Tốt |
-| [Dashboard](./pages/dashboard.md) | `dashboard`, `dashboard-ui`, `workshop-cost`, `logic/dashboard` | 13 mục + 5 test | 8 | Tốt |
-| [Đơn hàng](./pages/orders.md) | `orders-*`, `order-changes`, `order-draft`, `workshop-cost`, `price-guards`, `logic/orders`, `logic/order-changes`, `logic/price-guards` | 104 mục + 21 test | 27 | Tốt |
+| [Dashboard](./pages/dashboard.md) | `dashboard`, `dashboard-ui`, `dashboard-money`, `workshop-cost`, `logic/dashboard`, `logic/money` | 13 mục + 6 test | 16 | Tốt |
+| [Đơn hàng](./pages/orders.md) | `orders-*`, `order-changes`, `order-draft`, `shipping`, `workshop-cost`, `price-guards`, `logic/orders`, `logic/order-changes`, `logic/price-guards`, `logic/shipping` | 105 mục + 28 test | 34 | Tốt |
 | [Sản phẩm trưng bày](./pages/products.md) | `products`, `price-guards`, `logic/products`, `logic/price-guards` | 12 test | 15 | Tốt |
 | [Danh mục](./pages/categories.md) | `categories`, `misc-extra` | 21 mục + 1 test | | Tốt |
 | [Sản phẩm hủy đơn](./pages/cancelled-products.md) | `cancelled-*` | 41 mục + 2 test | | Tốt |
 | [Thủ công](./pages/craft.md) | `craft-*`, `orders-pending`, `storefront-sync`, `price-guards`, `logic/craft-pricing`, `logic/price-guards` | 103 mục + 15 test | 11 | Tốt |
 | [Kho nguyên liệu](./pages/inventory.md) | `inventory`, `inventory-ui`, `production`, `workshop-cost`, `logic/inventory`, `logic/costs-capacity`, `logic/production` | 34 mục + 17 test | 23 | Tốt |
-| [Phiếu kho](./pages/stock-movements.md) | `stock-movements` | 3 test | 2 | Tốt |
+| [Phiếu kho](./pages/stock-movements.md) | `stock-movements` | 4 test | 2 | Tốt |
 | [Khách hàng](./pages/customers.md) | `customers`, `customers-list`, `logic/customers` | 9 mục + 7 test | 13 | Tốt |
-| [Mã giảm giá](./pages/discounts.md) | `discounts`, `logic/discounts` | 8 test | 21 | Tốt |
-| [Cài đặt](./pages/settings.md) | `settings`, `misc-extra`, `workshop-cost`, `craft-pricing` | 24 mục + 2 test | | Tốt |
+| [Mã giảm giá](./pages/discounts.md) | `discounts`, `logic/discounts` | 10 test | 24 | Tốt |
+| [Cài đặt](./pages/settings.md) | `settings`, `misc-extra`, `workshop-cost`, `craft-pricing`, `shipping` | 24 mục + 4 test | | Tốt |
 
 Mỗi trang ghi chi tiết test đang có ở mục **Kiểm thử** cuối tài liệu trang.
 

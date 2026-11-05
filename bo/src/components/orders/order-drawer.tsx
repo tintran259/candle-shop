@@ -1,5 +1,6 @@
 import { Alert, App, Button, Col, Drawer, Flex, Form, Grid, Input, Modal, Radio, Result, Row, Typography } from "antd";
 import { useDeferredValue, useState } from "react";
+import { PrintMenu } from "@/components/orders/order-print";
 import { OrderProcess } from "@/components/orders/order-process";
 import { CustomerSection } from "@/components/orders/order-customer";
 import { PaymentSection } from "@/components/orders/order-payment";
@@ -48,6 +49,7 @@ export function OrderDrawer({ open, order, api, onClose, onEdit }: Props) {
         )
       }
       size={width}
+      extra={!api.loading && order && <PrintMenu orders={[order]} />}
       styles={{ header: { background: "#fff" }, body: { padding: screens.md ? 24 : 16 } }}
     >
       {(api.loading || (order && !ready)) && <OrderDetailSkeleton />}

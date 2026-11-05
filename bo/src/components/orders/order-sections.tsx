@@ -6,7 +6,8 @@ import { FormSection } from "@/components/form/form-section";
 import { ItemThumb } from "@/components/orders/order-view";
 import { useInventory } from "@/hooks/use-inventory";
 import { useStockHold } from "@/hooks/use-stock-hold";
-import { goodsValue, margin, orderCost } from "@/lib/costs";
+import { orderCost } from "@/lib/costs";
+import { orderProfit } from "@/lib/orders/money";
 import { resolutionLabels } from "@/lib/orders/complaint";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { unitLabel } from "@/lib/craft/groups";
@@ -32,8 +33,10 @@ export function ItemsSection({ order }: { order: Order }) {
   const { materials } = useInventory();
   const { source } = useStockHold();
   const cost = orderCost(order, source);
-  const value = goodsValue(order);
-  const result = margin(value, cost.cost);
+  // Lãi gồm phí vận chuyển shop chịu; đơn hủy tính trên tiền giữ lại (lib/orders/money)
+  const result = orderProfit(order, cost.cost);
+  const cancelled = order.status === "cancelled";
+  const percent = result.value > 0 ? result.profit / result.value : null;
   const recipeText = (recipe: NonNullable<Order["items"][number]["recipe"]>) =>
     recipe
       .map((r) => {
@@ -79,22 +82,33 @@ export function ItemsSection({ order }: { order: Order }) {
         <Row label="Phí giao hàng" value={order.shippingFee ? formatMoney(order.shippingFee) : "Miễn phí"} />
         <Row label="Tổng cộng" value={formatMoney(order.total)} strong />
       </Flex>
-      {order.status !== "cancelled" && (
+      {(!cancelled || result.value > 0 || result.carrier > 0 || result.material > 0) && (
         <Flex vertical gap={6} style={{ marginTop: 12, paddingTop: 12, borderTop: "1px dashed #eee5da" }} aria-label="Giá vốn và lãi gộp" role="group">
-          <Flex justify="space-between">
-            <Typography.Text type="secondary">
-              Giá vốn nguyên liệu{" "}
-              <Tooltip title={cost.final ? "Chốt theo giá nhập lúc Bắt đầu làm." : "Ước tính theo công thức và giá nhập hiện tại; chốt khi Bắt đầu làm."}>
-                <Tag style={{ marginInlineEnd: 0 }}>{cost.final ? "đã chốt" : "ước tính"}</Tag>
+          {cancelled && <Row label="Tiền hàng giữ lại" value={formatMoney(result.value)} />}
+          {(!cancelled || result.material > 0) && (
+            <Flex justify="space-between">
+              <Typography.Text type="secondary">
+                Giá vốn nguyên liệu{" "}
+                <Tooltip title={cost.final ? "Chốt theo giá nhập lúc Bắt đầu làm." : "Ước tính theo công thức và giá nhập hiện tại; chốt khi Bắt đầu làm."}>
+                  <Tag style={{ marginInlineEnd: 0 }}>{cost.final ? "đã chốt" : "ước tính"}</Tag>
+                </Tooltip>
+              </Typography.Text>
+              <Typography.Text className="tabular">{formatMoney(result.material)}</Typography.Text>
+            </Flex>
+          )}
+          {order.shippingCost !== undefined && (
+            <Flex justify="space-between">
+              <Tooltip title="Phí vận chuyển khách trả là tiền thu hộ để trả bên vận chuyển, không phải doanh thu. Phần shop trả thêm thì trừ vào lãi.">
+                <Typography.Text type="secondary">Phí trả đơn vị vận chuyển · khách trả {formatMoney(result.carrier + result.shipping)}</Typography.Text>
               </Tooltip>
-            </Typography.Text>
-            <Typography.Text className="tabular">{formatMoney(cost.cost)}</Typography.Text>
-          </Flex>
+              <Typography.Text className="tabular">{formatMoney(result.carrier)}</Typography.Text>
+            </Flex>
+          )}
           <Flex justify="space-between">
-            <Typography.Text type="secondary">Lãi gộp (không tính phí giao)</Typography.Text>
+            <Typography.Text type="secondary">{cancelled ? "Lãi sau khi hủy" : "Lãi gộp"}</Typography.Text>
             <Typography.Text strong className="tabular" type={result.profit < 0 ? "danger" : undefined}>
               {formatMoney(result.profit)}
-              {result.percent !== null && ` · ${Math.round(result.percent * 100)}%`}
+              {percent !== null && ` · ${Math.round(percent * 100)}%`}
             </Typography.Text>
           </Flex>
           {cost.missing.length > 0 && (
@@ -190,4 +204,3 @@ export function ComplaintsSection({ order }: { order: Order }) {
     </FormSection>
   );
 }
-

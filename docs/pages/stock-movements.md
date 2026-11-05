@@ -11,7 +11,7 @@
 
 ## Bố cục
 
-- **Đầu trang:** tiêu đề, link về Kho nguyên liệu, nút **Ghi phiếu kho** (cùng popup với nút Phiếu kho ở trang Kho).
+- **Đầu trang:** tiêu đề, link về Kho nguyên liệu, nút **Xuất Excel** (các phiếu đang lọc ra `phieu-kho-YYYY-MM-DD.xlsx`: thời gian, loại, nguyên liệu, mã nội bộ, thay đổi, tồn sau, đơn vị, tiền lô, giá mỗi đơn vị, giá trước khi sửa, mã đơn, mã mẻ, ghi chú, người ghi), nút **Ghi phiếu kho** (cùng popup với nút Phiếu kho ở trang Kho).
 - **Thẻ thống kê** theo bộ lọc đang chọn:
 
 | Thẻ | Cách tính |
@@ -31,11 +31,10 @@
 
 ## Chưa có
 
-- Xuất file (CSV, Excel).
 - Lưu tối đa 500 phiếu trên trình duyệt; khi có BE thì lấy theo trang từ `GET /api/admin/inventory/movements` (xem [inventory.md](../inventory.md)).
 
 ## Kiểm thử
 
 Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 
-**Đã có test:** `stock-movements`: lọc theo loại, nguyên liệu, khoảng ngày, tìm mã đơn / mã mẻ / tên không dấu; tiền nhập và đếm phiếu cộng / trừ tồn; sidebar Phiếu kho nằm dưới Kho nguyên liệu và sáng đúng mục; trang Kho không còn khối Phiếu kho gần đây; lọc trên URL, không khớp thì báo; nút Ghi phiếu kho.
+**Đã có test:** `stock-movements`: lọc theo loại, nguyên liệu, khoảng ngày, tìm mã đơn / mã mẻ / tên không dấu; tiền nhập và đếm phiếu cộng / trừ tồn; sidebar Phiếu kho nằm dưới Kho nguyên liệu và sáng đúng mục; trang Kho không còn khối Phiếu kho gần đây; lọc trên URL, không khớp thì báo; nút Ghi phiếu kho; xuất Excel các phiếu đang lọc.

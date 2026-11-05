@@ -18,6 +18,8 @@ export type Discount = {
   minOrder?: number;
   scope: DiscountScope;
   firstOrderOnly: boolean;
+  // Mã riêng: chỉ các khách này dùng được (id hồ sơ ở trang Khách hàng, đối chiếu theo số điện thoại của đơn). Trống = mọi khách
+  customerIds?: string[];
   // YYYY-MM-DD; endsAt bỏ trống = không hết hạn
   startsAt: string;
   endsAt?: string;

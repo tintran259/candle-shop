@@ -34,12 +34,13 @@ export function valueText(d: Pick<Discount, "type" | "value">) {
 }
 
 // Tóm tắt điều kiện bằng câu ngắn để đọc nhanh trên bảng và phiếu xem trước
-export function conditionText(d: Pick<Discount, "type" | "maxDiscount" | "minOrder" | "scope" | "firstOrderOnly">) {
+export function conditionText(d: Pick<Discount, "type" | "maxDiscount" | "minOrder" | "scope" | "firstOrderOnly" | "customerIds">) {
   const parts: string[] = [];
   if (d.type === "percent" && d.maxDiscount) parts.push(`tối đa ${formatMoney(d.maxDiscount)}`);
   parts.push(d.minOrder ? `đơn từ ${formatMoney(d.minOrder)}` : "mọi giá trị đơn");
   if (d.scope !== "all") parts.push(scopeLabels[d.scope].toLowerCase());
   if (d.firstOrderOnly) parts.push("khách đặt lần đầu");
+  if (d.customerIds?.length) parts.push(`riêng ${d.customerIds.length} khách`);
   return parts.join(" · ");
 }
 

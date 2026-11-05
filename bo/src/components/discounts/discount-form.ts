@@ -13,6 +13,9 @@ export type DiscountFormValues = {
   minOrder?: number | null;
   scope: DiscountScope;
   firstOrderOnly: boolean;
+  // Ai dùng được: mọi khách / chỉ khách được chọn
+  audience: "all" | "customers";
+  customerIds: string[];
   startsAt: Dayjs;
   endsAt?: Dayjs | null;
   usageLimit?: number | null;
@@ -20,7 +23,9 @@ export type DiscountFormValues = {
   active: boolean;
 };
 
-export function toFormValues(d?: Discount): DiscountFormValues {
+// presetCustomerId: tạo mã riêng từ hồ sơ khách (?customer=)
+export function toFormValues(d?: Discount, presetCustomerId?: string): DiscountFormValues {
+  const customerIds = d?.customerIds ?? (presetCustomerId ? [presetCustomerId] : []);
   return {
     code: d?.code ?? "",
     description: d?.description,
@@ -31,6 +36,8 @@ export function toFormValues(d?: Discount): DiscountFormValues {
     minOrder: d?.minOrder ?? null,
     scope: d?.scope ?? "all",
     firstOrderOnly: d?.firstOrderOnly ?? false,
+    audience: customerIds.length ? "customers" : "all",
+    customerIds,
     startsAt: dayjs(d?.startsAt),
     endsAt: d?.endsAt ? dayjs(d.endsAt) : null,
     usageLimit: d?.usageLimit ?? null,
@@ -54,6 +61,7 @@ export function fromFormValues(v: DiscountFormValues, previous?: Discount): Disc
     minOrder: orUndef(v.minOrder),
     scope: v.scope,
     firstOrderOnly: v.firstOrderOnly,
+    customerIds: v.audience === "customers" && v.customerIds?.length ? v.customerIds : undefined,
     startsAt: (v.startsAt ?? dayjs()).format("YYYY-MM-DD"),
     endsAt: v.endsAt ? v.endsAt.format("YYYY-MM-DD") : undefined,
     usageLimit: orUndef(v.usageLimit),

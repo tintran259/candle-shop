@@ -13,7 +13,7 @@ export function RevenueChart({ data, days }: { data: DailyRevenue[]; days: numbe
       <span className="big-number" style={{ fontSize: 40, lineHeight: 1.15, display: "block" }}>
         {formatMoneyShort(total)}
       </span>
-      <Typography.Text type="secondary">tiền thực nhận trong {days} ngày qua</Typography.Text>
+      <Typography.Text type="secondary">tiền hàng thực nhận trong {days} ngày qua, không gồm phí vận chuyển</Typography.Text>
       <div style={{ height: 280, marginTop: 16 }} role="img" aria-label={`Biểu đồ doanh thu ${days} ngày, tổng ${formatMoney(total)}`}>
         <ResponsiveContainer initialDimension={{ width: 640, height: 280 }}>
           <BarChart data={data} margin={{ left: 0, right: 12, top: 8 }}>

@@ -1,15 +1,17 @@
-import { EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { DownloadOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Row, Statistic, Tabs, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { OrderCreateDrawer } from "@/components/orders/order-create-drawer";
 import { OrderDrawer } from "@/components/orders/order-drawer";
+import { PrintHost, PrintMenu } from "@/components/orders/order-print";
 import { OrderTable } from "@/components/orders/order-table";
 import { OrderToolbar } from "@/components/orders/order-toolbar";
 import { OrdersSkeleton } from "@/components/skeletons";
 import { useOrderDraft } from "@/hooks/use-order-draft";
 import { useOrders } from "@/hooks/use-orders";
 import { formatMoneyShort } from "@/lib/format";
+import { exportOrdersXlsx } from "@/lib/orders/export";
 import { applyOrderFilters, defaultOrderFilters, type OrderFilters } from "@/lib/orders/filters";
 import { deadline, isDeliveryIssue, paymentStateMeta, remaining, statusMeta, type PaymentState } from "@/lib/orders/labels";
 import { deliveryIssues, orderFlow, type OrderStatus } from "@/lib/orders/types";
@@ -39,9 +41,13 @@ export function OrdersPage() {
   const pager = usePageQuery(api.loading ? undefined : items.length);
   const { paginationProps } = pager;
   const pagination = useMemo(() => paginationProps(items.length, "đơn"), [paginationProps, items.length]);
+  // Đơn đã chọn để in hàng loạt; đổi bộ lọc thì bỏ chọn
+  const [selected, setSelected] = useState<string[]>([]);
+  const chosen = useMemo(() => items.filter((o) => selected.includes(o.id)), [items, selected]);
   // Đổi bộ lọc thì quay về trang 1
   const setFilters = (f: OrderFilters) => {
     setFiltersState(f);
+    setSelected([]);
     pager.resetPage();
   };
   // Đơn đang mở nằm trên URL (?order=id; ?order=new = tạo đơn) — Dashboard, tìm kiếm, thông báo link thẳng tới
@@ -65,6 +71,7 @@ export function OrdersPage() {
       <OrderDrawer open={!!openId && !creating} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} onEdit={setEditId} />
       <OrderCreateDrawer key={createKey} open={creating} customerId={params.get("customer") ?? undefined} onClose={() => setOpenId(null)} onCreated={setOpenId} />
       {editing && <OrderCreateDrawer key={editKey} open={!!editId} order={editing} onClose={() => setEditId(null)} />}
+      <PrintHost />
     </>
   );
 
@@ -94,6 +101,9 @@ export function OrdersPage() {
           <Typography.Text type="secondary">Theo dõi từ lúc khách thanh toán, xưởng làm (2–3 ngày) tới khi giao xong.</Typography.Text>
         </div>
         <Flex gap={8} wrap>
+          <Button icon={<DownloadOutlined />} disabled={!items.length} onClick={() => exportOrdersXlsx(items)}>
+            Xuất Excel
+          </Button>
           <Button type="primary" icon={draft ? <EditOutlined /> : <PlusOutlined />} onClick={() => setOpenId("new")}>
             {draft ? "Tiếp tục đơn nháp" : "Tạo đơn hàng"}
           </Button>
@@ -128,8 +138,20 @@ export function OrdersPage() {
       </Card>
 
       <Card styles={{ body: { padding: 12 } }}>
+        {chosen.length > 0 && (
+          <Flex className="bulk-bar" align="center" gap={8} wrap role="region" aria-label="Đơn đã chọn">
+            <Typography.Text strong>Đã chọn {chosen.length} đơn</Typography.Text>
+            <PrintMenu orders={chosen} label={`In ${chosen.length} đơn`} />
+            <Button onClick={() => exportOrdersXlsx(chosen)} icon={<DownloadOutlined />}>
+              Xuất Excel
+            </Button>
+            <Button type="link" onClick={() => setSelected([])}>
+              Bỏ chọn
+            </Button>
+          </Flex>
+        )}
         {items.length ? (
-          <OrderTable items={items} onOpen={setOpenId} pagination={pagination} />
+          <OrderTable items={items} onOpen={setOpenId} pagination={pagination} selected={selected} onSelect={setSelected} />
         ) : api.orders.length ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có đơn hàng khớp bộ lọc.">
             <Button onClick={() => setFilters(defaultOrderFilters)}>Xóa bộ lọc</Button>

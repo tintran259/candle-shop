@@ -747,6 +747,12 @@ button.change-row:focus-visible {
 .ship-switch {
   margin-top: 7px;
 }
+.carrier-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1.4fr) 84px 32px;
+  gap: 12px;
+  align-items: start;
+}
 .settings-preview {
   position: sticky;
   top: 16px;
@@ -780,6 +786,28 @@ button.change-row:focus-visible {
   }
   .ship-remove {
     grid-area: remove;
+  }
+  /* Đơn vị vận chuyển: công tắc + tên, link, bắt buộc mã + xóa */
+  .carrier-row {
+    grid-template-columns: 44px minmax(0, 1fr) 32px;
+    grid-template-areas:
+      "switch name name"
+      "url url url"
+      "code . remove";
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1ece4;
+  }
+  .carrier-row .ship-switch {
+    grid-area: switch;
+  }
+  .carrier-name {
+    grid-area: name;
+  }
+  .carrier-url {
+    grid-area: url;
+  }
+  .carrier-row .carrier-code {
+    grid-area: code;
   }
 }
 /* Tóm tắt đơn: dính bên phải khi drawer rộng */
@@ -964,4 +992,191 @@ button.change-row:focus-visible {
 /* Form sản phẩm (drawer ~600px): thẻ chọn nguyên liệu 3 cột, tên không bị cắt */
 .product-craft .cfg-grid {
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+/* ---- In phiếu đơn và nhãn giao hàng (components/orders/order-print.tsx) ---- */
+.print-root {
+  display: none;
+}
+@media print {
+  body > *:not(.print-root) {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .print-root {
+    display: block;
+    color: #000;
+    font-family: Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+}
+.print-page {
+  break-after: page;
+  page-break-after: always;
+}
+.print-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+.print-brand {
+  font-weight: 700;
+  font-size: 13pt;
+  letter-spacing: 0.02em;
+}
+.print-label {
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #444;
+}
+.print-muted {
+  font-size: 9pt;
+  color: #444;
+}
+.print-root .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phiếu đơn A5 */
+.invoice-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid #000;
+}
+.invoice-title {
+  text-align: right;
+}
+.invoice-title strong {
+  display: block;
+  font-size: 15pt;
+}
+.invoice-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0;
+}
+.invoice-items,
+.invoice-totals {
+  width: 100%;
+  border-collapse: collapse;
+}
+.invoice-items th,
+.invoice-items td {
+  padding: 4px 4px;
+  border-bottom: 0.5pt solid #999;
+  vertical-align: top;
+  text-align: left;
+}
+.invoice-items th {
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  border-bottom: 1pt solid #000;
+}
+.invoice-totals {
+  width: 60%;
+  margin: 8px 0 8px auto;
+}
+.invoice-totals td {
+  padding: 2px 4px;
+}
+.invoice-totals .strong td {
+  font-weight: 700;
+  border-top: 0.5pt solid #000;
+}
+.invoice-totals .big td {
+  font-size: 13pt;
+}
+
+/* Nhãn 100 × 150 mm */
+.ship-label {
+  width: 100mm;
+  height: 150mm;
+  box-sizing: border-box;
+  padding: 4mm;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.label-row {
+  border: 1pt solid #000;
+  border-top: none;
+  padding: 2mm 3mm;
+}
+.label-row:first-child {
+  border-top: 1pt solid #000;
+}
+.label-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 3mm;
+}
+.label-carrier {
+  text-align: right;
+  font-size: 9pt;
+}
+.label-carrier strong {
+  display: block;
+  font-size: 14pt;
+  letter-spacing: 0.04em;
+}
+.label-code {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.label-code strong {
+  font-size: 15pt;
+  letter-spacing: 0.04em;
+}
+.label-to {
+  flex: 1;
+}
+.label-name,
+.label-phone {
+  display: block;
+  font-size: 14pt;
+}
+.label-address {
+  font-size: 12pt;
+  margin-top: 1mm;
+}
+.label-items {
+  font-size: 9.5pt;
+  max-height: 24mm;
+  overflow: hidden;
+}
+.label-cod {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+}
+.label-cod strong {
+  font-size: 16pt;
+}
+.label-foot {
+  font-size: 8pt;
+  text-align: center;
+  padding-top: 1.5mm;
+}
+
+/* Thanh thao tác khi chọn nhiều đơn */
+.bulk-bar {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: #fbf3ea;
+  border: 1px solid #eee5da;
 }

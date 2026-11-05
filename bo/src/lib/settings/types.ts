@@ -11,6 +11,19 @@ export type ShippingOption = {
   enabled: boolean;
 };
 
+// Đơn vị vận chuyển chọn khi giao đơn. trackingUrl: link tra cứu, {code} được thay bằng mã vận đơn
+export type Carrier = {
+  id: string;
+  name: string;
+  trackingUrl?: string;
+  // false = không bắt buộc mã vận đơn (shop tự giao, xe ôm, Grab…)
+  requireCode: boolean;
+  enabled: boolean;
+};
+
+// Người gửi in trên nhãn giao hàng và phiếu đơn
+export type Sender = { name: string; phone: string; address: string };
+
 export type ShopSettings = {
   // % tiền cọc khi khách chọn đặt cọc
   depositPercent: number;
@@ -19,6 +32,8 @@ export type ShopSettings = {
   // Phí vận chuyển mặc định khi gửi lại đơn, VNĐ
   resendFee: number;
   shippingOptions: ShippingOption[];
+  sender: Sender;
+  carriers: Carrier[];
   // Số cây xưởng làm được mỗi ngày, 0 = không giới hạn
   dailyCapacity: number;
   // Số ngày làm tối thiểu: ngày làm xong mặc định sớm nhất là hôm nay + số này
@@ -37,6 +52,15 @@ export const defaultSettings: ShopSettings = {
     { id: "standard", name: "Tiêu chuẩn", fee: 0, days: 3, enabled: true },
     { id: "express", name: "Nhanh", fee: 50_000, days: 1, enabled: true },
   ],
+  sender: { name: "2510 Candle", phone: "", address: "" },
+  // Link tra cứu: kiểm tra lại với đơn vị vận chuyển, đổi được ở Cài đặt
+  carriers: [
+    { id: "ghn", name: "Giao Hàng Nhanh", trackingUrl: "https://donhang.ghn.vn/?order_code={code}", requireCode: true, enabled: true },
+    { id: "ghtk", name: "Giao Hàng Tiết Kiệm", trackingUrl: "https://i.ghtk.vn/{code}", requireCode: true, enabled: true },
+    { id: "viettelpost", name: "Viettel Post", requireCode: true, enabled: true },
+    { id: "jt", name: "J&T Express", requireCode: true, enabled: true },
+    { id: "self", name: "Shop tự giao", requireCode: false, enabled: true },
+  ],
   dailyCapacity: 20,
   leadDays: 3,
   minMargin: 50,
@@ -44,3 +68,7 @@ export const defaultSettings: ShopSettings = {
 };
 
 export const shippingOptionLabel = (o: Pick<ShippingOption, "name" | "days">) => `${o.name} (${o.days} ngày)`;
+
+// Link tra cứu mã vận đơn, không có mẫu thì undefined
+export const trackingLink = (template: string | undefined, code: string | undefined) =>
+  template?.includes("{code}") && code ? template.replace(/\{code\}/g, encodeURIComponent(code)) : undefined;

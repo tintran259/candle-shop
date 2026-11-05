@@ -1,14 +1,4 @@
-import {
-  CopyOutlined,
-  EnvironmentOutlined,
-  MailOutlined,
-  MessageOutlined,
-  PhoneOutlined,
-  PlusOutlined,
-  RightOutlined,
-  StopOutlined,
-  UnlockOutlined,
-} from "@ant-design/icons";
+import { CopyOutlined, EnvironmentOutlined, MailOutlined, MessageOutlined, PhoneOutlined, PlusOutlined, RightOutlined, StopOutlined, UnlockOutlined, GiftOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Col, Drawer, Flex, Form, Grid, Input, Modal, Result, Row, Select, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { useDeferredValue, useState } from "react";
@@ -19,6 +9,8 @@ import { InfoRow } from "@/components/info-row";
 import { ItemThumb, StatusTag } from "@/components/orders/order-view";
 import { CustomerDetailSkeleton } from "@/components/skeletons";
 import type { CustomersApi } from "@/hooks/use-customers";
+import { useDiscounts } from "@/hooks/use-discounts";
+import { conditionText, discountStatus, statusMeta, valueText } from "@/lib/discounts/labels";
 import { tagSuggestions } from "@/lib/customers/mock";
 import { favoriteItems, phoneKey, type CustomerRow } from "@/lib/customers/stats";
 import { formatMoney, formatMoneyShort } from "@/lib/format";
@@ -37,21 +29,10 @@ export function CustomerDrawer({ open, row, api, loading, onClose }: Props) {
   const ready = !!row && readyId === id;
 
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title="Hồ sơ khách hàng"
-      size={width}
-      styles={{ header: { background: "#fff" }, body: { padding: screens.md ? 24 : 16 } }}
-    >
+    <Drawer open={open} onClose={onClose} title="Hồ sơ khách hàng" size={width} styles={{ header: { background: "#fff" }, body: { padding: screens.md ? 24 : 16 } }}>
       {(loading || (row && !ready)) && <CustomerDetailSkeleton />}
       {!loading && !row && (
-        <Result
-          status="404"
-          title="Không tìm thấy khách hàng"
-          subTitle="Hồ sơ có thể đã bị xóa hoặc đường dẫn không đúng."
-          extra={<Button onClick={onClose}>Về danh sách khách</Button>}
-        />
+        <Result status="404" title="Không tìm thấy khách hàng" subTitle="Hồ sơ có thể đã bị xóa hoặc đường dẫn không đúng." extra={<Button onClick={onClose}>Về danh sách khách</Button>} />
       )}
       {!loading && row && ready && <Profile row={row} api={api} />}
     </Drawer>
@@ -120,7 +101,11 @@ function Profile({ row, api }: { row: CustomerRow; api: CustomersApi }) {
         <Row gutter={[12, 12]} style={{ marginTop: 20 }}>
           {[
             { label: "Đã chi", value: stats.spent ? formatMoneyShort(stats.spent) : "—", hint: "Gồm tiền cọc, trừ đơn hủy" },
-            { label: "Số đơn", value: String(stats.orderCount), hint: [stats.cancelled && `${stats.cancelled} đơn đã hủy`, stats.failedDeliveries && `${stats.failedDeliveries} lần giao không thành`].filter(Boolean).join(" · ") || undefined },
+            {
+              label: "Số đơn",
+              value: String(stats.orderCount),
+              hint: [stats.cancelled && `${stats.cancelled} đơn đã hủy`, stats.failedDeliveries && `${stats.failedDeliveries} lần giao không thành`].filter(Boolean).join(" · ") || undefined,
+            },
             { label: "Trung bình / đơn", value: stats.average ? formatMoneyShort(stats.average) : "—" },
             {
               label: "Đơn gần nhất",
@@ -158,6 +143,7 @@ function Profile({ row, api }: { row: CustomerRow; api: CustomersApi }) {
           <Flex vertical gap={16}>
             <ContactSection row={row} />
             <NotesSection key={c.id} row={row} api={api} />
+            <CodesSection customerId={c.id} />
             <FormSection title="Tài khoản">
               <Flex vertical gap={10}>
                 <Flex justify="space-between">
@@ -189,6 +175,40 @@ function Profile({ row, api }: { row: CustomerRow; api: CustomersApi }) {
         }}
       />
     </Flex>
+  );
+}
+
+// Mã giảm giá dành riêng cho khách này (Mã giảm giá › Ai dùng được › Khách được chọn)
+function CodesSection({ customerId }: { customerId: string }) {
+  const navigate = useNavigate();
+  const { discounts } = useDiscounts();
+  const own = discounts.filter((d) => d.customerIds?.includes(customerId));
+  return (
+    <FormSection title={`Mã giảm giá riêng (${own.length})`} description="Chỉ khách này dùng được. Khi tạo đơn cho khách, mã hiện ngay dưới ô Mã giảm giá.">
+      <Flex vertical gap={10} role="list" aria-label="Mã giảm giá riêng">
+        {own.map((d) => {
+          const status = statusMeta[discountStatus(d)];
+          return (
+            <Flex key={d.id} role="listitem" justify="space-between" align="center" gap={8}>
+              <Flex vertical style={{ minWidth: 0 }}>
+                <Typography.Link strong className="tabular" onClick={() => navigate(`/discounts?edit=${d.id}`)}>
+                  {d.code} {valueText(d)}
+                </Typography.Link>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  {conditionText(d)}
+                </Typography.Text>
+              </Flex>
+              <Tag color={status.color} style={{ marginInlineEnd: 0 }}>
+                {status.label}
+              </Tag>
+            </Flex>
+          );
+        })}
+        <Button icon={<GiftOutlined />} onClick={() => navigate(`/discounts?edit=new&customer=${customerId}`)} style={{ alignSelf: "flex-start" }}>
+          Tạo mã riêng cho khách
+        </Button>
+      </Flex>
+    </FormSection>
   );
 }
 
@@ -369,19 +389,8 @@ function NotesSection({ row, api }: { row: CustomerRow; api: CustomersApi }) {
 function BlockModal({ open, name, onCancel, onBlock }: { open: boolean; name: string; onCancel: () => void; onBlock: (reason: string) => void }) {
   const [form] = Form.useForm<{ reason: string }>();
   return (
-    <Modal
-      open={open}
-      title={`Chặn ${name} đặt hàng?`}
-      okText="Chặn khách"
-      okButtonProps={{ danger: true }}
-      cancelText="Hủy"
-      onCancel={onCancel}
-      onOk={() => form.submit()}
-      destroyOnHidden
-    >
-      <Typography.Paragraph type="secondary">
-        Khách sẽ không đặt được đơn mới trên web (cần BE kiểm tra lúc thanh toán). Đơn đang làm không bị ảnh hưởng.
-      </Typography.Paragraph>
+    <Modal open={open} title={`Chặn ${name} đặt hàng?`} okText="Chặn khách" okButtonProps={{ danger: true }} cancelText="Hủy" onCancel={onCancel} onOk={() => form.submit()} destroyOnHidden>
+      <Typography.Paragraph type="secondary">Khách sẽ không đặt được đơn mới trên web (cần BE kiểm tra lúc thanh toán). Đơn đang làm không bị ảnh hưởng.</Typography.Paragraph>
       <Form form={form} layout="vertical" onFinish={(v) => onBlock(v.reason.trim())} preserve={false}>
         <Form.Item name="reason" label="Lý do" rules={[{ required: true, whitespace: true, message: "Ghi lý do để nhân viên khác hiểu." }]}>
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} maxLength={200} placeholder="VD: bom hàng 2 lần, không nghe máy" />

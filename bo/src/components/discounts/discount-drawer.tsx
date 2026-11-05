@@ -1,5 +1,5 @@
 import { DeleteOutlined, ThunderboltOutlined } from "@ant-design/icons";
-import { App, Button, Col, DatePicker, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Segmented, Typography } from "antd";
+import { App, Button, Col, DatePicker, Drawer, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Segmented, Select, Typography } from "antd";
 import dayjs from "dayjs";
 import { useDeferredValue, useState } from "react";
 import { Link } from "react-router";
@@ -8,18 +8,23 @@ import { DiscountTicket } from "@/components/discounts/discount-ticket";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { MoneyInput } from "@/components/money-input";
 import { DrawerFormSkeleton } from "@/components/skeletons";
+import { useCustomers } from "@/hooks/use-customers";
 import type { DiscountsApi } from "@/hooks/use-discounts";
 import { useOrders } from "@/hooks/use-orders";
 import { normalizeCode, randomCode, scopeLabels, typeLabels } from "@/lib/discounts/labels";
 import type { Discount, DiscountType } from "@/lib/discounts/types";
+import { phoneKey } from "@/lib/customers/stats";
 import { formatMoney } from "@/lib/format";
+import { fold } from "@/lib/search";
 
-type Props = { open: boolean; discount?: Discount; api: DiscountsApi; onClose: () => void };
+// presetCustomerId: mở từ hồ sơ khách (Tạo mã riêng) thì chọn sẵn khách đó
+type Props = { open: boolean; discount?: Discount; api: DiscountsApi; presetCustomerId?: string; onClose: () => void };
 
 const options = <K extends string>(labels: Record<K, string>) => (Object.keys(labels) as K[]).map((value) => ({ value, label: labels[value] }));
 
 // Drawer tạo/sửa mã: phiếu xem trước cập nhật theo form, các khối Mã → Ưu đãi → Điều kiện → Thời gian & giới hạn
-export function DiscountDrawer({ open, discount, api, onClose }: Props) {
+export function DiscountDrawer({ open, discount, api, presetCustomerId, onClose }: Props) {
+  const { customers } = useCustomers();
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
   // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
@@ -98,7 +103,7 @@ export function DiscountDrawer({ open, discount, api, onClose }: Props) {
         <Form
           form={form}
           layout="vertical"
-          initialValues={toFormValues(discount)}
+          initialValues={toFormValues(discount, presetCustomerId)}
           onFinish={finish}
           onValuesChange={() => setDirty(true)}
           scrollToFirstError={{ behavior: "smooth", block: "center", focus: true }}
@@ -189,6 +194,32 @@ export function DiscountDrawer({ open, discount, api, onClose }: Props) {
               <Form.Item name="scope" label="Áp dụng cho">
                 <Radio.Group optionType="button" options={options(scopeLabels)} />
               </Form.Item>
+              <Form.Item name="audience" label="Ai dùng được">
+                <Radio.Group
+                  optionType="button"
+                  options={[
+                    { value: "all", label: "Mọi khách" },
+                    { value: "customers", label: "Khách được chọn" },
+                  ]}
+                />
+              </Form.Item>
+              {values?.audience === "customers" && (
+                <Form.Item
+                  name="customerIds"
+                  label="Khách được dùng mã"
+                  extra="Mã riêng: khách khác nhập mã sẽ bị từ chối. Đối chiếu theo số điện thoại trên hồ sơ khách."
+                  rules={[{ required: true, type: "array", min: 1, message: "Chọn ít nhất một khách." }]}
+                >
+                  <Select
+                    mode="multiple"
+                    showSearch
+                    aria-label="Khách được dùng mã"
+                    placeholder="Tìm theo tên hoặc số điện thoại…"
+                    filterOption={(input, o) => fold((o as { search?: string })?.search ?? "").includes(fold(input.trim()))}
+                    options={customers.map((c) => ({ value: c.id, search: `${c.name} ${c.phone} ${phoneKey(c.phone)}`, label: `${c.name} · ${c.phone}` }))}
+                  />
+                </Form.Item>
+              )}
               <SwitchField name="firstOrderOnly" label="Chỉ cho khách đặt lần đầu" description="Kiểm tra theo số điện thoại / email." last />
             </FormSection>
 

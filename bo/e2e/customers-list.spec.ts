@@ -1,6 +1,7 @@
-// Trang Khách hàng: thống kê, nhóm khách, tìm, lọc, sắp xếp, xuất CSV, nhãn (docs/pages/customers.md)
+// Trang Khách hàng: thống kê, nhóm khách, tìm, lọc, sắp xếp, xuất Excel, nhãn (docs/pages/customers.md)
 import fs from "node:fs";
 import { expect, test } from "./support/harness.mjs";
+import { readXlsx } from "./support/xlsx";
 
 const rows = (page) => page.locator("main tr.ant-table-row");
 const segment = (page, label) => page.getByRole("radiogroup", { name: "Nhóm khách" }).locator(".ant-segmented-item").filter({ hasText: label });
@@ -51,17 +52,15 @@ test("Sắp xếp chi nhiều nhất, lọc khách vãng lai", async ({ page }) 
   await expect(rows(page).filter({ hasText: "Có tài khoản" })).toHaveCount(0);
 });
 
-test("Xuất CSV đúng danh sách đang lọc, Excel đọc được tiếng Việt", async ({ page }) => {
+test("Xuất Excel đúng danh sách đang lọc", async ({ page }) => {
   await page.getByLabel("Tìm khách hàng").fill("wing");
-  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Xuất CSV" }).click()]);
-  expect(download.suggestedFilename()).toMatch(/^khach-hang-\d{4}-\d{2}-\d{2}\.csv$/);
-  const csv = fs.readFileSync(await download.path(), "utf8");
-  // BOM để Excel đọc đúng dấu
-  expect(csv.charCodeAt(0)).toBe(0xfeff);
-  const lines = csv.slice(1).split("\r\n");
-  expect(lines[0]).toBe('"Tên","Số điện thoại","Email","Nhóm","Số đơn","Đã chi (VNĐ)","Đơn gần nhất","Tài khoản","Nhận ưu đãi","Nhãn","Ghi chú"');
-  expect(lines).toHaveLength(2);
-  expect(lines[1]).toContain('"Wing Sun"');
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Xuất Excel" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^khach-hang-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  const [sheet] = readXlsx(fs.readFileSync(await download.path()));
+  expect(sheet.name).toBe("Khách hàng");
+  expect(sheet.rows[0]).toEqual(["Tên", "Số điện thoại", "Email", "Nhóm", "Số đơn", "Đã chi", "Đơn gần nhất", "Tài khoản", "Nhận ưu đãi", "Nhãn", "Ghi chú"]);
+  expect(sheet.rows).toHaveLength(2);
+  expect(sheet.rows[1][0]).toBe("Wing Sun");
 });
 
 test("Thêm nhãn trên hồ sơ rồi lọc theo nhãn", async ({ page }) => {

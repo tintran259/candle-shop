@@ -23,7 +23,7 @@ Không tính đơn đã hủy.
 - **Thẻ thống kê:** Khách hàng (kèm số mới 30 ngày), Tỷ lệ quay lại, Chi tiêu trung bình mỗi khách, Lâu chưa mua.
 - **Bộ lọc:** nhóm khách, đã chặn, tìm theo tên, email hoặc số điện thoại, loại tài khoản, nhãn.
 - **Sắp xếp:** mua gần đây, chi nhiều nhất, nhiều đơn nhất, mới tham gia.
-- **Xuất CSV:** theo danh sách đang lọc.
+- **Xuất Excel:** danh sách đang lọc ra file `khach-hang-YYYY-MM-DD.xlsx`; số đơn, đã chi và ngày là số thật trong Excel.
 
 ## Hồ sơ khách
 
@@ -43,7 +43,7 @@ Phải ghi lý do. Khách bị chặn có cảnh báo trên hồ sơ và đơn h
 ## Liên kết trang khác
 
 - **Tạo đơn:** số điện thoại mới tự tạo hồ sơ khách vãng lai.
-- **Mã giảm giá:** điều kiện khách lần đầu và giới hạn mỗi khách dựa trên đơn của số điện thoại.
+- **Mã giảm giá:** điều kiện khách lần đầu và giới hạn mỗi khách dựa trên đơn của số điện thoại. Hồ sơ có khối **Mã giảm giá riêng**: các mã chỉ khách này dùng được, nút **Tạo mã riêng cho khách**. Xem [Mã giảm giá › Mã riêng cho khách](./discounts.md#mã-riêng-cho-khách).
 
 ## Giao lỗi
 
@@ -56,5 +56,5 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 **Đã có test:**
 
 - `customers`: mở hồ sơ, ghi chú, chặn và bỏ chặn, mở đơn từ hồ sơ và ngược lại, link sai, tìm kiếm.
-- `customers-list`: thẻ thống kê, số đếm theo nhóm, tìm tên không dấu và số điện thoại, sắp xếp, khách vãng lai, xuất CSV, thêm nhãn rồi lọc theo nhãn, hay mua, điện thoại.
+- `customers-list`: thẻ thống kê, số đếm theo nhóm, tìm tên không dấu và số điện thoại, sắp xếp, khách vãng lai, xuất Excel, thêm nhãn rồi lọc theo nhãn, hay mua, điện thoại.
 - `logic/customers`: phân loại VIP / Khách quen / Khách mới / Lâu chưa mua / Chưa mua theo ngưỡng, đã chi theo tiền thực nhận, số lần giao lỗi, hay mua, bộ lọc và 4 cách sắp xếp.

@@ -18,7 +18,7 @@ import { useProducts } from "@/hooks/use-products";
 import { useStockHold } from "@/hooks/use-stock-hold";
 import { useWorkshop } from "@/hooks/use-workshop";
 import { candleCount } from "@/lib/capacity";
-import { discountRule } from "@/lib/discounts/labels";
+import { discountRule, discountStatus, valueText } from "@/lib/discounts/labels";
 import { needsCost } from "@/lib/costs";
 import { belowCost, lowMargin } from "@/lib/craft/pricing";
 import { unitLabel } from "@/lib/craft/groups";
@@ -227,11 +227,13 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
   const pool = useMemo(
     () =>
       order?.discountCode
-        ? discounts.map((d) => (d.code === order.discountCode ? { ...d, active: true, startsAt: "2000-01-01", endsAt: undefined, usageLimit: undefined, perCustomerLimit: undefined, firstOrderOnly: false } : d))
+        ? discounts.map((d) => (d.code === order.discountCode ? { ...d, active: true, startsAt: "2000-01-01", endsAt: undefined, usageLimit: undefined, perCustomerLimit: undefined, firstOrderOnly: false, customerIds: undefined } : d))
         : discounts,
     [discounts, order],
   );
-  const discount = lockItems ? { amount: order!.discount } : evaluateDiscount(v.discountCode, pool, lines, shippingFee, previous);
+  const discount = lockItems ? { amount: order!.discount } : evaluateDiscount(v.discountCode, pool, lines, shippingFee, previous, profile?.id);
+  // Mã riêng đang chạy của khách này — gợi ý dưới ô mã khi chưa nhập
+  const ownCodes = profile && !lockItems ? discounts.filter((d) => d.customerIds?.includes(profile.id) && discountStatus(d) === "running") : [];
   const totals = orderTotals(lines, shippingFee, v.paymentPlan ?? "deposit", discount.amount, order?.depositPercent ?? settings.depositPercent);
   const paid = order ? paidAmount(order) : 0;
 
@@ -777,14 +779,28 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
                 <FormSection title="Thanh toán" description={editing ? "Các khoản đã thu giữ nguyên. Thu thêm khi giao; thu dư thì ghi nhận hoàn ở khối Thanh toán của đơn." : undefined}>
                   {/* Có dòng báo thì antd bù lề âm cho ô — dùng padding (lề sẽ bị gộp mất) để giữ khoảng cách với "Hình thức" */}
                   {!lockItems && (
-                    <div style={discount.error || discount.discount ? { paddingBottom: 16 } : undefined}>
+                    <div style={discount.error || discount.discount || ownCodes.length ? { paddingBottom: 16 } : undefined}>
                       <Form.Item
                         name="discountCode"
                         label="Mã giảm giá"
                         normalize={(s?: string) => s?.toUpperCase().replace(/\s/g, "")}
                         validateStatus={discount.error ? "error" : discount.discount ? "success" : undefined}
                         // Luật thật của mã (−80%, tối đa…), không dùng mô tả tự gõ — mô tả không tự đổi khi sửa mức giảm
-                        help={discount.error ?? (discount.discount ? `Giảm ${formatMoney(discount.amount)} · ${discountRule(discount.discount)}` : undefined)}
+                        help={
+                          discount.error ??
+                          (discount.discount ? (
+                            `Giảm ${formatMoney(discount.amount)} · ${discountRule(discount.discount)}`
+                          ) : ownCodes.length ? (
+                            <span role="group" aria-label="Mã riêng của khách">
+                              Khách có mã riêng:{" "}
+                              {ownCodes.map((d) => (
+                                <Button key={d.id} type="link" size="small" style={{ paddingInline: 4, height: "auto" }} onClick={() => form.setFieldValue("discountCode", d.code)}>
+                                  {d.code} {valueText(d)}
+                                </Button>
+                              ))}
+                            </span>
+                          ) : undefined)
+                        }
                       >
                         <Input allowClear maxLength={30} placeholder="Không bắt buộc" style={{ maxWidth: 260 }} />
                       </Form.Item>

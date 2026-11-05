@@ -13,7 +13,7 @@
 | Chờ thanh toán | Khách chưa trả cọc hoặc tiền | Xác nhận đã thanh toán | Có |
 | Đã thanh toán | Đã nhận cọc hoặc đủ tiền | Bắt đầu làm | Có |
 | Đang làm | Xưởng đang đổ và ủ hương | Đã làm xong | Có |
-| Chờ giao | Đã làm xong | Giao cho vận chuyển | Có |
+| Chờ giao | Đã làm xong | Giao cho vận chuyển (chọn đơn vị, nhập mã vận đơn) | Có |
 | Đang giao | Bên vận chuyển đang giao | Khách đã nhận, Giao không thành | Không |
 | Giao không thành | Giao lỗi, chờ quyết định | Giao lại, Hoàn về | Không |
 | Đang hoàn về | Hàng đang về shop | Đã nhận lại hàng | Không |
@@ -25,9 +25,11 @@
 
 - **Thẻ thống kê:** Chờ thanh toán, Cần làm (kèm số đơn trễ hạn), Chờ giao, Giao lỗi cần xử lý, Còn phải thu.
 - **Tab trạng thái:** có số đếm từng trạng thái, gồm cả 3 trạng thái giao hàng lỗi. Tab không đủ chỗ thì nằm trong nút **…**.
-- **Bộ lọc:** tìm theo mã đơn, tên không dấu, số điện thoại; lọc tình trạng thanh toán (Chưa thanh toán, Đã cọc, Đã thanh toán đủ, Chờ hoàn tiền, Đã hoàn tiền); khoảng ngày đặt.
+- **Bộ lọc:** tìm theo mã đơn, mã vận đơn, tên không dấu, số điện thoại; lọc tình trạng thanh toán (Chưa thanh toán, Đã cọc, Đã thanh toán đủ, Chờ hoàn tiền, Đã hoàn tiền); khoảng ngày đặt.
 - **Sắp xếp:** Mới đặt nhất, Sắp tới hạn làm, Giá trị cao nhất.
-- **Bảng:** mã đơn, khách, sản phẩm, ngày làm xong kèm cảnh báo hạn, thanh toán, trạng thái, tổng tiền.
+- **Bảng:** mã đơn, khách, sản phẩm, ngày làm xong kèm cảnh báo hạn, thanh toán, trạng thái (kèm đơn vị vận chuyển và mã vận đơn), tổng tiền.
+- **Chọn nhiều đơn** bằng ô đầu dòng: hiện thanh "Đã chọn N đơn" với nút **In N đơn** (phiếu đơn hoặc nhãn giao hàng), **Xuất Excel** và **Bỏ chọn**. Bấm ô chọn không mở đơn. Đổi tab hoặc bộ lọc thì bỏ chọn.
+- **Xuất Excel** ở đầu trang: xuất danh sách đang lọc, xem [Xuất Excel](#xuất-excel).
 
 ## Tạo đơn hàng
 
@@ -91,17 +93,59 @@ Nút **Sửa đơn** trên thẻ tiến trình, mở cùng form với Tạo đơ
 
 | Khối | Nội dung | Thao tác |
 |---|---|---|
+| Đầu drawer | Mã đơn, tên khách | Nút **In**: In phiếu đơn, In nhãn giao hàng |
 | Tiến trình | Trạng thái, hạn, 6 bước kèm thời gian, lý do giao lỗi | Bước tiếp theo, Hủy đơn, các nút giao hàng lỗi |
 | Sản phẩm | Các dòng, cấu hình tự phối, công thức 1 hũ, tạm tính, giảm giá, phí, tổng, giá vốn nguyên liệu và lãi gộp | |
 | Khiếu nại | Nội dung, ảnh khách gửi, cách xử lý, link đơn gửi bù | Nút Khiếu nại trên thẻ tiến trình (đơn Hoàn tất) |
 | Lịch sử | Mọi sự kiện kèm người làm và thời gian | |
 | Thanh toán | Tiến độ thu, đã thu, còn phải thu, các khoản, số phải hoàn, ảnh chứng từ | Ghi nhận đã hoàn tiền |
-| Khách hàng | Liên hệ, phân loại khách, số lần giao lỗi, link hồ sơ, hình thức giao | Đổi ngày làm xong (trước khi làm xong) |
+| Khách hàng | Liên hệ, phân loại khách, số lần giao lỗi, link hồ sơ, hình thức giao, đơn vị vận chuyển, mã vận đơn | Đổi ngày làm xong (trước khi làm xong), sao chép mã vận đơn, Tra cứu, Sửa vận chuyển |
 | Ghi chú | Ghi chú của khách, ghi chú nội bộ | Sửa ghi chú nội bộ |
 
-**Giá vốn và lãi gộp:** giá vốn = nguyên liệu theo công thức × giá nhập ([Kho › Giá nhập](./inventory.md#giá-nhập)). Trước khi Bắt đầu làm là **ước tính** theo giá hiện tại; bấm Bắt đầu làm thì **chốt** theo giá nhập lúc trừ Kho. Lãi gộp = tạm tính − giảm giá − tiền hoàn do khiếu nại − giá vốn, không tính phí giao. Nguyên liệu chưa có giá nhập thì báo thiếu.
+**Giá vốn và lãi gộp:** giá vốn = nguyên liệu theo công thức × giá nhập ([Kho › Giá nhập](./inventory.md#giá-nhập)). Trước khi Bắt đầu làm là **ước tính** theo giá hiện tại; bấm Bắt đầu làm thì **chốt** theo giá nhập lúc trừ Kho. Lãi gộp = tạm tính − giảm giá − tiền hoàn do khiếu nại − giá vốn + (phí giao khách trả − phí trả đơn vị vận chuyển); chưa giao thì chưa tính phần vận chuyển. Đơn hủy hiện tiền hàng giữ lại, nguyên liệu đã mất, phí trả đơn vị vận chuyển và **Lãi sau khi hủy**. Cách tính chung ở [Dashboard › Quy tắc lãi gộp](./dashboard.md#quy-tắc-lãi-gộp). Nguyên liệu chưa có giá nhập thì báo thiếu.
 
 **Ngày làm xong:** lịch tô vạch theo số cây xưởng đã nhận mỗi ngày (xanh còn chỗ, cam gần đầy, đỏ vượt). Đổi sang ngày vượt công suất vẫn đổi được, có thông báo cảnh báo. Xem [Cài đặt › Xưởng](./settings.md).
+
+## Vận chuyển
+
+### Giao cho vận chuyển
+
+Đơn Chờ giao bấm **Giao cho vận chuyển** thì mở popup:
+
+- **Thu hộ (COD):** số khách còn phải trả, để nhập đúng khi tạo đơn trên app đơn vị vận chuyển. Đã trả đủ thì ghi "Không thu hộ".
+- **Phí trả đơn vị vận chuyển:** số shop trả bên vận chuyển cho lượt này, mặc định bằng phí giao khách trả, sửa được. Là chi phí, trừ vào lãi; phí vận chuyển khách trả không tính vào doanh thu.
+- **Đơn vị vận chuyển:** các đơn vị đang dùng ở [Cài đặt › Đơn vị vận chuyển](./settings.md#đơn-vị-vận-chuyển).
+- **Mã vận đơn:** bắt buộc nếu đơn vị đó bắt buộc mã (Shop tự giao thì không). Tự bỏ khoảng trắng, viết hoa. Mã đã dùng cho đơn khác chưa hủy thì báo "Mã này đã dùng cho đơn …".
+
+Lưu xong đơn sang Đang giao, lịch sử ghi "Giao Hàng Nhanh · mã vận đơn …". Đơn lưu tên đơn vị và link tra cứu lúc giao, đổi Cài đặt sau đó không ảnh hưởng.
+
+- **Sửa vận chuyển** (khối Khách hàng) khi đơn Đang giao, Giao không thành, Đang hoàn về: đổi đơn vị hoặc mã, lịch sử ghi mã cũ → mã mới.
+- **Giao lại** (Giao không thành, hàng còn ở đơn vị vận chuyển) giữ đơn vị và mã vận đơn cũ.
+- **Đã nhận lại hàng** có ô **Phí hoàn hàng** trả đơn vị vận chuyển (mặc định 0), cộng vào chi phí vận chuyển của đơn.
+- **Gửi lại đơn** (hàng đã hoàn về shop) là lượt giao mới: popup Gửi lại đơn có phí gửi lại khách trả, phí trả đơn vị vận chuyển (mặc định bằng phí gửi lại), số thu hộ mới, dòng "Lần giao trước: …", chọn lại đơn vị (mặc định đơn vị lần trước) và nhập mã vận đơn mới. Mã của lần trước bị chặn. Lưu xong đơn sang thẳng Đang giao.
+- **Tra cứu** mở trang tra cứu của đơn vị nếu Cài đặt có link.
+
+### In đơn và nhãn giao hàng
+
+Nút **In** ở đầu chi tiết đơn, hoặc chọn nhiều đơn trên danh sách rồi bấm **In N đơn**. Trình duyệt mở hộp thoại in, mỗi đơn một trang.
+
+| Loại | Khổ giấy | Nội dung |
+|---|---|---|
+| Phiếu đơn | A5 | Người gửi, mã đơn, ngày đặt, khách, địa chỉ, hình thức giao, đơn vị và mã vận đơn, các sản phẩm (kèm chi tiết nến tự phối), tạm tính, giảm giá, phí giao, tổng, đã thanh toán, còn phải thu, ghi chú của khách |
+| Nhãn giao hàng | 100 × 150 mm (máy in nhiệt) | Tên shop, đơn vị và mã vận đơn, mã đơn, người gửi, người nhận (tên, SĐT, địa chỉ chữ to), nội dung hàng, ghi chú, số tiền thu hộ, "Hàng dễ vỡ" |
+
+- Ghi chú nội bộ không in.
+- Người gửi lấy ở [Cài đặt › Người gửi](./settings.md). In nhãn khi chưa có SĐT hoặc địa chỉ người gửi thì nhắc, vẫn in.
+- Nhãn chưa có mã vạch. Đơn vị vận chuyển thường in nhãn riêng có mã vạch của họ; nhãn này dùng khi shop tự giao hoặc dán thêm.
+
+### Xuất Excel
+
+Nút **Xuất Excel** xuất danh sách đang lọc (hoặc các đơn đang chọn) ra file `don-hang-YYYY-MM-DD.xlsx`, gồm 2 trang:
+
+- **Đơn hàng**, mỗi đơn một dòng: mã đơn, ngày đặt, trạng thái, khách, SĐT, địa chỉ, sản phẩm, số sản phẩm, tạm tính, giảm giá, mã giảm giá, phí giao, tổng, đã thu, còn phải thu (đơn hủy ghi 0), thanh toán, hình thức thu, ngày làm xong, phương thức giao, đơn vị vận chuyển, mã vận đơn, ghi chú của khách, ghi chú nội bộ.
+- **Sản phẩm**, mỗi sản phẩm một dòng: mã đơn, ngày đặt, trạng thái, tên, nến có sẵn hay tự phối, chi tiết tự phối, số lượng, đơn giá, thành tiền.
+
+Tiền và ngày là số thật trong Excel (cộng, lọc, sắp xếp được), dòng tiêu đề cố định và có sẵn bộ lọc.
 
 ## Hủy đơn
 
@@ -136,6 +180,8 @@ Xem [Workflow mục 7](../workflow.md#7-khiếu-nại-sau-khi-giao).
 | `resendFee` | Tổng phí gửi lại đã cộng vào `shippingFee` và `total` |
 | `items[].recipe` | Công thức 1 hũ của nến tự phối lúc tạo đơn |
 | `materialCost` | Giá vốn nguyên liệu chốt lúc Bắt đầu làm |
+| `shippingCost` | Tổng phí shop đã trả đơn vị vận chuyển (mọi lượt giao, phí hoàn hàng). Chưa giao thì không có |
+| `shipment` | Lượt giao hiện tại: `carrierId`, `carrier` (tên), `trackingCode`, `trackingUrl`, `cost` (phí trả đơn vị vận chuyển lượt này), `at`. Gửi lại đơn thì thay bằng lượt mới, lịch sử giữ mã cũ. Mã vận đơn không trùng giữa các đơn chưa hủy |
 | `complaints[]` | `reason`, `images`, `resolution` (`resend`, `refund`, `none`), `refundAmount`, `replacementId`, `replacementCode`, `at`, `by` |
 | `replacementFor` | `{ id, code }` của đơn gốc, có ở đơn gửi bù |
 | `payments[].kind = "refund"` | Khoản hoàn một phần (thu dư, khiếu nại): số âm, kèm `images`, `note` |
@@ -166,7 +212,9 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `order-draft`: đóng giữ nháp, nút Tiếp tục đơn nháp, tải lại trang vẫn còn, giá sản phẩm lấy lại giá hiện tại; Bắt đầu đơn mới; Bỏ đơn; tạo đơn xong xóa nháp; mở từ hồ sơ khách khi đang có nháp.
 - `orders-custom-candle`, `orders-custom-modal`, `orders-amounts`: popup Tự phối nến, khóa lựa chọn hết nguyên liệu, số hũ Kho làm được, chọn nhiều sáp, lượng từng nguyên liệu, công thức trên đơn.
 - `orders-cancel`: Bắt đầu làm trừ Kho, hủy đơn đang làm hỏi đã làm chưa, hoàn Kho, Kho thiếu thì chặn.
-- `orders-decisions`: công thức, giữ nguyên liệu, thu đủ khi hoàn tất, trả lượt mã, hoàn tiền kèm ảnh, giao hàng lỗi, gửi lại đơn.
+- `orders-decisions`: công thức, giữ nguyên liệu, thu đủ khi hoàn tất, trả lượt mã, hoàn tiền kèm ảnh, giao hàng lỗi, gửi lại đơn (nhập mã vận đơn mới, sang thẳng Đang giao).
+- `shipping`: giao cho vận chuyển (báo thu hộ, bắt buộc mã, chặn mã trùng, lưu link tra cứu), mã trên bảng và tìm theo mã, sửa vận chuyển sang Shop tự giao, khách không nhận hàng hoàn về rồi gửi lại đổi sang đơn vị khác (chặn mã cũ, thu hộ cộng phí gửi lại), in nhãn và phiếu đơn, nhắc thiếu người gửi, chọn nhiều đơn in hàng loạt, xuất Excel theo tab, thêm đơn vị vận chuyển có link tra cứu.
+- `logic/shipping`: link tra cứu, chuẩn hóa mã, mã trùng, tiền thu hộ, tìm theo mã vận đơn, nội dung file Excel đơn hàng.
 - `orders-list`: thẻ thống kê, lọc thanh toán, khoảng ngày, tìm số điện thoại, sắp xếp giá trị, tab dồn vào nút …, đổi ngày làm xong, ghi chú nội bộ, đơn đã làm xong không đổi ngày, sản phẩm đang ẩn có nhãn khi tạo đơn.
 - `logic/orders`: tình trạng thanh toán, số tiền hoàn theo lỗi khách / lỗi shop, thứ tự trạng thái, hủy được khi nào, nhãn hạn làm xong, bộ lọc và sắp xếp.
 - `logic/discounts`: áp mã khi tạo đơn, tổng tiền và tiền cọc.

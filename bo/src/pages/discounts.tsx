@@ -1,6 +1,7 @@
 import { PlusOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Card, Col, Empty, Flex, Input, Popconfirm, Row, Segmented, Select, Statistic, Typography } from "antd";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { DiscountDrawer } from "@/components/discounts/discount-drawer";
 import { DiscountTable } from "@/components/discounts/discount-table";
 import { DiscountsSkeleton } from "@/components/skeletons";
@@ -12,6 +13,7 @@ import { formatMoneyShort, formatNumber } from "@/lib/format";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
 import { useTitle } from "@/lib/use-title";
+import { useUpdateSearch } from "@/lib/use-update-search";
 
 type Filters = { q: string; status: DiscountStatus | "all"; sort: "newest" | "ending" | "most-used" };
 const defaultFilters: Filters = { q: "", status: "all", sort: "newest" };
@@ -40,6 +42,15 @@ export function DiscountsPage() {
   const [editing, setEditing] = useOpenParam("edit");
   // Đóng drawer thì URL bỏ ?edit= ngay — giữ mục cũ (cùng key) để drawer trượt ra có hiệu ứng
   const { shown, key: drawerKey } = useDrawerTarget(editing);
+  // Tạo mã riêng từ hồ sơ khách: ?edit=new&customer=id — đóng drawer thì bỏ cả hai
+  const [params] = useSearchParams();
+  const presetCustomerId = editing === "new" ? (params.get("customer") ?? undefined) : undefined;
+  const update = useUpdateSearch();
+  const closeDrawer = () =>
+    update((p) => {
+      p.delete("edit");
+      p.delete("customer");
+    }, true);
   // Memo để bảng (memo) chỉ render lại khi dữ liệu/bộ lọc/trang đổi — không phải khi mở drawer
   const items = useMemo(() => applyFilters(api.discounts, filters), [api.discounts, filters]);
   const pager = usePageQuery(api.loading ? undefined : items.length);
@@ -147,7 +158,7 @@ export function DiscountsPage() {
         )}
       </Card>
 
-      <DiscountDrawer key={drawerKey} open={editing !== null && (editing === "new" || !!current)} discount={current} api={api} onClose={() => setEditing(null)} />
+      <DiscountDrawer key={drawerKey} open={editing !== null && (editing === "new" || !!current)} discount={current} api={api} presetCustomerId={presetCustomerId} onClose={closeDrawer} />
     </Flex>
   );
 }

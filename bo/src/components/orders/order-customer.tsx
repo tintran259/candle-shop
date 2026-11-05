@@ -1,12 +1,15 @@
-import { CopyOutlined, EnvironmentOutlined, MailOutlined, MessageOutlined, PhoneOutlined, RightOutlined } from "@ant-design/icons";
+import { CarOutlined, CopyOutlined, EditOutlined, EnvironmentOutlined, ExportOutlined, MailOutlined, MessageOutlined, PhoneOutlined, RightOutlined } from "@ant-design/icons";
 import { App, Avatar, Button, Divider, Flex, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { Link } from "react-router";
 import { FormSection } from "@/components/form/form-section";
 import { InfoRow } from "@/components/info-row";
+import { ShipModal } from "@/components/orders/order-delivery";
 import { CapacityDatePicker } from "@/components/orders/ready-date";
 import { useCustomers } from "@/hooks/use-customers";
 import type { OrdersApi } from "@/hooks/use-orders";
+import { useSettings } from "@/hooks/use-settings";
 import { useWorkshop } from "@/hooks/use-workshop";
 import { candleCount } from "@/lib/capacity";
 import { formatMoney, initials } from "@/lib/format";
@@ -33,6 +36,11 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
   const failures = failedDeliveries(api.orders.filter((o) => digits(o.customer.phone) === phone));
   // Chỉ đổi ngày làm xong khi xưởng chưa làm xong
   const editable = ["pending", "paid", "producing"].includes(order.status);
+  // Sửa đơn vị / mã vận đơn khi hàng còn trên đường
+  const { settings } = useSettings();
+  const [shipEdit, setShipEdit] = useState(false);
+  const shipEditable = ["shipping", "delivery_failed", "returning"].includes(order.status);
+  const { shipment } = order;
 
   const copy = (text: string, what: string) => {
     navigator.clipboard?.writeText(text).then(
@@ -135,6 +143,11 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
           <InfoRow icon={null} label="Hình thức">
             <Typography.Text>{shippingName(order)}</Typography.Text>
           </InfoRow>
+          {shipment && (
+            <InfoRow icon={null} label="Vận chuyển">
+              <Typography.Text>{shipment.carrier}</Typography.Text>
+            </InfoRow>
+          )}
           <InfoRow icon={null} label="Ngày làm xong">
             {editable ? (
               <CapacityDatePicker
@@ -161,7 +174,49 @@ export function CustomerSection({ order, api }: { order: Order; api: OrdersApi }
             )}
           </InfoRow>
         </Flex>
+        {shipment && (
+          <InfoRow icon={<CarOutlined />} label="Mã vận đơn">
+            <Flex align="center" gap={4} wrap>
+              {shipment.trackingCode ? (
+                <>
+                  <Typography.Text strong className="tabular">
+                    {shipment.trackingCode}
+                  </Typography.Text>
+                  <Tooltip title="Sao chép mã vận đơn">
+                    <Button type="text" size="small" icon={<CopyOutlined />} aria-label="Sao chép mã vận đơn" onClick={() => copy(shipment.trackingCode!, "mã vận đơn")} />
+                  </Tooltip>
+                  {shipment.trackingUrl && (
+                    <Button size="small" icon={<ExportOutlined />} href={shipment.trackingUrl} target="_blank" rel="noopener noreferrer">
+                      Tra cứu
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <Typography.Text type="secondary">Không có</Typography.Text>
+              )}
+              {shipEditable && (
+                <Button size="small" type="text" icon={<EditOutlined />} aria-label="Sửa vận chuyển" onClick={() => setShipEdit(true)}>
+                  Sửa
+                </Button>
+              )}
+            </Flex>
+          </InfoRow>
+        )}
       </Flex>
+      {shipment && (
+        <ShipModal
+          open={shipEdit}
+          order={order}
+          orders={api.orders}
+          carriers={settings.carriers}
+          onClose={() => setShipEdit(false)}
+          onConfirm={(next) => {
+            api.updateShipment(order.id, next);
+            setShipEdit(false);
+            message.success("Đã lưu vận chuyển");
+          }}
+        />
+      )}
     </FormSection>
   );
 }

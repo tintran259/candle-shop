@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { phoneKey, segmentMeta, type CustomerRow, type Segment } from "@/lib/customers/stats";
 import { formatMoney } from "@/lib/format";
 import { fold } from "@/lib/search";
+import { downloadXlsx } from "@/lib/xlsx";
 
 export type CustomerFilters = {
   q: string;
@@ -44,34 +45,39 @@ export function applyCustomerFilters(rows: CustomerRow[], f: CustomerFilters) {
     });
 }
 
-// Xuất danh sách đang lọc ra CSV (mở bằng Excel/Google Sheets) — có BOM để Excel đọc đúng tiếng Việt
-export function exportCustomersCsv(rows: CustomerRow[]) {
-  const head = ["Tên", "Số điện thoại", "Email", "Nhóm", "Số đơn", "Đã chi (VNĐ)", "Đơn gần nhất", "Tài khoản", "Nhận ưu đãi", "Nhãn", "Ghi chú"];
-  const cell = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-  const lines = rows.map(({ customer: c, stats: s }) =>
-    [
-      c.name,
-      c.phone,
-      c.email,
-      c.blocked ? "Đã chặn" : segmentMeta[s.segment].label,
-      s.orderCount,
-      s.spent,
-      s.lastOrderAt ? dayjs(s.lastOrderAt).format("DD/MM/YYYY") : "",
-      c.hasAccount ? "Có" : "Vãng lai",
-      c.newsletter ? "Có" : "Không",
-      c.tags.join(", "),
-      c.note ?? "",
-    ]
-      .map(cell)
-      .join(","),
-  );
-  const blob = new Blob(["﻿" + [head.map(cell).join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `khach-hang-${dayjs().format("YYYY-MM-DD")}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+// Xuất danh sách đang lọc ra Excel
+export function exportCustomersXlsx(rows: CustomerRow[]) {
+  downloadXlsx(`khach-hang-${dayjs().format("YYYY-MM-DD")}`, [
+    {
+      name: "Khách hàng",
+      columns: [
+        { header: "Tên", width: 24 },
+        { header: "Số điện thoại", width: 14 },
+        { header: "Email", width: 26 },
+        { header: "Nhóm", width: 14 },
+        { header: "Số đơn", format: "number", width: 9 },
+        { header: "Đã chi", format: "money", width: 14 },
+        { header: "Đơn gần nhất", format: "date", width: 14 },
+        { header: "Tài khoản", width: 11 },
+        { header: "Nhận ưu đãi", width: 12 },
+        { header: "Nhãn", width: 20 },
+        { header: "Ghi chú", width: 30 },
+      ],
+      rows: rows.map(({ customer: c, stats: s }) => [
+        c.name,
+        c.phone,
+        c.email,
+        c.blocked ? "Đã chặn" : segmentMeta[s.segment].label,
+        s.orderCount,
+        s.spent,
+        s.lastOrderAt ? new Date(s.lastOrderAt) : undefined,
+        c.hasAccount ? "Có" : "Vãng lai",
+        c.newsletter ? "Có" : "Không",
+        c.tags.join(", "),
+        c.note,
+      ]),
+    },
+  ]);
 }
 
 export const spentText = (n: number) => (n ? formatMoney(n) : "—");

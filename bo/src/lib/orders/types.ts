@@ -77,6 +77,11 @@ export type Complaint = {
   by: string;
 };
 
+// Lượt giao hiện tại: đơn vị vận chuyển, mã vận đơn, link tra cứu (chụp lại lúc giao, đổi Cài đặt không ảnh hưởng).
+// Gửi lại đơn đã hoàn về thì bỏ, lịch sử đơn vẫn ghi mã cũ
+// cost: phí shop trả đơn vị vận chuyển cho lượt này
+export type Shipment = { carrierId: string; carrier: string; trackingCode?: string; trackingUrl?: string; cost?: number; at: string };
+
 export type OrderEvent = {
   at: string;
   // status = đổi trạng thái; payment = thu, hoàn tiền; schedule = đổi ngày làm xong; delivery = giao lại, gửi lại;
@@ -121,6 +126,9 @@ export type Order = {
   // Số tiền phải hoàn lúc hủy, chưa hoàn thì chưa có refund
   refundDue?: number;
   refund?: Refund;
+  shipment?: Shipment;
+  // Tổng phí shop đã trả đơn vị vận chuyển (mọi lượt giao, phí hoàn hàng) — chi phí, trừ vào lãi. Chưa giao thì không có
+  shippingCost?: number;
   // Số lần giao không thành của lượt giao hiện tại, gửi lại đơn thì đếm lại
   deliveryAttempts?: number;
   // Lý do lần giao không thành gần nhất

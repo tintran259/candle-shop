@@ -119,6 +119,21 @@ test.describe("Áp mã khi tạo đơn", () => {
   });
 });
 
+test.describe("Mã riêng cho khách được chọn", () => {
+  const vip = code({ code: "VYVIP", customerIds: ["cus-vy", "cus-an"] });
+  test("Khách được chọn dùng được", () => {
+    expect(evaluateDiscount("VYVIP", [vip], [product(500_000)], 0, [], "cus-vy").amount).toBe(50_000);
+    expect(evaluateDiscount("VYVIP", [vip], [product(500_000)], 0, [], "cus-an").amount).toBe(50_000);
+  });
+  test("Khách khác hoặc chưa có hồ sơ khách thì từ chối", () => {
+    expect(evaluateDiscount("VYVIP", [vip], [product(500_000)], 0, [], "cus-khac")).toEqual({ amount: 0, error: "Mã này dành riêng cho khách khác." });
+    expect(evaluateDiscount("VYVIP", [vip], [product(500_000)], 0, []).error).toBe("Mã dành riêng cho khách được chọn — nhập đúng số điện thoại của khách.");
+  });
+  test("Mã không chọn khách thì ai cũng dùng được", () => {
+    expect(evaluateDiscount("TEST", [code({ customerIds: [] })], [product(500_000)], 0, [], "cus-khac").amount).toBe(50_000);
+  });
+});
+
 test.describe("Tổng tiền đơn", () => {
   test("Tổng = tạm tính − giảm + phí giao, cọc làm tròn tới nghìn đồng", () => {
     expect(orderTotals([product(333_333, 3)], 50_000, "deposit", 100_000, 30)).toEqual({ subtotal: 999_999, discount: 100_000, shippingFee: 50_000, total: 949_999, dueNow: 285_000 });

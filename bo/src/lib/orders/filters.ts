@@ -16,7 +16,7 @@ export const defaultOrderFilters: OrderFilters = { q: "", status: "all", sort: "
 
 const digits = (s: string) => s.replace(/\D/g, "");
 
-// Tìm theo mã đơn, tên khách (không dấu) hoặc số điện thoại
+// Tìm theo mã đơn, mã vận đơn, tên khách (không dấu) hoặc số điện thoại
 export function applyOrderFilters(list: Order[], f: OrderFilters) {
   const q = slugify(f.q);
   const qDigits = digits(f.q);
@@ -32,6 +32,7 @@ export function applyOrderFilters(list: Order[], f: OrderFilters) {
       (o) =>
         !q ||
         slugify(o.code).includes(q) ||
+        slugify(o.shipment?.trackingCode ?? "").includes(q) ||
         slugify(o.customer.name).includes(q) ||
         (qDigits.length >= 3 && digits(o.customer.phone).includes(qDigits)),
     )

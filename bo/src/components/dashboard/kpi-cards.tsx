@@ -7,16 +7,30 @@ import { formatMoneyShort, formatNumber, formatPercent } from "@/lib/format";
 // Mỗi thẻ: tiêu đề → số lớn nét mảnh + mũi tên xu hướng → mô tả → link ở đáy
 export function KpiCards({ kpis, days }: { kpis: DashboardStats["kpis"]; days: number }) {
   const items = [
-    { label: "Doanh thu", value: formatMoneyShort(kpis.revenue.value), delta: kpis.revenue.delta, link: { to: "/orders", label: "Tất cả đơn" } },
+    // Doanh thu = tiền hàng thực nhận, không gồm phí vận chuyển khách trả (docs/pages/dashboard.md#quy-tắc-doanh-thu)
+    { label: "Doanh thu", value: formatMoneyShort(kpis.revenue.value), delta: kpis.revenue.delta, note: "Tiền hàng thực nhận, không gồm phí vận chuyển", link: { to: "/orders", label: "Tất cả đơn" } },
     { label: "Đơn hàng", value: formatNumber(kpis.orders.value), delta: kpis.orders.delta, link: { to: "/orders", label: "Tất cả đơn" } },
-    { label: "Giá trị đơn TB", value: formatMoneyShort(kpis.average.value), delta: kpis.average.delta, link: { to: "/products", label: "Sản phẩm" } },
+    // Tiền hàng trung bình của đơn Hoàn tất trong kỳ, không gồm phí vận chuyển
+    {
+      label: "Giá trị đơn TB",
+      value: formatMoneyShort(kpis.average.value),
+      delta: kpis.average.delta,
+      note: `Tiền hàng TB của ${formatNumber(kpis.average.completed)} đơn hoàn tất, không gồm phí vận chuyển`,
+      link: { to: "/orders?status=completed", label: "Đơn hoàn tất" },
+    },
     { label: "Khách hàng mới", value: formatNumber(kpis.customers.value), delta: kpis.customers.delta, link: { to: "/customers", label: "Khách hàng" } },
-    // Lãi gộp = giá trị hàng − giá vốn nguyên liệu, theo đơn đặt trong kỳ (docs/pages/dashboard.md)
+    // Lãi gộp = giá trị hàng − giá vốn nguyên liệu − phí vận chuyển shop chịu, theo đơn đã chốt trong kỳ: Hoàn tất và đơn hủy (docs/pages/dashboard.md)
     {
       label: "Lãi gộp",
       value: formatMoneyShort(kpis.profit.value),
       delta: kpis.profit.delta,
-      note: kpis.profit.rate !== null ? `Tỉ lệ lãi ${Math.round(kpis.profit.rate * 100)}% trên giá trị hàng` : undefined,
+      note: [
+        `Từ ${formatNumber(kpis.profit.closed)} đơn đã chốt (hoàn tất, đã hủy)`,
+        kpis.profit.rate !== null && `tỉ lệ lãi ${Math.round(kpis.profit.rate * 100)}%`,
+        kpis.profit.shipping < 0 && `Đã trừ ${formatMoneyShort(-kpis.profit.shipping)} phí vận chuyển shop chịu`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
       link: { to: "/inventory", label: "Giá nhập ở Kho" },
     },
   ];

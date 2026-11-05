@@ -145,8 +145,53 @@ test("Áp mã vào đơn hiện mức giảm thật của mã, không lấy mô 
   await d.getByLabel("Chọn sản phẩm").last().click();
   await page.keyboard.type("Moon Morning");
   await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
+  await expect(d.locator("aside.order-summary")).toContainText("Moon Morning");
   await d.locator("#discountCode").fill("TET2027");
   const help = d.locator(".ant-form-item").filter({ has: page.locator("#discountCode") }).locator(".ant-form-item-explain");
   await expect(help).toContainText("TET2027 −80%, tối đa 300.000");
   await expect(help).not.toContainText("20%");
+});
+
+test("Mã riêng: tạo từ hồ sơ khách, khách đó có gợi ý mã khi tạo đơn, khách khác bị từ chối", async ({ page }) => {
+  // Hồ sơ Ngô Thanh Vy (0944 889 900) → Tạo mã riêng cho khách
+  await page.goto("/customers?customer=cus-889900");
+  const profile = page.locator(".ant-drawer-open").last();
+  await expect(profile.getByRole("list", { name: "Mã giảm giá riêng" })).not.toContainText("VYVIP");
+  await profile.getByRole("button", { name: /Tạo mã riêng cho khách/ }).click();
+  await expect(page).toHaveURL(/\/discounts\?edit=new&customer=cus-889900/);
+  const d = drawer(page).last();
+  await expect(d.getByLabel("Khách được dùng mã")).toBeVisible();
+  await expect(d.locator(".ant-select-selection-item").filter({ hasText: "Ngô Thanh Vy" })).toBeVisible();
+  await d.locator("#code").fill("vyvip10");
+  await d.getByRole("button", { name: "Tạo mã" }).click();
+  await expect(page.getByText("Đã tạo mã VYVIP10")).toBeVisible();
+  await expect(page).not.toHaveURL(/customer=/);
+  const created = (await saved(page)).find((x) => x.code === "VYVIP10");
+  expect(created.customerIds).toEqual(["cus-889900"]);
+  await expect(rows(page).filter({ hasText: "VYVIP10" })).toContainText("riêng 1 khách");
+
+  // Hồ sơ khách hiện mã riêng
+  await page.goto("/customers?customer=cus-889900");
+  await expect(page.locator(".ant-drawer-open").last().getByRole("list", { name: "Mã giảm giá riêng" })).toContainText("VYVIP10 −10%");
+
+  // Tạo đơn cho Vy: gợi ý mã riêng, bấm để áp
+  await page.goto("/orders");
+  await page.getByRole("button", { name: /Tạo đơn hàng|Tiếp tục đơn nháp/ }).click();
+  const o = drawer(page).last();
+  await o.locator("#name").fill("Ngô Thanh Vy");
+  await o.locator("#phone").fill("0944 889 900");
+  await o.getByRole("button", { name: "Nến có sẵn" }).click();
+  await o.getByLabel("Chọn sản phẩm").last().click();
+  await page.keyboard.type("Moon Morning");
+  await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
+  await expect(o.locator("aside.order-summary")).toContainText("Moon Morning");
+  const hint = o.getByRole("group", { name: "Mã riêng của khách" });
+  await expect(hint).toContainText("Khách có mã riêng:");
+  await hint.getByRole("button", { name: /VYVIP10/ }).click();
+  const help = o.locator(".ant-form-item").filter({ has: page.locator("#discountCode") }).locator(".ant-form-item-explain");
+  await expect(help).toContainText("VYVIP10 −10%");
+
+  // Đổi sang số của khách khác: mã bị từ chối
+  await o.locator("#phone").fill("0977 001 122");
+  await expect(help).toContainText("Mã này dành riêng cho khách khác.");
 });

@@ -8,7 +8,7 @@ import { CustomerToolbar } from "@/components/customers/customer-toolbar";
 import { CustomersSkeleton } from "@/components/skeletons";
 import { useCustomers } from "@/hooks/use-customers";
 import { useOrders } from "@/hooks/use-orders";
-import { applyCustomerFilters, defaultCustomerFilters, exportCustomersCsv, type CustomerFilters } from "@/lib/customers/filters";
+import { applyCustomerFilters, defaultCustomerFilters, exportCustomersXlsx, type CustomerFilters } from "@/lib/customers/filters";
 import { customerStats, groupOrdersByPhone, type CustomerRow } from "@/lib/customers/stats";
 import { formatMoneyShort, formatNumber } from "@/lib/format";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
@@ -85,8 +85,8 @@ export function CustomersPage() {
           <Popconfirm title="Khôi phục dữ liệu mẫu?" description="Nhãn, ghi chú và trạng thái chặn trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
             <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
           </Popconfirm>
-          <Button icon={<DownloadOutlined />} disabled={!items.length} onClick={() => exportCustomersCsv(items)}>
-            Xuất CSV
+          <Button icon={<DownloadOutlined />} disabled={!items.length} onClick={() => exportCustomersXlsx(items)}>
+            Xuất Excel
           </Button>
         </Flex>
       </Flex>

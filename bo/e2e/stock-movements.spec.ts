@@ -1,5 +1,7 @@
 // Trang Phiếu kho: nằm dưới Kho nguyên liệu trên sidebar, lọc theo loại / nguyên liệu / ngày / tìm kiếm, mã mẻ, ghi phiếu (docs/pages/stock-movements.md)
+import fs from "node:fs";
 import { expect, test } from "./support/harness.mjs";
+import { readXlsx } from "./support/xlsx";
 import { filterMovements, movementTotals } from "@/lib/inventory/movements";
 import { mockInventory } from "@/lib/inventory/mock";
 import type { StockMovement } from "@/lib/inventory/types";
@@ -74,4 +76,18 @@ test("Lọc theo loại, tìm kiếm trên URL; ghi phiếu ngay trên trang", a
   const modal = page.locator(".ant-modal").last();
   await expect(modal).toBeVisible();
   await page.keyboard.press("Escape");
+});
+
+test("Xuất Excel phiếu kho đang lọc", async ({ page }) => {
+  await page.goto("/inventory/movements?type=out");
+  await expect(page.getByRole("list", { name: "Phiếu kho" }).getByRole("listitem")).toHaveCount(1);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Xuất Excel" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^phieu-kho-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  const [sheet] = readXlsx(fs.readFileSync(await download.path()));
+  expect(sheet.name).toBe("Phiếu kho");
+  expect(sheet.rows).toHaveLength(2);
+  const row = Object.fromEntries(sheet.rows[0].map((h, i) => [h, sheet.rows[1][i]]));
+  expect(row["Loại phiếu"]).toBe("Xuất / hao hụt");
+  expect(row["Ghi chú"]).toContain("Vỡ khi vận chuyển");
+  expect(Number(row["Thay đổi"])).toBeLessThan(0);
 });

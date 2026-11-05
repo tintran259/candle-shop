@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { Link } from "react-router";
 import { ComplaintModal } from "@/components/orders/order-complaint";
-import { DeliveryFailModal, ReceiveBackModal, ResendModal } from "@/components/orders/order-delivery";
+import { DeliveryFailModal, ReceiveBackModal, ResendModal, ShipModal } from "@/components/orders/order-delivery";
 import { consumeOrder } from "@/hooks/use-inventory";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
@@ -49,7 +49,7 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
   const { message, modal } = App.useApp();
   const { settings } = useSettings();
   const { map, available, source } = useStockHold();
-  const [dialog, setDialog] = useState<"fail" | "back" | "resend" | "complaint" | null>(null);
+  const [dialog, setDialog] = useState<"fail" | "back" | "resend" | "complaint" | "ship" | null>(null);
   const meta = statusMeta[order.status];
   const to = nextStatus(order.status);
   const action = nextAction[order.status];
@@ -95,6 +95,8 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
       // Chốt giá vốn theo giá nhập lúc trừ Kho
       return proceed({ materialCost: needsCost(needs, map).cost });
     }
+    // Giao cho vận chuyển: chọn đơn vị và nhập mã vận đơn
+    if (to === "shipping") return setDialog("ship");
     if (to === "completed" && left > 0)
       return modal.confirm({
         title: "Khách đã nhận và đã thu đủ tiền?",
@@ -264,22 +266,36 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
         open={dialog === "back"}
         order={order}
         onClose={close}
-        onConfirm={(condition, note) => {
-          api.receiveReturn(order.id, condition, note);
+        onConfirm={(condition, note, returnFee) => {
+          api.receiveReturn(order.id, condition, note, returnFee);
           close();
           message.success(`Đơn ${order.code}: ${statusMeta.returned.label}`);
         }}
       />
       {dialog === "complaint" && <ComplaintModal open order={order} api={api} onClose={close} />}
+      <ShipModal
+        open={dialog === "ship"}
+        order={order}
+        orders={api.orders}
+        carriers={settings.carriers}
+        onClose={close}
+        onConfirm={(shipment) => {
+          api.ship(order.id, shipment);
+          close();
+          message.success(`Đơn ${order.code}: ${statusMeta.shipping.label}`);
+        }}
+      />
       <ResendModal
         open={dialog === "resend"}
         order={order}
+        orders={api.orders}
+        carriers={settings.carriers}
         fee={settings.resendFee}
         onClose={close}
-        onConfirm={(fee) => {
-          api.resend(order.id, fee);
+        onConfirm={(fee, shipment) => {
+          api.resend(order.id, fee, shipment);
           close();
-          message.success(`Đã gửi lại đơn ${order.code}`);
+          message.success(`Đã gửi lại đơn ${order.code} qua ${shipment.carrier}`);
         }}
       />
     </section>

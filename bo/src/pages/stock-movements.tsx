@@ -1,4 +1,4 @@
-import { SearchOutlined, SwapOutlined } from "@ant-design/icons";
+import { DownloadOutlined, SearchOutlined, SwapOutlined } from "@ant-design/icons";
 import { App, Button, Card, Col, DatePicker, Flex, Input, Pagination, Row, Select, Statistic, Typography } from "antd";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
@@ -10,7 +10,7 @@ import { ListPageSkeleton, ToolbarSkeleton } from "@/components/skeletons";
 import { useInventory } from "@/hooks/use-inventory";
 import { lotTotal } from "@/lib/costs";
 import { formatMoneyShort } from "@/lib/format";
-import { filterMovements, movementTotals, movementTypes, type MovementFilters } from "@/lib/inventory/movements";
+import { exportMovementsXlsx, filterMovements, movementTotals, movementTypes, type MovementFilters } from "@/lib/inventory/movements";
 import { movementLabels } from "@/lib/inventory/stock";
 import type { MovementType } from "@/lib/inventory/types";
 import { useDrawerTarget } from "@/lib/use-open-param";
@@ -69,9 +69,14 @@ export function StockMovementsPage() {
             Mọi lần nhập, xuất, kiểm kê, sản xuất, trừ theo đơn và sửa giá. Số tồn từng nguyên liệu ở <Link to="/inventory">Kho nguyên liệu</Link>.
           </Typography.Text>
         </div>
-        <Button type="primary" icon={<SwapOutlined />} onClick={() => setMoving({})}>
-          Ghi phiếu kho
-        </Button>
+        <Flex gap={8} wrap>
+          <Button icon={<DownloadOutlined />} disabled={!items.length} onClick={() => exportMovementsXlsx(items, api.materials)}>
+            Xuất Excel
+          </Button>
+          <Button type="primary" icon={<SwapOutlined />} onClick={() => setMoving({})}>
+            Ghi phiếu kho
+          </Button>
+        </Flex>
       </Flex>
 
       <Row gutter={[16, 16]}>

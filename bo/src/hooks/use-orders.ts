@@ -3,7 +3,8 @@ import { createLocalStore, useLocalStore } from "@/lib/local-store";
 import { cancelOutcomeLabels, faultLabels, nextStatus, refundFor, remaining, returnConditionLabels } from "@/lib/orders/labels";
 import { recordComplaint } from "@/lib/orders/complaint";
 import { applyEdit, type EditOrderInput } from "@/lib/orders/edit";
-import type { CancelFault, CancelOutcome, ComplaintResolution, Order, OrderEvent, OrderStatus, Refund, ReturnCondition } from "@/lib/orders/types";
+import { shipmentNote, shipmentText } from "@/lib/orders/shipping";
+import type { CancelFault, CancelOutcome, ComplaintResolution, Order, OrderEvent, OrderStatus, Refund, ReturnCondition, Shipment } from "@/lib/orders/types";
 
 // Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/orders (GET, PATCH status/payment/note).
 // v4: bắt đầu không có đơn (bỏ đơn mẫu và mọi đơn lưu trước đó)
@@ -39,6 +40,20 @@ const advance = (id: string, extra?: Partial<Order>) =>
     const payments = to === "paid" ? o.payments.map((p) => (p.status === "pending" ? { ...p, status: "success" as const } : p)) : o.payments;
     return { ...o, ...extra, status: to, payments, history: log(o, to) };
   });
+
+// Giao cho vận chuyển (Chờ giao → Đang giao) kèm đơn vị và mã vận đơn
+const ship = (id: string, shipment: Shipment) =>
+  patch(id, (o) => (o.status === "ready" ? { ...o, status: "shipping", shipment, shippingCost: (o.shippingCost ?? 0) + (shipment.cost ?? 0), history: log(o, "shipping", shipmentNote(shipment)) } : o));
+
+// Sửa đơn vị / mã vận đơn của lượt giao hiện tại
+const updateShipment = (id: string, shipment: Shipment) =>
+  patch(id, (o) => ({
+    ...o,
+    shipment,
+    // Sửa phí của lượt này: bù phần chênh vào tổng phí đã trả
+    shippingCost: (o.shippingCost ?? 0) - (o.shipment?.cost ?? 0) + (shipment.cost ?? 0),
+    history: log(o, o.status, `Đổi vận chuyển: ${o.shipment ? `${shipmentNote(o.shipment)} → ` : ""}${shipmentNote(shipment)}`, "delivery"),
+  }));
 
 // Sửa đơn sau khi tạo. Trả về danh sách thay đổi (rỗng = không đổi gì)
 const edit = (id: string, input: EditOrderInput) => {
@@ -88,18 +103,30 @@ const failDelivery = (id: string, reason: string, max: number) =>
     return deliveryAttempts < max ? failed : { ...failed, status: "returning", history: log(failed, "returning", `Hết ${max} lần giao`) };
   });
 
-const redeliver = (id: string) => patch(id, (o) => ({ ...o, status: "shipping", history: log(o, "shipping", `Giao lại lần ${(o.deliveryAttempts ?? 0) + 1}`, "delivery") }));
+const redeliver = (id: string) =>
+  patch(id, (o) => ({ ...o, status: "shipping", history: log(o, "shipping", [`Giao lại lần ${(o.deliveryAttempts ?? 0) + 1}`, o.shipment && shipmentText(o.shipment)].filter(Boolean).join(" · "), "delivery") }));
 
 const startReturn = (id: string) => patch(id, (o) => ({ ...o, status: "returning", history: log(o, "returning") }));
 
-const receiveReturn = (id: string, returnCondition: ReturnCondition, returnNote?: string) =>
-  patch(id, (o) => ({ ...o, status: "returned", returnCondition, returnNote, history: log(o, "returned", [returnConditionLabels[returnCondition], returnNote].filter(Boolean).join(" · ")) }));
-
-// Hàng về shop rồi gửi lại: quay về Chờ giao, đếm lại số lần giao, phí cộng vào đơn
-const resend = (id: string, fee: number) =>
+// returnFee: phí hoàn hàng shop trả đơn vị vận chuyển, cộng vào chi phí vận chuyển
+const receiveReturn = (id: string, returnCondition: ReturnCondition, returnNote?: string, returnFee = 0) =>
   patch(id, (o) => ({
     ...o,
-    status: "ready",
+    status: "returned",
+    returnCondition,
+    returnNote,
+    shippingCost: returnFee ? (o.shippingCost ?? 0) + returnFee : o.shippingCost,
+    history: log(o, "returned", [returnConditionLabels[returnCondition], returnNote, returnFee && `phí hoàn hàng ${returnFee.toLocaleString("vi-VN")} ₫`].filter(Boolean).join(" · ")),
+  }));
+
+// Hàng về shop rồi gửi lại: chọn lại đơn vị, mã vận đơn mới, chuyển thẳng Đang giao. Đếm lại số lần giao, phí cộng vào đơn.
+// Lịch sử giữ mã của lượt giao trước
+const resend = (id: string, fee: number, shipment: Shipment) =>
+  patch(id, (o) => ({
+    ...o,
+    status: "shipping",
+    shipment,
+    shippingCost: (o.shippingCost ?? 0) + (shipment.cost ?? 0),
     deliveryAttempts: 0,
     deliveryIssue: undefined,
     returnCondition: undefined,
@@ -107,7 +134,7 @@ const resend = (id: string, fee: number) =>
     shippingFee: o.shippingFee + fee,
     total: o.total + fee,
     resendFee: (o.resendFee ?? 0) + fee,
-    history: log(o, "ready", `Gửi lại đơn · phí ${fee.toLocaleString("vi-VN")} ₫`, "delivery"),
+    history: log(o, "shipping", `Gửi lại đơn · khách trả thêm ${fee.toLocaleString("vi-VN")} ₫ · ${shipmentNote(shipment)}`, "delivery"),
   }));
 
 const reschedule = (id: string, readyDate: string) =>
@@ -123,7 +150,7 @@ const reset = () => store.set(null);
 export function useOrders() {
   const { data: orders, loading } = useLocalStore(store);
   return useMemo(
-    () => ({ orders, loading, create, advance, edit, refundPart, complain, cancel, recordRefund, failDelivery, redeliver, startReturn, receiveReturn, resend, reschedule, setInternalNote, reset }),
+    () => ({ orders, loading, create, advance, ship, updateShipment, edit, refundPart, complain, cancel, recordRefund, failDelivery, redeliver, startReturn, receiveReturn, resend, reschedule, setInternalNote, reset }),
     [orders, loading],
   );
 }

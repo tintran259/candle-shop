@@ -112,7 +112,11 @@ Bấm **Đã làm xong**. Đơn sang **Chờ giao**.
 
 **Ai làm:** admin.
 
-Bấm **Giao cho vận chuyển**. Đơn sang **Đang giao**. Từ đây không hủy trực tiếp được nữa.
+1. Đóng gói, bấm **In** ở chi tiết đơn để in phiếu đơn bỏ vào hộp và nhãn giao hàng dán ngoài. Nhiều đơn thì chọn trên danh sách tab Chờ giao rồi in một lần.
+2. Tạo đơn trên app đơn vị vận chuyển, nhập số tiền thu hộ (COD) đúng bằng số khách còn phải trả.
+3. Bấm **Giao cho vận chuyển**, chọn đơn vị và nhập mã vận đơn. Đơn sang **Đang giao**. Từ đây không hủy trực tiếp được nữa.
+
+Khách hỏi đơn tới đâu: mở đơn, bấm **Tra cứu** hoặc sao chép mã vận đơn. Chi tiết ở [Đơn hàng › Vận chuyển](./pages/orders.md#vận-chuyển).
 
 ### Bước 6. Giao thành công
 
@@ -162,21 +166,21 @@ Sau khi hủy, đơn có số phải hoàn sẽ hiện **Chờ hoàn tiền** v�
 flowchart LR
   G[Đang giao] -- Khách đã nhận --> H[Hoàn tất]
   G -- Giao không thành, ghi lý do --> L{Giao không thành}
-  L -- Giao lại --> G
+  L -- Giao lại, cùng mã vận đơn --> G
   L -- Hoàn về, hoặc hết số lần giao --> R[Đang hoàn về]
   R -- Đã nhận lại, kiểm tra nến --> K{Đã hoàn về}
-  K -- Gửi lại đơn, tính thêm phí --> F[Chờ giao]
+  K -- Gửi lại đơn: phí, đơn vị, mã vận đơn mới --> G
   K -- Hủy đơn --> X[Đã hủy]
 ```
 
 | Bước | Nút | Hệ thống làm gì |
 |---|---|---|
 | Đang giao | **Giao không thành** | Bắt buộc nhập lý do, đếm 1 lần giao. Sang **Giao không thành** |
-| Giao không thành | **Giao lại** | Về **Đang giao** |
+| Giao không thành | **Giao lại** | Hàng còn ở đơn vị vận chuyển, họ giao lại: giữ đơn vị và mã vận đơn, về **Đang giao** |
 | Giao không thành | **Hoàn về** | Sang **Đang hoàn về** |
 | Hết số lần giao | Tự động | Lần cuối ghi nhận xong thì đơn tự sang **Đang hoàn về**. Số lần lấy từ Cài đặt |
-| Đang hoàn về | **Đã nhận lại hàng** | Chọn nến còn tốt hoặc bị hỏng, ghi chú tùy chọn. Sang **Đã hoàn về** |
-| Đã hoàn về | **Gửi lại đơn** | Phí mặc định lấy từ Cài đặt, sửa được. Cộng vào tổng đơn, đếm lại số lần giao, đơn về **Chờ giao** |
+| Đang hoàn về | **Đã nhận lại hàng** | Chọn nến còn tốt hoặc bị hỏng, phí hoàn hàng trả đơn vị vận chuyển (trừ vào lãi), ghi chú tùy chọn. Sang **Đã hoàn về** |
+| Đã hoàn về | **Gửi lại đơn** | Hàng đã về shop nên chọn lại đơn vị vận chuyển (mặc định đơn vị lần trước, đổi được) và nhập mã vận đơn mới, không dùng lại mã cũ. Phí mặc định lấy từ Cài đặt, sửa được, cộng vào tổng đơn; popup báo số thu hộ mới. Đếm lại số lần giao, đơn sang thẳng **Đang giao**. Lịch sử giữ mã lần trước |
 | Đã hoàn về | **Hủy đơn** | Theo [mục 4](#4-hủy-đơn) và [mục 5](#5-hoàn-tiền) |
 
 Quy tắc:

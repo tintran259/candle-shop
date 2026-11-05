@@ -53,9 +53,14 @@ test("E2E 16 — 6 quyết định: công thức, giữ nguyên liệu, thu đ�
 
   // --- Công thức
   await go(base + "/products?edit=new", 2600);
-  await click(byText(`${D} .ant-drawer-footer button`, "Thêm sản phẩm"));
-  await sleep(700);
-  ok("Recipe: sản phẩm mới bắt buộc chọn nguyên liệu", /Còn \d+ bước cần chọn lại/.test(await ev("document.querySelector('.ant-drawer-open').innerText")));
+  // Chờ báo lỗi thay vì chờ cứng: drawer còn trượt thì cú bấm đầu có thể trượt, bấm lại một lần
+  const recipeErr = async () => /Còn \d+ bước cần chọn lại/.test(await ev("document.querySelector('.ant-drawer-open')?.innerText ?? ''"));
+  let recipeOk = false;
+  for (let i = 0; i < 2 && !recipeOk; i++) {
+    await click(byText(`${D} .ant-drawer-footer button`, "Thêm sản phẩm"));
+    for (let k = 0; k < 10 && !(recipeOk = await recipeErr()); k++) await sleep(300);
+  }
+  ok("Recipe: sản phẩm mới bắt buộc chọn nguyên liệu", recipeOk);
   await shot("d16-recipe.png");
   await go(base + "/products?edit=brown-relac", 2600);
   const recipeText = await ev(`document.querySelector('${D}').innerText`);
@@ -203,10 +208,11 @@ test("E2E 16 — 6 quyết định: công thức, giữ nguyên liệu, thu đ�
   const feeVal = await ev(`document.querySelector('${M} input').value`);
   await shot("d16-resend.png");
   ok("Resend: phí mặc định từ Cài đặt, cảnh báo nến hỏng", feeVal.replace(/\D/g, "") === "30000" && (await text(`${M} .ant-alert`)).join(" ").includes("hỏng"), feeVal);
+  // Gửi lại là lượt giao mới: chọn đơn vị và nhập mã vận đơn ngay trong popup (docs/pages/orders.md#giao-cho-vận-chuyển)
+  await type(`document.querySelector('${M} input[aria-label="Mã vận đơn"]')`, "ghn resend 01");
   await modalBtn("Gửi lại đơn");
   const r1 = await order("resend");
-  ok("Resend: về Chờ giao, cộng phí, đếm lại", r1.status === "ready" && r1.total === 1030000 && r1.deliveryAttempts === 0, `${r1.status} ${r1.total}`);
-  await btn("Giao cho vận chuyển");
+  ok("Resend: sang Đang giao với mã vận đơn mới, cộng phí, đếm lại", r1.status === "shipping" && r1.total === 1030000 && r1.deliveryAttempts === 0 && r1.shipment?.trackingCode === "GHNRESEND01" && r1.shipment?.carrier === "Giao Hàng Nhanh", `${r1.status} ${r1.total} ${JSON.stringify(r1.shipment)}`);
   await btn("Khách đã nhận");
   await confirmBtn("Đã thu đủ, hoàn tất");
   ok("Resend: hoàn tất thu nốt phí", (await order("resend")).status === "completed" && (await order("resend")).payments.reduce((s, p) => s + p.amount, 0) === 1030000);

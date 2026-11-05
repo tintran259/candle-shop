@@ -2,6 +2,7 @@
 import dayjs, { type Dayjs } from "dayjs";
 import { goodsValue } from "@/lib/costs";
 import { deadline, isDeliveryIssue, isReplacement } from "@/lib/orders/labels";
+import { orderMoney, orderProfit } from "@/lib/orders/money";
 import type { Order, OrderStatus } from "@/lib/orders/types";
 import type { Product } from "@/lib/products/types";
 
@@ -14,30 +15,53 @@ export type DailyRevenue = { date: string; revenue: number; orders: number };
 export type TypeSales = { type: string; revenue: number };
 export type ProductSales = { id: string; name: string; image?: string; sold: number; revenue: number };
 
-// Mỗi biến động tiền của đơn: khoản đã thu là dương, tiền đã hoàn hoặc đang chờ hoàn là âm
-function moneyEntries(o: Order) {
-  const entries = o.payments.filter((p) => p.status === "success").map((p) => ({ at: p.createdAt, amount: p.amount }));
-  const back = o.status === "cancelled" ? (o.refund?.amount ?? o.refundDue ?? 0) : 0;
-  return back ? [...entries, { at: o.refund?.at ?? o.updatedAt, amount: -back }] : entries;
-}
+// Doanh thu theo ngày phát sinh: chỉ tiền hàng, không gồm phí vận chuyển khách trả (lib/orders/money)
+const moneyEntries = (o: Order) => orderMoney(o).entries;
 
 const phoneKey = (o: Order) => o.customer.phone.replace(/\D/g, "");
 // So với kỳ trước; kỳ trước không có số thì không so được
 const change = (now: number, before: number) => (before > 0 ? now / before - 1 : null);
 
-// costOf: giá vốn nguyên liệu của đơn. Đơn gửi bù không tính vào số đơn, giá trị đơn nhưng vẫn tính giá vốn (lãi âm)
+// Ngày chốt đơn: lúc Hoàn tất hoặc lúc hủy (lần cuối chuyển sang trạng thái đó). Đơn đang xử lý chưa chốt
+export function closedAt(o: Order) {
+  if (o.status !== "completed" && o.status !== "cancelled") return undefined;
+  return o.history.findLast((e) => e.status === o.status && (e.kind ?? "status") === "status")?.at ?? o.updatedAt;
+}
+
+// costOf: giá vốn nguyên liệu của đơn.
+// Đơn hàng: đơn đặt trong kỳ, không tính đơn hủy, đơn gửi bù.
+// Giá trị đơn TB: tiền hàng (không gồm phí vận chuyển) trung bình của đơn Hoàn tất trong kỳ, không tính đơn gửi bù.
+// Lãi gộp: đơn đã chốt trong kỳ — Hoàn tất, và đơn hủy (tiền cọc giữ lại, phí vận chuyển đã trả, nguyên liệu đã mất).
+// Đơn gửi bù vẫn tính lãi (giá 0 nên lãi âm)
 function period(orders: Order[], from: string, to: string, costOf: (o: Order) => number) {
   const inRange = (iso: string) => {
     const d = dayjs(iso).format(DAY);
     return d >= from && d <= to;
   };
-  const all = orders.filter((o) => o.status !== "cancelled" && inRange(o.createdAt));
-  const placed = all.filter((o) => !isReplacement(o));
+  const placed = orders.filter((o) => o.status !== "cancelled" && !isReplacement(o) && inRange(o.createdAt));
   const revenue = orders.flatMap(moneyEntries).reduce((s, e) => s + (inRange(e.at) ? e.amount : 0), 0);
-  const value = placed.reduce((s, o) => s + o.total, 0);
-  const goods = all.reduce((s, o) => s + goodsValue(o), 0);
-  const profit = goods - all.reduce((s, o) => s + costOf(o), 0);
-  return { placed, revenue, count: placed.length, average: placed.length ? value / placed.length : 0, profit, profitRate: goods > 0 ? profit / goods : null };
+  const closed = orders.filter((o) => {
+    const at = closedAt(o);
+    return at !== undefined && inRange(at);
+  });
+  const completed = closed.filter((o) => o.status === "completed" && !isReplacement(o));
+  const value = completed.reduce((s, o) => s + goodsValue(o), 0);
+  const profits = closed.map((o) => orderProfit(o, costOf(o)));
+  const goods = profits.reduce((s, p) => s + p.value, 0);
+  const profit = profits.reduce((s, p) => s + p.profit, 0);
+  // Phí vận chuyển khách trả − phí trả đơn vị vận chuyển: âm là shop chịu
+  const shipping = profits.reduce((s, p) => s + p.shipping, 0);
+  return {
+    placed,
+    revenue,
+    count: placed.length,
+    completed: completed.length,
+    average: completed.length ? value / completed.length : 0,
+    closed: closed.length,
+    profit,
+    shipping,
+    profitRate: goods > 0 ? profit / goods : null,
+  };
 }
 
 // Khách mới: đơn hợp lệ đầu tiên của số điện thoại rơi vào kỳ
@@ -98,9 +122,9 @@ export function dashboardStats(orders: Order[], products: Product[], categoryLab
     kpis: {
       revenue: { value: now.revenue, delta: change(now.revenue, prev.revenue) },
       orders: { value: now.count, delta: change(now.count, prev.count) },
-      average: { value: now.average, delta: change(now.average, prev.average) },
+      average: { value: now.average, delta: change(now.average, prev.average), completed: now.completed },
       customers: { value: customers, delta: change(customers, prevCustomers) },
-      profit: { value: now.profit, delta: change(now.profit, prev.profit), rate: now.profitRate },
+      profit: { value: now.profit, delta: change(now.profit, prev.profit), rate: now.profitRate, shipping: now.shipping, closed: now.closed },
     },
     daily: [...daily.values()],
     byType: [...types].map(([type, revenue]): TypeSales => ({ type, revenue })).sort((a, b) => b.revenue - a.revenue),

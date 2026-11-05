@@ -37,13 +37,16 @@ export const lineTotal = (l: DraftLine) => Math.max(0, Math.round(l.price ?? 0))
 export type DiscountResult = { discount?: Discount; amount: number; error?: string };
 
 // Kiểm tra & tính mã giảm giá giống lúc khách nhập ở checkout
-export function evaluateDiscount(code: string | undefined, discounts: Discount[], lines: DraftLine[], shippingFee: number, previousOrders: Order[]): DiscountResult {
+// customerId: hồ sơ khách theo số điện thoại đang nhập — để kiểm tra mã riêng
+export function evaluateDiscount(code: string | undefined, discounts: Discount[], lines: DraftLine[], shippingFee: number, previousOrders: Order[], customerId?: string): DiscountResult {
   const key = code?.trim().toUpperCase();
   if (!key) return { amount: 0 };
   const d = discounts.find((x) => x.code === key);
   if (!d) return { amount: 0, error: "Không có mã này." };
   const status = discountStatus(d);
   if (status !== "running") return { amount: 0, error: { paused: "Mã đang tạm dừng.", expired: "Mã đã hết hạn.", exhausted: "Mã đã hết lượt dùng.", scheduled: "Mã chưa tới ngày áp dụng.", running: "" }[status] };
+  if (d.customerIds?.length && !(customerId && d.customerIds.includes(customerId)))
+    return { amount: 0, error: customerId ? "Mã này dành riêng cho khách khác." : "Mã dành riêng cho khách được chọn — nhập đúng số điện thoại của khách." };
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
   if (d.minOrder && subtotal < d.minOrder) return { amount: 0, error: `Đơn từ ${formatMoney(d.minOrder)} mới dùng được mã này.` };
   const valid = previousOrders.filter((o) => o.status !== "cancelled");

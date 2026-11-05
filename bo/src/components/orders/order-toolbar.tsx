@@ -16,7 +16,7 @@ export function OrderToolbar({ filters, onChange }: Props) {
       <Input
         allowClear
         prefix={<SearchOutlined style={{ color: "#6b6b6b" }} />}
-        placeholder="Mã đơn, tên khách hoặc số điện thoại…"
+        placeholder="Mã đơn, mã vận đơn, tên khách hoặc SĐT…"
         aria-label="Tìm đơn hàng"
         value={filters.q}
         onChange={(e) => set({ q: e.target.value })}
