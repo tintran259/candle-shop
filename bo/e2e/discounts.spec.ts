@@ -183,6 +183,9 @@ test("Mã riêng: tạo từ hồ sơ khách, khách đó có gợi ý mã khi t
   await o.getByRole("button", { name: "Nến có sẵn" }).click();
   await expect(async () => {
     await o.getByLabel("Chọn sản phẩm").last().click();
+    // Lần trước trượt thì ô tìm còn chữ cũ — xóa trước khi gõ lại
+    await page.keyboard.press("Control+A");
+    await page.keyboard.press("Backspace");
     await page.keyboard.type("Moon Morning");
     await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
     await expect(o.locator("aside.order-summary")).toContainText("Moon Morning", { timeout: 2000 });

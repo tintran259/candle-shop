@@ -9,6 +9,9 @@ const pickProduct = async (page, d, name: string) => {
   await d.getByRole("button", { name: "Nến có sẵn" }).click();
   await expect(async () => {
     await d.getByLabel("Chọn sản phẩm").last().click();
+    // Lần trước trượt thì ô tìm còn chữ cũ — xóa trước khi gõ lại
+    await page.keyboard.press("Control+A");
+    await page.keyboard.press("Backspace");
     await page.keyboard.type(name);
     await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: name }).first().click();
     await expect(d.locator("aside.order-summary")).toContainText(name, { timeout: 2000 });
