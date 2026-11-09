@@ -2,13 +2,15 @@
 
 Bộ tài liệu để chủ shop duyệt chức năng. Ghi theo những gì BO đang chạy, phần chưa làm được đánh dấu rõ.
 
+Hướng dẫn cho Claude Code (cấu trúc dự án, cách chạy trên máy mới, quy ước, trạng thái và việc còn lại): [CLAUDE.md](../CLAUDE.md).
+
 Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 
 ## Tài liệu theo trang
 
 | Trang | Đường dẫn | Tài liệu | Tình trạng |
 |---|---|---|---|
-| Đăng nhập | `/login` | [login.md](./pages/login.md) | Đã có, chặn phía trình duyệt |
+| Đăng nhập | `/login` | [login.md](./pages/login.md) | Đã có, PIN 6 số qua BE |
 | Phần chung (menu, tìm kiếm, thông báo) | | [common.md](./pages/common.md) | Đã có |
 | Dashboard | `/` | [dashboard.md](./pages/dashboard.md) | Đã có, số thật từ đơn trong BO |
 | Đơn hàng | `/orders` | [orders.md](./pages/orders.md) | Đã có, gồm hoàn tiền và giao hàng lỗi |
