@@ -86,7 +86,9 @@ export class StockService {
         made.recipe.map((r) => ({ materialId: r.componentId, quantity: r.quantity })),
         dto.count,
       );
-      const parts = await tx.material.findMany({ where: { id: { in: [...needs.keys()] } } });
+      // Theo thứ tự trong công thức
+      const order = [...needs.keys()];
+      const parts = (await tx.material.findMany({ where: { id: { in: order } } })).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       const short = parts.filter((p) => p.tracked && needs.get(p.id)! > p.stock);
       if (short.length) throw new BadRequestException(`Không đủ ${short.map((p) => `${p.name} (cần ${num(needs.get(p.id)!)} ${UNIT[p.unit]}, còn ${num(p.stock)})`).join(', ')}.`);
       const noCost = parts.filter((p) => p.unitCost === null);

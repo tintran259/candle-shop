@@ -96,7 +96,9 @@ describe('Kho nguyên liệu', () => {
     // Mẻ sau tự nhập tổng chi phí: 10 hũ 200.000 ₫ = 20.000 ₫/hũ → bình quân (20 × 14.400 + 10 × 20.000) ÷ 30
     const r2 = await t.post('/api/admin/materials/jar-150/produce', { count: 10, total: 200000 }).expect(201);
     expect(r2.body.material).toMatchObject({ stock: 30, unitCost: 16266.67 });
-    expect((await t.post('/api/admin/materials/jar-150/produce', { count: 100 }).expect(400)).body.message).toContain('Không đủ Thạch cao');
+    expect((await t.post('/api/admin/materials/jar-150/produce', { count: 100 }).expect(400)).body.message).toContain(
+      'Không đủ Thạch cao (cần 35.000 g, còn 8.500), Màu thạch cao (cần 200 ml, còn 40).',
+    );
     await t.post('/api/admin/materials/plaster/produce', { count: 1 }).expect(400); // không có công thức
   });
 

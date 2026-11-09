@@ -2,7 +2,7 @@
 
 Tài liệu mọi endpoint đang có của `be/`. Cách cài đặt, biến môi trường, bảng DB ở [backend.md](./backend.md). Khi chạy BE có thêm Swagger tại `/api/docs`.
 
-> **Trạng thái:** đã có đăng nhập (PIN), API nhóm 1 (cài đặt, danh mục, khách hàng, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm) và nhóm 3 (Thủ công, sản phẩm hủy đơn). Chưa có: đơn hàng (gồm giữ / trừ / hoàn kho theo đơn, tạo bản ghi hủy đơn). BO **chưa gọi** các API này (giai đoạn 4).
+> **Trạng thái:** đã có đăng nhập (PIN), API nhóm 1 (cài đặt, danh mục, khách hàng, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm) nhóm 3 (Thủ công, sản phẩm hủy đơn) và nhóm 4 (đơn hàng, đơn nháp, thông báo đã đọc) — đủ mọi trang của BO. BO **chưa gọi** các API này (giai đoạn 4).
 
 ## Quy ước chung
 
@@ -764,3 +764,357 @@ Nến tự phối đã làm xong nhưng đơn bị hủy. Mỗi dòng nến tự
 - 400 `"Không tìm thấy sản phẩm trưng bày này."`
 - 400 khi `status` sai
 - 404
+
+---
+
+## Đơn hàng
+
+Luồng đơn và quy tắc ở [pages/orders.md](./pages/orders.md) và [workflow.md](./workflow.md).
+
+**BE tính lại tiền:**
+- Tạm tính = Σ giá × số lượng, theo giá từng dòng BO gửi lên. Giá nến tự phối do BO tính theo Thủ công.
+- Giảm giá tính lại theo mã, đúng quy tắc checkout.
+- Cọc theo % ở Cài đặt, tính trên tiền hàng (tạm tính − giảm giá), không gồm phí giao.
+
+**Mọi thao tác chạy trong một giao dịch.** Đơn đổi cùng lúc với Kho, mã giảm giá, hồ sơ khách và sản phẩm hủy đơn. Lỗi giữa chừng thì không đổi gì. Mỗi thao tác ghi một dòng lịch sử kèm người làm (tên trong phiên đăng nhập).
+
+**Trạng thái:**
+
+```
+pending → paid → producing → ready → shipping → completed
+                                       ↓
+                              delivery_failed → returning → returned → (gửi lại) shipping
+cancelled: hủy từ pending, paid, producing, ready, returned
+```
+
+| `status` | Nhãn |
+|---|---|
+| `pending` | Chờ thanh toán |
+| `paid` | Đã thanh toán: giữ nguyên liệu |
+| `producing` | Đang làm: đã trừ Kho |
+| `ready` | Chờ giao |
+| `shipping` | Đang giao |
+| `completed` | Hoàn tất |
+| `delivery_failed` | Giao không thành |
+| `returning` | Đang hoàn về |
+| `returned` | Đã hoàn về |
+| `cancelled` | Đã hủy |
+
+Thao tác sai trạng thái trả 400, vd `"Đơn đang Chờ giao — không làm được thao tác này."`
+
+### `Order`
+
+| Trường | Kiểu | Ghi chú |
+|---|---|---|
+| `id`, `code` | string | `code` dạng `SC` + YYMMDD (giờ Việt Nam) + số thứ tự trong ngày, vd `SC261109001` |
+| `status` | string | Bảng trên |
+| `customer` | `{ name, email, phone }` | Chụp lúc tạo / sửa đơn |
+| `shippingAddress` | string | |
+| `shippingMethod`, `shippingName`, `shippingDays` | string, string?, number? | Phương thức giao, chụp lúc tạo đơn |
+| `depositPercent` | number? | % cọc lúc tạo đơn |
+| `items` | `OrderItem[]` | |
+| `subtotal`, `discount`, `shippingFee`, `total` | number | `shippingFee` gồm cả phí gửi lại |
+| `discountCode` | string? | |
+| `paymentPlan` | `"full"` \| `"deposit"` | |
+| `paymentMethod` | `"vnpay"` \| `"momo"` \| `"cod"` | `cod` = tiền mặt / chuyển khoản |
+| `payments` | `Payment[]` | |
+| `readyDate` | string | Ngày làm xong `YYYY-MM-DD` |
+| `note`, `internalNote` | string? | Ghi chú của khách / nội bộ |
+| `cancelReason`, `cancelOutcome`, `cancelFault` | | Khi hủy. `cancelOutcome`: `returned` (hoàn nguyên liệu) \| `stocked` (sang Sản phẩm hủy đơn) \| `consumed`. `cancelFault`: `customer` \| `shop` |
+| `refundDue` | number? | Số phải hoàn lúc hủy |
+| `refund` | `{ amount, images, note?, at, by }`? | Khoản đã hoàn sau khi hủy |
+| `carrier` | `{ id, name }`? | Đơn vị vận chuyển chọn lúc tạo đơn |
+| `shipment` | `{ carrierId, carrier, trackingCode?, trackingUrl?, cost?, at }`? | Lượt giao hiện tại; `cost` = phí shop trả lượt này |
+| `shippingCost` | number? | Tổng phí shop đã trả đơn vị vận chuyển (mọi lượt, phí hoàn hàng) |
+| `deliveryAttempts`, `deliveryIssue` | number?, string? | Số lần giao không thành của lượt hiện tại, lý do gần nhất |
+| `returnCondition`, `returnNote` | `"good"` \| `"damaged"`?, string? | Khi hàng hoàn về |
+| `resendFee` | number? | Tổng phí gửi lại đã cộng vào đơn |
+| `materialCost` | number? | Giá vốn nguyên liệu chốt lúc Bắt đầu làm |
+| `complaints` | `Complaint[]`? | |
+| `replacementFor` | `{ id, code }`? | Đơn gửi bù cho đơn gốc (0 ₫) |
+| `history` | `{ at, kind?, status, note?, by }[]` | `kind`: `status` \| `payment` \| `schedule` \| `delivery` \| `edit` \| `complaint` |
+| `createdAt`, `updatedAt` | string | ISO |
+
+**`OrderItem`:** `{ id, productId?, name, image?, price, quantity, custom?, craft?, recipe? }`
+- Nến có sẵn có `productId`.
+- Nến tự phối có `custom` (mô tả), `craft` (lựa chọn từng bước) và `recipe` (công thức 1 hũ chụp lúc tạo đơn).
+
+**`Payment`:** `{ id, provider, amount, status: "pending" | "success" | "failed" | "refunded", transactionId?, kind?: "refund", images?, note?, createdAt }`. Khoản hoàn một phần là số âm, kèm `kind: "refund"`.
+
+**`Complaint`:** `{ id, reason, images, resolution: "resend" | "refund" | "none", refundAmount?, replacementId?, replacementCode?, at, by }`
+
+### `GET /admin/orders`
+
+Query `status` (không bắt buộc) để lọc theo một trạng thái. **Trả về 200:** `Order[]`, mới tạo trước.
+
+### `GET /admin/orders/:id`
+
+**Trả về 200:** `Order`. **Lỗi:** 404 `"Không tìm thấy đơn hàng."`
+
+### `POST /admin/orders`
+
+Tạo đơn tại BO (khách đặt qua điện thoại, Zalo, Facebook, tại cửa hàng…).
+
+| Trường | Kiểu | Bắt buộc | Ghi chú |
+|---|---|---|---|
+| `customer` | `{ name, phone, email? }` | ✔ | |
+| `shippingAddress` | string | ✔ | |
+| `shippingMethod` | string | ✔ | id phương thức ở Cài đặt |
+| `shippingFee` | number | | Bỏ trống = phí của phương thức. Admin sửa được |
+| `carrierId` | string | | Đơn vị vận chuyển dự kiến |
+| `lines` | `Line[]` | ✔ | 1–50 dòng, xem dưới |
+| `discountCode` | string | | Tự viết hoa, bỏ ký tự lạ |
+| `paymentPlan`, `paymentMethod` | | ✔ | |
+| `received` | boolean | ✔ | Đã nhận tiền (cọc / đủ) lúc tạo: đơn vào thẳng Đã thanh toán |
+| `transactionId` | string | | Mã giao dịch, khi `received` |
+| `readyDate` | string | ✔ | `YYYY-MM-DD` |
+| `channel` | `"phone"` \| `"zalo"` \| `"facebook"` \| `"store"` \| `"other"` | ✔ | Ghi vào lịch sử: "Tạo đơn tại BO · Zalo" |
+| `note`, `internalNote` | string | | |
+| `allowBlocked` | boolean | | Khách đang bị chặn: gửi `true` sau khi admin chọn "Vẫn tạo đơn" |
+
+**`Line`:**
+- `{ kind: "product", productId, price, quantity, name?, image? }`: nến có sẵn. Thiếu tên / ảnh thì lấy từ sản phẩm.
+- `{ kind: "custom", custom, craft?, recipe, price, quantity }`: nến tự phối. Bắt buộc có `custom` và `recipe`, để giữ và trừ Kho.
+
+```json
+{
+  "customer": { "name": "Ngô Thanh Vy", "phone": "0944 889 900" },
+  "shippingAddress": "25 Hàng Bạc, Hà Nội", "shippingMethod": "standard", "carrierId": "ghn",
+  "lines": [
+    { "kind": "product", "productId": "nen-cam", "price": 250000, "quantity": 2 },
+    { "kind": "custom", "custom": "Hũ gốm · Sáp đậu nành", "recipe": [{ "materialId": "soy", "quantity": 150 }, { "materialId": "jar", "quantity": 1 }], "price": 320000, "quantity": 1 }
+  ],
+  "discountCode": "GIAM10", "paymentPlan": "deposit", "paymentMethod": "cod", "received": true,
+  "readyDate": "2026-11-20", "channel": "zalo"
+}
+```
+
+Tính tiền ví dụ trên: tạm tính 820.000; giảm 10% = 82.000; phí giao 30.000; tổng 768.000. Cọc 50% của 738.000 = 369.000. Cọc làm tròn tới nghìn, tối thiểu 1.000 ₫.
+
+**Kèm theo:**
+- Một khoản thu bằng số cần trả lúc này: cọc hoặc đủ. `received` thì khoản này thành công, không thì đang chờ.
+- Có mã giảm giá thì tăng 1 lượt dùng.
+- Số điện thoại chưa có hồ sơ thì tạo hồ sơ khách vãng lai.
+
+**Trả về 201:** `{ "order": Order, "createdCustomer": true }`
+
+**Lỗi:**
+- 400 `"Mã giảm giá: Mã đã hết hạn."`. Các lý do khác: không có mã, tạm dừng, hết lượt, chưa tới ngày, mã riêng của khách khác, chưa đủ đơn tối thiểu, chỉ khách lần đầu, khách hết lượt, sai phạm vi.
+- 400 `"Dòng 2: nến tự phối cần công thức để giữ và trừ Kho."`
+- 400 `"Không có phương thức giao này."`
+- 409 Kho không đủ trên phần còn dùng được (tồn − đang giữ cho đơn Đã thanh toán):
+  ```json
+  { "message": "Kho không đủ Hũ gốm (cần 8 cái, còn 7) — giảm số lượng hoặc đổi cấu hình.", "shortages": [{ "materialId": "jar", "name": "Hũ gốm", "need": 8, "available": 7 }] }
+  ```
+- 409 khách bị chặn: `{ "message": "Ngô Thanh Vy đang bị chặn đặt hàng: Bom hàng.", "customerId": "cus-889900", "blocked": true }`
+
+### `PUT /admin/orders/:id`
+
+Sửa đơn (drawer Sửa đơn). Không sửa được đơn Hoàn tất hoặc đã hủy.
+
+| Trường | Bắt buộc | Ghi chú |
+|---|---|---|
+| `customer`, `shippingAddress`, `readyDate` | ✔ | |
+| `shippingMethod`, `shippingFee`, `carrierId` | | Bỏ trống = giữ. Đổi đơn vị vận chuyển chỉ khi chưa giao |
+| `lines`, `discountCode` | | **Chỉ khi** đơn còn Chờ thanh toán / Đã thanh toán. Bỏ `lines` = giữ sản phẩm và mã |
+| `note`, `internalNote` | | |
+
+Khi đổi sản phẩm:
+- Kiểm tra lại Kho. Phần đơn này đang giữ được tính là dùng được.
+- Tính lại giảm giá. Mã cũ của đơn bỏ qua hạn dùng và số lượt, chỉ kiểm tra lại đơn tối thiểu và phạm vi.
+- Đổi mã thì trả lượt mã cũ, tính lượt mã mới.
+
+Đơn còn Chờ thanh toán: khoản đang chờ thu đổi theo tổng mới. Số điện thoại mới chưa có hồ sơ thì tạo hồ sơ.
+
+**Trả về 200:** `{ "order": Order, "changes": ["Sản phẩm: Nến cam ×1", "Bỏ mã giảm giá", "Tổng 768.000 ₫ → 280.000 ₫"] }`. Không có thay đổi thì `changes: []` và không ghi lịch sử. Số tiền định dạng như BO: dấu cách trước ₫ là dấu cách không ngắt.
+
+**Lỗi:**
+- 400 `"Đơn đã bắt đầu làm — không sửa sản phẩm được nữa."`
+- 400 `"Đơn đã hoàn tất hoặc đã hủy — không sửa được."`
+- Lỗi mã giảm giá, Kho như `POST`.
+
+### `POST /admin/orders/:id/advance`
+
+Chuyển bước kế tiếp. Không gửi body.
+
+| Từ → tới | Kèm theo |
+|---|---|
+| `pending` → `paid` | Khoản đang chờ thành công. Bắt đầu giữ nguyên liệu |
+| `paid` → `producing` | **Trừ Kho** theo công thức × số lượng (mỗi nguyên liệu một phiếu `order`, ghi chú "Đơn SC…"), chốt `materialCost` theo giá nhập lúc này. Thiếu tồn thực tế thì 409 kèm `shortages` |
+| `producing` → `ready` | |
+| `shipping` → `completed` | Còn thiếu tiền thì ghi đã thu phần còn lại (khoản `cod`, lịch sử "Thu nốt … khi giao") |
+
+Từ `ready` phải gọi `/ship`, vì cần đơn vị và mã vận đơn.
+
+**Trả về 200:** `Order`.
+
+### `POST /admin/orders/:id/ship`
+
+Giao cho vận chuyển: `ready` → `shipping`.
+
+| Trường | Ghi chú |
+|---|---|
+| `carrierId` | Bỏ trống = đơn vị chọn lúc tạo đơn |
+| `trackingCode` | Bỏ khoảng trắng, viết hoa. Bắt buộc nếu đơn vị đòi mã (Cài đặt). Không trùng đơn khác chưa hủy |
+| `cost` | Phí shop trả đơn vị cho lượt này, cộng vào `shippingCost` |
+
+`trackingUrl` dựng từ link tra cứu của đơn vị ở Cài đặt.
+
+**Trả về 200:** `Order`.
+
+**Lỗi:**
+- 400 `"Nhập mã vận đơn của Giao Hàng Nhanh."`
+- 400 `"Chọn đơn vị vận chuyển."`
+- 409 `{ "message": "Mã vận đơn GHN1 đã dùng cho đơn SC…", "orderId": "…" }`
+
+### `PUT /admin/orders/:id/shipment`
+
+Sửa đơn vị, mã vận đơn hoặc phí của lượt giao hiện tại. Gửi lên giống `/ship`; bỏ `carrierId` thì giữ đơn vị. Phí đổi thì bù phần chênh vào `shippingCost`. Lịch sử ghi "Đổi vận chuyển: cũ → mới".
+
+**Trả về 200:** `Order`. **Lỗi:** như `/ship`; 400 khi đơn chưa giao.
+
+### `POST /admin/orders/:id/delivery-failed`
+
+Giao không thành, từ `shipping`. **Gửi lên:** `{ "reason": "Không nghe máy" }`.
+
+Tăng `deliveryAttempts`; lịch sử ghi "Lần 1/3: …". Đủ số lần giao tối đa ở Cài đặt thì tự chuyển `returning` ("Hết 3 lần giao").
+
+**Trả về 200:** `Order`.
+
+### `POST /admin/orders/:id/redeliver`
+
+Giao lại, `delivery_failed` → `shipping`. **Trả về 200:** `Order`.
+
+### `POST /admin/orders/:id/return`
+
+Cho hoàn về, `delivery_failed` → `returning`. **Trả về 200:** `Order`.
+
+### `POST /admin/orders/:id/receive-return`
+
+Hàng đã về shop, `returning` → `returned`.
+
+| Trường | Bắt buộc | Ghi chú |
+|---|---|---|
+| `condition` | ✔ | `"good"` (nến còn tốt) \| `"damaged"` |
+| `note` | | |
+| `returnFee` | | Phí hoàn hàng shop trả, cộng vào `shippingCost` |
+
+**Trả về 200:** `Order`.
+
+### `POST /admin/orders/:id/resend`
+
+Gửi lại đơn đã hoàn về: `returned` → `shipping`, chọn lại đơn vị và mã vận đơn.
+
+Gửi lên như `/ship`, thêm `fee`: phí khách trả thêm. Bỏ trống `fee` = phí gửi lại ở Cài đặt.
+
+Kèm theo:
+- `fee` cộng vào `shippingFee`, `total` và `resendFee`.
+- `cost` cộng vào `shippingCost`.
+- Đếm lại số lần giao, bỏ tình trạng hoàn về.
+
+**Trả về 200:** `Order`.
+
+### `PATCH /admin/orders/:id/ready-date`
+
+Đổi ngày làm xong, khi đơn còn `pending`, `paid` hoặc `producing`. **Gửi lên:** `{ "readyDate": "2026-11-22" }`. Lịch sử ghi "Ngày làm xong mới: 22/11/2026".
+
+**Trả về 200:** `Order`.
+
+### `PATCH /admin/orders/:id/internal-note`
+
+**Gửi lên:** `{ "internalNote": "Gọi trước 30 phút" }`. Gửi `""` thì xóa. Không ghi lịch sử. **Trả về 200:** `Order`.
+
+### `POST /admin/orders/:id/cancel`
+
+Hủy đơn khi đang `pending`, `paid`, `producing`, `ready` hoặc `returned`.
+
+| Trường | Khi nào bắt buộc | Ghi chú |
+|---|---|---|
+| `reason` | Luôn | |
+| `outcome` | Đơn `producing` có nến tự phối, hoặc đã trừ Kho | `"returned"`: chưa làm, hoàn nguyên liệu. `"stocked"`: đã làm, chỉ dùng khi có nến tự phối. `"consumed"`: đã làm, chỉ dùng khi đơn toàn nến có sẵn |
+| `fault` | Khách đã trả tiền | `"shop"`: hoàn hết số đã thu. `"customer"`: giữ cọc, hoàn phần vượt cọc |
+
+Tự xử lý:
+- Nến tự phối đã làm xong (đơn `ready`, hoặc `returned` còn tốt) thì `outcome` luôn là `stocked`.
+- `returned`: hoàn **đúng lượng đã trừ** theo phiếu của đơn (phiếu Nhập thêm "Hoàn kho do hủy đơn").
+- `stocked`: mỗi dòng nến tự phối thành một bản ghi Sản phẩm hủy đơn.
+- Trả lượt mã giảm giá. Phần đang giữ tự nhả.
+- `refundDue` = số phải hoàn theo `fault`.
+
+```json
+{ "reason": "Hết hũ đẹp", "outcome": "returned", "fault": "shop" }
+```
+
+**Trả về 200:** `{ "order": Order, "restored": 2, "stocked": 0 }`: số nguyên liệu được hoàn, số bản ghi Sản phẩm hủy đơn vừa tạo.
+
+**Lỗi 400:**
+- `"Chọn đã làm hay chưa để xử lý Kho."`
+- `"Chọn lỗi do ai để tính tiền hoàn."`
+- `"Đơn có nến tự phối: chọn hoàn nguyên liệu hoặc chuyển sang Sản phẩm hủy đơn."`
+- `"Chỉ hủy được trước khi giao, hoặc sau khi hàng đã hoàn về shop."`
+
+### `POST /admin/orders/:id/refund`
+
+Ghi khoản đã hoàn cho khách sau khi hủy (đơn có `refundDue`). Chỉ ghi được một lần.
+
+**Gửi lên:** `{ "amount": 369000, "images": ["<ảnh chứng từ>"], "note": "Chuyển khoản" }`. `amount` ≥ 1 và không quá số đã thu.
+
+**Trả về 200:** `Order` (có `refund`). **Lỗi 400:** `"Đơn không có khoản cần hoàn."`, `"Đơn đã ghi hoàn tiền."`, `"Không hoàn quá số đã thu (…)."`
+
+### `POST /admin/orders/:id/refund-overpaid`
+
+Hoàn phần thu dư, khi sửa đơn bớt hàng sau khi khách đã trả. Gửi lên giống `/refund`, `amount` không quá phần dư. Ghi một khoản âm `kind: "refund"`.
+
+**Trả về 200:** `Order`. **Lỗi 400:** `"Đơn không thu dư."`, `"Chỉ thu dư …"`
+
+### `POST /admin/orders/:id/complaints`
+
+Khiếu nại sau khi giao, chỉ với đơn `completed`.
+
+| Trường | Bắt buộc | Ghi chú |
+|---|---|---|
+| `reason` | ✔ | |
+| `images` | | Ảnh khách gửi |
+| `resolution` | ✔ | `"resend"` gửi bù \| `"refund"` hoàn một phần \| `"none"` chỉ ghi nhận |
+| `refundAmount`, `refundImages`, `refundNote` | với `refund` | Tối đa số shop đang giữ của đơn. Ghi khoản âm `kind: "refund"` |
+| `picks`, `readyDate` | với `resend` | `picks: [{ itemId, quantity }]`: các cây gửi bù |
+
+Gửi bù tạo **đơn mới 0 ₫** (`replacementFor` trỏ về đơn gốc). Đơn này vào thẳng Đã thanh toán, nên giữ nguyên liệu và đi qua đủ các bước làm, giao. Kho phải đủ, không thì 409.
+
+**Trả về 201:** `{ "order": Order, "replacement": Order | undefined }`
+
+**Lỗi 400:** `"Chỉ ghi khiếu nại cho đơn Hoàn tất."`, `"Nhập số tiền hoàn."`, `"Hoàn tối đa …"`, `"Chọn ít nhất một cây để gửi bù."`, `"Chọn ngày làm xong của đơn gửi bù."`
+
+### `GET /admin/stock-holds`
+
+Nguyên liệu đang giữ cho các đơn Đã thanh toán. Tồn dùng được = tồn − đang giữ.
+
+**Trả về 200:** `{ "soy": 390, "jar": 3 }` (`materialId` → lượng).
+
+---
+
+## Đơn nháp, thông báo đã đọc
+
+Trạng thái phụ của BO, lưu trên máy chủ thay vì từng trình duyệt.
+
+### `GET /admin/order-draft`
+
+Đơn đang tạo dở trong form Tạo đơn. **Trả về 200:** `{ "values": { … }, "savedAt": "…" }`, hoặc rỗng khi không có nháp.
+
+### `PUT /admin/order-draft`
+
+**Gửi lên:** `{ "values": { "name": "Vy", "lines": [ … ], "readyDate": "2026-11-20" } }`: giá trị form, BE lưu nguyên. Đơn nháp không giữ nguyên liệu, không tính lượt mã.
+
+**Trả về 200:** như `GET`.
+
+### `DELETE /admin/order-draft`
+
+**Trả về 204.**
+
+### `GET /admin/notifications/read`
+
+**Trả về 200:** `string[]`: id các thông báo đã đọc. Thông báo do BO tự suy ra từ đơn, kho, mã giảm giá.
+
+### `POST /admin/notifications/read`
+
+**Gửi lên:** `{ "ids": ["low-soy", "order-1"] }`. Id đã có thì bỏ qua. **Trả về 200:** `string[]`, danh sách đã đọc sau khi thêm.
