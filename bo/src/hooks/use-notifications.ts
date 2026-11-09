@@ -1,11 +1,12 @@
 import { useInventory } from "@/hooks/use-inventory";
 import { useDiscounts } from "@/hooks/use-discounts";
 import { useOrders } from "@/hooks/use-orders";
+import { api } from "@/lib/api";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 import { buildNotifications } from "@/lib/notifications";
 
-// Id các thông báo đã đọc — theo từng trình duyệt cho tới khi có API lưu theo tài khoản
-const readStore = createLocalStore<string[]>("bo-notifications-read-v1", []);
+// Id các thông báo đã đọc: chế độ BE lưu ở /api/admin/notifications/read, không thì trên trình duyệt này
+const readStore = createLocalStore<string[]>("bo-notifications-read-v1", [], undefined, () => api<string[]>("GET", "/admin/notifications/read"));
 
 // Thông báo suy ra từ dữ liệu + trạng thái đã đọc
 export function useNotifications() {
@@ -21,7 +22,12 @@ export function useNotifications() {
   // Chỉ giữ id của thông báo còn tồn tại để bản lưu không phình mãi
   const markRead = (ids: string[]) => {
     const alive = new Set(items.map((n) => n.id));
-    readStore.set([...new Set([...readStore.get(), ...ids])].filter((id) => alive.has(id)));
+    readStore.sync(
+      [...new Set([...readStore.get(), ...ids])].filter((id) => alive.has(id)),
+      async () => {
+        await api("POST", "/admin/notifications/read", { ids });
+      },
+    );
   };
 
   return { items, unread, isRead: (id: string) => readSet.has(id), markRead, loading };

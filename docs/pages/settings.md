@@ -24,7 +24,7 @@ Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh"
 ## Bố cục
 
 - **Đầu trang:** dòng "Có thay đổi chưa lưu", nút Mặc định, nút Lưu cài đặt.
-- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển, Sao lưu dữ liệu.
+- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển, Sao lưu dữ liệu, Xóa toàn bộ dữ liệu.
 - **Bên phải:** Xem trước tiền trên đơn mẫu 1.000.000 ₫, cập nhật theo số đang nhập.
 
 ## Quy tắc
@@ -57,19 +57,27 @@ Chọn phương thức thì ô Phí vận chuyển tự điền. Admin sửa đ�
 
 ## Sao lưu dữ liệu
 
-Chưa có BE nên mọi dữ liệu nằm trên trình duyệt đang dùng: xóa dữ liệu trình duyệt hoặc đổi máy là mất. Khối **Sao lưu dữ liệu** cuối trang:
+Dữ liệu nằm trên máy chủ (BE). Khối **Sao lưu dữ liệu** cuối trang để cất thêm một bản riêng:
 
-- **Sao lưu (tải file):** tải về `2510-bo-sao-luu-YYYY-MM-DD-HHmm.json` gồm toàn bộ dữ liệu BO (đơn, sản phẩm, danh mục, sản phẩm hủy đơn, kho và phiếu kho, khách, mã giảm giá, Thủ công, cài đặt, đơn nháp). Không gồm phiên đăng nhập. Cất file ở nơi an toàn (Google Drive, máy khác).
-- **Khôi phục từ file:** chọn file sao lưu → hiện ngày sao lưu và số đơn, sản phẩm, khách, nguyên liệu, mã giảm giá → bấm **Khôi phục** thì **thay toàn bộ** dữ liệu hiện tại bằng dữ liệu trong file rồi tải lại trang. Nên sao lưu dữ liệu hiện tại trước khi khôi phục.
+- **Sao lưu (tải file):** tải lại mọi dữ liệu từ BE rồi tải về `2510-bo-sao-luu-YYYY-MM-DD-HHmm.json` gồm toàn bộ dữ liệu BO (đơn, sản phẩm, danh mục, sản phẩm hủy đơn, kho và phiếu kho, khách, mã giảm giá, Thủ công, cài đặt, đơn nháp). Không gồm phiên đăng nhập. Cất file ở nơi an toàn (Google Drive, máy khác).
+- **Khôi phục:** làm trên máy chủ bằng `pnpm db:import <file>` ở thư mục `be` (xóa dữ liệu hiện có rồi ghi lại theo file, xem [backend.md](../backend.md#nhập-dữ-liệu-từ-bo)). Trang chỉ ghi hướng dẫn này, không có nút khôi phục.
+- **Chế độ dữ liệu trên trình duyệt** (`VITE_DATA_SOURCE=local`, dùng cho test): có nút **Khôi phục từ file**, chọn file sao lưu → hiện ngày sao lưu và số đơn, sản phẩm, khách, nguyên liệu, mã giảm giá → bấm **Khôi phục** thì **thay toàn bộ** dữ liệu hiện tại bằng dữ liệu trong file rồi tải lại trang. Nên sao lưu dữ liệu hiện tại trước khi khôi phục.
 - File không phải file sao lưu của BO, hoặc hỏng, thì báo lỗi và không đổi gì. Trình duyệt hết chỗ lưu khi khôi phục thì giữ nguyên dữ liệu cũ.
 - Hiện **Sao lưu gần nhất** và nhắc (cam) khi chưa sao lưu lần nào hoặc đã quá 7 ngày.
-- Có BE thì bỏ chức năng này.
 
-## Việc của BE
+## Xóa toàn bộ dữ liệu
 
-`ShopSettings` là một bản ghi duy nhất, gồm `depositPercent`, `maxDeliveryAttempts`, `resendFee`, `shippingOptions[]`, `dailyCapacity`, `leadDays`, `minMargin`, `priceMarkup`, `sender` (`name`, `phone`, `address`), `carriers[]`. Mỗi phương thức gồm `id`, `name`, `fee`, `days`, `enabled`. Mỗi đơn vị vận chuyển gồm `id`, `name`, `trackingUrl?`, `requireCode`, `enabled`. `sender` và `carriers` chỉ BO dùng, không trả cho web.
+Khối cuối cột trái, nút đỏ **Xóa toàn bộ dữ liệu…**: đưa BO về trạng thái trống để bắt đầu lại.
 
-API đề xuất: `GET /api/settings` cho web, `GET` và `PUT /api/admin/settings` cho BO. Khi tạo đơn, lưu vào đơn `depositPercent`, `shippingName`, `shippingDays`, `shippingFee`.
+- Xóa đơn hàng, sản phẩm, danh mục, sản phẩm hủy đơn, kho và phiếu kho, khách hàng, mã giảm giá, cấu hình Thủ công, cài đặt, đơn nháp. Cài đặt về mặc định. **Thủ công** giữ các bước của cấu hình mẫu (Hũ, Sáp, Hương, Bấc, Màu, Trang trí, Cá nhân hóa) nhưng **bỏ hết lựa chọn** và tuỳ chọn thêm (vì lựa chọn mẫu trỏ tới Kho mẫu không còn); ô nhập chữ giữ nguyên. Thêm lựa chọn gắn Kho thật ở trang Thủ công.
+- **Giữ đăng nhập:** PIN (nằm ở BE), trạng thái khóa khi nhập sai, phiên đang dùng — không bị đăng xuất.
+- **Hộp thoại xác nhận:** cảnh báo đỏ "Không thể hoàn tác" kèm danh sách sẽ xóa; nút **Sao lưu trước** tải file sao lưu ngay trong hộp thoại (xong thì ghi "Đã tải file sao lưu."); phải gõ **XÓA HẾT** (không phân biệt hoa thường) thì nút **Xóa toàn bộ** mới bật, Enter cũng xác nhận. Hủy / đóng thì không đổi gì; đang xóa thì không đóng được.
+- Xóa xong báo "Đã xóa toàn bộ dữ liệu." và tải lại BO về Dashboard.
+- Chế độ BE gọi `POST /api/admin/reset` ([api.md](../api.md#xóa-toàn-bộ-dữ-liệu)); BE cũng kiểm tra câu xác nhận. Chế độ dữ liệu trên trình duyệt (test) xóa các khóa `bo-*` trong localStorage.
+
+## API
+
+`GET` và `PUT /api/admin/settings` ([api.md](../api.md#cài-đặt)). Đơn lưu lại `depositPercent`, `shippingName`, `shippingDays`, `shippingFee` lúc tạo nên đổi Cài đặt không ảnh hưởng đơn cũ. Chưa có API cho web (`GET /api/settings`).
 
 ## Chưa có
 

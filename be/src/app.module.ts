@@ -14,6 +14,7 @@ import { MaterialsModule } from './materials/materials.module.js';
 import { CraftModule } from './craft/craft.module.js';
 import { CancelledModule } from './cancelled/cancelled.module.js';
 import { DraftsModule } from './drafts/drafts.module.js';
+import { ResetModule } from './reset/reset.module.js';
 import { SettingsModule } from './settings/settings.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
@@ -36,6 +37,7 @@ import { NewsletterModule } from './newsletter/newsletter.module.js';
     CraftModule,
     CancelledModule,
     DraftsModule,
+    ResetModule,
     PaymentsModule,
     ReviewsModule,
     NewsletterModule,

@@ -2,7 +2,7 @@
 
 Tài liệu mọi endpoint đang có của `be/`. Cách cài đặt, biến môi trường, bảng DB ở [backend.md](./backend.md). Khi chạy BE có thêm Swagger tại `/api/docs`.
 
-> **Trạng thái:** đã có đăng nhập (PIN), API nhóm 1 (cài đặt, danh mục, khách hàng, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm) nhóm 3 (Thủ công, sản phẩm hủy đơn) và nhóm 4 (đơn hàng, đơn nháp, thông báo đã đọc) — đủ mọi trang của BO. BO **chưa gọi** các API này (giai đoạn 4).
+> **Trạng thái:** đã có đăng nhập (PIN), API nhóm 1 (cài đặt, danh mục, khách hàng, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm), nhóm 3 (Thủ công, sản phẩm hủy đơn) và nhóm 4 (đơn hàng, đơn nháp, thông báo đã đọc) — đủ mọi trang của BO. BO đã dùng các API này (giai đoạn 4).
 
 ## Quy ước chung
 
@@ -857,6 +857,7 @@ Tạo đơn tại BO (khách đặt qua điện thoại, Zalo, Facebook, tại c
 
 | Trường | Kiểu | Bắt buộc | Ghi chú |
 |---|---|---|---|
+| `id` | string | | Dạng `ord-…`. Bỏ trống thì BE tự tạo. BO gửi id đã tạo sẵn để drawer đang mở giữ đúng đơn; trùng thì 409 `"Mã đơn đã tồn tại."` |
 | `customer` | `{ name, phone, email? }` | ✔ | |
 | `shippingAddress` | string | ✔ | |
 | `shippingMethod` | string | ✔ | id phương thức ở Cài đặt |
@@ -1118,3 +1119,15 @@ Trạng thái phụ của BO, lưu trên máy chủ thay vì từng trình duy�
 ### `POST /admin/notifications/read`
 
 **Gửi lên:** `{ "ids": ["low-soy", "order-1"] }`. Id đã có thì bỏ qua. **Trả về 200:** `string[]`, danh sách đã đọc sau khi thêm.
+
+---
+
+## Xóa toàn bộ dữ liệu
+
+### `POST /admin/reset`
+
+Xóa mọi dữ liệu BO trong một giao dịch: đơn hàng (kèm khoản thu, lịch sử, khiếu nại), sản phẩm, danh mục, kho và phiếu kho, khách hàng, mã giảm giá, sản phẩm hủy đơn, Thủ công, cài đặt, đơn nháp, thông báo đã đọc. **Giữ** đăng nhập: PIN nằm ở biến môi trường, bảng `LoginGuard` (khóa khi nhập sai) không đụng tới. Lần `GET` cài đặt sau đó tự tạo lại giá trị mặc định. Thủ công ghi sẵn bản đã lưu gồm các bước của cấu hình mẫu, không có lựa chọn nào (bước Cá nhân hóa giữ ô nhập chữ, bỏ tuỳ chọn thêm).
+
+**Gửi lên:** `{ "confirm": "XÓA HẾT" }` — đúng câu này (bỏ khoảng trắng đầu cuối, không phân biệt hoa thường) để không lỡ tay gọi nhầm.
+
+**Trả về 204.** **Lỗi:** 400 `"Gõ đúng \"XÓA HẾT\" để xác nhận."` (thiếu / sai câu); 401 chưa đăng nhập.

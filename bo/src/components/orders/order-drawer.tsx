@@ -10,8 +10,9 @@ import { OrderDetailSkeleton } from "@/components/skeletons";
 import type { CancelInput, OrdersApi } from "@/hooks/use-orders";
 import { addFromOrder } from "@/hooks/use-cancelled-products";
 import { releaseDiscount } from "@/hooks/use-discounts";
-import { restoreOrder, useInventory } from "@/hooks/use-inventory";
+import { consumedCount, restoreOrder, useInventory } from "@/hooks/use-inventory";
 import { hasCustomItems } from "@/lib/cancelled/labels";
+import { REMOTE } from "@/lib/data-mode";
 import { formatMoney } from "@/lib/format";
 import { faultLabels, paidAmount, refundFor } from "@/lib/orders/labels";
 import type { CancelFault, CancelOutcome, Order } from "@/lib/orders/types";
@@ -85,10 +86,11 @@ export function OrderDrawer({ open, order, api, onClose, onEdit }: Props) {
           onClose={() => setCancelOpen(false)}
           onConfirm={(input) => {
             const { reason, outcome } = input;
-            const restored = outcome === "returned" ? restoreOrder(order.code) : 0;
-            const stocked = outcome === "stocked" ? addFromOrder(order, reason) : 0;
+            // Chế độ BE: BE hoàn Kho, tạo sản phẩm hủy đơn, trả lượt mã — BO chỉ đếm để báo
+            const restored = outcome === "returned" ? (REMOTE ? consumedCount(order.code) : restoreOrder(order.code)) : 0;
+            const stocked = outcome === "stocked" ? (REMOTE ? order.items.filter((i) => i.custom).length : addFromOrder(order, reason)) : 0;
             api.cancel(order.id, input);
-            if (order.discountCode) releaseDiscount(order.discountCode);
+            if (order.discountCode && !REMOTE) releaseDiscount(order.discountCode);
             setCancelOpen(false);
             if (stocked) message.success(`Đã hủy đơn ${order.code}, ${stocked} sản phẩm thủ công chuyển sang Sản phẩm hủy đơn`);
             else message.success(restored ? `Đã hủy đơn ${order.code}, hoàn ${restored} nguyên liệu về Kho` : `Đã hủy đơn ${order.code}`);

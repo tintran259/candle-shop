@@ -7,6 +7,7 @@ import { saveOrderDraft } from "@/hooks/use-order-draft";
 import type { OrdersApi } from "@/hooks/use-orders";
 import type { Customer } from "@/lib/customers/types";
 import type { Discount } from "@/lib/discounts/types";
+import { REMOTE } from "@/lib/data-mode";
 import { buildOrder, type DiscountResult } from "@/lib/orders/create";
 import type { shortages } from "@/lib/orders/materials";
 import type { Order } from "@/lib/orders/types";
@@ -61,7 +62,7 @@ export function useOrderSubmit(a: Args) {
     );
     a.orders.create(created);
     // Khách chưa có hồ sơ (gộp theo SĐT) thì tạo hồ sơ khách vãng lai
-    if (!profile)
+    if (!profile && !REMOTE)
       a.customers.add({
         id: `cus-${created.id.replace("ord-", "")}`,
         name: created.customer.name,
@@ -73,7 +74,7 @@ export function useOrderSubmit(a: Args) {
         blocked: false,
         createdAt: created.createdAt,
       });
-    if (discount.discount) a.patchDiscount(discount.discount.id, { used: discount.discount.used + 1 });
+    if (discount.discount && !REMOTE) a.patchDiscount(discount.discount.id, { used: discount.discount.used + 1 });
     saveOrderDraft(null);
     message.success(`Đã tạo đơn ${created.code}${profile ? "" : " · thêm khách mới"}`);
     a.onCreated?.(created.id);
@@ -96,12 +97,12 @@ export function useOrderSubmit(a: Args) {
     });
     const before = order.discountCode;
     const after = lockItems ? before : discount.discount?.code;
-    if (changes.length && before !== after) {
+    if (changes.length && before !== after && !REMOTE) {
       if (before) releaseDiscount(before);
       if (!lockItems && discount.discount) a.patchDiscount(discount.discount.id, { used: discount.discount.used + 1 });
     }
     // Đổi sang số điện thoại chưa có hồ sơ: tạo hồ sơ khách vãng lai như lúc tạo đơn
-    if (changes.length && !profile) a.customers.add(guestProfile(values));
+    if (changes.length && !profile && !REMOTE) a.customers.add(guestProfile(values));
     if (changes.length) message.success(`Đã lưu ${changes.length} thay đổi của đơn ${order.code}`);
     else message.info("Không có thay đổi nào.");
     a.onClose();

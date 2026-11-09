@@ -2,11 +2,14 @@
 // Chỉ lấy các khóa "bo-" (đơn, sản phẩm, kho, khách, mã giảm giá, Thủ công, cài đặt…), không lấy phiên đăng nhập.
 // Khi có BE: bỏ chức năng này, dữ liệu nằm trên server.
 import dayjs from "dayjs";
+import { defaultCraftConfig } from "@/lib/craft/default-config";
+import { withoutOptions } from "@/lib/craft/steps";
 // Nạp mọi kho dữ liệu để file sao lưu luôn đủ nhóm dữ liệu, kể cả khi trang của nhóm đó chưa mở
 import "@/lib/all-stores";
 import { registeredStores } from "@/lib/local-store";
 
 const PREFIX = "bo-";
+const CRAFT_KEY = "bo-craft-builder-v5";
 // Thời điểm sao lưu gần nhất — để nhắc, không nằm trong file sao lưu
 const LAST_KEY = "bo-backup-last";
 const APP = "2510-bo";
@@ -18,7 +21,9 @@ const ownKeys = () => Object.keys(localStorage).filter((k) => k.startsWith(PREFI
 // Lấy cả dữ liệu đang hiển thị của mọi kho (kể cả dữ liệu mặc định chưa từng ghi) — để nhập vào BE đủ dữ liệu
 export function createBackup(at = new Date()): BackupFile {
   const data: Record<string, string> = {};
-  for (const k of ownKeys()) data[k] = localStorage.getItem(k) ?? "";
+  // Kho đọc từ BE: lấy bản trong bộ nhớ (bản trên trình duyệt có thể là dữ liệu cũ trước khi chuyển sang BE)
+  for (const [k, store] of registeredStores) if (store.online) data[k] = JSON.stringify(store.get());
+  for (const k of ownKeys()) if (!(k in data)) data[k] = localStorage.getItem(k) ?? "";
   for (const [k, store] of registeredStores) if (!(k in data)) data[k] = JSON.stringify(store.get());
   return { app: APP, version: 1, exportedAt: at.toISOString(), data };
 }
@@ -90,6 +95,13 @@ export function backupSummary(file: BackupFile) {
 
 // Thay toàn bộ dữ liệu hiện tại bằng dữ liệu trong file. Gọi xong nên tải lại trang để mọi màn hình đọc lại.
 // Trả false khi trình duyệt hết chỗ lưu — khi đó đã khôi phục lại dữ liệu cũ
+// Chế độ dữ liệu trên trình duyệt: xóa mọi dữ liệu BO, giữ phiên đăng nhập (khóa riêng) và mốc sao lưu gần nhất.
+// Thủ công giữ các bước của cấu hình mẫu nhưng bỏ mọi lựa chọn (giống BE, POST /api/admin/reset)
+export function clearLocalData() {
+  for (const k of ownKeys()) localStorage.removeItem(k);
+  localStorage.setItem(CRAFT_KEY, JSON.stringify(withoutOptions(defaultCraftConfig)));
+}
+
 export function restoreBackup(file: BackupFile) {
   const before = createBackup();
   try {

@@ -11,7 +11,7 @@ Trong thư mục `bo`:
 
 | Lệnh | Việc |
 |---|---|
-| `pnpm test:e2e` | Build, mở bản preview cổng 3011, chạy tất cả |
+| `pnpm test:e2e` | Build (chế độ dữ liệu trên trình duyệt `VITE_DATA_SOURCE=local` — test tự nạp dữ liệu mẫu vào localStorage, không cần BE), mở bản preview cổng 3011, chạy tất cả |
 | `pnpm test:e2e e2e/logic` | Chỉ chạy quy tắc nghiệp vụ |
 | `pnpm test:e2e e2e/discounts` | Chạy một file |
 | `pnpm test:e2e:ui` | Mở giao diện Playwright, xem từng bước |

@@ -39,6 +39,8 @@ class OrderFields {
 }
 
 export class CreateOrderDto extends OrderFields {
+  // Bỏ trống thì BE tự tạo. BO gửi id đã tạo sẵn để đơn đang mở giữ nguyên id
+  @IsOptional() @Matches(/^ord-[a-z0-9-]{3,40}$/, { message: 'Mã đơn dạng ord-…' }) id?: string;
   @IsString() shippingMethod: string;
   @ArrayMinSize(1, { message: 'Thêm ít nhất một sản phẩm.' }) @ArrayMaxSize(50) @ValidateNested({ each: true }) @Type(() => LineDto) lines: LineDto[];
   @IsOptional() @IsString() @MaxLength(40) discountCode?: string;

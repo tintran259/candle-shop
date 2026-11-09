@@ -62,6 +62,8 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
       refundImages: v.refundImages,
       refundNote: v.refundNote,
       replacement,
+      picks,
+      readyDate: v.readyDate?.format("YYYY-MM-DD"),
     });
     if (!saved) return message.error("Bộ nhớ trình duyệt đã đầy — bớt ảnh rồi lưu lại.");
     message.success(

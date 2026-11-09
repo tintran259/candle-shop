@@ -123,7 +123,8 @@ export class OrdersService {
         dto.lines.map((l) => ({ productId: l.productId, recipe: l.recipe, quantity: l.quantity })),
       );
       const d = await this.discount(tx, { code: dto.discountCode, lines: dto.lines, shippingFee, phone: dto.customer.phone });
-      const id = `ord-${stamp()}`;
+      const id = dto.id ?? `ord-${stamp()}`;
+      if (dto.id && (await tx.order.findUnique({ where: { id } }))) throw new ConflictException('Mã đơn đã tồn tại.');
       const subtotal = dto.lines.reduce((s, l) => s + lineTotal(l), 0);
       const total = Math.max(0, subtotal - d.amount + shippingFee);
       // Cọc tính trên tiền hàng (tạm tính − giảm giá), phí giao thu cùng phần còn lại khi giao

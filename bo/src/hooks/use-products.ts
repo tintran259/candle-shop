@@ -1,32 +1,42 @@
 import { useMemo } from "react";
-import { createLocalStore, useLocalStore } from "@/lib/local-store";
+import { api } from "@/lib/api";
+import { createLocalStore, upsert, useLocalStore } from "@/lib/local-store";
 import type { Product } from "@/lib/products/types";
 
-// Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/products (GET/POST/PATCH/DELETE).
-// Bản lưu cũ dùng aromaType (fruits/nature/parfum) — chính là id danh mục mặc định
+// Sản phẩm trưng bày: /api/admin/products (docs/api.md#sản-phẩm-trưng-bày).
+// Bản lưu cũ trên trình duyệt dùng aromaType (fruits/nature/parfum) — chính là id danh mục mặc định
 const migrate = (list: Product[]) =>
   list.map((p) => {
     const { aromaType, ...rest } = p as Product & { aromaType?: string };
     return p.categoryId ? p : { ...rest, categoryId: aromaType ?? "" };
   });
-const store = createLocalStore<Product[]>("bo-products-v2", [], migrate);
+const store = createLocalStore<Product[]>("bo-products-v2", [], migrate, () => api<Product[]>("GET", "/admin/products"));
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-// Thao tác chỉ đụng tới store nên để ngoài hook — giữ nguyên tham chiếu, bảng memo không phải render lại
-const update = (fn: (list: Product[]) => Product[]) => store.set(fn(store.get()));
+// Thao tác chỉ đụng tới store nên để ngoài hook — giữ nguyên tham chiếu, bảng memo không phải render lại.
+// Thêm mới hoặc thay sản phẩm cùng id; trả false khi bộ nhớ trình duyệt đầy (chế độ lưu trên trình duyệt)
+const save = (product: Product) => {
+  const exists = store.get().some((p) => p.id === product.id);
+  const next = { ...product, updatedAt: today() };
+  return store.sync(upsert(next, true)(store.get()), async () => upsert(await api<Product>(exists ? "PUT" : "POST", exists ? `/admin/products/${product.id}` : "/admin/products", product), true));
+};
 
-// Thêm mới hoặc thay sản phẩm cùng id; trả false khi bộ nhớ trình duyệt đầy
-const save = (product: Product) =>
-  update((list) => {
-    const next = { ...product, updatedAt: today() };
-    return list.some((p) => p.id === product.id) ? list.map((p) => (p.id === product.id ? next : p)) : [next, ...list];
-  });
+// Bật / tắt bán, nổi bật, nhãn Mới cho một hoặc nhiều sản phẩm
+const patch = (ids: string[], changes: Partial<Pick<Product, "status" | "isNew" | "isFeatured">>) =>
+  store.sync(
+    store.get().map((p) => (ids.includes(p.id) ? { ...p, ...changes, updatedAt: today() } : p)),
+    async () => {
+      const saved = await api<Product[]>("PATCH", "/admin/products", { ids, ...changes });
+      return (list) => saved.reduce((acc, p) => upsert(p)(acc), list);
+    },
+  );
 
-const patch = (ids: string[], changes: Partial<Product>) =>
-  update((list) => list.map((p) => (ids.includes(p.id) ? { ...p, ...changes, updatedAt: today() } : p)));
-
-const remove = (ids: string[]) => update((list) => list.filter((p) => !ids.includes(p.id)));
+const remove = (ids: string[]) =>
+  store.sync(
+    store.get().filter((p) => !ids.includes(p.id)),
+    () => api("POST", "/admin/products/delete", { ids }),
+  );
 const reset = () => store.set(null);
 
 export function useProducts() {

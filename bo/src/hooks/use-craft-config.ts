@@ -4,7 +4,9 @@ import { DYE_RATIO } from "@/lib/craft/steps";
 import { isOptionStep, newStep } from "@/lib/craft/steps";
 import { splitSharedSizes, toAmountPricing } from "@/lib/craft/legacy";
 import type { CraftConfig, CraftStep, StepKind, StepOption } from "@/lib/craft/types";
-import { createMaterials } from "@/hooks/use-inventory";
+import { createMaterials, reloadInventory } from "@/hooks/use-inventory";
+import { api } from "@/lib/api";
+import { notifyError } from "@/lib/notify";
 import { materialUsage } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
@@ -25,29 +27,60 @@ function dropWaxBlend(config: CraftConfig): CraftConfig {
 // Bản lưu cũ: màu sáp cho chọn nhiều, tính theo ml; trang trí cho chọn nhiều; Không màu, Không trang trí đứng một mình
 const upgrade = (config: CraftConfig): CraftConfig => ({
   ...dropWaxBlend(config),
-  steps: dropWaxBlend(config).steps.map(splitSharedSizes).map((s) => {
-    if (s.kind === "swatches" && s.multiple === undefined)
-      return { ...s, multiple: s.id === "color", gramsPerGram: s.gramsPerGram ?? DYE_RATIO, options: s.options.map((o) => (o.materialId ? o : { ...o, exclusive: true })) };
-    if (s.kind === "cards" && s.id === "decoration" && s.options.some((o) => o.id === "none" && !o.exclusive))
-      return { ...s, multiple: true, options: s.options.map((o) => (o.id === "none" ? { ...o, exclusive: true } : o)) };
-    return s;
-  }).map(toAmountPricing),
+  steps: dropWaxBlend(config)
+    .steps.map(splitSharedSizes)
+    .map((s) => {
+      if (s.kind === "swatches" && s.multiple === undefined)
+        return { ...s, multiple: s.id === "color", gramsPerGram: s.gramsPerGram ?? DYE_RATIO, options: s.options.map((o) => (o.materialId ? o : { ...o, exclusive: true })) };
+      if (s.kind === "cards" && s.id === "decoration" && s.options.some((o) => o.id === "none" && !o.exclusive))
+        return { ...s, multiple: true, options: s.options.map((o) => (o.id === "none" ? { ...o, exclusive: true } : o)) };
+      return s;
+    })
+    .map(toAmountPricing),
 });
 
-// Chưa có API: lưu tạm trên trình duyệt. Khi có BE: GET /api/shop-config/craft để tải,
-// PUT /api/shop-config/craft để lưu cả cấu hình (xem docs/craft-builder.md).
-// v5: hũ gắn kho theo từng cỡ (sizeMaterials), cỡ có dung tích ml — bỏ dữ liệu v4
-const store = createLocalStore<CraftConfig>("bo-craft-builder-v5", defaultCraftConfig, upgrade);
+// Cấu hình Thủ công: /api/admin/craft (docs/api.md#thủ-công) — bản đã lưu (web dùng), bản nháp, nguyên liệu chờ tạo.
+// Ba kho cùng tải từ một lần GET. Lưu trên trình duyệt (chế độ local): v5 — hũ gắn kho theo từng cỡ, cỡ có dung tích ml
+type CraftState = { saved: CraftConfig; draft: CraftConfig | null; pendingMaterials: Omit<Material, "updatedAt">[] };
+let fetching: Promise<CraftState> | null = null;
+const fetchCraft = () => (fetching ??= api<CraftState>("GET", "/admin/craft").finally(() => setTimeout(() => (fetching = null), 1000)));
+const store = createLocalStore<CraftConfig>("bo-craft-builder-v5", defaultCraftConfig, upgrade, async () => (await fetchCraft()).saved);
 
 // Bản nháp trên trang Thủ công: mọi chỉnh sửa vào đây, chỉ lên web (store) khi bấm Lưu.
 // Giữ trên trình duyệt để rời trang / tải lại không mất việc đang làm. null = không có thay đổi.
-const draftStore = createLocalStore<CraftConfig | null>("bo-craft-builder-v5-draft", null, (c) => c && upgrade(c));
+const draftStore = createLocalStore<CraftConfig | null>(
+  "bo-craft-builder-v5-draft",
+  null,
+  (c) => c && upgrade(c),
+  async () => (await fetchCraft()).draft,
+);
 
 // Nguyên liệu tạo mới từ drawer lựa chọn ("Tạo nguyên liệu mới trong Kho") — thuộc bản nháp:
 // chỉ vào Kho khi bấm Lưu, Bỏ thay đổi thì không sót lại gì trong Kho.
 type PendingMaterial = Omit<Material, "updatedAt">;
-const pendingStore = createLocalStore<PendingMaterial[]>("bo-craft-builder-v5-new-materials", []);
-const addPendingMaterial = (m: PendingMaterial) => pendingStore.set([...pendingStore.get().filter((x) => x.id !== m.id), m]);
+const pendingStore = createLocalStore<PendingMaterial[]>("bo-craft-builder-v5-new-materials", [], undefined, async () => (await fetchCraft()).pendingMaterials);
+
+// Chế độ BE: lưu bản nháp lên BE sau khi ngừng sửa 0,6 giây (sửa liên tục chỉ gửi bản cuối). null = bỏ nháp
+let draftTimer: ReturnType<typeof setTimeout> | undefined;
+const pushDraft = () => {
+  if (!store.online) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    const draft = draftStore.get();
+    const req = draft ? api("PUT", "/admin/craft/draft", { config: draft, pendingMaterials: pendingStore.get() }) : api("DELETE", "/admin/craft/draft");
+    req.catch((e: Error) => notifyError(`Chưa lưu được bản nháp Thủ công: ${e.message}`));
+  }, 600);
+};
+const setDraft = (c: CraftConfig | null) => {
+  const ok = draftStore.set(c);
+  pushDraft();
+  return ok;
+};
+
+const addPendingMaterial = (m: PendingMaterial) => {
+  pendingStore.set([...pendingStore.get().filter((x) => x.id !== m.id), m]);
+  pushDraft();
+};
 // Chỉ giữ nguyên liệu chờ tạo mà bản nháp còn dùng (xóa lựa chọn / hoàn tác bước thì tự rơi)
 const usedPending = (config: CraftConfig, pending: PendingMaterial[]) => {
   const used = materialUsage(config);
@@ -58,13 +91,16 @@ const current = () => draftStore.get() ?? store.get();
 
 // Thao tác chỉ đụng tới store nên để ngoài hook — giữ nguyên tham chiếu giữa các lần render.
 // Trả false khi bộ nhớ trình duyệt đầy (thường do ảnh).
-const update = (fn: (c: CraftConfig) => CraftConfig) => draftStore.set({ ...fn(current()), updatedAt: new Date().toISOString() });
+const update = (fn: (c: CraftConfig) => CraftConfig) => setDraft({ ...fn(current()), updatedAt: new Date().toISOString() });
 
-const updateStep = (id: string, fn: (s: CraftStep) => CraftStep) =>
-  update((c) => ({ ...c, steps: c.steps.map((s) => (s.id === id ? fn(s) : s)) }));
+const updateStep = (id: string, fn: (s: CraftStep) => CraftStep) => update((c) => ({ ...c, steps: c.steps.map((s) => (s.id === id ? fn(s) : s)) }));
 
 const addStep = (kind: StepKind, title: string) => {
-  const step = newStep(kind, title, current().steps.map((s) => s.id));
+  const step = newStep(
+    kind,
+    title,
+    current().steps.map((s) => s.id),
+  );
   update((c) => ({ ...c, steps: [...c.steps, step] }));
   return step;
 };
@@ -113,26 +149,41 @@ const saveOption = (stepId: string, option: StepOption, previousId?: string) =>
 const patchOption = (stepId: string, id: string, patch: Partial<StepOption>) =>
   updateStep(stepId, (s) => (isOptionStep(s) ? ({ ...s, options: (s.options as StepOption[]).map((o) => (o.id === id ? { ...o, ...patch } : o)) } as CraftStep) : s));
 
-const removeOption = (stepId: string, id: string) =>
-  updateStep(stepId, (s) => (isOptionStep(s) ? ({ ...s, options: (s.options as StepOption[]).filter((o) => o.id !== id) } as CraftStep) : s));
+const removeOption = (stepId: string, id: string) => updateStep(stepId, (s) => (isOptionStep(s) ? ({ ...s, options: (s.options as StepOption[]).filter((o) => o.id !== id) } as CraftStep) : s));
 
-const replace = (config: CraftConfig) => draftStore.set(config);
+const replace = (config: CraftConfig) => setDraft(config);
 // Cấu hình mẫu vào bản nháp — xem lại rồi mới Lưu
-const reset = () => draftStore.set({ ...defaultCraftConfig, updatedAt: new Date().toISOString() });
+const reset = () => setDraft({ ...defaultCraftConfig, updatedAt: new Date().toISOString() });
 
 // Lưu bản nháp lên web (khi có BE: tạo nguyên liệu mới rồi PUT cả cấu hình), rồi xóa nháp
 const save = () => {
   const draft = draftStore.get();
   if (!draft) return true;
+  const pending = usedPending(draft, pendingStore.get());
   if (!store.set(draft)) return false;
-  createMaterials(usedPending(draft, pendingStore.get()));
   draftStore.set(null);
   pendingStore.set(null);
+  if (!store.online) {
+    createMaterials(pending);
+    return true;
+  }
+  // BE: tạo nguyên liệu mới, ghi bản đã lưu, xóa nháp trong một giao dịch; xong thì tải lại Kho
+  clearTimeout(draftTimer);
+  api<{ saved: CraftConfig; missingMaterials: string[] }>("POST", "/admin/craft/publish", { config: draft, pendingMaterials: pending })
+    .then((r) => {
+      store.set(upgrade(r.saved));
+      void reloadInventory();
+    })
+    .catch((e: Error) => {
+      notifyError(`Chưa lưu được cấu hình Thủ công: ${e.message}`);
+      void Promise.all([store.reload(), draftStore.reload(), pendingStore.reload()]);
+    });
   return true;
 };
 const discard = () => {
   draftStore.set(null);
   pendingStore.set(null);
+  pushDraft();
 };
 
 // Hoàn tác một bước về bản đã lưu (bước mới thêm thì bỏ, bước đã xóa thì đặt lại đúng vị trí cũ).
@@ -152,7 +203,7 @@ const revertStep = (id: string) => {
   }
   const next = { ...draft, steps };
   if (same(next.steps, saved.steps)) discard();
-  else draftStore.set(next);
+  else setDraft(next);
 };
 
 // So sánh bỏ qua updatedAt — sửa rồi sửa lại như cũ thì không còn tính là thay đổi
@@ -168,7 +219,10 @@ function diff(saved: CraftConfig, draft: CraftConfig): DraftChanges {
     added: draft.steps.filter((s) => !before.has(s.id)),
     removed: saved.steps.filter((s) => !after.has(s.id)),
     edited: draft.steps.filter((s) => before.has(s.id) && !same(s, before.get(s.id))),
-    reordered: !same(kept, saved.steps.map((s) => s.id).filter((id) => after.has(id))),
+    reordered: !same(
+      kept,
+      saved.steps.map((s) => s.id).filter((id) => after.has(id)),
+    ),
   };
 }
 
@@ -189,7 +243,28 @@ export function useCraftDraft() {
   const changes = useMemo(() => (draft ? diff(saved, draft) : null), [draft, saved]);
   const dirty = !!changes && (changes.added.length + changes.removed.length + changes.edited.length > 0 || changes.reordered);
   return useMemo(
-    () => ({ config, saved, dirty, changes, pending, loading: l1 || l2, addPendingMaterial, update, updateStep, addStep, removeStep, moveStep, saveOption, patchOption, removeOption, replace, reset, save, discard, revertStep }),
+    () => ({
+      config,
+      saved,
+      dirty,
+      changes,
+      pending,
+      loading: l1 || l2,
+      addPendingMaterial,
+      update,
+      updateStep,
+      addStep,
+      removeStep,
+      moveStep,
+      saveOption,
+      patchOption,
+      removeOption,
+      replace,
+      reset,
+      save,
+      discard,
+      revertStep,
+    }),
     [config, saved, dirty, changes, pending, l1, l2],
   );
 }

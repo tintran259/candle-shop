@@ -27,6 +27,8 @@ export default defineConfig({
   webServer: {
     command: "pnpm exec vite build && pnpm exec vite preview --port 3011 --strictPort",
     url: "http://localhost:3011",
+    // Test tự nạp dữ liệu mẫu vào localStorage: build ở chế độ dữ liệu trên trình duyệt (lib/data-mode.ts)
+    env: { VITE_DATA_SOURCE: "local" },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

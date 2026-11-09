@@ -1,44 +1,24 @@
 // Nhập file sao lưu của BO vào DB: pnpm db:import <đường-dẫn-file.json>
 // Xóa sạch dữ liệu BO hiện có rồi ghi lại toàn bộ, trong một giao dịch — lỗi giữa chừng thì không đổi gì.
-import "dotenv/config";
-import { readFileSync } from "node:fs";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client.js";
-import { mapBackup, type BackupFile } from "../import/map-backup.js";
+import 'dotenv/config';
+import { readFileSync } from 'node:fs';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client.js';
+import { mapBackup, type BackupFile } from '../import/map-backup.js';
+import { wipeBoData } from '../common/wipe.js';
 
 const path = process.argv[2];
 if (!path) {
-  console.error("Cách dùng: pnpm db:import <file-sao-luu.json>");
+  console.error('Cách dùng: pnpm db:import <file-sao-luu.json>');
   process.exit(1);
 }
 
-const { data, warnings } = mapBackup(JSON.parse(readFileSync(path, "utf8")) as BackupFile);
+const { data, warnings } = mapBackup(JSON.parse(readFileSync(path, 'utf8')) as BackupFile);
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
 
 await prisma.$transaction(
   async (tx) => {
-    // Xóa theo thứ tự con trước cha (khóa ngoại)
-    await tx.orderEvent.deleteMany();
-    await tx.payment.deleteMany();
-    await tx.orderItem.deleteMany();
-    await tx.complaint.deleteMany();
-    await tx.order.deleteMany();
-    await tx.discountCustomer.deleteMany();
-    await tx.discount.deleteMany();
-    await tx.customer.deleteMany();
-    await tx.productRecipeLine.deleteMany();
-    await tx.product.deleteMany();
-    await tx.category.deleteMany();
-    await tx.stockMovement.deleteMany();
-    await tx.materialRecipeLine.deleteMany();
-    await tx.material.deleteMany();
-    await tx.cancelledProduct.deleteMany();
-    await tx.craftConfig.deleteMany();
-    await tx.orderDraft.deleteMany();
-    await tx.notificationRead.deleteMany();
-    await tx.shippingOption.deleteMany();
-    await tx.carrier.deleteMany();
-    await tx.shopSettings.deleteMany();
+    await wipeBoData(tx);
 
     await tx.shopSettings.create({ data: data.settings });
     await tx.shippingOption.createMany({ data: data.shippingOptions });
@@ -69,4 +49,4 @@ await prisma.$disconnect();
 console.log(
   `Đã nhập: ${data.orders.length} đơn, ${data.products.length} sản phẩm, ${data.materials.length} nguyên liệu, ${data.movements.length} phiếu kho, ${data.customers.length} khách, ${data.discounts.length} mã giảm giá.`,
 );
-for (const w of warnings) console.warn("Lưu ý:", w);
+for (const w of warnings) console.warn('Lưu ý:', w);

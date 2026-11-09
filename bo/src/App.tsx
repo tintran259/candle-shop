@@ -1,4 +1,5 @@
 import { App as AntdApp, ConfigProvider } from "antd";
+import { NotifyBridge } from "@/lib/notify";
 import viVN from "antd/locale/vi_VN";
 import { createBrowserRouter, redirect, RouterProvider } from "react-router";
 import { RouteError } from "@/components/route-error";
@@ -60,6 +61,7 @@ export function App() {
     <ConfigProvider theme={theme} locale={viVN}>
       {/* Thông báo nằm dưới vạch header của drawer (~57px) — không che nút đóng và tiêu đề */}
       <AntdApp message={{ top: 72 }}>
+        <NotifyBridge />
         <RouterProvider router={router} />
       </AntdApp>
     </ConfigProvider>

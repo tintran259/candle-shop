@@ -116,6 +116,9 @@ describe('Tạo đơn', () => {
     expect(r2.body.order.code).toMatch(/002$/);
     expect(r2.body.order.status).toBe('pending');
     expect(r2.body.createdCustomer).toBe(false);
+    // BO gửi id tạo sẵn
+    expect((await t.post('/api/admin/orders', order({ id: 'ord-tu-bo', lines: [product(1)], discountCode: '' })).expect(201)).body.order.id).toBe('ord-tu-bo');
+    await t.post('/api/admin/orders', order({ id: 'ord-tu-bo', lines: [product(1)], discountCode: '' })).expect(409);
   });
 
   it('chặn: kho không đủ trên phần còn dùng được, mã sai, khách bị chặn (trừ khi xác nhận), dòng tự phối thiếu công thức', async () => {

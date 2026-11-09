@@ -167,7 +167,7 @@ export function InventoryPage() {
       </Card>
 
       <MaterialDrawer
-        key={drawerKey}
+        key={`material:${drawerKey}`}
         open={openId !== null && (openId === "new" || !!current)}
         material={current}
         usage={current ? (usage.get(current.id) ?? []) : []}
@@ -176,7 +176,7 @@ export function InventoryPage() {
       />
 
       <MovementModal
-        key={movingKey}
+        key={`movement:${movingKey}`}
         open={moving !== null}
         materials={materials}
         preset={moving ?? undefined}

@@ -192,3 +192,9 @@ export function validateConfig(config: CraftConfig, materials: Material[]): Conf
   }
   return issues;
 }
+
+// Giữ các bước, bỏ mọi lựa chọn và tuỳ chọn thêm gắn Kho (sau khi xóa toàn bộ dữ liệu). Ô nhập chữ giữ nguyên
+export const withoutOptions = (config: CraftConfig): CraftConfig => ({
+  ...config,
+  steps: config.steps.map((s) => (s.kind === "inputs" ? { ...s, addons: [] } : { ...s, options: [] }) as CraftStep),
+});

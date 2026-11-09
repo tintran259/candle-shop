@@ -6,6 +6,7 @@ import { Link } from "react-router";
 import { ComplaintModal } from "@/components/orders/order-complaint";
 import { DeliveryFailModal, ReceiveBackModal, ResendModal, ShipModal } from "@/components/orders/order-delivery";
 import { consumeOrder } from "@/hooks/use-inventory";
+import { REMOTE } from "@/lib/data-mode";
 import type { OrdersApi } from "@/hooks/use-orders";
 import { useSettings } from "@/hooks/use-settings";
 import { useStockHold } from "@/hooks/use-stock-hold";
@@ -68,7 +69,8 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
     if (to === "producing") {
       const short = shortages(needs, map);
       if (short.length) return modal.warning({ title: "Kho không đủ để bắt đầu làm", content: shortList(short), okText: "Đã hiểu" });
-      consumeOrder(order.code, needs);
+      // Chế độ BE: BE trừ Kho và chốt giá vốn khi chuyển bước
+      if (!REMOTE) consumeOrder(order.code, needs);
       // Chốt giá vốn theo giá nhập lúc trừ Kho
       return proceed({ materialCost: needsCost(needs, map).cost });
     }

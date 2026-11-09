@@ -1,31 +1,48 @@
 import { useMemo } from "react";
-import { createLocalStore, useLocalStore } from "@/lib/local-store";
+import { api } from "@/lib/api";
+import { REMOTE } from "@/lib/data-mode";
+import { createLocalStore, upsert, useLocalStore } from "@/lib/local-store";
 import { defaultCategories, UNCATEGORIZED, type Category } from "@/lib/products/categories";
 
-// Chưa có API: lưu tạm trên trình duyệt. Khi có BE thay bằng /api/categories (GET/POST/PATCH/DELETE).
-const store = createLocalStore<Category[]>("bo-categories-v1", defaultCategories);
+// Danh mục: /api/admin/categories (docs/api.md#danh-mục)
+const store = createLocalStore<Category[]>("bo-categories-v1", REMOTE ? [] : defaultCategories, undefined, () => api<Category[]>("GET", "/admin/categories"));
 
 // Thao tác chỉ đụng tới store nên để ngoài hook — giữ nguyên tham chiếu, bảng memo không phải render lại
-const update = (fn: (list: Category[]) => Category[]) => store.set(fn(store.get()));
+const save = (category: Category) => {
+  const exists = store.get().some((c) => c.id === category.id);
+  return store.sync(upsert(category)(store.get()), async () => {
+    const { id, name, color, hidden } = category;
+    const saved = await (exists ? api<Category>("PATCH", `/admin/categories/${id}`, { name, color, hidden }) : api<Category>("POST", "/admin/categories", { id, name, color, hidden }));
+    return upsert(saved);
+  });
+};
 
-const save = (category: Category) =>
-  update((list) => (list.some((c) => c.id === category.id) ? list.map((c) => (c.id === category.id ? category : c)) : [...list, category]));
-
-const patch = (id: string, changes: Partial<Category>) => update((list) => list.map((c) => (c.id === id ? { ...c, ...changes } : c)));
+const patch = (id: string, changes: Partial<Category>) =>
+  store.sync(
+    store.get().map((c) => (c.id === id ? { ...c, ...changes } : c)),
+    async () => upsert(await api<Category>("PATCH", `/admin/categories/${id}`, changes)),
+  );
 
 // Kéo thả: đưa danh mục id vào vị trí của danh mục to
-const move = (id: string, to: string) =>
-  update((list) => {
-    const i = list.findIndex((c) => c.id === id);
-    const j = list.findIndex((c) => c.id === to);
-    if (i < 0 || j < 0 || i === j) return list;
-    const next = [...list];
-    next.splice(j, 0, ...next.splice(i, 1));
-    return next;
+const move = (id: string, to: string) => {
+  const list = store.get();
+  const i = list.findIndex((c) => c.id === id);
+  const j = list.findIndex((c) => c.id === to);
+  if (i < 0 || j < 0 || i === j) return true;
+  const next = [...list];
+  next.splice(j, 0, ...next.splice(i, 1));
+  return store.sync(next, async () => {
+    const saved = await api<Category[]>("PUT", "/admin/categories/order", { ids: next.map((c) => c.id) });
+    return () => saved;
   });
+};
 
 // Trang gọi chỉ khi danh mục không còn sản phẩm nào
-const remove = (id: string) => update((list) => list.filter((c) => c.id !== id));
+const remove = (id: string) =>
+  store.sync(
+    store.get().filter((c) => c.id !== id),
+    () => api("DELETE", `/admin/categories/${id}`),
+  );
 const reset = () => store.set(null);
 
 export function useCategories() {

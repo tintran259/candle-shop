@@ -69,8 +69,8 @@ export function OrdersPage() {
   const drawer = (
     <>
       <OrderDrawer open={!!openId && !creating} order={orders.find((o) => o.id === shownId)} api={api} onClose={() => setOpenId(null)} onEdit={setEditId} />
-      <OrderCreateDrawer key={createKey} open={creating} customerId={params.get("customer") ?? undefined} onClose={() => setOpenId(null)} onCreated={setOpenId} />
-      {editing && <OrderCreateDrawer key={editKey} open={!!editId} order={editing} onClose={() => setEditId(null)} />}
+      <OrderCreateDrawer key={`create:${createKey}`} open={creating} customerId={params.get("customer") ?? undefined} onClose={() => setOpenId(null)} onCreated={setOpenId} />
+      {editing && <OrderCreateDrawer key={`edit:${editKey}`} open={!!editId} order={editing} onClose={() => setEditId(null)} />}
       <PrintHost />
     </>
   );

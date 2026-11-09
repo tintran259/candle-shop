@@ -4,6 +4,8 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { FormSection } from "@/components/form/form-section";
 import { backupSummary, downloadBackup, lastBackupAt, parseBackup, restoreBackup } from "@/lib/backup";
+import { REMOTE } from "@/lib/data-mode";
+import { registeredStores } from "@/lib/local-store";
 import { formatNumber } from "@/lib/format";
 
 // Quá số ngày này chưa sao lưu thì nhắc
@@ -15,7 +17,9 @@ export function BackupSection() {
   const [last, setLast] = useState(lastBackupAt);
   const stale = !last || dayjs().diff(dayjs(last), "day") >= REMIND_DAYS;
 
-  const backup = () => {
+  const backup = async () => {
+    // Chế độ BE: tải đủ mọi kho từ BE trước (kho chưa mở trang nào thì chưa có trong bộ nhớ)
+    if (REMOTE) await Promise.all([...registeredStores.values()].map((s) => s.reload()));
     const file = downloadBackup();
     setLast(file.exportedAt);
     message.success("Đã tải file sao lưu — cất ở nơi an toàn (Google Drive, máy khác…).");
@@ -48,7 +52,14 @@ export function BackupSection() {
   };
 
   return (
-    <FormSection title="Sao lưu dữ liệu" description="Dữ liệu đang nằm trên trình duyệt này: xóa dữ liệu trình duyệt hoặc đổi máy là mất. Sao lưu thường xuyên để khôi phục khi cần.">
+    <FormSection
+      title="Sao lưu dữ liệu"
+      description={
+        REMOTE
+          ? "Dữ liệu nằm trên máy chủ. Tải file sao lưu để cất thêm một bản riêng."
+          : "Dữ liệu đang nằm trên trình duyệt này: xóa dữ liệu trình duyệt hoặc đổi máy là mất. Sao lưu thường xuyên để khôi phục khi cần."
+      }
+    >
       <Flex vertical gap={12}>
         <Alert
           type={stale ? "warning" : "info"}
@@ -57,20 +68,27 @@ export function BackupSection() {
           description={stale ? `Nên sao lưu ít nhất mỗi ${REMIND_DAYS} ngày.` : undefined}
         />
         <Flex gap={8} wrap>
-          <Button type="primary" icon={<CloudDownloadOutlined />} onClick={backup}>
+          <Button type="primary" icon={<CloudDownloadOutlined />} onClick={() => void backup()}>
             Sao lưu (tải file)
           </Button>
-          <Upload
-            accept=".json,application/json"
-            showUploadList={false}
-            beforeUpload={(f) => {
-              void restore(f);
-              return false;
-            }}
-          >
-            <Button icon={<CloudUploadOutlined />}>Khôi phục từ file</Button>
-          </Upload>
+          {!REMOTE && (
+            <Upload
+              accept=".json,application/json"
+              showUploadList={false}
+              beforeUpload={(f) => {
+                void restore(f);
+                return false;
+              }}
+            >
+              <Button icon={<CloudUploadOutlined />}>Khôi phục từ file</Button>
+            </Upload>
+          )}
         </Flex>
+        {REMOTE && (
+          <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            Khôi phục từ file làm trên máy chủ: <Typography.Text code>pnpm db:import &lt;file&gt;</Typography.Text> ở thư mục be (xóa dữ liệu hiện có rồi ghi lại theo file).
+          </Typography.Text>
+        )}
         <Typography.Text type="secondary" style={{ fontSize: 13 }}>
           File gồm đơn hàng, sản phẩm, danh mục, kho, phiếu kho, khách hàng, mã giảm giá, Thủ công và cài đặt. Không gồm thông tin đăng nhập.
         </Typography.Text>
