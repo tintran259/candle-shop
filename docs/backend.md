@@ -18,7 +18,7 @@ NestJS + Prisma + PostgreSQL trên [Neon](https://neon.com) (gói miễn phí, r
 | `PORT` | Cổng chạy BE, mặc định 4000 |
 
 3. Tạo bảng: `pnpm db:deploy` (máy mới / server) hoặc `pnpm db:migrate` (khi sửa schema lúc dev).
-4. Chạy: `pnpm start:dev`. Tài liệu API (Swagger): `http://localhost:4000/api/docs`.
+4. Chạy: `pnpm start:dev`. Tài liệu API: [api.md](./api.md); Swagger khi đang chạy: `http://localhost:4000/api/docs`.
 
 ## Nhập dữ liệu từ BO
 
@@ -44,6 +44,8 @@ id giữ đúng id của BO. Tiền là VNĐ, số nguyên. Ảnh tạm lưu d�
 
 ## Đăng nhập
 
+Đầu vào, đầu ra, mã lỗi của từng endpoint: **[api.md](./api.md)**.
+
 | API | Mô tả |
 |---|---|
 | `POST /api/auth/login` | `{ pin, remember? }` → `{ token, name, expiresAt }`. Ghi nhớ thiết bị 30 ngày, không thì 12 giờ. PIN sai → 401 kèm `remaining` (số lần còn thử) |
@@ -58,7 +60,7 @@ Mọi API khác cần `Authorization: Bearer <token>`, thiếu hoặc sai thì 4
 
 ## API cho Back Office
 
-Tất cả dưới `/api/admin/…`, cần đăng nhập. Dữ liệu trả về đúng dạng BO đang dùng (`bo/src/lib/*/types.ts`) để BO thay kho trên trình duyệt bằng API. Lỗi trả thông báo tiếng Việt trong `message` (400 dữ liệu sai, 404 không có, 409 trùng / không được phép).
+Tất cả dưới `/api/admin/…`, cần đăng nhập. Dữ liệu trả về đúng dạng BO đang dùng (`bo/src/lib/*/types.ts`) để BO thay kho trên trình duyệt bằng API. Lỗi trả thông báo tiếng Việt trong `message` (400 dữ liệu sai, 404 không có, 409 trùng / không được phép). Bảng dưới là tóm tắt; chi tiết từng trường gửi lên / trả về ở [api.md](./api.md).
 
 | Nhóm | API | Quy tắc |
 |---|---|---|

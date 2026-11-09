@@ -13,7 +13,7 @@
 - Email không phân biệt hoa thường, tự bỏ khoảng trắng thừa.
 - **Đăng xuất:** nút ở góc dưới sidebar. Đăng xuất ở một tab thì các tab khác cũng thoát.
 
-## Tài khoản
+## Tài khoản (màn BO hiện tại, bỏ ở giai đoạn 4)
 
 Mặc định khi chạy trên máy: `admin@2510.vn` / `2510candle`. **Đổi trước khi đưa BO lên mạng**, trong `bo/.env.local`:
 
@@ -24,15 +24,21 @@ VITE_ADMIN_PASSWORD_SHA256=<sha256 của mật khẩu>
 
 Tạo mã sha256: `node -e "console.log(require('crypto').createHash('sha256').update('mat-khau-moi').digest('hex'))"`
 
-## Giới hạn khi chưa có BE
+## Giới hạn hiện tại
 
-Mật khẩu được so ngay trên trình duyệt, mã sha256 nằm trong code đã build. Người rành kỹ thuật có thể vượt qua bằng công cụ trình duyệt. Đây chỉ là cổng chặn người lạ, chưa phải bảo mật thật.
+BO chưa gọi BE: mật khẩu được so ngay trên trình duyệt, mã sha256 nằm trong code đã build. Người rành kỹ thuật có thể vượt qua bằng công cụ trình duyệt. Đây chỉ là cổng chặn người lạ, chưa phải bảo mật thật.
 
-## Việc của BE
+## Đăng nhập bằng PIN (BE đã có)
 
-- `POST /api/auth/login { email, password, remember }`: kiểm tra mật khẩu đã băm (bcrypt/argon2), trả cookie phiên `httpOnly`, `Secure`, `SameSite=Lax`; giới hạn số lần sai theo IP.
-- `POST /api/auth/logout`, `GET /api/auth/me`.
-- Mọi API của BO trả 401 khi chưa đăng nhập. BO chỉ cần thay hàm `checkCredentials` trong `bo/src/lib/auth.ts` và đọc phiên từ `/api/auth/me`.
+BE đăng nhập bằng **PIN 6 số**, không dùng email / mật khẩu. Chi tiết endpoint ở [api.md](../api.md#đăng-nhập), cài đặt ở [backend.md](../backend.md#đăng-nhập).
+
+- **Đặt PIN:** `cd be && pnpm auth:pin <6 số>` rồi dán dòng `ADMIN_PIN_HASH=...` in ra vào `be/.env`. PIN chỉ lưu dạng băm (scrypt). Lệnh từ chối PIN dễ đoán (111111, 123456, 112233…).
+- `POST /api/auth/login { pin, remember? }` → `{ token, name, expiresAt }`. Ghi nhớ: 30 ngày, không: 12 giờ.
+- `GET /api/auth/me` → phiên hiện tại. Mọi API khác gửi `Authorization: Bearer <token>`, thiếu / sai / hết hạn trả 401.
+- **Sai PIN:** 401 kèm `remaining` (số lần còn thử). Sai 5 lần liên tiếp thì khóa chung toàn hệ thống (không theo IP), 429 kèm `retryIn` (giây); khóa tăng dần 15 phút → 1 giờ → 6 giờ → 24 giờ, đúng PIN thì đếm lại.
+- Đăng xuất: BO xóa token đã lưu (token không lưu trên máy chủ nên không cần API đăng xuất).
+
+**Việc ở giai đoạn 4 (BO gọi API):** đổi màn này sang ô nhập PIN 6 số (thay email / mật khẩu), gọi `/api/auth/login`, lưu token (ghi nhớ: `localStorage`, không: `sessionStorage`), gặp 401 thì về `/login`; hiện số lần còn thử và đếm ngược `retryIn` khi bị khóa. Bỏ `VITE_ADMIN_EMAIL`, `VITE_ADMIN_PASSWORD_SHA256` và khóa 30 giây phía trình duyệt.
 
 ## Kiểm thử
 
