@@ -6,7 +6,7 @@ import type { Material } from "@/lib/inventory/types";
 import { discountStatus, periodHint } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
-import { deadline, remaining, statusMeta } from "@/lib/orders/labels";
+import { deadline, paidAmount, remaining, statusOf } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 
 export type NotificationKind = "order-late" | "order-due" | "order-new" | "order-paid" | "order-delivery" | "order-refund" | "stock-out" | "stock-low" | "discount";
@@ -62,8 +62,8 @@ export function buildNotifications(src: { orders: Order[]; materials: Material[]
         id: `order-delivery:${o.id}:${o.status}:${o.deliveryAttempts ?? 0}`,
         kind: "order-delivery",
         tone: "danger",
-        title: `Đơn ${o.code}: ${statusMeta[o.status].label}`,
-        description: statusMeta[o.status].hint,
+        title: `Đơn ${o.code}: ${statusOf(o.status, o).label}`,
+        description: statusOf(o.status, o).hint,
         to: `/orders?order=${o.id}`,
       });
     }
@@ -85,7 +85,7 @@ export function buildNotifications(src: { orders: Order[]; materials: Material[]
         kind: "order-new",
         tone: "info",
         title: `Đơn mới ${o.code}`,
-        description: `${o.customer.name} đặt ${formatMoney(o.total)} — đang chờ thanh toán.`,
+        description: `${o.customer.name} đặt ${formatMoney(o.total)} — ${o.paymentPlan === "later" ? "chờ xác nhận, trả tiền khi nhận hàng" : "đang chờ thanh toán"}.`,
         at: o.createdAt,
         to: `/orders?order=${o.id}`,
       });
@@ -95,7 +95,7 @@ export function buildNotifications(src: { orders: Order[]; materials: Material[]
         id: `order-paid:${o.id}`,
         kind: "order-paid",
         tone: "info",
-        title: `Đơn ${o.code} đã ${left ? "nhận cọc" : "thanh toán"}`,
+        title: `Đơn ${o.code} đã ${o.paymentPlan === "later" && !paidAmount(o) ? "xác nhận" : left ? "nhận cọc" : "thanh toán"}`,
         description: left ? `Còn phải thu ${formatMoney(left)} — chờ xưởng nhận làm.` : "Chờ xưởng nhận làm.",
         at: lastEventAt(o, "paid"),
         to: `/orders?order=${o.id}`,

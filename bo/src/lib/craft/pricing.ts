@@ -10,8 +10,18 @@ import type { MaterialMap } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
 
 // price: tiền khách trả cho phần này. floor: giá vốn tối thiểu phần này phải bù. missing: nguyên liệu chưa có giá nhập, floor đang thiếu phần này.
-// vessel, size: hũ và cỡ dùng để tính. per: so theo đơn vị (vd "100 g", "ml") khi lựa chọn tính giá theo lượng
-export type PriceCheck = { price: number; floor: number; missing: Material[]; margin: number | null; vessel?: VesselOption; size?: VesselSize; per?: string };
+// vessel, size: hũ và cỡ dùng để tính. per: so theo đơn vị (vd "100 g", "ml") khi lựa chọn tính giá theo lượng.
+// missingParts: phần trong missing thuộc mục mặc định của bước khác tính gộp vào giá hũ (vd bấc) — hiện tách riêng khỏi nguyên liệu của chính hũ
+export type PriceCheck = {
+  price: number;
+  floor: number;
+  missing: Material[];
+  margin: number | null;
+  vessel?: VesselOption;
+  size?: VesselSize;
+  per?: string;
+  missingParts?: { step: string; material: Material }[];
+};
 
 const check = (price: number, floor: number, missing: Material[], vessel?: VesselOption, size?: VesselSize): PriceCheck => ({
   price,
@@ -114,10 +124,12 @@ export function sizeCheck(config: CraftConfig, vessel: VesselOption, size: Vesse
   const name = (size.materialId && map.get(size.materialId)?.name) || `${vessel.name.vi} ${size.ml}ml`;
   const parts: SizeCheck["parts"] = jar.cost > 0 ? [{ step: "Hũ", name, cost: jar.cost }] : [];
   const missing = [...jar.missing];
+  const missingParts: { step: string; material: Material }[] = [];
   for (const step of activeSteps(config).filter(coveredByJar)) {
     const d = defaultPart(config, step, vessel, size, map);
     if (!d) continue;
     missing.push(...d.missing);
+    missingParts.push(...d.missing.map((material) => ({ step: step.title.vi, material })));
     if (uncovered(d) > 0) parts.push({ step: step.title.vi, name: d.option.name.vi, cost: uncovered(d) });
   }
   const price = vessel.priceDelta + size.priceDelta;
@@ -129,6 +141,7 @@ export function sizeCheck(config: CraftConfig, vessel: VesselOption, size: Vesse
       vessel,
       size,
     ),
+    missingParts,
     parts,
   };
 }

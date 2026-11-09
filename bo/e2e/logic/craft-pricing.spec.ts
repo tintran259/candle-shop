@@ -29,6 +29,14 @@ test.describe("Hũ: giá hũ + phụ thu cỡ", () => {
     expect(priceSelection(config, sel).unit).toBe(725_000);
     expect(priceSelection(config, sel).lines[0]).toMatchObject({ label: "Hũ thạch cao 250ml", amount: 725_000, base: true });
   });
+  test("Hũ có giá nhưng bấc mặc định chưa có giá → báo thiếu giá đúng nguyên liệu bấc, không phải hũ", () => {
+    const noWickCost = toMap(mockInventory.materials.map((m) => (m.id === "wick-cotton" ? { ...m, unitCost: undefined } : m)));
+    const c = sizeCheck(config, plaster, s200, noWickCost);
+    expect(c.missing.map((m) => m.id)).toEqual(["wick-cotton"]);
+    // Thuộc bước Bấc, không phải nguyên liệu của chính hũ
+    expect(c.missingParts?.map((p) => [p.step, p.material.id])).toEqual([["Bấc", "wick-cotton"]]);
+    expect(c.parts).toEqual([{ step: "Hũ", name: "Bát thạch cao 200ml", cost: 35_000 }]);
+  });
   test("≥ vốn hũ cỡ đó + mục mặc định tính giá cố định (bấc); sáp, màu, hương khách trả riêng theo lượng", () => {
     const c = sizeCheck(config, plaster, s200, map);
     expect(c.parts).toEqual([
@@ -50,7 +58,10 @@ test.describe("Hũ: giá hũ + phụ thu cỡ", () => {
 
 test.describe("Sáp, màu, hương: giá theo lượng dùng cho hũ đã chọn", () => {
   test("Ví dụ: sáp 2.000 ₫/100 g, hũ 150ml dùng 120 g → 2.400 ₫", () => {
-    const cfg = { ...config, steps: config.steps.map((s) => (s.id === "wax" ? { ...s, options: (s as OptionStep).options.map((o) => (o.id === "soy" ? { ...o, unitPrice: 2_000 } : o)) } : s)) } as CraftConfig;
+    const cfg = {
+      ...config,
+      steps: config.steps.map((s) => (s.id === "wax" ? { ...s, options: (s as OptionStep).options.map((o) => (o.id === "soy" ? { ...o, unitPrice: 2_000 } : o)) } : s)),
+    } as CraftConfig;
     const sel = { container: { kind: "vessel" as const, optionId: "ceramic", sizeId: "s150", withLid: false }, wax: { kind: "cards" as const, optionIds: ["soy"] } };
     expect(priceSelection(cfg, sel).lines[1]).toEqual({ stepId: "wax", label: "Sáp đậu nành 120 g", amount: 2_400 });
   });
@@ -67,7 +78,18 @@ test.describe("Sáp, màu, hương: giá theo lượng dùng cho hũ đã chọn
     // Đậm 10%: 16 ml × 3.600
     expect(total(config, { fragrance: { kind: "blend", items: [{ optionId: "vanilla", weight: 1 }], intensity: "strong" } })).toBe(57_600);
     // 50/50 Vanilla + Rose: 6,4 ml mỗi mùi
-    expect(total(config, { fragrance: { kind: "blend", items: [{ optionId: "vanilla", weight: 50 }, { optionId: "rose", weight: 50 }], intensity: "medium" } })).toBe(23_000 + 44_800);
+    expect(
+      total(config, {
+        fragrance: {
+          kind: "blend",
+          items: [
+            { optionId: "vanilla", weight: 50 },
+            { optionId: "rose", weight: 50 },
+          ],
+          intensity: "medium",
+        },
+      }),
+    ).toBe(23_000 + 44_800);
     // Không mùi: không tính
     expect(total(config, { fragrance: { kind: "blend", items: [{ optionId: "none", weight: 1 }], intensity: null } })).toBe(0);
   });
@@ -135,7 +157,10 @@ test.describe("Chuyển cấu hình cũ", () => {
       kind: "blend",
       scentPrice: { basePrice: 10_000, standardLoad: 0.1 },
       intensity: { priceDelta: { light: 0, medium: 0, strong: 10_000 }, load: { light: 0.06, medium: 0.08, strong: 0.1 } },
-      options: [{ id: "v", priceDelta: 6_000, materialId: "oil-vanilla" }, { id: "none", priceDelta: 0, exclusive: true }],
+      options: [
+        { id: "v", priceDelta: 6_000, materialId: "oil-vanilla" },
+        { id: "none", priceDelta: 0, exclusive: true },
+      ],
     } as unknown as CraftStep;
     const b = toAmountPricing(blend) as OptionStep & { scentPrice?: unknown; intensity: { priceDelta?: unknown } };
     // (6.000 + 10.000) ÷ (160 g × 10%) = 1.000 ₫/ml

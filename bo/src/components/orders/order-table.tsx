@@ -3,7 +3,7 @@ import { memo } from "react";
 import dayjs from "dayjs";
 import { ItemStack, PaymentTag, ReadyDate, StatusTag } from "@/components/orders/order-view";
 import { formatMoney } from "@/lib/format";
-import { depositLabel, itemCount, providerLabels } from "@/lib/orders/labels";
+import { planLabel, itemCount, providerLabels } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
 
 type Props = { items: Order[]; onOpen: (id: string) => void; pagination: TablePaginationConfig; selected: string[]; onSelect: (ids: string[]) => void };
@@ -76,7 +76,7 @@ function OrderTableView({ items, onOpen, pagination, selected, onSelect }: Props
         <Flex vertical gap={2} align="flex-start">
           <PaymentTag order={o} />
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            {providerLabels[o.paymentMethod]} · {o.paymentPlan === "deposit" ? depositLabel(o) : "Trả đủ"}
+            {providerLabels[o.paymentMethod]} · {planLabel(o)}
           </Typography.Text>
         </Flex>
       ),
@@ -86,7 +86,7 @@ function OrderTableView({ items, onOpen, pagination, selected, onSelect }: Props
       key: "status",
       render: (_, o) => (
         <Flex vertical gap={2} align="flex-start">
-          <StatusTag status={o.status} />
+          <StatusTag status={o.status} order={o} />
           {o.shipment && o.status !== "cancelled" && (
             <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
               {o.shipment.trackingCode ? `${o.shipment.carrier} · ${o.shipment.trackingCode}` : o.shipment.carrier}

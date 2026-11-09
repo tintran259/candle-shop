@@ -12,7 +12,8 @@ export const orderFlow = ["pending", "paid", "producing", "ready", "shipping", "
 export const deliveryIssues = ["delivery_failed", "returning", "returned"] as const;
 export type OrderStatus = (typeof orderFlow)[number] | (typeof deliveryIssues)[number] | "cancelled";
 
-export type PaymentPlan = "full" | "deposit";
+// full = trả đủ khi đặt, deposit = cọc % tiền hàng khi đặt (% chọn theo đơn), later = trả toàn bộ khi nhận hàng
+export type PaymentPlan = "full" | "deposit" | "later";
 export type PaymentProvider = "vnpay" | "momo" | "cod";
 export type PaymentStatus = "pending" | "success" | "failed" | "refunded";
 // id phương thức trong Cài đặt

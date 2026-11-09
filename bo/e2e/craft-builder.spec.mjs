@@ -251,12 +251,15 @@ test("E2E 2 — Thủ công từ trống trên kho đã tạo ở E2E 1: thêm b
   const cards = await text(".sf-card");
   ok("M4 oải hương hết → Tạm hết trên xem trước", cards.some((c) => c.includes("Oải hương") && c.includes("Tạm hết")), cards.join(" | "));
   await tab("Lựa chọn");
-  await addOption("Sả chanh", 5000, null, async () => { await type(`document.querySelector('.ant-drawer-open input#newStock')`, 250); });
+  await addOption("Sả chanh", 5000, null, async () => {
+    await type(`document.querySelector('.ant-drawer-open input#newStock')`, 250);
+    await type(`document.querySelector('.ant-drawer-open input[aria-label="Tổng tiền đã trả"]')`, 500000);
+  });
   ok("M4 trước khi Lưu: Kho chưa có 'Sả chanh'", !(await inv()).materials.some((m) => m.name === "Sả chanh"));
   await clickText("main .save-bar button", "Lưu thay đổi");
   await sleep(800);
   const newMat = (await inv()).materials.find((m) => m.name === "Sả chanh");
-  ok("M4 tạo lựa chọn kèm nguyên liệu mới → có trong kho", newMat && newMat.unit === "ml" && newMat.category === "fragrance" && newMat.stock === 250, JSON.stringify(newMat));
+  ok("M4 tạo lựa chọn kèm nguyên liệu mới → có trong kho, giá nhập 500.000 ₫ ÷ 250 ml", newMat && newMat.unit === "ml" && newMat.category === "fragrance" && newMat.stock === 250 && newMat.unitCost === 2000, JSON.stringify(newMat));
 
   // M5: xóa nguyên liệu đang dùng → Thủ công cảnh báo + khóa
   await go(base + "/inventory?material=mau-nhuom-hong", 2300);

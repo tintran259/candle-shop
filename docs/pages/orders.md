@@ -10,8 +10,8 @@
 
 | Trạng thái | Nghĩa | Nút bước tiếp | Hủy được |
 |---|---|---|---|
-| Chờ thanh toán | Khách chưa trả cọc hoặc tiền | Xác nhận đã thanh toán | Có |
-| Đã thanh toán | Đã nhận cọc hoặc đủ tiền | Bắt đầu làm | Có |
+| Chờ thanh toán (đơn trả sau: **Chờ xác nhận**) | Khách chưa trả cọc hoặc tiền / đơn trả sau chưa chốt | Xác nhận đã thanh toán (đơn trả sau: **Xác nhận đơn**, không thu tiền) | Có |
+| Đã thanh toán (đơn trả sau: **Đã xác nhận**) | Đã nhận cọc hoặc đủ tiền / đơn trả sau đã chốt. Giữ nguyên liệu | Bắt đầu làm | Có |
 | Đang làm | Xưởng đang đổ và ủ hương | Đã làm xong | Có |
 | Chờ giao | Đã làm xong | Giao cho vận chuyển (chọn đơn vị, nhập mã vận đơn) | Có |
 | Đang giao | Bên vận chuyển đang giao | Khách đã nhận, Giao không thành | Không |
@@ -31,6 +31,18 @@
 - **Chọn nhiều đơn** bằng ô đầu dòng: hiện thanh "Đã chọn N đơn" với nút **In N đơn** (phiếu đơn hoặc nhãn giao hàng), **Xuất Excel** và **Bỏ chọn**. Bấm ô chọn không mở đơn. Đổi tab hoặc bộ lọc thì bỏ chọn.
 - **Xuất Excel** ở đầu trang: xuất danh sách đang lọc, xem [Xuất Excel](#xuất-excel).
 
+## Hình thức thanh toán
+
+| Hình thức | Thu lúc đặt | Thu khi giao | Bước đầu của đơn |
+|---|---|---|---|
+| **Cọc x%** | Cọc x% tiền hàng (x điền sẵn theo Cài đặt, sửa được 1–99% cho từng đơn) | Phần còn lại + phí giao | Chờ thanh toán → Đã thanh toán khi nhận cọc |
+| **Trả đủ** | Toàn bộ tổng đơn | — | Chờ thanh toán → Đã thanh toán khi nhận đủ |
+| **Trả sau** | Không thu gì | Toàn bộ tổng đơn (Khách đã nhận thì ghi đã thu đủ) | **Chờ xác nhận** → bấm **Xác nhận đơn** → **Đã xác nhận** (giữ nguyên liệu như đơn đã cọc) |
+
+- Đơn lưu lại % cọc đã chọn; hủy đơn lỗi do khách thì giữ đúng % đó (trên tiền hàng).
+- Trả sau: khối Thanh toán của đơn ghi "Khách trả toàn bộ khi nhận hàng", tình trạng thanh toán **Trả khi nhận hàng** (lọc được ở danh sách). Hủy đơn trả sau chưa thu gì thì không hỏi lỗi do ai.
+- Sửa đơn không đổi hình thức thanh toán.
+
 ## Tạo đơn hàng
 
 Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
@@ -40,7 +52,7 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 | Khách hàng | Hồ sơ có sẵn, tên, SĐT, email, kênh đặt, địa chỉ | SĐT trùng hồ sơ thì tự nhận ra khách. Khách bị chặn thì hỏi lại trước khi tạo |
 | Sản phẩm | Nến có sẵn, Tự phối nến, số lượng | Sản phẩm đang ẩn vẫn chọn được, có nhãn "Đang ẩn". Thiếu nguyên liệu cho cả đơn thì chặn, tính trên số dùng được |
 | Giao hàng | Phương thức, phí vận chuyển (khách trả), đơn vị vận chuyển, ngày xưởng làm xong | Phí tự điền theo phương thức, sửa được cho đơn này. Đơn vị vận chuyển chọn từ [Cài đặt](./settings.md#đơn-vị-vận-chuyển), lúc giao chọn sẵn đơn vị này. Mặc định xong sau 3 ngày |
-| Thanh toán | Mã giảm giá, cọc hoặc trả đủ, kênh thanh toán, đã nhận tiền, mã giao dịch | % cọc lấy từ Cài đặt. Áp mã thì dưới ô hiện số tiền giảm và luật thật của mã (vd "TET2027 −80%, tối đa 300.000 ₫, chỉ nến có sẵn"), không lấy mô tả tự gõ |
+| Thanh toán | Mã giảm giá, hình thức **Cọc / Trả đủ / Trả sau**, ô **% cọc** (khi Cọc), kênh thanh toán (Trả sau: "Khách trả bằng"), **Đã nhận tiền** (Trả sau: **Xác nhận đơn luôn**), mã giao dịch (không có khi Trả sau) | % cọc điền sẵn theo Cài đặt, sửa được cho đơn này (khác Cài đặt thì ghi "Cài đặt: 50%"). Tóm tắt đơn: Cọc → "Cọc 30% tiền hàng khi đặt" + "Thu nốt khi giao"; Trả sau → "Thu khi nhận hàng" toàn bộ. Áp mã thì dưới ô hiện số tiền giảm và luật thật của mã (vd "TET2027 −80%, tối đa 300.000 ₫, chỉ nến có sẵn"), không lấy mô tả tự gõ |
 | Ghi chú | Ghi chú của khách, ghi chú nội bộ | |
 
 **Popup Tự phối nến:** đi theo các bước đang bật ở Thủ công. Lựa chọn hết nguyên liệu bị khóa kèm lý do, phần đang giữ cho đơn khác không tính là còn. Tóm tắt bên phải hiện mô tả gửi xưởng, giá 1 hũ, nguyên liệu cần và số hũ Kho làm được. Tiêu đề và nút thêm luôn hiện, chỉ phần chọn cuộn.
@@ -56,7 +68,7 @@ Drawer 2 cột trên màn rộng: form bên trái, tóm tắt dính bên phải.
 
 ```
 Tổng = Tạm tính − Giảm giá + Phí giao
-Cọc  = (Tạm tính − Giảm giá) × % cọc, không gồm phí vận chuyển; làm tròn tới nghìn đồng, ít nhất 1.000 ₫
+Cọc  = (Tạm tính − Giảm giá) × % cọc của đơn, không gồm phí vận chuyển; làm tròn tới nghìn đồng, ít nhất 1.000 ₫
        Vd 300.000 ₫ hàng + 30.000 ₫ phí giao, cọc 50% = 150.000 ₫; phí giao thu cùng phần còn lại khi giao
 ```
 
@@ -212,6 +224,7 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `order-changes`: sửa đơn Đã thanh toán bớt hàng rồi ghi nhận hoàn phần dư, sửa đơn đã Bắt đầu làm (khóa sản phẩm), không đổi gì thì không ghi lịch sử, đơn Hoàn tất không có nút Sửa đơn, khiếu nại gửi bù (đơn 0 ₫, link hai chiều, nhãn trên bảng), khiếu nại hoàn một phần (bắt buộc chứng từ).
 - `workshop-cost`: ngày làm xong gợi ý theo công suất, cảnh báo vượt và nút dùng ngày còn chỗ, đổi ngày sang ngày đầy, giá vốn ước tính rồi chốt khi Bắt đầu làm.
 - `logic/order-changes`: quy tắc sửa đơn, tính lại tiền, thu dư, mã giảm giá, đơn gửi bù, ghi khiếu nại, khoản hoàn một phần.
+- `payment-plans`: % cọc điền sẵn theo Cài đặt, sửa 30% thì tiền cọc và đơn lưu đúng; Trả sau không thu lúc đặt, Chờ xác nhận → Xác nhận đơn → Đã xác nhận, danh sách ghi Trả khi nhận hàng.
 - `orders-create`: tạo đơn cho khách có sẵn, khách mới, khách bị chặn; mã giảm giá; cọc; đã nhận tiền; mã đơn theo ngày; lịch sử; đóng khi đang nhập thì lưu nháp.
 - `order-draft`: đóng giữ nháp, nút Tiếp tục đơn nháp, tải lại trang vẫn còn, giá sản phẩm lấy lại giá hiện tại; Bắt đầu đơn mới; Bỏ đơn; tạo đơn xong xóa nháp; mở từ hồ sơ khách khi đang có nháp.
 - `orders-custom-candle`, `orders-custom-modal`, `orders-amounts`: popup Tự phối nến, khóa lựa chọn hết nguyên liệu, số hũ Kho làm được, chọn nhiều sáp, lượng từng nguyên liệu, công thức trên đơn.

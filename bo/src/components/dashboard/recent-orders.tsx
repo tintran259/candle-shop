@@ -36,7 +36,7 @@ const columns: TableProps<Order>["columns"] = [
     ),
   },
   { title: "Làm xong", key: "ready", responsive: ["sm"], render: (_, o) => <ReadyDate order={o} /> },
-  { title: "Trạng thái", key: "status", render: (_, o) => <StatusTag status={o.status} /> },
+  { title: "Trạng thái", key: "status", render: (_, o) => <StatusTag status={o.status} order={o} /> },
   {
     title: "Tổng",
     dataIndex: "total",

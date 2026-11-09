@@ -44,13 +44,14 @@ type Values = {
   swatch?: string;
   note?: string;
 };
-type Props = { open: boolean; material?: Material; usage: Usage[]; api: InventoryApi; onClose: () => void };
+// unsaved: lựa chọn gắn trong bản nháp Thủ công, chưa Lưu lên web
+type Props = { open: boolean; material?: Material; usage: Usage[]; unsaved?: Usage[]; api: InventoryApi; onClose: () => void };
 
 const cleanRecipe = (lines?: (RecipeLine | undefined)[]) => (lines ?? []).filter((r): r is RecipeLine => !!r?.materialId && !!r.quantity);
 
 // Thêm/sửa nguyên liệu. Nguyên liệu đã có: số tồn và giá nhập chỉ đổi qua thẻ tồn kho trên cùng (có lịch sử),
 // form bên dưới chỉ sửa thông tin và cài đặt — không có ô nào trông như nhập hàng.
-export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
+export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClose }: Props) {
   const { message, modal } = App.useApp();
   const screens = Grid.useBreakpoint();
   const ready = useDeferredValue(true, false);
@@ -266,7 +267,7 @@ export function MaterialDrawer({ open, material, usage, api, onClose }: Props) {
             </Flex>
           </Form>
 
-          {material && <MaterialUsage usage={usage} history={history} materials={api.materials} />}
+          {material && <MaterialUsage usage={usage} unsaved={unsaved} history={history} materials={api.materials} />}
         </Flex>
       ) : (
         <DrawerFormSkeleton />

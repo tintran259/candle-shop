@@ -1,11 +1,11 @@
-import { Button, Col, Flex, Form, Input, Radio, Row, Segmented, Switch, Typography, type FormInstance } from "antd";
+import { Button, Col, Flex, Form, Input, InputNumber, Radio, Row, Segmented, Switch, Typography, type FormInstance } from "antd";
 import { FormSection } from "@/components/form/form-section";
 import type { OrderFormValues } from "@/components/orders/order-form/model";
 import { discountRule, valueText } from "@/lib/discounts/labels";
 import type { Discount } from "@/lib/discounts/types";
 import { formatMoney } from "@/lib/format";
 import type { DiscountResult } from "@/lib/orders/create";
-import { providerLabels } from "@/lib/orders/labels";
+import { planLabel, providerLabels } from "@/lib/orders/labels";
 import type { Order, PaymentProvider } from "@/lib/orders/types";
 
 type Props = {
@@ -18,12 +18,16 @@ type Props = {
   ownCodes: Discount[];
   paid: number;
   dueNow: number;
+  // Tổng đơn — trả sau thì thu toàn bộ khi nhận hàng
+  total: number;
+  // % cọc mặc định trong Cài đặt
   depositPercent: number;
   values: Partial<OrderFormValues>;
 };
 
 // Khối Thanh toán: mã giảm giá, cọc hoặc trả đủ, kênh thanh toán, đã nhận tiền
-export function PaymentFields({ form, order, lockItems, discount, ownCodes, paid, dueNow, depositPercent, values: v }: Props) {
+export function PaymentFields({ form, order, lockItems, discount, ownCodes, paid, dueNow, total, depositPercent, values: v }: Props) {
+  const later = v.paymentPlan === "later";
   return (
     <FormSection title="Thanh toán" description={order ? "Các khoản đã thu giữ nguyên. Thu thêm khi giao; thu dư thì ghi nhận hoàn ở khối Thanh toán của đơn." : undefined}>
       {/* Có dòng báo thì antd bù lề âm cho ô — dùng padding (lề sẽ bị gộp mất) để giữ khoảng cách với "Hình thức" */}
@@ -57,40 +61,53 @@ export function PaymentFields({ form, order, lockItems, discount, ownCodes, paid
       )}
       {order ? (
         <Typography.Text type="secondary">
-          {order.paymentPlan === "deposit" ? `Cọc ${order.depositPercent ?? 50}%` : "Trả đủ"} · {providerLabels[order.paymentMethod]} · đã thu {formatMoney(paid)}
+          {planLabel(order)} · {providerLabels[order.paymentMethod]} · đã thu {formatMoney(paid)}
         </Typography.Text>
       ) : (
         <>
           <Row gutter={16}>
-            <Col xs={24} sm={9}>
+            <Col xs={24} sm={14}>
               <Form.Item name="paymentPlan" label="Hình thức">
                 <Radio.Group
                   optionType="button"
                   options={[
-                    { value: "deposit", label: `Cọc ${depositPercent}%` },
+                    { value: "deposit", label: "Cọc" },
                     { value: "full", label: "Trả đủ" },
+                    { value: "later", label: "Trả sau" },
                   ]}
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={15}>
-              <Form.Item name="paymentMethod" label="Kênh thanh toán">
-                <Segmented<PaymentProvider> options={(["cod", "vnpay", "momo"] as const).map((p) => ({ value: p, label: providerLabels[p] }))} />
-              </Form.Item>
-            </Col>
+            {v.paymentPlan === "deposit" && (
+              <Col xs={24} sm={10}>
+                <Form.Item
+                  name="depositPercent"
+                  label="% cọc"
+                  rules={[{ required: true, message: "Nhập % cọc." }]}
+                  extra={v.depositPercent !== depositPercent ? `Cài đặt: ${depositPercent}%` : "Theo Cài đặt, sửa được cho đơn này."}
+                >
+                  <InputNumber min={1} max={99} precision={0} suffix="%" aria-label="Phần trăm cọc" style={{ width: 120 }} />
+                </Form.Item>
+              </Col>
+            )}
           </Row>
+          <Form.Item name="paymentMethod" label={later ? "Khách trả bằng" : "Kênh thanh toán"}>
+            <Segmented<PaymentProvider> options={(["cod", "vnpay", "momo"] as const).map((p) => ({ value: p, label: providerLabels[p] }))} />
+          </Form.Item>
           <Flex justify="space-between" align="center" gap={16} style={{ padding: "4px 0" }}>
             <Flex vertical>
-              <Typography.Text strong>Đã nhận {v.paymentPlan === "full" ? "đủ tiền" : "tiền cọc"}</Typography.Text>
+              <Typography.Text strong>{later ? "Xác nhận đơn luôn" : `Đã nhận ${v.paymentPlan === "full" ? "đủ tiền" : "tiền cọc"}`}</Typography.Text>
               <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                Bật nếu khách đã chuyển {formatMoney(dueNow)} — đơn chuyển sang “Đã thanh toán”. Tắt thì đơn chờ thanh toán.
+                {later
+                  ? `Bật nếu đã chốt với khách — đơn chuyển sang “Đã xác nhận”, giữ nguyên liệu. Khách trả ${formatMoney(total)} khi nhận hàng. Tắt thì đơn chờ xác nhận.`
+                  : `Bật nếu khách đã chuyển ${formatMoney(dueNow)} — đơn chuyển sang “Đã thanh toán”. Tắt thì đơn chờ thanh toán.`}
               </Typography.Text>
             </Flex>
             <Form.Item name="received" valuePropName="checked" noStyle>
-              <Switch aria-label="Đã nhận tiền" />
+              <Switch aria-label={later ? "Xác nhận đơn luôn" : "Đã nhận tiền"} />
             </Form.Item>
           </Flex>
-          {v.received && v.paymentMethod !== "cod" && (
+          {v.received && !later && v.paymentMethod !== "cod" && (
             <Form.Item name="transactionId" label="Mã giao dịch" style={{ marginTop: 12, marginBottom: 0 }}>
               <Input maxLength={40} placeholder="Mã giao dịch VNPay / MoMo (không bắt buộc)" style={{ maxWidth: 320 }} />
             </Form.Item>

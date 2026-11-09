@@ -93,16 +93,16 @@ const saveMaterial = (material: Omit<Material, "updatedAt">, openingTotal?: numb
 };
 
 // Tạo nhiều nguyên liệu một lần (trang Thủ công gọi khi bấm Lưu) — mỗi cái có phiếu "Tồn ban đầu" như tạo tay
-export const createMaterials = (list: Omit<Material, "updatedAt">[]) => {
+export const createMaterials = (list: (Omit<Material, "updatedAt"> & { openingTotal?: number })[]) => {
   const fresh = list.filter((m) => !store.get().materials.some((x) => x.id === m.id));
   if (store.online)
     return fresh.length
       ? update(
           (inv) => inv,
-          () => api("POST", "/admin/materials/batch", { materials: fresh.map((m) => createBody(m)) }),
+          () => api("POST", "/admin/materials/batch", { materials: fresh.map(({ openingTotal, ...m }) => createBody(m, openingTotal)) }),
         )
       : true;
-  for (const m of fresh) saveMaterial(m);
+  for (const { openingTotal, ...m } of fresh) saveMaterial(m, openingTotal);
   return true;
 };
 

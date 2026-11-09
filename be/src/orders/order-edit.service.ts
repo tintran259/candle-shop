@@ -98,7 +98,7 @@ export class OrderEditService {
         },
       });
       // Chưa thanh toán: khoản đang chờ thu đổi theo tổng mới (cọc theo % lúc tạo đơn)
-      if (o.status === 'pending') {
+      if (o.status === 'pending' && o.paymentPlan !== 'later') {
         const amount = o.paymentPlan === 'deposit' ? depositAmount(Math.max(0, subtotal - discount), o.depositPercent ?? DEFAULT_DEPOSIT) : total;
         await tx.payment.updateMany({ where: { orderId: id, status: 'pending' }, data: { amount } });
       }

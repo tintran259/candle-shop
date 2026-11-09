@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { depositLabel, itemCount, paidAmount, paymentState, paymentStateMeta, providerLabels, shippingName, statusMeta } from "@/lib/orders/labels";
+import { itemCount, paidAmount, paymentState, paymentStateMeta, planLabel, providerLabels, shippingName, statusOf } from "@/lib/orders/labels";
 import { carrierName, codAmount } from "@/lib/orders/shipping";
 import type { Order } from "@/lib/orders/types";
 import { downloadXlsx, type XlsxSheet } from "@/lib/xlsx";
@@ -42,7 +42,7 @@ export function ordersSheets(orders: Order[]): XlsxSheet[] {
       rows: orders.map((o) => [
         o.code,
         date(o.createdAt),
-        statusMeta[o.status].label,
+        statusOf(o.status, o).label,
         o.customer.name,
         o.customer.phone,
         o.shippingAddress,
@@ -56,7 +56,7 @@ export function ordersSheets(orders: Order[]): XlsxSheet[] {
         paidAmount(o),
         o.status === "cancelled" ? 0 : codAmount(o),
         paymentStateMeta[paymentState(o)].label,
-        `${providerLabels[o.paymentMethod]} · ${o.paymentPlan === "deposit" ? depositLabel(o) : "Trả đủ"}`,
+        `${providerLabels[o.paymentMethod]} · ${planLabel(o)}`,
         day(o.readyDate),
         shippingName(o),
         carrierName(o),
@@ -80,7 +80,7 @@ export function ordersSheets(orders: Order[]): XlsxSheet[] {
         { header: "Thành tiền", format: "money", width: 13 },
       ],
       rows: orders.flatMap((o) =>
-        o.items.map((i) => [o.code, date(o.createdAt), statusMeta[o.status].label, i.name, i.custom ? "Nến tự phối" : "Nến có sẵn", i.custom, i.quantity, i.price, i.price * i.quantity]),
+        o.items.map((i) => [o.code, date(o.createdAt), statusOf(o.status, o).label, i.name, i.custom ? "Nến tự phối" : "Nến có sẵn", i.custom, i.quantity, i.price, i.price * i.quantity]),
       ),
     },
   ];

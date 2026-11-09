@@ -1,4 +1,5 @@
 // Chuyển qua lại giữa lựa chọn (cấu trúc lồng) và giá trị phẳng của antd Form. Tiền là VNĐ.
+import type { LotPrice } from "@/lib/costs";
 import { amountBasis, uniqueId } from "@/lib/craft/steps";
 import type { OptionStep, StepOption, Unit, VesselOption, VesselSize } from "@/lib/craft/types";
 import { jarsOfType } from "@/lib/inventory/stock";
@@ -68,6 +69,8 @@ export type OptionFormValues = {
   // Khi tạo nguyên liệu mới
   newUnit?: Unit;
   newStock?: number;
+  // Tiền đã trả cho tồn ban đầu (hoặc Không mất tiền) — chia ra giá nhập ban đầu
+  newOpening?: LotPrice;
   // Không có màu = ô sọc (swatches: "không pha màu")
   hasSwatch: boolean;
   swatch?: string;

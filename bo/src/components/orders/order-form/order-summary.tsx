@@ -3,7 +3,7 @@ import { unitLabel } from "@/lib/craft/groups";
 import { belowCost, type PriceCheck } from "@/lib/craft/pricing";
 import { formatMoney, formatNumber } from "@/lib/format";
 import { lineTotal, type DiscountResult, type DraftLine, type OrderTotals } from "@/lib/orders/create";
-import { statusMeta } from "@/lib/orders/labels";
+import { statusOf } from "@/lib/orders/labels";
 import type { shortages } from "@/lib/orders/materials";
 import type { Order } from "@/lib/orders/types";
 
@@ -88,8 +88,14 @@ export function OrderSummary({ lines, totals, discount, order, lockItems, paid, 
           </>
         ) : (
           <>
-            <Line label={paymentPlan === "full" ? "Thu khi đặt" : `Cọc ${depositPercent}% tiền hàng khi đặt`} value={formatMoney(totals.dueNow)} />
-            {totals.total > totals.dueNow && <Line label="Thu nốt khi giao" value={formatMoney(totals.total - totals.dueNow)} />}
+            {paymentPlan === "later" ? (
+              <Line label="Thu khi nhận hàng" value={formatMoney(totals.total)} />
+            ) : (
+              <>
+                <Line label={paymentPlan === "full" ? "Thu khi đặt" : `Cọc ${depositPercent}% tiền hàng khi đặt`} value={formatMoney(totals.dueNow)} />
+                {totals.total > totals.dueNow && <Line label="Thu nốt khi giao" value={formatMoney(totals.total - totals.dueNow)} />}
+              </>
+            )}
           </>
         )}
       </div>
@@ -98,8 +104,8 @@ export function OrderSummary({ lines, totals, discount, order, lockItems, paid, 
           <Typography.Text type="secondary" style={{ fontSize: 13 }}>
             Trạng thái khi tạo:
           </Typography.Text>
-          <Tag color={statusMeta[received ? "paid" : "pending"].color} style={{ marginInlineEnd: 0 }}>
-            {statusMeta[received ? "paid" : "pending"].label}
+          <Tag color={statusOf(received ? "paid" : "pending", { paymentPlan: paymentPlan ?? "deposit" }).color} style={{ marginInlineEnd: 0 }}>
+            {statusOf(received ? "paid" : "pending", { paymentPlan: paymentPlan ?? "deposit" }).label}
           </Tag>
         </Flex>
       )}

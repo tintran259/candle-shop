@@ -121,6 +121,31 @@ describe('Tạo đơn', () => {
     await t.post('/api/admin/orders', order({ id: 'ord-tu-bo', lines: [product(1)], discountCode: '' })).expect(409);
   });
 
+  it('cọc theo % từng đơn; trả sau: không có khoản thu, xác nhận đơn rồi làm, khách nhận thì thu đủ; hủy không cần lỗi do ai', async () => {
+    // Cọc 30% của 820.000 − 82.000 = 738.000 → 221.000 (làm tròn nghìn)
+    const dep = (await t.post('/api/admin/orders', order({ depositPercent: 30 })).expect(201)).body.order;
+    expect(dep).toMatchObject({ depositPercent: 30, payments: [expect.objectContaining({ amount: 221000, status: 'success' })] });
+    await t.post('/api/admin/orders', order({ depositPercent: 100, discountCode: '' })).expect(400);
+
+    const later = (await t.post('/api/admin/orders', order({ paymentPlan: 'later', received: false, discountCode: '', lines: [product(1)] })).expect(201)).body.order;
+    expect(later).toMatchObject({ status: 'pending', paymentPlan: 'later', total: 280000, payments: [] });
+    expect((await t.get('/api/admin/stock-holds').expect(200)).body.jar).toBe(3); // chỉ đơn cọc đang giữ
+    // Xác nhận đơn (không thu tiền) → giữ nguyên liệu
+    expect((await t.post(`/api/admin/orders/${later.id}/advance`).expect(200)).body).toMatchObject({ status: 'paid', payments: [] });
+    expect((await t.get('/api/admin/stock-holds').expect(200)).body.jar).toBe(4);
+    for (let i = 0; i < 2; i++) await t.post(`/api/admin/orders/${later.id}/advance`).expect(200);
+    await t.post(`/api/admin/orders/${later.id}/ship`, { trackingCode: 'GHNLATER' }).expect(200);
+    const done = (await t.post(`/api/admin/orders/${later.id}/advance`).expect(200)).body;
+    expect(done).toMatchObject({ status: 'completed', payments: [expect.objectContaining({ amount: 280000, provider: 'cod', status: 'success' })] });
+
+    // Trả sau, xác nhận luôn lúc tạo; hủy không hỏi lỗi do ai (chưa thu gì)
+    const confirmed = (await t.post('/api/admin/orders', order({ paymentPlan: 'later', received: true, discountCode: '', lines: [product(1)] })).expect(201)).body.order;
+    expect(confirmed.status).toBe('paid');
+    expect(confirmed.history.at(-1).note).toBe('Xác nhận đơn · trả tiền khi nhận hàng');
+    const c = await t.post(`/api/admin/orders/${confirmed.id}/cancel`, { reason: 'Khách đổi ý' }).expect(200);
+    expect(c.body.order.refundDue).toBeUndefined();
+  });
+
   it('chặn: kho không đủ trên phần còn dùng được, mã sai, khách bị chặn (trừ khi xác nhận), dòng tự phối thiếu công thức', async () => {
     await t.post('/api/admin/orders', order()).expect(201); // giữ 3 hũ
     const short = await t.post('/api/admin/orders', order({ lines: [product(8)], discountCode: '' })).expect(409);

@@ -65,6 +65,18 @@ const shippingLabels: Record<ShippingMethod, string> = { standard: "Tiêu chuẩ
 const SHIP_DAYS: Record<ShippingMethod, number> = { standard: 3, express: 1 };
 
 export const depositLabel = (o: Order) => `Cọc ${o.depositPercent ?? DEPOSIT_RATE * 100}%`;
+export const isPayLater = (o: Pick<Order, "paymentPlan">) => o.paymentPlan === "later";
+// Hình thức thanh toán: "Cọc 30%", "Trả đủ", "Trả khi nhận hàng"
+export const planLabel = (o: Order) => (o.paymentPlan === "deposit" ? depositLabel(o) : o.paymentPlan === "later" ? "Trả khi nhận hàng" : "Trả đủ");
+
+// Đơn trả sau không có bước thanh toán: Chờ thanh toán → "Chờ xác nhận", Đã thanh toán → "Đã xác nhận" (vẫn giữ nguyên liệu như đơn đã cọc)
+const laterMeta: Partial<Record<OrderStatus, { label: string; hint: string }>> = {
+  pending: { label: "Chờ xác nhận", hint: "Đơn trả tiền khi nhận hàng — xác nhận với khách rồi bấm Xác nhận đơn." },
+  paid: { label: "Đã xác nhận", hint: "Đã chốt đơn, khách trả toàn bộ khi nhận hàng — chờ xưởng nhận làm." },
+};
+export const statusOf = (status: OrderStatus, o?: Pick<Order, "paymentPlan">) => ({ ...statusMeta[status], ...(o && isPayLater(o) ? laterMeta[status] : undefined) });
+// Nút chuyển bước theo đơn: đơn trả sau "Xác nhận đơn" thay vì "Xác nhận đã thanh toán"
+export const nextActionOf = (o: Order) => (o.status === "pending" && isPayLater(o) ? "Xác nhận đơn" : nextAction[o.status]);
 export const shippingName = (o: Order) => o.shippingName ?? shippingLabels[o.shippingMethod] ?? o.shippingMethod;
 export const shippingDays = (o: Order) => o.shippingDays ?? SHIP_DAYS[o.shippingMethod] ?? 3;
 
@@ -84,17 +96,18 @@ export function refundFor(o: Order, fault: CancelFault) {
   return Math.max(0, paid - depositAmount(Math.max(0, o.total - (o.shippingFee ?? 0)), o.depositPercent ?? DEPOSIT_RATE * 100));
 }
 
-export type PaymentState = "unpaid" | "deposit" | "paid" | "refunding" | "refunded";
+export type PaymentState = "unpaid" | "later" | "deposit" | "paid" | "refunding" | "refunded";
 export function paymentState(o: Order): PaymentState {
   if (o.refund || o.payments.some((p) => p.status === "refunded")) return "refunded";
   if (o.refundDue) return "refunding";
   const paid = paidAmount(o);
   // Đơn 0 ₫ (gửi bù khiếu nại) không có gì để thu
-  if (paid <= 0) return o.total > 0 ? "unpaid" : "paid";
+  if (paid <= 0) return o.total > 0 ? (isPayLater(o) ? "later" : "unpaid") : "paid";
   return paid >= o.total ? "paid" : "deposit";
 }
 export const paymentStateMeta: Record<PaymentState, { label: string; color: string }> = {
   unpaid: { label: "Chưa thanh toán", color: "default" },
+  later: { label: "Trả khi nhận hàng", color: "cyan" },
   deposit: { label: "Đã cọc", color: "gold" },
   paid: { label: "Đã thanh toán đủ", color: "green" },
   refunding: { label: "Chờ hoàn tiền", color: "red" },

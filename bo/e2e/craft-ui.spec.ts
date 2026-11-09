@@ -51,9 +51,22 @@ test("Thêm bước mới: ẩn mặc định, thêm lựa chọn kèm nguyên l
   await page.getByRole("button", { name: "Thêm lựa chọn" }).first().click();
   await drawer(page).locator("#nameVi").fill("Que mồi lửa");
   await drawer(page).locator("#price").fill("15000");
+  // Nguyên liệu trong kho nằm trước Giá & bán
+  const sections = await drawer(page)
+    .locator("section[aria-label]")
+    .evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+  expect(sections.indexOf("Nguyên liệu trong kho")).toBeGreaterThan(-1);
+  expect(sections.indexOf("Nguyên liệu trong kho")).toBeLessThan(sections.indexOf("Giá & bán"));
   await drawer(page).locator("#newStock").fill("40");
+  // Có tồn ban đầu thì bắt buộc tiền đã trả
+  await drawer(page).locator(".ant-drawer-footer").getByRole("button", { name: "Thêm lựa chọn" }).click();
+  await expect(drawer(page)).toContainText("Nhập tổng tiền đã trả cho lô, hoặc chọn “Không mất tiền”.");
+  await drawer(page).getByLabel("Tổng tiền đã trả").fill("200000");
+  await expect(drawer(page)).toContainText("= 5.000 ₫/cái — giá nhập ban đầu");
   await drawer(page).locator(".ant-drawer-footer").getByRole("button", { name: "Thêm lựa chọn" }).click();
   await expect(drawer(page)).toHaveCount(0);
+  const pending = await page.evaluate(() => JSON.parse(localStorage.getItem("bo-craft-builder-v5-new-materials")!));
+  expect(pending).toEqual([expect.objectContaining({ name: "Que mồi lửa", stock: 40, openingTotal: 200000, unitCost: 5000 })]);
   const option = (await step(page, "phu-kien-kem")).options[0];
   expect(option).toMatchObject({ name: { vi: "Que mồi lửa" }, priceDelta: 15_000 });
   // Nguyên liệu mới chờ Lưu mới vào Kho

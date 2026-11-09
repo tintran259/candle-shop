@@ -59,7 +59,9 @@ export function applyEdit(order: Order, input: EditOrderInput, by: string, at = 
     payments:
       order.status === "pending"
         ? order.payments.map((p) =>
-            p.status === "pending" ? { ...p, amount: order.paymentPlan === "deposit" ? depositAmount(Math.max(0, subtotal - discount), order.depositPercent ?? 50) : total } : p,
+            p.status === "pending" && order.paymentPlan !== "later"
+              ? { ...p, amount: order.paymentPlan === "deposit" ? depositAmount(Math.max(0, subtotal - discount), order.depositPercent ?? 50) : total }
+              : p,
           )
         : order.payments,
   };

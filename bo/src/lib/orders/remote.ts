@@ -28,6 +28,7 @@ export const createOrder = (o: Order) =>
     lines: o.items.map(line),
     discountCode: o.discountCode,
     paymentPlan: o.paymentPlan,
+    depositPercent: o.depositPercent,
     paymentMethod: o.paymentMethod,
     received: o.status === "paid",
     transactionId: o.payments[0]?.transactionId,

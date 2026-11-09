@@ -13,6 +13,8 @@ import type { Material } from "@/lib/inventory/types";
 type Props = {
   items: Material[];
   usage: Map<string, Usage[]>;
+  // Gắn trong bản nháp Thủ công nhưng chưa Lưu lên web
+  unsaved: Map<string, Usage[]>;
   // Lượng các đơn Đã thanh toán đang giữ
   held: Map<string, number>;
   pagination: TablePaginationConfig;
@@ -24,7 +26,7 @@ type Props = {
 const barColor = { out: "#ff7875", low: "#ffc069", ok: "#95de64", untracked: "#d9d9d9" } as const;
 
 // Bảng nguyên liệu — bấm dòng để mở chi tiết; nút + để ghi nhận nhập kho nhanh
-function MaterialTableView({ items, usage, held, pagination, onOpen, onReceive }: Props) {
+function MaterialTableView({ items, usage, unsaved, held, pagination, onOpen, onReceive }: Props) {
   const columns: TableProps<Material>["columns"] = [
     {
       title: "Nguyên liệu",
@@ -106,7 +108,17 @@ function MaterialTableView({ items, usage, held, pagination, onOpen, onReceive }
       responsive: ["lg"],
       render: (_, m) => {
         const used = usage.get(m.id) ?? [];
-        if (!used.length) return <Tag style={{ marginInlineEnd: 0 }}>Chưa dùng</Tag>;
+        const draft = unsaved.get(m.id) ?? [];
+        if (!used.length)
+          return draft.length ? (
+            <Tooltip title={`Đã gắn trong bản nháp Thủ công, chưa Lưu lên web: ${draft.map((u) => `${u.step.title.vi}: ${u.label}`).join(" · ")}`}>
+              <Tag color="gold" style={{ marginInlineEnd: 0 }}>
+                Chưa lưu
+              </Tag>
+            </Tooltip>
+          ) : (
+            <Tag style={{ marginInlineEnd: 0 }}>Chưa dùng</Tag>
+          );
         const steps = [...new Set(used.map((u) => u.step.title.vi))];
         return (
           <Tooltip title={used.map((u) => `${u.step.title.vi}: ${u.label}`).join(" · ")}>

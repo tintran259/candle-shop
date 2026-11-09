@@ -15,7 +15,7 @@ import { formatMoney, formatNumber } from "@/lib/format";
 import { needsCost } from "@/lib/costs";
 import { orderEditable } from "@/lib/orders/edit";
 import { orderNeeds, shortages } from "@/lib/orders/materials";
-import { cancelOutcomeLabels, canCancel, deadline, isDeliveryIssue, nextAction, nextStatus, remaining, returnConditionLabels, statusMeta, stepLabels } from "@/lib/orders/labels";
+import { cancelOutcomeLabels, canCancel, deadline, isDeliveryIssue, nextActionOf, nextStatus, remaining, returnConditionLabels, statusMeta, statusOf, stepLabels } from "@/lib/orders/labels";
 import { orderFlow, type Order } from "@/lib/orders/types";
 import { radius } from "@/theme";
 import { dot, stepTime } from "@/components/orders/process-steps";
@@ -28,9 +28,9 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
   const { settings } = useSettings();
   const { map, available, source } = useStockHold();
   const [dialog, setDialog] = useState<"fail" | "back" | "resend" | "complaint" | "ship" | null>(null);
-  const meta = statusMeta[order.status];
+  const meta = statusOf(order.status, order);
   const to = nextStatus(order.status);
-  const action = nextAction[order.status];
+  const action = nextActionOf(order);
   const due = deadline(order);
   const left = remaining(order);
   const issue = isDeliveryIssue(order.status);
@@ -48,7 +48,7 @@ export function OrderProcess({ order, api, onCancel, onEdit }: Props) {
   // extra: trường ghi kèm khi chuyển bước, vd giá vốn chốt lúc Bắt đầu làm
   const proceed = (extra?: Partial<Order>) => {
     api.advance(order.id, extra);
-    message.success(`Đơn ${order.code}: ${statusMeta[to!].label}`);
+    message.success(`Đơn ${order.code}: ${statusOf(to!, order).label}`);
   };
 
   const goNext = () => {

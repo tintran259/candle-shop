@@ -25,6 +25,8 @@
 - **Hũ tính theo từng cỡ:** hũ 150ml, 200ml, 250ml là các mã khác nhau, nắp cũng vậy. Xem mục Hũ và kích thước.
 - Ảnh được ưu tiên hơn màu khi hiển thị.
 - Tạo lựa chọn với nguyên liệu mới thì nguyên liệu ở trạng thái **Chờ lưu**, chỉ vào Kho khi bấm Lưu. Bỏ thay đổi thì không tạo.
+- **Drawer lựa chọn:** khối **Nguyên liệu trong kho** nằm ngay sau Thông tin cơ bản, trước **Giá & bán** (chọn nguyên liệu trước, giá vốn và gợi ý giá tính theo nguyên liệu đó). Bước Hũ giữ thứ tự cũ vì khối cỡ hũ có phụ thu theo giá hũ.
+- **Tạo nguyên liệu mới trong Kho:** nhập Tính theo (Cái / Gram / Mililít), **Tồn ban đầu** và **Tổng tiền đã trả** (hoặc tick **Không mất tiền**) giống thêm nguyên liệu ở Kho. Có tồn ban đầu thì bắt buộc ghi tiền, báo khi bấm lưu lựa chọn; ghi tiền mà tồn 0 thì báo "Nhập tồn ban đầu để chia ra giá mỗi đơn vị." Dưới ô tiền hiện giá mỗi đơn vị, vd 300.000 ₫ cho 100 cái "= 3.000 ₫/cái — giá nhập ban đầu". Bấm Lưu thì nguyên liệu vào Kho với giá nhập đó, phiếu "Tồn ban đầu" ghi tiền lô.
 
 ## Hũ và kích thước
 
@@ -113,7 +115,7 @@ Giá bán không tự chạy theo giá vốn để giá trên web không nhảy 
   - **lãi Y%** (phụ). Dưới **Lãi tối thiểu** ở [Cài đặt](./settings.md) (mặc định 50%) thì màu cam kèm ⚠.
   - Đầu trang có thông báo đếm số cỡ, nắp (theo hũ), lựa chọn, ô nhập và tuỳ chọn thêm đang bán cần xem lại.
 - **Gợi ý giá** (nút "Gợi ý …", chỉ hiện khi cần xem lại và cao hơn giá đang đặt, chỉ điền khi bấm): giá vốn tối thiểu × **Hệ số gợi ý giá** (mặc định ×2,5), không thấp hơn mức đạt lãi tối thiểu, làm tròn lên 5.000 ₫ (giá theo lượng làm tròn lên 100 ₫). Có ở từng cỡ trong drawer hũ (điền Phụ thu cỡ = giá gợi ý − giá hũ) và dưới ô giá trong drawer lựa chọn (tính theo phụ thu và nguyên liệu đang nhập, chưa cần Áp dụng).
-- Nguyên liệu chưa có giá nhập: ghi "Thiếu giá N nguyên liệu", giá vốn đang thiếu phần đó. Nguyên liệu không theo dõi tồn không tính, giống giá vốn ở đơn hàng.
+- Nguyên liệu chưa có giá nhập: ghi "Thiếu giá: <tên nguyên liệu>", mỗi tên là link mở nguyên liệu đó ở Kho để đặt giá; giá vốn đang thiếu phần đó. Ở bước Hũ, vốn mỗi cỡ gồm mã hũ + mục mặc định của bước bắt buộc tính trong giá hũ (vd bấc): mã hũ thiếu giá thì ghi "Thiếu giá: <mã hũ>" (cam); mục của bước khác thiếu giá thì ghi riêng dòng xám "Vốn chưa gồm bước Bấc: Bấc cotton chưa có giá" để không nhầm là hũ thiếu giá. Nguyên liệu không theo dõi tồn không tính, giống giá vốn ở đơn hàng.
 - **Ô nhập chữ** có thể gắn nguyên liệu (**Nguyên liệu trừ khi khách nhập**, vd nhãn decal): khách có nhập thì trừ 1 cái, hết thì không thêm được vào đơn. Cấu hình mẫu gắn "Chữ in trên nhãn" với nhãn decal. Ô không gắn nguyên liệu thì không so giá.
 - Đơn hàng giữ cách cũ: giá bán chốt lúc tạo đơn, giá vốn cả hũ chốt lúc Bắt đầu làm.
 
@@ -147,9 +149,9 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `craft-drag`: kéo thả thứ tự bước bằng chuột và bàn phím.
 - `craft-wax`, `craft-scent`, `craft-select`, `craft-exclusive`: chọn nhiều sáp, phụ thu theo tỉ lệ, phụ thu hương, màu theo ml, Chọn 1 / Chọn nhiều / Tối đa, Đứng một mình.
 - `craft-fixes`: nút nhập nhanh, ảnh ưu tiên hơn màu.
-- `craft-ui`: thẻ thống kê, sửa lựa chọn giữ quy tắc chỉ dùng với, xem trước, thêm / bật / đổi chỗ / xóa bước, lựa chọn kèm nguyên liệu mới, icon và tên tiếng Anh, bước Cá nhân hóa, bước Hũ không còn tab Kích thước, giá theo cỡ, Cấu hình mẫu, Xuất JSON, điện thoại.
+- `craft-ui`: thẻ thống kê, sửa lựa chọn giữ quy tắc chỉ dùng với, xem trước, thêm / bật / đổi chỗ / xóa bước, lựa chọn kèm nguyên liệu mới (bắt buộc tiền đã trả, ra giá mỗi đơn vị, khối Nguyên liệu trước Giá & bán), icon và tên tiếng Anh, bước Cá nhân hóa, bước Hũ không còn tab Kích thước, giá theo cỡ, Cấu hình mẫu, Xuất JSON, điện thoại.
 - `craft-pricing`: bảng Hũ hiện giá theo từng cỡ; drawer hũ so khách trả với vốn hũ + sáp + bấc, giá hũ thấp hơn vốn báo đỏ, bấm gợi ý điền phụ thu cỡ; Kho thêm hũ cùng Loại hũ (tên tự điền) → Thủ công báo cỡ mới, cỡ mới để tắt, bật và đặt giá; Rose thấp hơn vốn, sáp mặc định tính trong giá hũ, sáp ong chỉ bù phần chênh, gợi ý phụ thu trong drawer; cột Giá bình quân ở Kho; Lãi tối thiểu và Hệ số ở Cài đặt.
 - `price-guards`: drawer Hũ thiếc báo phụ thu nắp thấp hơn vốn nắp, gợi ý điền phụ thu nắp; bước Cá nhân hóa gắn nguyên liệu cho ô nhập, so phụ thu với vốn, gợi ý giá; cảnh báo đầu trang tính cả nắp.
 - `logic/price-guards`: nắp so ở cỡ đắt nhất, bỏ qua hũ không nắp; ô nhập và tuỳ chọn thêm so với 1 cái nguyên liệu; nhập chữ in nhãn trừ 1 nhãn decal, bỏ trống không trừ, hết nhãn báo lỗi.
-- `logic/craft-pricing`: giá khách trả = giá hũ + phụ thu cỡ; vốn hũ cỡ đó + sáp + bấc mặc định, thấp hơn vốn, lãi dưới mức, thiếu giá nhập; cột hũ lấy cỡ thiếu nhiều nhất; bước bắt buộc chỉ bù phần chênh, hương gồm phụ thu hương, lựa chọn mới chưa lưu; mã hũ cùng loại xếp theo dung tích, đoán loại hũ theo tên; chuyển cấu hình cũ giữ nguyên giá khách trả; giá gợi ý.
+- `logic/craft-pricing`: giá khách trả = giá hũ + phụ thu cỡ; vốn hũ cỡ đó + sáp + bấc mặc định, thấp hơn vốn, lãi dưới mức, thiếu giá nhập (hũ có giá, bấc mặc định thiếu giá thì báo đúng bấc); cột hũ lấy cỡ thiếu nhiều nhất; bước bắt buộc chỉ bù phần chênh, hương gồm phụ thu hương, lựa chọn mới chưa lưu; mã hũ cùng loại xếp theo dung tích, đoán loại hũ theo tên; chuyển cấu hình cũ giữ nguyên giá khách trả; giá gợi ý.
 - `storefront-sync`: web chạy theo cấu hình BO. Chỉ chạy khi web chạy ở cổng 3000, không thì bỏ qua.

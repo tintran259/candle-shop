@@ -128,7 +128,9 @@ export class OrdersService {
       const subtotal = dto.lines.reduce((s, l) => s + lineTotal(l), 0);
       const total = Math.max(0, subtotal - d.amount + shippingFee);
       // Cọc tính trên tiền hàng (tạm tính − giảm giá), phí giao thu cùng phần còn lại khi giao
-      const dueNow = dto.paymentPlan === 'deposit' ? depositAmount(Math.max(0, subtotal - d.amount), settings.depositPercent) : total;
+      const percent = dto.depositPercent ?? settings.depositPercent;
+      // Trả sau: không thu gì lúc đặt, thu toàn bộ khi giao (Khách đã nhận)
+      const dueNow = dto.paymentPlan === 'later' ? 0 : dto.paymentPlan === 'deposit' ? depositAmount(Math.max(0, subtotal - d.amount), percent) : total;
       const at = new Date();
       const items = await this.items(tx, id, dto.lines);
       await tx.order.create({
@@ -145,7 +147,7 @@ export class OrdersService {
           shippingDays: option.days,
           carrierId: carrier?.id ?? null,
           carrierName: carrier?.name ?? null,
-          depositPercent: settings.depositPercent,
+          depositPercent: percent,
           subtotal,
           discount: d.amount,
           discountCode: d.code,
@@ -159,20 +161,24 @@ export class OrdersService {
           createdAt: at,
           updatedAt: at,
           items: { createMany: { data: items } },
-          payments: {
-            create: {
-              id: rowId(id, `pay-${stamp()}`),
-              provider: dto.paymentMethod,
-              amount: dueNow,
-              status: dto.received ? 'success' : 'pending',
-              transactionId: dto.received ? clean(dto.transactionId) : null,
-              createdAt: at,
+          // Trả sau: chưa có khoản thu nào
+          ...(dto.paymentPlan !== 'later' && {
+            payments: {
+              create: {
+                id: rowId(id, `pay-${stamp()}`),
+                provider: dto.paymentMethod,
+                amount: dueNow,
+                status: dto.received ? 'success' : 'pending',
+                transactionId: dto.received ? clean(dto.transactionId) : null,
+                createdAt: at,
+              },
             },
-          },
+          }),
         },
       });
       await addEvent(tx, id, { status: 'pending', note: `${BO_ORDER_NOTE} · ${CHANNELS[dto.channel]}`, by, at });
-      if (dto.received) await addEvent(tx, id, { status: 'paid', note: dto.paymentPlan === 'deposit' ? `Nhận cọc ${formatMoney(dueNow)}` : 'Thanh toán đủ', by, at });
+      const confirmNote = { deposit: `Nhận cọc ${formatMoney(dueNow)}`, full: 'Thanh toán đủ', later: 'Xác nhận đơn · trả tiền khi nhận hàng' }[dto.paymentPlan];
+      if (dto.received) await addEvent(tx, id, { status: 'paid', note: confirmNote, by, at });
       if (d.id) await tx.discount.update({ where: { id: d.id }, data: { used: { increment: 1 } } });
       const createdCustomer = await this.ensureProfile(tx, id, dto.customer);
       return { order: orderDto(await this.load(tx, id)), createdCustomer };

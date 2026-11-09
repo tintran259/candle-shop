@@ -69,7 +69,7 @@ export function OrdersSection({ row }: { row: CustomerRow }) {
                   <Typography.Text strong className="tabular">
                     {o.code}
                   </Typography.Text>
-                  <StatusTag status={o.status} />
+                  <StatusTag status={o.status} order={o} />
                 </Flex>
                 <Typography.Text type="secondary" ellipsis style={{ fontSize: 12 }}>
                   {dayjs(o.createdAt).format("DD/MM/YYYY")} · {itemCount(o)} sản phẩm · {o.items.map((i) => i.name).join(", ")}

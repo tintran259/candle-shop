@@ -63,7 +63,7 @@ test("E2E 7 — Tạo đơn hàng tại BO: khách có sẵn / khách mới / kh
 
   // 5. Giao nhanh + cọc 50% tiền mặt, đã nhận cọc
   await clickText(`${D} .ant-radio-wrapper`, "Nhanh");
-  await clickText(`${D} .ant-radio-button-wrapper`, "Cọc 50%");
+  await clickText(`${D} .ant-radio-button-wrapper`, "Cọc"); // % cọc điền sẵn 50% theo Cài đặt
   await click(`document.querySelector('${D} [aria-label="Đã nhận tiền"]')`);
   await type(`document.querySelector('${D} textarea#note')`, "Gói quà giúp mình");
   await sleep(300);

@@ -44,9 +44,12 @@ export class CreateOrderDto extends OrderFields {
   @IsString() shippingMethod: string;
   @ArrayMinSize(1, { message: 'Thêm ít nhất một sản phẩm.' }) @ArrayMaxSize(50) @ValidateNested({ each: true }) @Type(() => LineDto) lines: LineDto[];
   @IsOptional() @IsString() @MaxLength(40) discountCode?: string;
-  @IsIn(['full', 'deposit']) paymentPlan: 'full' | 'deposit';
+  // full = trả đủ khi đặt, deposit = cọc depositPercent % tiền hàng, later = trả toàn bộ khi nhận hàng
+  @IsIn(['full', 'deposit', 'later']) paymentPlan: 'full' | 'deposit' | 'later';
+  // % cọc của đơn này (1–99). Bỏ trống = % trong Cài đặt
+  @IsOptional() @IsInt() @Min(1) @Max(99) depositPercent?: number;
   @IsIn(['vnpay', 'momo', 'cod']) paymentMethod: 'vnpay' | 'momo' | 'cod';
-  // Đã nhận tiền (cọc / đủ) lúc tạo đơn → đơn Đã thanh toán
+  // Đã nhận tiền (cọc / đủ) lúc tạo đơn → đơn Đã thanh toán. Trả sau: đã xác nhận đơn (chưa thu gì)
   @IsBoolean() received: boolean;
   @IsOptional() @IsString() @MaxLength(100) transactionId?: string;
   @IsIn(Object.keys(CHANNELS)) channel: keyof typeof CHANNELS;

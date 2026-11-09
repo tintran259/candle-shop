@@ -84,6 +84,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
     // Ngày sớm nhất còn chỗ từ hôm nay + số ngày làm tối thiểu (Cài đặt › Xưởng)
     readyDate: dayjs(workshop.suggest(0)),
     paymentPlan: "deposit",
+    depositPercent: settings.depositPercent,
     paymentMethod: "cod",
     received: false,
   });
@@ -107,6 +108,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
             readyDate: dayjs(order.readyDate),
             discountCode: order.discountCode,
             paymentPlan: order.paymentPlan,
+            depositPercent: order.depositPercent,
             paymentMethod: order.paymentMethod,
             note: order.note,
             internalNote: order.internalNote,
@@ -155,7 +157,9 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
   const discount = lockItems ? { amount: order!.discount } : evaluateDiscount(v.discountCode, pool, lines, shippingFee, previous, profile?.id);
   // Mã riêng đang chạy của khách này — gợi ý dưới ô mã khi chưa nhập
   const ownCodes = profile && !lockItems ? discounts.filter((d) => d.customerIds?.includes(profile.id) && discountStatus(d) === "running") : [];
-  const totals = orderTotals(lines, shippingFee, v.paymentPlan ?? "deposit", discount.amount, order?.depositPercent ?? settings.depositPercent);
+  // % cọc: đơn đã tạo giữ % lúc tạo; đơn mới theo ô % cọc (điền sẵn theo Cài đặt)
+  const depositPercent = order?.depositPercent ?? Math.min(99, Math.max(1, Math.round(v.depositPercent ?? settings.depositPercent)));
+  const totals = orderTotals(lines, shippingFee, v.paymentPlan ?? "deposit", discount.amount, depositPercent);
   const paid = order ? paidAmount(order) : 0;
   const candles = candleCount(lines);
 
@@ -193,7 +197,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
     shippingOptions,
     carriers,
     shippingFee,
-    depositPercent: settings.depositPercent,
+    depositPercent,
     orders,
     customers,
     patchDiscount,
@@ -211,7 +215,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
       paid={paid}
       paymentPlan={v.paymentPlan}
       received={v.received}
-      depositPercent={settings.depositPercent}
+      depositPercent={depositPercent}
       minMargin={settings.minMargin}
       goods={goods}
       goodsWarning={goodsWarning}
@@ -264,6 +268,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
                   ownCodes={ownCodes}
                   paid={paid}
                   dueNow={totals.dueNow}
+                  total={totals.total}
                   depositPercent={settings.depositPercent}
                   values={v}
                 />

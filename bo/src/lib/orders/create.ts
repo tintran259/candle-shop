@@ -77,7 +77,8 @@ export function orderTotals(lines: DraftLine[], shippingFee: number, plan: Payme
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
   const total = Math.max(0, subtotal - discount + shippingFee);
   // Cọc tính trên tiền hàng (tạm tính − giảm giá), không gồm phí vận chuyển — phí giao thu cùng phần còn lại khi giao
-  const dueNow = plan === "deposit" ? depositAmount(Math.max(0, subtotal - discount), depositPercent) : total;
+  // Trả sau: không thu gì lúc đặt, thu toàn bộ khi giao
+  const dueNow = plan === "later" ? 0 : plan === "deposit" ? depositAmount(Math.max(0, subtotal - discount), depositPercent) : total;
   return { subtotal, discount, shippingFee, total, dueNow };
 }
 
@@ -148,7 +149,9 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
   const totals = orderTotals(input.lines, input.shippingFee, input.paymentPlan, input.discount.amount, input.depositPercent);
   const items = toItems(input.lines, now.valueOf().toString(36));
   const history: OrderEvent[] = [{ at, status: "pending", by: input.by, note: `${BO_ORDER_NOTE} · ${channelLabels[input.channel]}` }];
-  if (input.received) history.push({ at, status: "paid", by: input.by, note: input.paymentPlan === "deposit" ? `Nhận cọc ${formatMoney(totals.dueNow)}` : "Thanh toán đủ" });
+  // received: đã nhận tiền (cọc / đủ); trả sau thì là đã xác nhận đơn (chưa thu gì)
+  const confirmNote = { deposit: `Nhận cọc ${formatMoney(totals.dueNow)}`, full: "Thanh toán đủ", later: "Xác nhận đơn · trả tiền khi nhận hàng" }[input.paymentPlan];
+  if (input.received) history.push({ at, status: "paid", by: input.by, note: confirmNote });
   return {
     id: `ord-${now.valueOf().toString(36)}`,
     code: nextOrderCode(orders, now),
@@ -168,16 +171,20 @@ export function buildOrder(input: CreateOrderInput, orders: Order[]): Order {
     total: totals.total,
     paymentPlan: input.paymentPlan,
     paymentMethod: input.paymentMethod,
-    payments: [
-      {
-        id: `pay-${now.valueOf().toString(36)}`,
-        provider: input.paymentMethod,
-        amount: totals.dueNow,
-        status: input.received ? "success" : "pending",
-        transactionId: input.received ? input.transactionId?.trim() || undefined : undefined,
-        createdAt: at,
-      },
-    ],
+    // Trả sau: chưa có khoản thu nào, thu toàn bộ khi giao (Khách đã nhận)
+    payments:
+      input.paymentPlan === "later"
+        ? []
+        : [
+            {
+              id: `pay-${now.valueOf().toString(36)}`,
+              provider: input.paymentMethod,
+              amount: totals.dueNow,
+              status: input.received ? "success" : "pending",
+              transactionId: input.received ? input.transactionId?.trim() || undefined : undefined,
+              createdAt: at,
+            },
+          ],
     readyDate: input.readyDate,
     note: input.note?.trim() || undefined,
     internalNote: input.internalNote?.trim() || undefined,

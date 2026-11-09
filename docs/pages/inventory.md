@@ -43,6 +43,7 @@ Hũ và nắp: mỗi dung tích là một nguyên liệu riêng. Màu nhuộm t�
 - **Bộ lọc:** trạng thái, tìm theo tên hoặc mã không dấu, loại.
 - **Sắp xếp:** cần nhập trước, tên A–Z, mới cập nhật.
 - **Bảng:** tồn kho kèm thanh mức, **giá bình quân**, ngưỡng, nơi dùng trên web, cập nhật, nút **+** nhập nhanh.
+- **Dùng trên web** tính theo cấu hình Thủ công **đã lưu** (bản web đang dùng). Lựa chọn mới gắn trong **bản nháp** Thủ công mà chưa bấm Lưu thay đổi: bảng ghi nhãn vàng **Chưa lưu** (rê chuột xem bước, lựa chọn); chi tiết nguyên liệu vẫn ghi "Dùng trên web (0)" kèm cảnh báo "Đã gắn N lựa chọn trong bản nháp Thủ công nhưng chưa lưu", link sang trang Thủ công và danh sách lựa chọn đó có nhãn Chưa lưu.
 - **Giá bình quân** trên bảng: nguyên liệu tính theo gram hiện giá **100 g** (giá 1 g thường lẻ, khó đọc), ml và cái hiện giá 1 đơn vị. Vd sáp đậu nành 90 ₫/g hiện "9.000 ₫ / 100 g". Chưa có giá thì ghi "Chưa có giá".
 - **Phiếu kho:** không hiện trên trang này; xem ở trang [Phiếu kho](./stock-movements.md) (mục con dưới Kho nguyên liệu trên sidebar) hoặc lịch sử trong drawer từng nguyên liệu.
 

@@ -288,9 +288,11 @@ enum OrderStatus {
   cancelled
 }
 
+// full = trả đủ khi đặt, deposit = cọc % tiền hàng khi đặt (% theo từng đơn), later = trả toàn bộ khi nhận hàng
 enum PaymentPlan {
   full
   deposit
+  later
 }
 
 enum PaymentProvider {

@@ -57,7 +57,8 @@ const draftStore = createLocalStore<CraftConfig | null>(
 
 // Nguyên liệu tạo mới từ drawer lựa chọn ("Tạo nguyên liệu mới trong Kho") — thuộc bản nháp:
 // chỉ vào Kho khi bấm Lưu, Bỏ thay đổi thì không sót lại gì trong Kho.
-type PendingMaterial = Omit<Material, "updatedAt">;
+// openingTotal: tiền đã trả cho tồn ban đầu — BE / Kho chia ra giá nhập ban đầu, ghi vào phiếu "Tồn ban đầu"
+type PendingMaterial = Omit<Material, "updatedAt"> & { openingTotal?: number };
 const pendingStore = createLocalStore<PendingMaterial[]>("bo-craft-builder-v5-new-materials", [], undefined, async () => (await fetchCraft()).pendingMaterials);
 
 // Chế độ BE: lưu bản nháp lên BE sau khi ngừng sửa 0,6 giây (sửa liên tục chỉ gửi bản cuối). null = bỏ nháp
@@ -230,6 +231,11 @@ function diff(saved: CraftConfig, draft: CraftConfig): DraftChanges {
 export function useCraftConfig() {
   const { data: config, loading } = useLocalStore(store);
   return useMemo(() => ({ config, loading }), [config, loading]);
+}
+
+// Bản nháp Thủ công chưa lưu (null = không có) — trang Kho báo lựa chọn đã gắn nhưng chưa lên web
+export function useCraftDraftConfig() {
+  return useLocalStore<CraftConfig | null>(draftStore).data;
 }
 
 // Trang Thủ công: đọc / sửa bản nháp, Lưu để lên web

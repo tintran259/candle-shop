@@ -105,6 +105,19 @@ export function guessJar(name: string): Pick<Material, "jarType" | "capacity"> {
 }
 
 // Nguyên liệu → nơi đang dùng trên trang Thủ công (lựa chọn, nắp hũ, tuỳ chọn thêm)
+// Lựa chọn gắn nguyên liệu trong bản nháp nhưng chưa có ở bản đã lưu (chưa lên web)
+export function unsavedUsage(saved: Map<string, Usage[]>, draft: CraftConfig | null) {
+  const out = new Map<string, Usage[]>();
+  if (!draft) return out;
+  const key = (u: Usage) => `${u.target.stepId}|${u.target.optionId ?? ""}|${u.label}`;
+  for (const [id, list] of materialUsage(draft)) {
+    const known = new Set((saved.get(id) ?? []).map(key));
+    const fresh = list.filter((u) => !known.has(key(u)));
+    if (fresh.length) out.set(id, fresh);
+  }
+  return out;
+}
+
 export function materialUsage(config: CraftConfig) {
   const usage = new Map<string, Usage[]>();
   const add = (id: string | undefined, u: Usage) => id && usage.set(id, [...(usage.get(id) ?? []), u]);

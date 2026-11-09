@@ -20,7 +20,7 @@ const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
 function paymentTitle(order: Order, p: Payment, index: number) {
   if (p.kind === "refund") return "Hoàn tiền cho khách";
   // Khoản đầu luôn là cọc / trả đủ lúc đặt — kể cả đơn tạo tại BO trả tiền mặt
-  if (index === 0) return order.paymentPlan === "deposit" ? `Tiền ${depositLabel(order).toLowerCase()}` : "Thanh toán đủ";
+  if (index === 0 && order.paymentPlan !== "later") return order.paymentPlan === "deposit" ? `Tiền ${depositLabel(order).toLowerCase()}` : "Thanh toán đủ";
   if (p.provider === "cod") return "Thu nốt khi giao";
   return "Thanh toán thêm";
 }
@@ -34,6 +34,7 @@ function remainingNote(order: Order, left: number) {
   }
   if (overpaid(order)) return "Khách đã trả dư sau khi sửa đơn.";
   if (!left) return "Đã thu đủ, không cần thu thêm.";
+  if (order.paymentPlan === "later" && !paidAmount(order)) return `Khách trả ${formatMoney(left)} khi nhận hàng — bấm Khách đã nhận là ghi nhận đã thu đủ.`;
   if (order.status === "pending") {
     const due = order.payments.find((p) => p.status === "pending")?.amount ?? left;
     const what = order.paymentPlan === "deposit" ? `cọc ${formatMoney(due)}` : formatMoney(due);
@@ -78,7 +79,7 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
   return (
     <FormSection
       title="Thanh toán"
-      description={`${order.paymentPlan === "deposit" ? `${depositLabel(order)} khi đặt, phần còn lại thu khi giao` : "Khách trả đủ khi đặt"} · ${providerLabels[order.paymentMethod]}`}
+      description={`${order.paymentPlan === "deposit" ? `${depositLabel(order)} khi đặt, phần còn lại thu khi giao` : order.paymentPlan === "later" ? "Khách trả toàn bộ khi nhận hàng" : "Khách trả đủ khi đặt"} · ${providerLabels[order.paymentMethod]}`}
     >
       {/* Tiến độ thu tiền trên tổng đơn */}
       <Flex justify="space-between" align="baseline">

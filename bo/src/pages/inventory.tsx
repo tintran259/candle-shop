@@ -7,13 +7,13 @@ import { MaterialTable } from "@/components/inventory/material-table";
 import { MovementModal, type ManualMovement } from "@/components/inventory/movement-modal";
 import { RestockPanel } from "@/components/inventory/restock-panel";
 import { InventorySkeleton } from "@/components/skeletons";
-import { useCraftConfig } from "@/hooks/use-craft-config";
+import { useCraftConfig, useCraftDraftConfig } from "@/hooks/use-craft-config";
 import { useInventory } from "@/hooks/use-inventory";
 import { useStockHold } from "@/hooks/use-stock-hold";
 import { applyInventoryFilters, defaultInventoryFilters, matchStatus, sortOptions, statusLabels, statusOrder, type InventoryFilters, type InventoryStatus } from "@/lib/inventory/filters";
 import { lotTotal } from "@/lib/costs";
 import { formatMoneyShort } from "@/lib/format";
-import { categoryLabels, materialLevel, materialUsage, movementLabels } from "@/lib/inventory/stock";
+import { categoryLabels, materialLevel, materialUsage, movementLabels, unsavedUsage } from "@/lib/inventory/stock";
 import { materialCategories } from "@/lib/inventory/types";
 import { useDrawerTarget, useOpenParam } from "@/lib/use-open-param";
 import { usePageQuery } from "@/lib/use-page-query";
@@ -29,6 +29,8 @@ export function InventoryPage() {
   const craft = useCraftConfig();
   const loading = api.loading || craft.loading;
   const usage = useMemo(() => materialUsage(craft.config), [craft.config]);
+  const draft = useCraftDraftConfig();
+  const unsaved = useMemo(() => unsavedUsage(usage, draft), [usage, draft]);
   const [filters, setFiltersState] = useState<InventoryFilters>(defaultInventoryFilters);
 
   // Trạng thái lọc nằm trên URL (?status=out) — thông báo trên header link thẳng tới
@@ -144,7 +146,7 @@ export function InventoryPage() {
 
       <Card styles={{ body: { padding: 12 } }}>
         {items.length ? (
-          <MaterialTable items={items} usage={usage} held={held} pagination={pagination} onOpen={setOpenId} onReceive={setMoving} />
+          <MaterialTable items={items} usage={usage} unsaved={unsaved} held={held} pagination={pagination} onOpen={setOpenId} onReceive={setMoving} />
         ) : !materials.length ? (
           // Kho trống khác với lọc không ra kết quả — hướng admin thêm nguyên liệu đầu tiên
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Kho chưa có nguyên liệu nào. Thêm sáp, tinh dầu, hũ… để gắn vào các lựa chọn trên trang Thủ công.">
@@ -171,6 +173,7 @@ export function InventoryPage() {
         open={openId !== null && (openId === "new" || !!current)}
         material={current}
         usage={current ? (usage.get(current.id) ?? []) : []}
+        unsaved={current ? (unsaved.get(current.id) ?? []) : []}
         api={api}
         onClose={() => setOpenId(null)}
       />

@@ -32,6 +32,8 @@ export type OrderFormValues = {
   readyDate: Dayjs;
   discountCode?: string;
   paymentPlan: PaymentPlan;
+  // % cọc của đơn này (điền sẵn theo Cài đặt), chỉ dùng khi Cọc
+  depositPercent?: number;
   paymentMethod: PaymentProvider;
   received: boolean;
   transactionId?: string;

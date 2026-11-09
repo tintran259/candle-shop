@@ -815,7 +815,7 @@ Thao tác sai trạng thái trả 400, vd `"Đơn đang Chờ giao — không l�
 | `items` | `OrderItem[]` | |
 | `subtotal`, `discount`, `shippingFee`, `total` | number | `shippingFee` gồm cả phí gửi lại |
 | `discountCode` | string? | |
-| `paymentPlan` | `"full"` \| `"deposit"` | |
+| `paymentPlan` | `"full"` \| `"deposit"` \| `"later"` | `later` = trả toàn bộ khi nhận hàng |
 | `paymentMethod` | `"vnpay"` \| `"momo"` \| `"cod"` | `cod` = tiền mặt / chuyển khoản |
 | `payments` | `Payment[]` | |
 | `readyDate` | string | Ngày làm xong `YYYY-MM-DD` |
@@ -865,8 +865,10 @@ Tạo đơn tại BO (khách đặt qua điện thoại, Zalo, Facebook, tại c
 | `carrierId` | string | | Đơn vị vận chuyển dự kiến |
 | `lines` | `Line[]` | ✔ | 1–50 dòng, xem dưới |
 | `discountCode` | string | | Tự viết hoa, bỏ ký tự lạ |
-| `paymentPlan`, `paymentMethod` | | ✔ | |
-| `received` | boolean | ✔ | Đã nhận tiền (cọc / đủ) lúc tạo: đơn vào thẳng Đã thanh toán |
+| `paymentPlan` | `"deposit"` \| `"full"` \| `"later"` | ✔ | Cọc / Trả đủ / **Trả sau** (không thu lúc đặt, không tạo khoản thu; khách trả toàn bộ khi nhận hàng) |
+| `depositPercent` | number | | % cọc của đơn này, 1–99. Bỏ trống = % trong Cài đặt. Lưu vào đơn |
+| `paymentMethod` | | ✔ | |
+| `received` | boolean | ✔ | Đã nhận tiền (cọc / đủ) lúc tạo: đơn vào thẳng Đã thanh toán. Trả sau: **đã xác nhận đơn** (vào thẳng `paid`, lịch sử "Xác nhận đơn · trả tiền khi nhận hàng", không thu gì) |
 | `transactionId` | string | | Mã giao dịch, khi `received` |
 | `readyDate` | string | ✔ | `YYYY-MM-DD` |
 | `channel` | `"phone"` \| `"zalo"` \| `"facebook"` \| `"store"` \| `"other"` | ✔ | Ghi vào lịch sử: "Tạo đơn tại BO · Zalo" |

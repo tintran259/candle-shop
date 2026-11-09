@@ -10,6 +10,7 @@ import { DrawerFormSkeleton } from "@/components/skeletons";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
 import { lidCheck, optionCheck, vesselSizeChecks, type SizeCheck } from "@/lib/craft/pricing";
 import { stepAmounts, vesselStep } from "@/lib/craft/selection";
+import { lotTotal, unitPrice } from "@/lib/costs";
 import { DEFAULT_LOW_STOCK, toMap } from "@/lib/inventory/stock";
 import type { Material, MaterialCategory } from "@/lib/inventory/types";
 import { amountBasis, basisLabel, isOptionStep, previewRoleMeta, uniqueId } from "@/lib/craft/steps";
@@ -130,7 +131,12 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
     const create = (key: string, materialName: string, unit: Unit, stock: number | undefined, category: MaterialCategory, swatch?: string) => {
       const id = uniqueId(key, taken, "material");
       taken.push(id);
-      api.addPendingMaterial({ id, name: materialName, category, unit, tracked: true, stock: Math.max(0, Math.round(stock ?? 0)), lowStock: DEFAULT_LOW_STOCK[unit], swatch });
+      const count = Math.max(0, Math.round(stock ?? 0));
+      // Tiền đã trả cho tồn ban đầu → giá nhập ban đầu (Kho ghi vào phiếu "Tồn ban đầu" khi bấm Lưu)
+      const total = count > 0 ? lotTotal(values.newOpening) : undefined;
+      const openingTotal = total === undefined ? undefined : Math.round(total);
+      const unitCost = openingTotal === undefined ? undefined : unitPrice(openingTotal, count);
+      api.addPendingMaterial({ id, name: materialName, category, unit, tracked: true, stock: count, lowStock: DEFAULT_LOW_STOCK[unit], swatch, unitCost, openingTotal });
       return id;
     };
     const pick = (value: string | undefined, make: () => string) => (value === NEW_MATERIAL ? make() : value || undefined);
@@ -202,6 +208,9 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
 
             <BasicFields />
 
+            {/* Chọn nguyên liệu trước: giá vốn và gợi ý giá ở khối Giá & bán tính theo nguyên liệu này */}
+            {step.kind !== "vessel" && <MaterialFields materials={materials} materialId={materialId} />}
+
             <PriceFields
               form={form}
               isVessel={isVessel}
@@ -214,8 +223,6 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
               pricing={pricing}
               setDirty={setDirty}
             />
-
-            {step.kind !== "vessel" && <MaterialFields materials={materials} materialId={materialId} />}
 
             <ImageFields step={step} role={role} hasImage={hasImage} hasSwatch={hasSwatch} />
 

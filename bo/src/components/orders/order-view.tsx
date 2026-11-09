@@ -1,14 +1,16 @@
 import { ExperimentOutlined } from "@ant-design/icons";
 import { Avatar, Flex, Tag, Typography } from "antd";
 import dayjs from "dayjs";
-import { deadline, paymentState, paymentStateMeta, statusMeta } from "@/lib/orders/labels";
+import { deadline, paymentState, paymentStateMeta, statusOf } from "@/lib/orders/labels";
 import type { Order, OrderItem, OrderStatus } from "@/lib/orders/types";
 import { brand } from "@/theme";
 
-export function StatusTag({ status }: { status: OrderStatus }) {
+// order: để đơn trả sau ghi "Chờ xác nhận / Đã xác nhận"
+export function StatusTag({ status, order }: { status: OrderStatus; order?: Pick<Order, "paymentPlan"> }) {
+  const meta = statusOf(status, order);
   return (
-    <Tag color={statusMeta[status].color} style={{ marginInlineEnd: 0 }}>
-      {statusMeta[status].label}
+    <Tag color={meta.color} style={{ marginInlineEnd: 0 }}>
+      {meta.label}
     </Tag>
   );
 }

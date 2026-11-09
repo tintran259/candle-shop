@@ -15,6 +15,8 @@ test("E2E 6 — nguyên liệu tạo từ Thủ công chỉ vào Kho khi Lưu; B
     await sleep(1200);
     await type(`document.querySelector('.ant-drawer-open input#nameVi')`, name);
     if (stock !== undefined) await type(`document.querySelector('.ant-drawer-open input#newStock')`, stock);
+    // Có tồn ban đầu thì nhập tiền đã trả (giá nhập ban đầu)
+    if (stock) await type(`document.querySelector('.ant-drawer-open input[aria-label="Tổng tiền đã trả"]')`, stock * 1000);
     await clickText(".ant-drawer-open .ant-drawer-footer button", "Thêm lựa chọn");
     await sleep(900);
   };
