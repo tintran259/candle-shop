@@ -9,7 +9,8 @@ export class PrismaService
 {
   constructor() {
     super({
-      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+      // DB_SCHEMA: schema Postgres (trống = public). Test dùng bo_test, tách khỏi dữ liệu thật
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }, process.env.DB_SCHEMA ? { schema: process.env.DB_SCHEMA } : undefined),
     });
   }
 

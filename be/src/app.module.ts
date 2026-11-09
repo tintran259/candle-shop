@@ -8,6 +8,9 @@ import { CartModule } from './cart/cart.module.js';
 import { OrdersModule } from './orders/orders.module.js';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { CustomersModule } from './customers/customers.module.js';
+import { DiscountsModule } from './discounts/discounts.module.js';
+import { SettingsModule } from './settings/settings.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
 import { NewsletterModule } from './newsletter/newsletter.module.js';
@@ -22,6 +25,9 @@ import { NewsletterModule } from './newsletter/newsletter.module.js';
     OrdersModule,
     UsersModule,
     AuthModule,
+    SettingsModule,
+    CustomersModule,
+    DiscountsModule,
     PaymentsModule,
     ReviewsModule,
     NewsletterModule,
