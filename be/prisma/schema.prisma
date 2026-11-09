@@ -524,3 +524,13 @@ model NotificationRead {
   id     String   @id
   readAt DateTime @default(now())
 }
+
+// Chặn đoán thử PIN: đếm lần sai và khóa chung toàn hệ thống (không theo IP), lưu DB để khởi động lại không xóa.
+// level tăng mỗi lần khóa → khóa lâu dần; đăng nhập đúng thì về 0
+model LoginGuard {
+  id          String    @id @default("admin")
+  failed      Int       @default(0)
+  level       Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}

@@ -33,6 +33,7 @@ Test E2E bằng Playwright ở `bo/e2e/`, chạy `pnpm test:e2e` trong `bo`. Đ�
 |---|---|
 | [craft-builder.md](./craft-builder.md) | Cấu hình Thủ công, cách tính giá, API |
 | [inventory.md](./inventory.md) | Nguyên liệu, phiếu kho, tiêu hao, trừ kho, API |
+| [backend.md](./backend.md) | Cài đặt BE (Neon), bảng, nhập dữ liệu từ BO, đăng nhập |
 
 Yêu cầu dữ liệu đơn hàng cho BE nằm ở [orders.md](./pages/orders.md#việc-của-be).
 
