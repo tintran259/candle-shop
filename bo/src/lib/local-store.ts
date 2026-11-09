@@ -7,6 +7,9 @@ export const MOCK_LATENCY_MS = 400;
 // Kho dữ liệu tạm lưu trên trình duyệt (chưa có API). Mọi component dùng chung một bản, đổi là cùng render lại.
 // Khi có BE: thay load (bất đồng bộ) bằng fetch, set bằng gọi API — giao diện get/set/subscribe giữ nguyên.
 // migrate: đổi dữ liệu đã lưu theo cấu trúc mới ngay khi đọc, không mất dữ liệu của người dùng
+// Mọi kho đã tạo, theo khóa — để sao lưu lấy đủ dữ liệu đang hiển thị (cả dữ liệu mặc định chưa từng ghi)
+export const registeredStores = new Map<string, { get: () => unknown }>();
+
 export function createLocalStore<T>(key: string, fallback: T, migrate?: (saved: T) => T) {
   // undefined = chưa tải xong
   let state: T | undefined;
@@ -62,6 +65,7 @@ export function createLocalStore<T>(key: string, fallback: T, migrate?: (saved: 
     return () => listeners.delete(listener);
   };
 
+  registeredStores.set(key, { get });
   return { get, set, subscribe, snapshot, fallback };
 }
 

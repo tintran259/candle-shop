@@ -9,6 +9,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrate cần kết nối trực tiếp: dùng DIRECT_URL nếu có, không thì bỏ "-pooler" khỏi máy chủ Neon trong DATABASE_URL
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"]?.replace("-pooler.", "."),
   },
 });

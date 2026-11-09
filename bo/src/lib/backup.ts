@@ -2,6 +2,9 @@
 // Chỉ lấy các khóa "bo-" (đơn, sản phẩm, kho, khách, mã giảm giá, Thủ công, cài đặt…), không lấy phiên đăng nhập.
 // Khi có BE: bỏ chức năng này, dữ liệu nằm trên server.
 import dayjs from "dayjs";
+// Nạp mọi kho dữ liệu để file sao lưu luôn đủ nhóm dữ liệu, kể cả khi trang của nhóm đó chưa mở
+import "@/lib/all-stores";
+import { registeredStores } from "@/lib/local-store";
 
 const PREFIX = "bo-";
 // Thời điểm sao lưu gần nhất — để nhắc, không nằm trong file sao lưu
@@ -12,9 +15,11 @@ export type BackupFile = { app: typeof APP; version: 1; exportedAt: string; data
 
 const ownKeys = () => Object.keys(localStorage).filter((k) => k.startsWith(PREFIX) && k !== LAST_KEY);
 
+// Lấy cả dữ liệu đang hiển thị của mọi kho (kể cả dữ liệu mặc định chưa từng ghi) — để nhập vào BE đủ dữ liệu
 export function createBackup(at = new Date()): BackupFile {
   const data: Record<string, string> = {};
   for (const k of ownKeys()) data[k] = localStorage.getItem(k) ?? "";
+  for (const [k, store] of registeredStores) if (!(k in data)) data[k] = JSON.stringify(store.get());
   return { app: APP, version: 1, exportedAt: at.toISOString(), data };
 }
 

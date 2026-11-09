@@ -1,3 +1,7 @@
+// Dữ liệu Back Office 2510 (docs/README.md). Tiền là VNĐ, số nguyên. id giữ đúng id của BO
+// (vd "moon-morning", "ord-abc", "cus-889900") để nhập được từ file sao lưu của BO.
+// Ảnh hiện là chuỗi (URL hoặc data URL như BO đang lưu) — sau này chuyển sang kho file, chỉ lưu URL.
+
 generator client {
   provider     = "prisma-client"
   output       = "../src/generated/prisma"
@@ -8,154 +12,515 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  CUSTOMER
-  ADMIN
+// ---------- Cài đặt (một dòng duy nhất, id = "shop") ----------
+
+model ShopSettings {
+  id                  String   @id @default("shop")
+  depositPercent      Int      @default(50)
+  maxDeliveryAttempts Int      @default(3)
+  resendFee           Int      @default(30000)
+  dailyCapacity       Int      @default(20)
+  leadDays            Int      @default(3)
+  minMargin           Int      @default(50)
+  priceMarkup         Float    @default(2.5)
+  // Người gửi in trên nhãn giao hàng và phiếu đơn
+  senderName          String   @default("2510 Candle")
+  senderPhone         String   @default("")
+  senderAddress       String   @default("")
+  updatedAt           DateTime @updatedAt
 }
 
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPING
-  COMPLETED
-  CANCELLED
+// Phương thức giao hiện khi tạo đơn (phí khách trả, số ngày giao)
+model ShippingOption {
+  id        String  @id
+  name      String
+  fee       Int
+  days      Int
+  enabled   Boolean @default(true)
+  sortOrder Int     @default(0)
 }
 
-enum PaymentProvider {
-  VNPAY
-  MOMO
-  COD
+// Đơn vị vận chuyển; trackingUrl có {code} thay cho mã vận đơn
+model Carrier {
+  id          String  @id
+  name        String
+  trackingUrl String?
+  requireCode Boolean @default(true)
+  enabled     Boolean @default(true)
+  sortOrder   Int     @default(0)
 }
 
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  phone        String?
-  role         Role     @default(CUSTOMER)
-  orders       Order[]
-  reviews      Review[]
-  cart         Cart?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
+// ---------- Sản phẩm ----------
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String
-  slug     String    @unique
-  products Product[]
+  id        String    @id
+  nameVi    String
+  nameEn    String
+  color     String    @default("default")
+  hidden    Boolean   @default(false)
+  sortOrder Int       @default(0)
+  products  Product[]
+}
+
+enum AromaLevel {
+  soft
+  medium
+  strong
+}
+
+enum ProductSize {
+  small
+  medium
+  big
+}
+
+enum ProductStatus {
+  active
+  hidden
 }
 
 model Product {
-  id          String        @id @default(cuid())
+  id          String              @id
   name        String
-  slug        String        @unique
+  slug        String              @unique
   description String?
-  // Giá lưu theo VND (số nguyên) để khớp VNPay/MoMo
   price       Int
   salePrice   Int?
   images      String[]
-  // Thông tin riêng của nến
+  categoryId  String
+  category    Category            @relation(fields: [categoryId], references: [id])
+  aromaLevel  AromaLevel
+  size        ProductSize
   scent       String?
   waxType     String?
   burnTime    Int?
-  stock       Int           @default(0)
-  isFeatured  Boolean       @default(false)
-  category    Category?     @relation(fields: [categoryId], references: [id])
-  categoryId  String?
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-  reviews     Review[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  // Lựa chọn nguyên liệu như nến tự phối + phụ kiện khác (trạng thái form, docs/pages/products.md)
+  build       Json?
+  status      ProductStatus       @default(active)
+  isNew       Boolean             @default(false)
+  isFeatured  Boolean             @default(false)
+  rating      Float               @default(0)
+  reviewCount Int                 @default(0)
+  sold        Int                 @default(0)
+  // Công thức 1 cây: trừ Kho khi Bắt đầu làm
+  recipe      ProductRecipeLine[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 }
 
-model Cart {
-  id        String     @id @default(cuid())
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String     @unique
-  items     CartItem[]
-  updatedAt DateTime   @updatedAt
+model ProductRecipeLine {
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id])
+  quantity   Float
+  sortOrder  Int      @default(0)
+
+  @@id([productId, materialId])
 }
 
-model CartItem {
-  id        String  @id @default(cuid())
-  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  cartId    String
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
-  quantity  Int     @default(1)
+// ---------- Kho nguyên liệu ----------
 
-  @@unique([cartId, productId])
+enum MaterialCategory {
+  vessel
+  wax
+  fragrance
+  wick
+  dye
+  decor
+  packaging
+  other
+}
+
+enum Unit {
+  g
+  ml
+  pcs
+}
+
+model Material {
+  id        String           @id
+  name      String
+  sku       String?
+  category  MaterialCategory
+  unit      Unit
+  // false = không đếm tồn, luôn coi là còn hàng
+  tracked   Boolean          @default(true)
+  stock     Float            @default(0)
+  lowStock  Float            @default(0)
+  // Giá nhập bình quân 1 đơn vị (1 g, 1 ml, 1 cái); chưa có giá thì null
+  unitCost  Float?
+  // Hũ: loại hũ và dung tích (ml)
+  jarType   String?
+  capacity  Int?
+  swatch    String?
+  note      String?
+  updatedAt DateTime         @updatedAt
+
+  // Xưởng tự sản xuất: định mức nguyên liệu cho 1 đơn vị
+  recipe        MaterialRecipeLine[] @relation("MadeMaterial")
+  usedIn        MaterialRecipeLine[] @relation("Component")
+  movements     StockMovement[]
+  productRecipe ProductRecipeLine[]
+}
+
+model MaterialRecipeLine {
+  materialId  String
+  material    Material @relation("MadeMaterial", fields: [materialId], references: [id], onDelete: Cascade)
+  componentId String
+  component   Material @relation("Component", fields: [componentId], references: [id])
+  quantity    Float
+  sortOrder   Int      @default(0)
+
+  @@id([materialId, componentId])
+}
+
+enum MovementType {
+  in
+  out
+  adjust
+  order
+  cost
+  make
+}
+
+// Phiếu kho: nhập, xuất, kiểm kê, trừ theo đơn, sửa giá, sản xuất
+model StockMovement {
+  id           String       @id
+  materialId   String
+  material     Material     @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  type         MovementType
+  change       Float
+  after        Float
+  note         String?
+  orderCode    String?
+  // Phiếu nhập: tổng tiền lô và giá mỗi đơn vị; phiếu sửa giá: giá mới và giá trước
+  totalCost    Int?
+  unitCost     Float?
+  previousCost Float?
+  // Mẻ sản xuất — chung cho phiếu thành phẩm và các phiếu trừ nguyên liệu của mẻ
+  batch        String?
+  by           String
+  at           DateTime
+
+  @@index([materialId, at])
+  @@index([orderCode])
+}
+
+// ---------- Khách hàng ----------
+
+model Customer {
+  id          String   @id
+  name        String
+  email       String   @default("")
+  phone       String
+  hasAccount  Boolean  @default(false)
+  newsletter  Boolean  @default(false)
+  tags        String[]
+  note        String?
+  blocked     Boolean  @default(false)
+  blockReason String?
+  createdAt   DateTime @default(now())
+
+  privateDiscounts DiscountCustomer[]
+
+  @@index([phone])
+}
+
+// ---------- Mã giảm giá ----------
+
+enum DiscountType {
+  percent
+  fixed
+  freeship
+}
+
+enum DiscountScope {
+  all
+  products
+  custom
+}
+
+model Discount {
+  id               String             @id
+  code             String             @unique
+  description      String?
+  type             DiscountType
+  // percent: 1–100; fixed: số tiền; freeship: bỏ qua
+  value            Int
+  maxDiscount      Int?
+  minOrder         Int?
+  scope            DiscountScope      @default(all)
+  firstOrderOnly   Boolean            @default(false)
+  // YYYY-MM-DD; endsAt trống = không hết hạn
+  startsAt         String
+  endsAt           String?
+  usageLimit       Int?
+  perCustomerLimit Int?
+  used             Int                @default(0)
+  active           Boolean            @default(true)
+  createdAt        String
+  // Mã riêng: chỉ các khách này dùng được. Không có dòng nào = mọi khách
+  customers        DiscountCustomer[]
+}
+
+model DiscountCustomer {
+  discountId String
+  discount   Discount @relation(fields: [discountId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@id([discountId, customerId])
+}
+
+// ---------- Đơn hàng ----------
+
+enum OrderStatus {
+  pending
+  paid
+  producing
+  ready
+  shipping
+  completed
+  delivery_failed
+  returning
+  returned
+  cancelled
+}
+
+enum PaymentPlan {
+  full
+  deposit
+}
+
+enum PaymentProvider {
+  vnpay
+  momo
+  cod
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  refunded
+}
+
+enum CancelOutcome {
+  returned
+  stocked
+  consumed
+}
+
+enum CancelFault {
+  customer
+  shop
+}
+
+enum ReturnCondition {
+  good
+  damaged
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  code            String      @unique
-  user            User?       @relation(fields: [userId], references: [id])
-  userId          String?
-  status          OrderStatus @default(PENDING)
-  subtotal        Int
-  shippingFee     Int         @default(0)
-  total           Int
+  id              String          @id
+  code            String          @unique
+  status          OrderStatus
   customerName    String
-  customerEmail   String
+  customerEmail   String          @default("")
   customerPhone   String
   shippingAddress String
+  // Phương thức giao lúc tạo đơn (id, tên, số ngày) — chụp lại, đổi Cài đặt không ảnh hưởng
+  shippingMethod  String
+  shippingName    String?
+  shippingDays    Int?
+  depositPercent  Int?
+  subtotal        Int
+  discount        Int             @default(0)
+  discountCode    String?
+  // Phí vận chuyển khách trả (gồm phí gửi lại)
+  shippingFee     Int             @default(0)
+  total           Int
+  paymentPlan     PaymentPlan
+  paymentMethod   PaymentProvider
+  // Ngày xưởng làm xong YYYY-MM-DD
+  readyDate       String
   note            String?
-  items           OrderItem[]
-  payments        Payment[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  internalNote    String?
+
+  cancelReason  String?
+  cancelOutcome CancelOutcome?
+  cancelFault   CancelFault?
+  // Số phải hoàn lúc hủy, và khoản đã hoàn (kèm ảnh chứng từ)
+  refundDue     Int?
+  refundAmount  Int?
+  refundImages  String[]
+  refundNote    String?
+  refundAt      DateTime?
+  refundBy      String?
+
+  // Đơn vị vận chuyển chọn lúc tạo đơn
+  carrierId     String?
+  carrierName   String?
+  // Lượt giao hiện tại (gửi lại đơn thì thay; lịch sử giữ lượt cũ)
+  shipCarrierId String?
+  shipCarrier   String?
+  trackingCode  String?
+  trackingUrl   String?
+  shipCost      Int?
+  shippedAt     DateTime?
+  // Tổng phí shop đã trả đơn vị vận chuyển (mọi lượt, phí hoàn hàng)
+  shippingCost  Int?
+
+  deliveryAttempts Int?
+  deliveryIssue    String?
+  returnCondition  ReturnCondition?
+  returnNote       String?
+  // Tổng phí gửi lại đã cộng vào shippingFee và total
+  resendFee        Int?
+  // Giá vốn nguyên liệu chốt lúc Bắt đầu làm
+  materialCost     Int?
+
+  // Đơn gửi bù cho khiếu nại của đơn gốc
+  replacementForId   String?
+  replacementForCode String?
+
+  items      OrderItem[]
+  payments   Payment[]
+  events     OrderEvent[]
+  complaints Complaint[]
+
+  createdAt DateTime
+  updatedAt DateTime
+
+  @@index([status])
+  @@index([customerPhone])
+  @@index([createdAt])
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id        String  @id
   orderId   String
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sortOrder Int     @default(0)
+  // Nến có sẵn: productId; nến tự phối: custom (mô tả) + craft (lựa chọn từng bước)
+  productId String?
   name      String
+  image     String?
   price     Int
   quantity  Int
+  custom    String?
+  craft     Json?
+  // Công thức 1 hũ chụp lúc tạo đơn: [{ materialId, quantity }]
+  recipe    Json?
 }
 
 model Payment {
-  id            String          @id @default(cuid())
-  order         Order           @relation(fields: [orderId], references: [id])
+  id            String          @id
   orderId       String
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   provider      PaymentProvider
-  status        PaymentStatus   @default(PENDING)
+  // Số âm = khoản hoàn một phần (thu dư, khiếu nại)
   amount        Int
-  // Mã giao dịch phía VNPay (vnp_TransactionNo) / MoMo (transId)
+  status        PaymentStatus
   transactionId String?
-  rawResponse   Json?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  isRefund      Boolean         @default(false)
+  images        String[]
+  note          String?
+  createdAt     DateTime
 }
 
-model Review {
-  id        String   @id @default(cuid())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now())
+enum EventKind {
+  status
+  payment
+  schedule
+  delivery
+  edit
+  complaint
 }
 
-model NewsletterSubscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
+// Lịch sử đơn: mọi sự kiện kèm người làm và thời gian
+model OrderEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sortOrder Int         @default(0)
+  at        DateTime
+  kind      EventKind?
+  status    OrderStatus
+  note      String?
+  by        String
+
+  @@index([orderId, at])
+}
+
+enum ComplaintResolution {
+  resend
+  refund
+  none
+}
+
+model Complaint {
+  id              String              @id
+  orderId         String
+  order           Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reason          String
+  images          String[]
+  resolution      ComplaintResolution
+  refundAmount    Int?
+  replacementId   String?
+  replacementCode String?
+  at              DateTime
+  by              String
+}
+
+// ---------- Sản phẩm hủy đơn ----------
+
+enum CancelledStatus {
+  pending
+  converted
+  discarded
+}
+
+model CancelledProduct {
+  id               String          @id
+  name             String
+  custom           String?
+  recipe           Json?
+  personalized     Boolean         @default(false)
+  images           String[]
+  price            Int
+  quantity         Int
+  orderId          String
+  orderCode        String
+  customerName     String
+  cancelReason     String
+  cancelledAt      DateTime
+  status           CancelledStatus @default(pending)
+  displayProductId String?
+  updatedAt        DateTime
+}
+
+// ---------- Thủ công, nháp, thông báo ----------
+
+// Cấu hình trang Thủ công dạng tài liệu (bước → lựa chọn → cỡ…): luôn sửa và lưu nguyên khối, đẩy lên web.
+// id "saved" = bản web đang dùng, "draft" = bản nháp đang sửa (kèm nguyên liệu chờ tạo)
+model CraftConfig {
+  id               String   @id
+  config           Json
+  pendingMaterials Json?
+  updatedAt        DateTime @updatedAt
+}
+
+// Đơn đang tạo dở trong form Tạo đơn hàng (một bản cho cả BO)
+model OrderDraft {
+  id      String   @id @default("current")
+  values  Json
+  savedAt DateTime
+}
+
+// Thông báo đã đọc (id thông báo)
+model NotificationRead {
+  id     String   @id
+  readAt DateTime @default(now())
 }
