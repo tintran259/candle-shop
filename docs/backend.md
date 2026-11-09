@@ -2,7 +2,7 @@
 
 NestJS + Prisma + PostgreSQL trên [Neon](https://neon.com) (gói miễn phí, region Singapore). Phục vụ Back Office: một người dùng, đăng nhập bằng PIN 6 số, không phân quyền.
 
-> **Trạng thái:** giai đoạn 1–2 xong (schema, nhập dữ liệu, đăng nhập bằng PIN). Giai đoạn 3 (API từng trang): xong nhóm 1 (cài đặt, danh mục, khách, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm), nhóm 3 (Thủ công, sản phẩm hủy đơn) và nhóm 4 (đơn hàng, đơn nháp, thông báo đã đọc) — đủ API cho mọi trang BO. Giai đoạn 4 xong: BO đăng nhập bằng PIN và đọc / ghi mọi dữ liệu qua API (mục BO dùng API bên dưới). Còn giai đoạn 5: đưa lên Render và host BO.
+> **Trạng thái:** giai đoạn 1–2 xong (schema, nhập dữ liệu, đăng nhập bằng PIN). Giai đoạn 3 (API từng trang): xong nhóm 1 (cài đặt, danh mục, khách, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm), nhóm 3 (Thủ công, sản phẩm hủy đơn) và nhóm 4 (đơn hàng, đơn nháp, thông báo đã đọc) — đủ API cho mọi trang BO. Giai đoạn 4 xong: BO đăng nhập bằng PIN và đọc / ghi mọi dữ liệu qua API (mục BO dùng API bên dưới). Giai đoạn 5: BE lên Render bằng `render.yaml` (mục Đưa lên Render); còn host BO.
 
 ## Cài đặt lần đầu
 
@@ -89,6 +89,41 @@ Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 - **Bản nháp Thủ công, đơn nháp:** lưu lên BE sau khi ngừng sửa (0,6 giây / 1 giây).
 - **Sao lưu:** Cài đặt › Sao lưu dữ liệu tải đủ mọi kho từ BE rồi xuất file (cùng định dạng cũ). Khôi phục làm trên máy chủ: `pnpm db:import <file>`.
 - **Chế độ dữ liệu trên trình duyệt:** `VITE_DATA_SOURCE=local` giữ cách lưu cũ (localStorage), chỉ dùng cho bộ test e2e của BO.
+
+## Đưa lên Render
+
+BE chạy trên [Render](https://render.com) (gói Free, vùng Singapore cùng Neon), cấu hình ở `render.yaml` ở gốc repo (Render Blueprint).
+
+| Bước Render | Lệnh |
+|---|---|
+| Build | `pnpm install --frozen-lockfile` → `pnpm run build` → `pnpm run db:deploy` (áp migration mới, không xóa dữ liệu — gói Free không có bước pre-deploy nên chạy trong build) |
+| Start | `node dist/main.js` (cổng do Render cấp qua `PORT`) |
+| Health check | `GET /api/health` — lỗi DB thì Render không chuyển sang bản mới |
+
+**Tạo lần đầu**
+
+1. Đẩy code lên GitHub (có `render.yaml`).
+2. Render › **New** › **Blueprint** › chọn repo `candle-shop` › Render đọc `render.yaml`, tạo service `candle-be`.
+3. Nhập biến môi trường (bí mật không nằm trong repo):
+
+   | Biến | Giá trị |
+   |---|---|
+   | `DATABASE_URL` | Connection string Neon, bản `-pooler` (giống `be/.env`) |
+   | `ADMIN_PIN_HASH` | Phần sau `ADMIN_PIN_HASH=` trong `be/.env` (hoặc chạy lại `pnpm auth:pin <6 số>`) |
+   | `BO_URL` | Địa chỉ BO, vd `https://candle-bo.pages.dev`. Chưa có thì tạm `http://localhost:5173` |
+   | `FRONTEND_URL` | Địa chỉ web (fe), chưa có thì để `http://localhost:3000` |
+   | `JWT_SECRET` | Render tự sinh — không cần nhập |
+
+4. **Apply** → chờ build xong (vài phút) → mở `https://candle-be.onrender.com/api/health` thấy `{"ok":true}` là chạy.
+5. BO gọi BE trên Render: trong `bo/.env.local` đặt `VITE_API_URL=https://candle-be.onrender.com/api` (tên thật lấy ở trang service), chạy lại BO. Thêm địa chỉ BO vào `BO_URL` trên Render.
+
+**Sau đó:** mỗi lần push lên `main` Render tự build và deploy lại (`autoDeploy`). Sửa schema thì tạo migration như bình thường (`pnpm db:migrate`), lần deploy sau tự áp.
+
+**Lưu ý gói Free**
+
+- Không có request trong 15 phút thì service ngủ; lần gọi đầu sau đó chờ ~30–60 giây (màn đăng nhập BO sẽ chậm lần đầu).
+- 750 giờ chạy / tháng — đủ cho một service chạy cả tháng.
+- Đổi `JWT_SECRET` trên Render thì mọi phiên đăng nhập cũ hết hạn (cách đăng xuất mọi máy). Đổi PIN: thay `ADMIN_PIN_HASH`, Render tự khởi động lại.
 
 ## Kiểm thử
 

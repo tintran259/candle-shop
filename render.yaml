@@ -1,0 +1,32 @@
+# Render Blueprint — BE (NestJS + Prisma) chạy trên Render, DB Postgres ở Neon (docs/backend.md#đưa-lên-render).
+# Tạo: Render › New › Blueprint › chọn repo này. Bí mật (sync: false) nhập trên Render, không ghi vào đây.
+services:
+  - type: web
+    name: candle-be
+    runtime: node
+    # Cùng vùng với Neon (Singapore) để truy vấn nhanh
+    region: singapore
+    plan: free
+    rootDir: be
+    # Gói Free không có pre-deploy command: chạy migrate ngay trong bước build (chỉ áp migration mới, không xóa dữ liệu)
+    buildCommand: npx -y pnpm@10.33.4 install --frozen-lockfile && npx -y pnpm@10.33.4 run build && npx -y pnpm@10.33.4 run db:deploy
+    startCommand: node dist/main.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # Connection string Neon (bản -pooler). Migrate tự bỏ "-pooler" để kết nối trực tiếp
+      - key: DATABASE_URL
+        sync: false
+      # Render tự sinh chuỗi ngẫu nhiên để ký token đăng nhập
+      - key: JWT_SECRET
+        generateValue: true
+      # Mã băm PIN: chạy `pnpm auth:pin <6 số>` trên máy, dán phần sau dấu =
+      - key: ADMIN_PIN_HASH
+        sync: false
+      # Địa chỉ BO được gọi API (CORS), nhiều địa chỉ cách nhau dấu phẩy
+      - key: BO_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
