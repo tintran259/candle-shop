@@ -2,7 +2,7 @@
 
 NestJS + Prisma + PostgreSQL trên [Neon](https://neon.com) (gói miễn phí, region Singapore). Phục vụ Back Office: một người dùng, đăng nhập bằng PIN 6 số, không phân quyền.
 
-> **Trạng thái:** giai đoạn 1–2 xong (schema, nhập dữ liệu, đăng nhập bằng PIN). Giai đoạn 3 (API từng trang): xong nhóm 1 — cài đặt, danh mục, khách, mã giảm giá; còn sản phẩm & kho, Thủ công & sản phẩm hủy đơn, đơn hàng. BO gọi API (giai đoạn 4) chưa làm; BO vẫn lưu trên trình duyệt.
+> **Trạng thái:** giai đoạn 1–2 xong (schema, nhập dữ liệu, đăng nhập bằng PIN). Giai đoạn 3 (API từng trang): xong nhóm 1 (cài đặt, danh mục, khách, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm) và nhóm 3 (Thủ công, sản phẩm hủy đơn); còn đơn hàng. BO gọi API (giai đoạn 4) chưa làm; BO vẫn lưu trên trình duyệt.
 
 ## Cài đặt lần đầu
 
@@ -68,8 +68,16 @@ Tất cả dưới `/api/admin/…`, cần đăng nhập. Dữ liệu trả về
 | Danh mục | `GET`, `POST`, `PATCH /:id`, `PUT /order` `{ ids }`, `DELETE /:id` | Bỏ trống id thì tạo từ tên (`Nước hoa` → `nuoc-hoa`). Tên trùng (không dấu, không phân biệt hoa thường) → 409. `PUT /order` sắp xếp theo đúng thứ tự, phải đủ mọi danh mục. Còn sản phẩm thì không xóa được (409) |
 | Khách | `GET`, `GET /:id`, `POST`, `PATCH /:id` | Gộp theo số điện thoại: số đã thuộc hồ sơ khác → 409 kèm `customerId`. Bỏ trống id thì `cus-` + 6 số cuối. Bỏ chặn thì xóa lý do chặn. Nhãn bỏ trùng, bỏ trống |
 | Mã giảm giá | `GET`, `POST`, `PUT /:id`, `PATCH /:id` `{ active?, used? }`, `DELETE /:id` | Mã bỏ dấu, viết hoa, 4–20 ký tự, không trùng. % 1–100; giảm tiền ≥ 1.000 ₫ và nhỏ hơn đơn tối thiểu; ngày kết thúc không trước ngày bắt đầu; `customerIds` (mã riêng) phải là khách có thật. `PUT` giữ lượt đã dùng và ngày tạo |
+| Kho nguyên liệu | `GET`, `GET /:id`, `POST`, `POST /batch`, `PATCH /:id`, `DELETE /:id` | Số tồn, giá nhập (theo dõi tồn) chỉ đổi qua phiếu; tạo có tồn ban đầu thì ghi phiếu "Tồn ban đầu" và chia `openingTotal` ra giá. Công thức sản xuất: không dùng chính nó, không vòng. Còn trong công thức sản phẩm / sản xuất thì không xóa được (409) |
+| Phiếu kho | `POST /materials/:id/movements`, `PUT /materials/:id/cost`, `POST /materials/:id/produce`, `GET /stock-movements` | Nhập bắt buộc tiền lô (0 = không mất tiền), tính lại giá bình quân; không xuất quá tồn. Sửa giá ghi giá mới / giá trước. Sản xuất trừ nguyên liệu theo định mức × số lượng, chung mã mẻ, giá theo nguyên liệu hoặc tự nhập; thiếu nguyên liệu / thiếu giá thì chặn. Lọc phiếu theo loại, nguyên liệu, ngày, tìm không dấu |
+| Sản phẩm | `GET`, `GET /:id`, `POST`, `PUT /:id`, `PATCH` `{ ids, status?, isNew?, isFeatured? }`, `POST /delete` `{ ids }` | id = slug khi tạo. Slug không trùng, giá giảm < giá bán, danh mục và nguyên liệu trong công thức phải có thật. `PUT` giữ số đã bán, đánh giá |
+
+| Thủ công | `GET /admin/craft`, `PUT`, `DELETE /admin/craft/draft`, `POST /admin/craft/publish` | Bản đã lưu (web dùng; chưa lưu thì trả cấu hình mẫu) và bản nháp kèm nguyên liệu chờ tạo. BE chỉ kiểm tra cấu trúc (phiên bản, id bước / lựa chọn không trùng, tên, phụ thu, cỡ hũ). Lưu: tạo nguyên liệu chờ mà cấu hình còn dùng, ghi bản đã lưu, xóa nháp trong một giao dịch; báo mã Kho không có |
+| Sản phẩm hủy đơn | `GET`, `GET /:id`, `PATCH /:id` `{ status, displayProductId? }` | Bản ghi do API đơn hàng tạo. Đã tạo sản phẩm trưng bày phải trỏ tới sản phẩm có thật; trạng thái khác thì bỏ liên kết |
+
+Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 
 ## Kiểm thử
 
 - `pnpm test`: chuyển file sao lưu BO (dữ liệu mẫu thật ở `test/fixtures/bo-backup-sample.json`), mã băm, token, PIN dễ đoán, thời gian khóa.
-- `pnpm test:e2e`: chạy trên **DB thật, schema `bo_test`** (tách khỏi dữ liệu thật ở `public`; trước khi chạy tự `migrate deploy` vào schema này, mỗi file test xóa trắng schema). Gồm: đăng nhập PIN (khóa 15 phút rồi 1 giờ…, DB giả), chặn khi không có token, health; API nhóm 1 — cài đặt (mặc định, lưu, các quy tắc), danh mục (tạo mã từ tên, trùng tên, sắp xếp, chặn xóa khi còn sản phẩm), khách (trùng số điện thoại, nhãn, chặn / bỏ chặn), mã giảm giá (chuẩn hóa, trùng, quy tắc tiền và ngày, mã riêng, tạm dừng, lượt dùng, xóa).
+- `pnpm test:e2e`: chạy trên **DB thật, schema `bo_test`** (tách khỏi dữ liệu thật ở `public`; trước khi chạy tự `migrate deploy` vào schema này, mỗi file test xóa trắng schema). Gồm: đăng nhập PIN (khóa 15 phút rồi 1 giờ…, DB giả), chặn khi không có token, health; API nhóm 1 — cài đặt (mặc định, lưu, các quy tắc), danh mục (tạo mã từ tên, trùng tên, sắp xếp, chặn xóa khi còn sản phẩm), khách (trùng số điện thoại, nhãn, chặn / bỏ chặn), mã giảm giá (chuẩn hóa, trùng, quy tắc tiền và ngày, mã riêng, tạm dừng, lượt dùng, xóa); API nhóm 2 — kho (tồn ban đầu và giá ban đầu, giá bình quân 60 → 70 → 78,33 theo ví dụ trong docs, chặn phiếu sai, sửa giá, tạo nhiều), sản xuất (trừ nguyên liệu, mã mẻ, giá theo nguyên liệu và tự nhập, thiếu tồn / thiếu giá, chặn vòng), chặn xóa khi còn trong công thức, lọc phiếu; sản phẩm (slug, giá giảm, danh mục / nguyên liệu không có, sửa giữ số đã bán, bật tắt và xóa hàng loạt); API nhóm 3 — Thủ công (cấu hình mẫu hợp lệ, nháp kèm nguyên liệu chờ, bỏ nháp, chặn cấu hình hỏng, Lưu chỉ tạo nguyên liệu còn dùng và báo mã Kho không có), sản phẩm hủy đơn (thứ tự, bỏ, tạo sản phẩm trưng bày, bỏ liên kết).

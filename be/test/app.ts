@@ -1,8 +1,8 @@
 // Dựng app Nest cho test e2e trên schema bo_test, kèm token đăng nhập sẵn
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { signToken } from '../src/auth/token.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
@@ -14,7 +14,8 @@ export async function createTestApp() {
   process.env.DB_SCHEMA = TEST_SCHEMA;
   process.env.JWT_SECRET = SECRET;
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-  const app: INestApplication<App> = moduleRef.createNestApplication();
+  const app = moduleRef.createNestApplication<NestExpressApplication>();
+  app.useBodyParser('json', { limit: '10mb' });
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   await app.init();

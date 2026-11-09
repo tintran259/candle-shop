@@ -1,10 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Ảnh sản phẩm, nến hủy đơn đang gửi dạng data URL nên cần giới hạn lớn hơn mặc định 100 KB
+  app.useBodyParser('json', { limit: '10mb' });
 
   app.setGlobalPrefix('api');
   // Web (FRONTEND_URL) và Back Office (BO_URL) — mỗi biến có thể ghi nhiều địa chỉ, cách nhau dấu phẩy
@@ -15,16 +18,8 @@ async function bootstrap() {
   app.enableCors({ origin: origins, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Candle Shop API')
-    .setVersion('0.1')
-    .addBearerAuth()
-    .build();
-  SwaggerModule.setup(
-    'api/docs',
-    app,
-    SwaggerModule.createDocument(app, swaggerConfig),
-  );
+  const swaggerConfig = new DocumentBuilder().setTitle('Candle Shop API').setVersion('0.1').addBearerAuth().build();
+  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
 
   await app.listen(process.env.PORT ?? 4000);
 }

@@ -10,6 +10,9 @@ import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CustomersModule } from './customers/customers.module.js';
 import { DiscountsModule } from './discounts/discounts.module.js';
+import { MaterialsModule } from './materials/materials.module.js';
+import { CraftModule } from './craft/craft.module.js';
+import { CancelledModule } from './cancelled/cancelled.module.js';
 import { SettingsModule } from './settings/settings.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
@@ -28,6 +31,9 @@ import { NewsletterModule } from './newsletter/newsletter.module.js';
     SettingsModule,
     CustomersModule,
     DiscountsModule,
+    MaterialsModule,
+    CraftModule,
+    CancelledModule,
     PaymentsModule,
     ReviewsModule,
     NewsletterModule,
