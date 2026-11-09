@@ -41,7 +41,7 @@ Trong thư mục `bo`:
 
 | Trang | File | Trình duyệt | Quy tắc | Mức phủ |
 |---|---|---|---|---|
-| [Đăng nhập](./pages/login.md) | `login`, `login-extra` | 19 mục + 2 test | | Tốt |
+| [Đăng nhập](./pages/login.md) | `login` (giả lập BE) | 5 test | | Tốt |
 | [Phần chung](./pages/common.md) | `common`, `drawers`, `chunk-reload`, `layout-width` | 23 mục + 7 test | | Tốt |
 | [Dashboard](./pages/dashboard.md) | `dashboard`, `dashboard-ui`, `dashboard-money`, `workshop-cost`, `logic/dashboard`, `logic/money` | 13 mục + 6 test | 16 | Tốt |
 | [Đơn hàng](./pages/orders.md) | `orders-*`, `order-changes`, `order-draft`, `shipping`, `workshop-cost`, `price-guards`, `logic/orders`, `logic/order-changes`, `logic/price-guards`, `logic/shipping` | 105 mục + 28 test | 34 | Tốt |

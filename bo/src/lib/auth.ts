@@ -1,28 +1,13 @@
 import { useSyncExternalStore } from "react";
+import { API_URL } from "@/lib/api-url";
 
-// Đăng nhập một tài khoản quản trị (shop chỉ có 1 người dùng, không phân quyền).
-// ⚠️ Chưa có BE: so mật khẩu ngay trên trình duyệt nên chỉ là cổng chặn người lạ mở BO, không phải bảo mật thật.
-// Khi có BE: thay checkCredentials bằng POST /api/auth/login (cookie httpOnly), giữ nguyên trang và cách chặn route.
+// Đăng nhập BO bằng PIN 6 số qua BE (POST /api/auth/login, docs/api.md#đăng-nhập). Một người dùng, không phân quyền.
+// BE trả token: gửi kèm mọi API (Authorization: Bearer). Ghi nhớ thì giữ 30 ngày trong localStorage, không thì sessionStorage (12 giờ).
+// Khóa khi nhập sai nhiều lần do BE quyết định (chung toàn hệ thống), BO chỉ hiện số lần còn lại và đếm ngược.
 
-export type Session = { email: string; name: string; expiresAt: number };
+export type Session = { name: string; expiresAt: number; token?: string };
 
 const KEY = "2510-admin-session";
-const DAY = 24 * 60 * 60 * 1000;
-// Ghi nhớ: 30 ngày. Không ghi nhớ: hết khi đóng trình duyệt (sessionStorage), tối đa 12 giờ
-const REMEMBER_MS = 30 * DAY;
-const SESSION_MS = 12 * 60 * 60 * 1000;
-
-// Đổi tài khoản trong bo/.env.local: VITE_ADMIN_EMAIL và VITE_ADMIN_PASSWORD_SHA256 (sha256 hex của mật khẩu)
-const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL ?? "admin@2510.vn").toLowerCase();
-// Mặc định là sha256("2510candle")
-const ADMIN_HASH = import.meta.env.VITE_ADMIN_PASSWORD_SHA256 ?? "bcb8ef8840e45c2e87a10de808af2b32a35b51553b3d3ee7782a727e0e62cf0d";
-const ADMIN_NAME = "Admin 2510";
-
-// Sai liên tiếp 5 lần thì khóa 30 giây
-const MAX_TRIES = 5;
-const LOCK_MS = 30_000;
-let failed = 0;
-let lockedUntil = 0;
 
 const listeners = new Set<() => void>();
 let cached: Session | null | undefined;
@@ -48,30 +33,29 @@ if (typeof window !== "undefined") window.addEventListener("storage", (e) => e.k
 
 export const getSession = () => (cached === undefined ? (cached = read()) : cached && cached.expiresAt > Date.now() ? cached : (cached = null));
 
-async function sha256(text: string) {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+export const PIN_LENGTH = 6;
 
-async function checkCredentials(email: string, password: string) {
-  return email.trim().toLowerCase() === ADMIN_EMAIL && (await sha256(password)) === ADMIN_HASH;
-}
+export type LoginResult =
+  | { ok: true }
+  // remaining: số lần còn thử trước khi bị khóa
+  | { ok: false; reason: "invalid"; remaining?: number }
+  // retryIn: số giây còn khóa
+  | { ok: false; reason: "locked"; retryIn: number }
+  // offline: không gọi được máy chủ; server: máy chủ lỗi / chưa cấu hình PIN
+  | { ok: false; reason: "offline" | "server"; message?: string };
 
-export type LoginResult = { ok: true } | { ok: false; reason: "invalid" | "locked"; retryIn?: number };
-
-export async function login(email: string, password: string, remember: boolean): Promise<LoginResult> {
-  if (Date.now() < lockedUntil) return { ok: false, reason: "locked", retryIn: Math.ceil((lockedUntil - Date.now()) / 1000) };
-  if (!(await checkCredentials(email, password))) {
-    failed += 1;
-    if (failed >= MAX_TRIES) {
-      failed = 0;
-      lockedUntil = Date.now() + LOCK_MS;
-      return { ok: false, reason: "locked", retryIn: LOCK_MS / 1000 };
-    }
-    return { ok: false, reason: "invalid" };
+export async function login(pin: string, remember: boolean): Promise<LoginResult> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin, remember }) });
+  } catch {
+    return { ok: false, reason: "offline" };
   }
-  failed = 0;
-  const session: Session = { email: ADMIN_EMAIL, name: ADMIN_NAME, expiresAt: Date.now() + (remember ? REMEMBER_MS : SESSION_MS) };
+  const body = (await res.json().catch(() => ({}))) as { token?: string; name?: string; expiresAt?: number; remaining?: number; retryIn?: number; message?: string };
+  if (res.status === 401 || res.status === 400) return { ok: false, reason: "invalid", remaining: body.remaining };
+  if (res.status === 429) return { ok: false, reason: "locked", retryIn: Math.max(1, body.retryIn ?? 60) };
+  if (!res.ok || !body.token) return { ok: false, reason: "server", message: typeof body.message === "string" ? body.message : undefined };
+  const session: Session = { name: body.name ?? "Admin", expiresAt: body.expiresAt ?? Date.now() + 12 * 3_600_000, token: body.token };
   try {
     (remember ? localStorage : sessionStorage).setItem(KEY, JSON.stringify(session));
     (remember ? sessionStorage : localStorage).removeItem(KEY);
@@ -82,6 +66,7 @@ export async function login(email: string, password: string, remember: boolean):
   return { ok: true };
 }
 
+// Token không lưu trên máy chủ nên đăng xuất chỉ cần xóa phiên ở trình duyệt
 export function logout() {
   try {
     localStorage.removeItem(KEY);

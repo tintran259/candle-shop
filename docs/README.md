@@ -43,4 +43,4 @@ Yêu cầu dữ liệu đơn hàng cho BE nằm ở [orders.md](./pages/orders.m
 - **Dữ liệu lưu trên trình duyệt:** chưa có BE, xóa dữ liệu trình duyệt là mất. Máy khác không thấy. Sao lưu / khôi phục bằng file ở [Cài đặt › Sao lưu dữ liệu](./pages/settings.md#sao-lưu-dữ-liệu).
 - **Web (`fe`) nối tạm với BO:** trang Thủ công chạy theo cấu hình BO. BO chạy trên máy tự đẩy cấu hình đã lưu và tồn dùng được sang web qua `fe/src/app/api/craft-config`, chỉ dùng khi dev. Web chưa đọc Cài đặt, đơn trên web chưa vào BO.
 - **Ô lượng cho 1 hũ:** chỉ có ở popup Tự phối nến của BO, web không có.
-- **Đăng nhập:** một người dùng, không phân quyền. BE đã có đăng nhập bằng **PIN 6 số** (khóa tăng dần khi nhập sai, xem [backend.md](./backend.md#đăng-nhập)). BO chưa gọi BE nên màn đăng nhập BO vẫn so email / mật khẩu trên trình duyệt; sẽ đổi sang bàn phím PIN ở giai đoạn 4.
+- **Đăng nhập:** một người dùng, không phân quyền. BE đã có đăng nhập bằng **PIN 6 số** (khóa tăng dần khi nhập sai, xem [backend.md](./backend.md#đăng-nhập)). Màn đăng nhập BO chỉ có ô PIN 6 số, BE kiểm tra và trả token ([pages/login.md](./pages/login.md)).

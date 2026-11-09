@@ -42,7 +42,7 @@ export const test = base.extend({
     if (autoLogin)
       await page.addInitScript(
         ([key]) => {
-          if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ email: "admin@2510.vn", name: "Admin 2510", expiresAt: Date.now() + 864e5 }));
+          if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ name: "Admin 2510", token: "token-test", expiresAt: Date.now() + 864e5 }));
         },
         [SESSION_KEY],
       );

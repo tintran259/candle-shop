@@ -1,32 +1,43 @@
-import { LockOutlined, MailOutlined, WarningOutlined } from "@ant-design/icons";
-import { Alert, Button, Checkbox, Flex, Form, Grid, Input, Typography } from "antd";
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { ExclamationCircleFilled, LoadingOutlined, LockOutlined } from "@ant-design/icons";
+import { Checkbox, Flex, Grid, Typography } from "antd";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router";
-import { login, safeNext, useSession } from "@/lib/auth";
+import { BrandPanel } from "@/components/login/brand-panel";
+import { PinField } from "@/components/login/pin-field";
+import { login, PIN_LENGTH, safeNext, useSession } from "@/lib/auth";
 import { useTitle } from "@/lib/use-title";
-import { brand, radius, text } from "@/theme";
+import { brand, radius } from "@/theme";
 
-type Values = { email: string; password: string; remember: boolean };
+type Notice = { tone: "error" | "warning"; text: string } | null;
 
-const iconStyle = { color: text.tertiary, marginInlineEnd: 4 };
+// 900 giây → "15:00"; trên 1 giờ → "1 giờ 05 phút"
+const countdown = (s: number) => {
+  if (s >= 3600) return `${Math.floor(s / 3600)} giờ ${String(Math.floor((s % 3600) / 60)).padStart(2, "0")} phút`;
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
 
-// Đăng nhập BO: một tài khoản quản trị. Vào đúng trang đang mở dở (?next=) sau khi đăng nhập.
+const toneColor = { error: "#cf1322", warning: "#ad4e00" };
+
+// Đăng nhập BO bằng PIN 6 số (docs/pages/login.md): chỉ một ô PIN, đủ 6 số thì tự đăng nhập; vào đúng trang đang mở dở (?next=)
 export function LoginPage() {
   useTitle("Đăng nhập");
   const session = useSession();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const screens = Grid.useBreakpoint();
-  const mobile = screens.md === false;
-  const [form] = Form.useForm<Values>();
-  const [error, setError] = useState<string>();
+  const mobile = Grid.useBreakpoint().md === false;
+  const input = useRef<HTMLInputElement>(null);
+  const [pin, setPin] = useState("");
+  const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [capsLock, setCapsLock] = useState(false);
-  // Sai quá nhiều lần: khóa nút tới thời điểm này, đếm ngược từng giây
+  const [notice, setNotice] = useState<Notice>(null);
+  const [wrong, setWrong] = useState(false);
+  const [shake, setShake] = useState(0);
+  // BE khóa đăng nhập tới thời điểm này; đếm ngược từng giây
   const [lockedUntil, setLockedUntil] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const next = safeNext(params.get("next"));
   const wait = Math.max(0, Math.ceil((lockedUntil - now) / 1000));
+  const locked = wait > 0;
 
   useEffect(() => {
     if (!lockedUntil) return;
@@ -34,7 +45,8 @@ export function LoginPage() {
       setNow(Date.now());
       if (Date.now() >= lockedUntil) {
         setLockedUntil(0);
-        setError(undefined);
+        setNotice(null);
+        setTimeout(() => input.current?.focus());
       }
     }, 1000);
     return () => clearInterval(timer);
@@ -42,22 +54,41 @@ export function LoginPage() {
 
   if (session) return <Navigate to={next} replace />;
 
-  const finish = async (v: Values) => {
+  const submit = async (value: string) => {
+    if (value.length !== PIN_LENGTH || busy || locked) return;
     setBusy(true);
-    setError(undefined);
-    const result = await login(v.email, v.password, v.remember);
+    setNotice(null);
+    const r = await login(value, remember);
     setBusy(false);
-    if (result.ok) return navigate(next, { replace: true });
-    if (result.reason === "locked") {
+    if (r.ok) return navigate(next, { replace: true });
+    setPin("");
+    if (r.reason === "invalid") {
+      setWrong(true);
+      setShake((n) => n + 1);
+      const left = r.remaining;
+      setNotice(
+        left !== undefined && left <= 2
+          ? { tone: "warning", text: `PIN không đúng. Còn ${left} lần thử trước khi bị tạm khóa.` }
+          : { tone: "error", text: left !== undefined ? `PIN không đúng. Còn ${left} lần thử.` : "PIN không đúng." },
+      );
+    } else if (r.reason === "locked") {
       setNow(Date.now());
-      setLockedUntil(Date.now() + (result.retryIn ?? 30) * 1000);
-      setError("locked");
-    } else setError("Email hoặc mật khẩu không đúng. Kiểm tra lại rồi thử lần nữa.");
-    form.setFieldValue("password", "");
-    form.getFieldInstance("password")?.focus();
+      setLockedUntil(Date.now() + r.retryIn * 1000);
+      setNotice({ tone: "error", text: "locked" });
+    } else if (r.reason === "offline") setNotice({ tone: "error", text: "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại." });
+    else setNotice({ tone: "error", text: r.message ?? "Máy chủ đang lỗi, thử lại sau ít phút." });
+    setTimeout(() => input.current?.focus());
   };
 
-  const checkCaps = (e: KeyboardEvent) => setCapsLock(e.getModifierState("CapsLock"));
+  const change = (value: string) => {
+    setWrong(false);
+    if (notice && notice.text !== "locked") setNotice(null);
+    setPin(value);
+    // Đủ 6 số thì tự đăng nhập
+    if (value.length === PIN_LENGTH) void submit(value);
+  };
+
+  const message = notice?.text === "locked" ? `Nhập sai PIN nhiều lần nên đăng nhập đang tạm khóa. Thử lại sau ${countdown(wait)}.` : notice?.text;
 
   return (
     <Flex vertical={mobile} style={{ minHeight: "100vh", boxSizing: "border-box", padding: mobile ? 12 : 16, gap: mobile ? 12 : 16, background: brand.page }}>
@@ -65,109 +96,58 @@ export function LoginPage() {
 
       <Flex vertical align="center" justify={mobile ? "flex-start" : "center"} style={{ flex: "1 1 46%", padding: mobile ? "4px 0 16px" : "32px 24px" }}>
         <main
-          style={{
-            width: "100%",
-            maxWidth: 440,
-            boxSizing: "border-box",
-            background: "#fff",
-            borderRadius: radius.card,
-            padding: mobile ? "28px 20px" : "44px 40px 36px",
-          }}
+          style={{ width: "100%", maxWidth: 440, boxSizing: "border-box", background: "#fff", borderRadius: radius.card, padding: mobile ? "32px 20px 28px" : "48px 40px 40px", textAlign: "center" }}
         >
-          <Typography.Title level={2} style={{ margin: "0 0 6px" }}>
-            Chào mừng trở lại
+          <span
+            aria-hidden
+            style={{ width: 48, height: 48, borderRadius: 14, background: brand.emberLight, color: brand.emberDark, display: "inline-grid", placeItems: "center", fontSize: 20, marginBottom: 16 }}
+          >
+            <LockOutlined />
+          </span>
+          <Typography.Title level={2} style={{ margin: "0 0 6px", fontSize: mobile ? 24 : 28 }}>
+            Nhập mã PIN
           </Typography.Title>
-          <Typography.Paragraph type="secondary" style={{ marginBottom: 28 }}>
-            Đăng nhập để quản lý đơn hàng, sản phẩm và kho của 2510.
+          <Typography.Paragraph type="secondary" id="pin-help" style={{ marginBottom: 28 }}>
+            Mã {PIN_LENGTH} số để vào trang quản lý 2510.
           </Typography.Paragraph>
 
-          {error && (
-            <Alert type="error" showIcon role="alert" title={error === "locked" ? `Sai quá nhiều lần. Thử lại sau ${wait} giây.` : error} style={{ marginBottom: 20, borderRadius: radius.inner }} />
-          )}
+          <PinField
+            ref={input}
+            value={pin}
+            onChange={change}
+            onEnter={() => void submit(pin)}
+            error={wrong}
+            shakeKey={shake}
+            disabled={locked}
+            readOnly={busy}
+            describedBy={message ? "pin-help pin-notice" : "pin-help"}
+          />
 
-          <Form form={form} layout="vertical" requiredMark={false} initialValues={{ email: "", password: "", remember: true }} onFinish={finish} disabled={busy}>
-            <Form.Item
-              name="email"
-              label="Email"
-              // Dán email hay kèm khoảng trắng
-              normalize={(v: string) => v.trim()}
-              rules={[
-                { required: true, message: "Nhập email." },
-                { type: "email", message: "Email chưa đúng định dạng." },
-              ]}
-            >
-              <Input size="large" autoFocus autoComplete="username" inputMode="email" prefix={<MailOutlined style={iconStyle} />} placeholder="admin@2510.vn" style={{ height: 48 }} />
-            </Form.Item>
-            <Form.Item
-              name="password"
-              label="Mật khẩu"
-              rules={[{ required: true, message: "Nhập mật khẩu." }]}
-              extra={
-                capsLock && (
-                  <span role="status" style={{ color: "#ad6800" }}>
-                    <WarningOutlined /> Đang bật Caps Lock
-                  </span>
-                )
-              }
-            >
-              <Input.Password
-                size="large"
-                autoComplete="current-password"
-                prefix={<LockOutlined style={iconStyle} />}
-                placeholder="Nhập mật khẩu"
-                onKeyDown={checkCaps}
-                onKeyUp={checkCaps}
-                onBlur={() => setCapsLock(false)}
-                style={{ height: 48 }}
-              />
-            </Form.Item>
-            <Form.Item name="remember" valuePropName="checked" extra="Bỏ chọn nếu đang dùng máy chung." style={{ marginBottom: 28 }}>
-              <Checkbox>Ghi nhớ đăng nhập 30 ngày</Checkbox>
-            </Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block loading={busy} disabled={wait > 0} style={{ height: 48, fontWeight: 600 }}>
-              Đăng nhập
-            </Button>
-          </Form>
+          {/* Một dòng trạng thái ngay dưới ô PIN, giữ sẵn chỗ để bố cục không nhảy */}
+          <div aria-live="polite" style={{ minHeight: 44, marginTop: 14, fontSize: 14, lineHeight: 1.5 }}>
+            {busy ? (
+              <Typography.Text type="secondary" aria-busy>
+                <LoadingOutlined style={{ marginInlineEnd: 6 }} />
+                Đang kiểm tra…
+              </Typography.Text>
+            ) : (
+              message && (
+                <span id="pin-notice" role="alert" style={{ color: toneColor[notice!.tone] }}>
+                  <ExclamationCircleFilled style={{ marginInlineEnd: 6 }} />
+                  {message}
+                </span>
+              )
+            )}
+          </div>
+
+          <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)} disabled={busy} style={{ marginTop: 4 }}>
+            Ghi nhớ trên máy này 30 ngày
+          </Checkbox>
         </main>
         <Typography.Text type="secondary" style={{ marginTop: 20, fontSize: 12 }}>
           © {new Date().getFullYear()} 2510 Scented Candle
         </Typography.Text>
       </Flex>
-    </Flex>
-  );
-}
-
-// Khối thương hiệu: ảnh nến 2510 phủ nền mocha, logo bản sáng giữ nguyên như sidebar
-function BrandPanel({ mobile }: { mobile: boolean }) {
-  return (
-    <Flex
-      vertical
-      justify={mobile ? "center" : "space-between"}
-      align={mobile ? "center" : "flex-start"}
-      style={{
-        flex: mobile ? "none" : "1 1 54%",
-        minHeight: mobile ? 168 : undefined,
-        borderRadius: radius.card,
-        padding: mobile ? 24 : 48,
-        backgroundColor: brand.mocha,
-        // Mobile: logo nằm giữa ảnh nên phủ đều và đậm hơn để logo không lẫn vào chữ trên hũ nến
-        backgroundImage: `${mobile ? "linear-gradient(rgba(74,55,43,0.78), rgba(74,55,43,0.78))" : "linear-gradient(180deg, rgba(74,55,43,0.55) 0%, rgba(74,55,43,0.35) 45%, rgba(58,42,32,0.9) 100%)"}, url("/login-hero.webp")`,
-        backgroundSize: "cover",
-        backgroundPosition: "center 60%",
-      }}
-    >
-      <Flex vertical align={mobile ? "center" : "flex-start"} gap={10}>
-        <img src="/logo-2510-light.png" alt="2510 Candle" style={{ height: mobile ? 64 : 88, width: "auto" }} />
-        <Typography.Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, letterSpacing: "0.28em" }}>BACK OFFICE</Typography.Text>
-      </Flex>
-      {!mobile && (
-        <div style={{ maxWidth: 420 }}>
-          <Typography.Title level={3} style={{ color: "#fff", fontWeight: 500, lineHeight: 1.35, margin: 0 }}>
-            Mỗi ngọn nến được đổ tay theo đơn.
-          </Typography.Title>
-          <Typography.Paragraph style={{ color: "rgba(255,255,255,0.8)", margin: "10px 0 0" }}>Theo dõi đơn, giữ nguyên liệu và cấu hình nến tự phối ở một nơi.</Typography.Paragraph>
-        </div>
-      )}
     </Flex>
   );
 }
