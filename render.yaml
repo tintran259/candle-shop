@@ -1,4 +1,4 @@
-# Render Blueprint — BE (NestJS + Prisma) chạy trên Render, DB Postgres ở Neon (docs/backend.md#đưa-lên-render).
+# Render Blueprint — BE (NestJS + Prisma, DB Postgres ở Neon) và BO (trang tĩnh Vite) chạy trên Render (docs/backend.md#đưa-lên-render).
 # Tạo: Render › New › Blueprint › chọn repo này. Bí mật (sync: false) nhập trên Render, không ghi vào đây.
 services:
   - type: web
@@ -13,6 +13,11 @@ services:
     startCommand: node dist/main.js
     healthCheckPath: /api/health
     autoDeploy: true
+    # Chỉ build lại khi BE đổi (sửa bo/, docs/… không làm BE khởi động lại)
+    buildFilter:
+      paths:
+        - be/**
+        - render.yaml
     envVars:
       - key: NODE_VERSION
         value: "24"
@@ -25,8 +30,42 @@ services:
       # Mã băm PIN: chạy `pnpm auth:pin <6 số>` trên máy, dán phần sau dấu =
       - key: ADMIN_PIN_HASH
         sync: false
-      # Địa chỉ BO được gọi API (CORS), nhiều địa chỉ cách nhau dấu phẩy
+      # Địa chỉ BO được gọi API (CORS), nhiều địa chỉ cách nhau dấu phẩy, vd https://candle-bo.onrender.com,http://localhost:3001
       - key: BO_URL
         sync: false
       - key: FRONTEND_URL
         sync: false
+
+  # BO: trang tĩnh (Vite build), gọi BE qua VITE_API_URL — gán lúc build nên đổi địa chỉ BE thì phải build lại
+  - type: web
+    name: candle-bo
+    runtime: static
+    rootDir: bo
+    buildCommand: npx -y pnpm@10.33.4 install --frozen-lockfile && npx -y pnpm@10.33.4 run build
+    staticPublishPath: dist
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - bo/**
+        - render.yaml
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: VITE_API_URL
+        value: https://candle-be.onrender.com/api
+      # Không tải trình duyệt của Playwright khi cài thư viện (chỉ dùng cho test)
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "1"
+    # Trang một trang (React Router): mọi đường dẫn trả index.html
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      # File build có mã băm trong tên — giữ cache lâu
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Frame-Options
+        value: DENY

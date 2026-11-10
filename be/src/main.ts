@@ -11,7 +11,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   // Web (FRONTEND_URL) và Back Office (BO_URL) — mỗi biến có thể ghi nhiều địa chỉ, cách nhau dấu phẩy
-  const origins = [process.env.FRONTEND_URL ?? 'http://localhost:3000', process.env.BO_URL ?? 'http://localhost:5173,http://localhost:3011']
+  // Để trống cũng dùng giá trị mặc định (BO chạy dev ở cổng 3001, preview test 3011)
+  const origins = [process.env.FRONTEND_URL || 'http://localhost:3000', process.env.BO_URL || 'http://localhost:3001,http://localhost:3011']
     .flatMap((s) => s.split(','))
     .map((s) => s.trim())
     .filter(Boolean);
