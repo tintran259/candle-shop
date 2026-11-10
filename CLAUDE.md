@@ -10,7 +10,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 |---|---|---|
 | `bo/` | Back Office cho chủ shop (một người dùng, không phân quyền) | Vite + React 19 + antd 6, pnpm, Playwright e2e (cổng 3011) |
 | `be/` | API cho BO | NestJS 12 + Prisma 7 (`@prisma/adapter-pg`) + Postgres trên Neon (Singapore) |
-| `fe/` | Web bán hàng cho khách | Next.js — **tạm hoãn**, chưa nối BE |
+| `fe/` | Web bán hàng cho khách | **Đã xóa (10/11/2026), sẽ tạo lại sau** — bản cũ Next.js còn trong lịch sử git (trước commit xóa) |
 | `landing-page/` | Trang giới thiệu | Không đụng tới trừ khi được yêu cầu |
 | `docs/` | Tài liệu nghiệp vụ, API, test | Tiếng Việt |
 
@@ -83,6 +83,6 @@ Còn lại, theo thứ tự đề xuất:
 2. Mang dữ liệu cũ sang DB mới nếu cần: file sao lưu BO + `pnpm db:import`.
 3. Chuyển ảnh sang kho file (Cloudinary / R2), DB chỉ giữ URL.
 4. Thêm vài e2e chạy với BE thật cho luồng chính (tạo đơn → làm → giao → hoàn tất, Thủ công Lưu).
-5. Nối web `fe` với BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối.
+5. Tạo lại web `fe` và nối BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối. Các comment trong BO còn nhắc `fe/…` (dữ liệu mẫu, đồng bộ cấu hình Thủ công sang web khi chạy localhost) là của bản cũ.
 
 Dữ liệu thật đang cần chủ dự án xử lý: hai bấc chưa có giá (`wick-cotton-wick` "Bấc cotton", `wick-wooden-wick` "Bấc gỗ"); trùng tên "Bấc cotton" với `bac-cotton`.
