@@ -85,7 +85,7 @@ Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 
 Ảnh (sản phẩm, lựa chọn Thủ công, ảnh khiếu nại, chứng từ hoàn tiền) lưu trên [Cloudinary](https://cloudinary.com); DB chỉ giữ URL `https://res.cloudinary.com/…`.
 
-**Cách chạy:** BO nén ảnh trên trình duyệt (cạnh dài ≤ 800px, WebP) → xin chữ ký ở BE (`POST /api/admin/uploads/sign`) → tải **thẳng** lên Cloudinary (không qua BE) → lưu URL. Khóa bí mật chỉ nằm ở BE. Thư mục: `candle2510/products`, `candle2510/craft`, `candle2510/orders`.
+**Cách chạy:** chọn ảnh thì BO chỉ nén trên trình duyệt (cạnh dài ≤ 800px, WebP) để xem trước — **chưa tải lên**. Bấm Lưu form (sản phẩm, Áp dụng lựa chọn Thủ công, Ghi nhận hoàn tiền / khiếu nại) thì BO mới xin chữ ký ở BE (`POST /api/admin/uploads/sign`, một chữ ký cho cả lượt) → tải **thẳng** các ảnh mới lên Cloudinary (không qua BE) → lưu URL (`uploadImages()` trong `bo/src/lib/craft/image.ts`). Đóng form không lưu thì không có ảnh nào lên Cloudinary; tải lỗi thì form giữ nguyên để lưu lại. Khóa bí mật chỉ nằm ở BE. Thư mục: `candle2510/products`, `candle2510/craft`, `candle2510/orders`.
 
 **Hiển thị:** BO chèn tham số vào URL (`f_auto,q_auto` + cỡ ô, gấp đôi cho màn hình nét) để Cloudinary trả ảnh đúng cỡ, định dạng tốt nhất (WebP / AVIF). Ảnh trong bảng, ô ảnh dùng ảnh thu nhỏ; bấm xem ảnh chứng từ thì mở ảnh gốc (`bo/src/lib/craft/image-url.ts`). Không cần cài SDK `@cloudinary/react`.
 

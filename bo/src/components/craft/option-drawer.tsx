@@ -7,6 +7,7 @@ import { BasicFields, ImageFields, LookFields, MaterialFields, RuleFields } from
 import { PriceFields } from "@/components/craft/option/price-fields";
 import { VesselFields } from "@/components/craft/option/vessel-fields";
 import { DrawerFormSkeleton } from "@/components/skeletons";
+import { uploadError, uploadImages } from "@/lib/craft/image";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
 import { lidCheck, optionCheck, vesselSizeChecks, type SizeCheck } from "@/lib/craft/pricing";
 import { stepAmounts, vesselStep } from "@/lib/craft/selection";
@@ -122,7 +123,19 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
     });
   };
 
-  const finish = (values: OptionFormValues) => {
+  const [saving, setSaving] = useState(false);
+  const finish = async (raw: OptionFormValues) => {
+    if (saving) return;
+    // Ảnh mới chọn tải lên kho ảnh lúc này (trước mọi thay đổi khác — lỗi thì drawer giữ nguyên)
+    setSaving(true);
+    let values: OptionFormValues;
+    try {
+      values = { ...raw, images: await uploadImages(raw.images, "craft") };
+    } catch (e) {
+      return message.error(uploadError(e));
+    } finally {
+      setSaving(false);
+    }
     // Chọn "Tạo mới" thì tạo nguyên liệu trong bản nháp (tồn ban đầu admin nhập), lựa chọn trỏ tới id đó.
     // Nguyên liệu chỉ thật sự vào Kho khi bấm Lưu trên trang — Bỏ thay đổi thì không sót lại gì.
     const name = values.nameVi.trim();
@@ -188,7 +201,7 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
           <Button onClick={requestClose} style={{ marginLeft: "auto" }}>
             Hủy
           </Button>
-          <Button type="primary" onClick={() => form.submit()}>
+          <Button type="primary" loading={saving} onClick={() => form.submit()}>
             {option ? "Áp dụng" : "Thêm lựa chọn"}
           </Button>
         </Flex>
@@ -211,21 +224,7 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
             {/* Chọn nguyên liệu trước: giá vốn và gợi ý giá ở khối Giá & bán tính theo nguyên liệu này */}
             {step.kind !== "vessel" && <MaterialFields materials={materials} materialId={materialId} />}
 
-            <PriceFields
-              form={form}
-              isVessel={isVessel}
-              basis={basis}
-              perLabel={perLabel}
-              priceLabel={priceLabel}
-              price={price}
-              sample={sample}
-              priceCheck={priceCheck}
-              pricing={pricing}
-              setDirty={setDirty}
-            />
-
-            <ImageFields step={step} role={role} hasImage={hasImage} hasSwatch={hasSwatch} />
-
+            {/* Hũ: chọn loại hũ & kích thước trước rồi mới đặt giá bán */}
             {isVessel && (
               <VesselFields
                 rows={rows}
@@ -245,6 +244,21 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
                 }}
               />
             )}
+
+            <PriceFields
+              form={form}
+              isVessel={isVessel}
+              basis={basis}
+              perLabel={perLabel}
+              priceLabel={priceLabel}
+              price={price}
+              sample={sample}
+              priceCheck={priceCheck}
+              pricing={pricing}
+              setDirty={setDirty}
+            />
+
+            <ImageFields step={step} role={role} hasImage={hasImage} hasSwatch={hasSwatch} />
 
             {looks && <LookFields role={role!} looks={looks} />}
 

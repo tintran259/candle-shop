@@ -1,15 +1,15 @@
 import { DeleteOutlined, EyeOutlined, LoadingOutlined, PlusOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import { App, Button, Flex, Image, Tooltip, Upload } from "antd";
 import { useEffect, useRef, useState } from "react";
-import { imageUrl, MAX_FILE_MB, MAX_IMAGES, storeImage, type ImageFolder } from "@/lib/craft/image";
+import { imageUrl, MAX_FILE_MB, MAX_IMAGES, prepareImage } from "@/lib/craft/image";
 import { brand } from "@/theme";
 
 // Cạnh ô ảnh — ô "Thêm ảnh" dùng cùng kích thước (xem .image-upload-trigger trong index.css)
 const TILE = 112;
 
 // Upload nhiều ảnh; ảnh đầu tiên là ảnh chính. Dùng như một field của antd Form.
-// folder: thư mục trên kho ảnh (Cloudinary) theo nơi dùng — sản phẩm, Thủ công, đơn hàng
-export function ImageUpload({ value = [], onChange, folder = "misc" }: { value?: string[]; onChange?: (images: string[]) => void; folder?: ImageFolder }) {
+// Chọn ảnh chỉ nén + xem trước trên máy; form gọi uploadImages() khi bấm Lưu mới tải lên kho ảnh (Cloudinary)
+export function ImageUpload({ value = [], onChange }: { value?: string[]; onChange?: (images: string[]) => void }) {
   const { message } = App.useApp();
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(0);
@@ -32,11 +32,11 @@ export function ImageUpload({ value = [], onChange, folder = "misc" }: { value?:
     pending.current += 1;
     setBusy(pending.current);
     try {
-      const url = await storeImage(file, folder);
+      const url = await prepareImage(file);
       latest.current = [...latest.current, url];
       onChange?.(latest.current);
-    } catch (e) {
-      message.error(e instanceof Error && e.message.startsWith("Không tải") ? `${file.name}: ${e.message}` : `Không đọc được ${file.name}.`);
+    } catch {
+      message.error(`Không đọc được ${file.name}.`);
     } finally {
       pending.current -= 1;
       setBusy(pending.current);
@@ -104,7 +104,7 @@ export function ImageUpload({ value = [], onChange, folder = "misc" }: { value?:
           <Upload className="image-upload-trigger" listType="picture-card" accept="image/*" multiple showUploadList={false} beforeUpload={beforeUpload}>
             <button type="button" style={{ border: 0, background: "none", cursor: "pointer" }}>
               {busy ? <LoadingOutlined /> : <PlusOutlined />}
-              <div style={{ marginTop: 8 }}>{busy ? "Đang tải ảnh…" : "Thêm ảnh"}</div>
+              <div style={{ marginTop: 8 }}>{busy ? "Đang xử lý ảnh…" : "Thêm ảnh"}</div>
             </button>
           </Upload>
         )}

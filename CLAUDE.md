@@ -54,7 +54,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 - **Thủ công:** cấu hình JSON, bản đã lưu (web dùng) + bản nháp + nguyên liệu chờ tạo; bấm Lưu gọi `POST /api/admin/craft/publish`. "Dùng trên web" ở Kho tính theo bản đã lưu (bản nháp hiện nhãn "Chưa lưu").
 - **Đăng nhập:** PIN 6 số, JWT HS256, khóa chung toàn hệ thống khi sai 5 lần (15 phút → 1 giờ → 6 giờ → 24 giờ, bảng `LoginGuard`).
 - **Xóa toàn bộ dữ liệu** (Cài đặt): `POST /api/admin/reset {confirm: "XÓA HẾT"}`, giữ đăng nhập; Thủ công giữ bước, bỏ lựa chọn.
-- **Ảnh trên Cloudinary:** BO nén ảnh → xin chữ ký `POST /api/admin/uploads/sign` → tải thẳng lên Cloudinary → lưu URL. Hiển thị qua `imageUrl()` (`bo/src/lib/craft/image-url.ts`) chèn `f_auto,q_auto` + cỡ. Thiếu biến `CLOUDINARY_*` thì BE trả 503, BO lưu data URL như cũ (body JSON tối đa 10 MB). Xem [docs/backend.md#kho-ảnh-cloudinary](docs/backend.md#kho-ảnh-cloudinary).
+- **Ảnh trên Cloudinary:** chọn ảnh chỉ nén + xem trước (data URL); bấm Lưu form mới `uploadImages()` → xin chữ ký `POST /api/admin/uploads/sign` → tải thẳng lên Cloudinary → lưu URL. Hiển thị qua `imageUrl()` (`bo/src/lib/craft/image-url.ts`) chèn `f_auto,q_auto` + cỡ. Thiếu biến `CLOUDINARY_*` thì BE trả 503, BO lưu data URL như cũ (body JSON tối đa 10 MB). Xem [docs/backend.md#kho-ảnh-cloudinary](docs/backend.md#kho-ảnh-cloudinary).
 
 ## Kiểm thử
 

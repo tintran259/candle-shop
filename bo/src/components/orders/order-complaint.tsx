@@ -1,5 +1,6 @@
 import { Alert, App, Flex, Form, Input, InputNumber, Modal, Radio, Typography } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
+import { useState } from "react";
 import { ImageUpload } from "@/components/form/image-upload";
 import { MoneyInput } from "@/components/money-input";
 import { ItemThumb } from "@/components/orders/order-view";
@@ -8,6 +9,7 @@ import type { OrdersApi } from "@/hooks/use-orders";
 import { useStockHold } from "@/hooks/use-stock-hold";
 import { useWorkshop } from "@/hooks/use-workshop";
 import { unitLabel } from "@/lib/craft/groups";
+import { uploadError, uploadImages } from "@/lib/craft/image";
 import { formatMoney, formatNumber } from "@/lib/format";
 import { buildReplacement, maxComplaintRefund, resolutionLabels } from "@/lib/orders/complaint";
 import { linesNeeds, shortages } from "@/lib/orders/materials";
@@ -50,16 +52,29 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
   );
   const maxRefund = maxComplaintRefund(order);
 
-  const finish = (v: Values) => {
+  const [saving, setSaving] = useState(false);
+
+  const finish = async (v: Values) => {
+    if (saving) return;
     if (v.resolution === "resend" && !candles) return message.error("Chọn ít nhất một cây để gửi bù.");
     if (v.resolution === "resend" && short.length) return message.error(`Kho không đủ ${short.map(({ m }) => m.name).join(", ")} để làm nến gửi bù.`);
+    // Ảnh mới chọn tải lên kho ảnh lúc bấm Ghi nhận
+    setSaving(true);
+    let images: string[], refundImages: string[];
+    try {
+      [images, refundImages] = await Promise.all([uploadImages(v.images, "orders"), v.resolution === "refund" ? uploadImages(v.refundImages, "orders") : Promise.resolve(v.refundImages ?? [])]);
+    } catch (e) {
+      return message.error(uploadError(e));
+    } finally {
+      setSaving(false);
+    }
     const replacement = v.resolution === "resend" ? buildReplacement(order, picks, { readyDate: v.readyDate.format("YYYY-MM-DD"), reason: v.reason.trim(), by: STAFF }, api.orders) : undefined;
     const saved = api.complain(order.id, {
       reason: v.reason,
-      images: v.images ?? [],
+      images,
       resolution: v.resolution,
       refundAmount: v.resolution === "refund" ? Math.round(v.refundAmount ?? 0) : undefined,
-      refundImages: v.refundImages,
+      refundImages,
       refundNote: v.refundNote,
       replacement,
       picks,
@@ -77,7 +92,17 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
   };
 
   return (
-    <Modal open={open} title={`Khiếu nại đơn ${order.code}`} okText="Ghi nhận" cancelText="Quay lại" onCancel={onClose} onOk={() => form.submit()} destroyOnHidden width={640}>
+    <Modal
+      open={open}
+      title={`Khiếu nại đơn ${order.code}`}
+      okText="Ghi nhận"
+      cancelText="Quay lại"
+      onCancel={onClose}
+      onOk={() => form.submit()}
+      okButtonProps={{ loading: saving }}
+      destroyOnHidden
+      width={640}
+    >
       <Form
         form={form}
         layout="vertical"
@@ -94,7 +119,7 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
           <Input.TextArea autoFocus autoSize={{ minRows: 2, maxRows: 4 }} maxLength={300} placeholder="VD: Hũ vỡ khi nhận hàng, nến cháy lệch tâm…" />
         </Form.Item>
         <Form.Item name="images" label="Ảnh khách gửi" extra="Không bắt buộc.">
-          <ImageUpload folder="orders" />
+          <ImageUpload />
         </Form.Item>
         <Form.Item name="resolution" label="Cách xử lý">
           <Radio.Group optionType="button" options={(["resend", "refund", "none"] as const).map((value) => ({ value, label: resolutionLabels[value] }))} />
@@ -158,7 +183,7 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
               <MoneyInput aria-label="Số tiền hoàn" />
             </Form.Item>
             <Form.Item name="refundImages" label="Ảnh chứng từ hoàn tiền" rules={[{ required: true, type: "array", min: 1, message: "Thêm ít nhất một ảnh chứng từ." }]}>
-              <ImageUpload folder="orders" />
+              <ImageUpload />
             </Form.Item>
             <Form.Item name="refundNote" label="Ghi chú" style={{ marginBottom: 0 }}>
               <Input.TextArea autoSize={{ minRows: 1, maxRows: 3 }} placeholder="VD: Chuyển khoản Vietcombank…" />

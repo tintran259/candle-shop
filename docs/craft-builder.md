@@ -437,7 +437,7 @@ Trang **Trình dựng Thủ công** (`/craft`, URL giữ trạng thái `?step=&v
   - **Lựa chọn:** bảng (bật/tắt bán ngay trên bảng) và drawer sửa.
     - Cột "Tồn kho" lấy từ nguyên liệu gắn kèm; bước hũ hiện "Tồn kho theo cỡ".
     - Ô "Nguyên liệu trong kho": chọn nguyên liệu có sẵn, chọn "Không theo dõi", hoặc **tạo nguyên liệu mới** kèm tồn ban đầu (đơn vị Cái / Gram / Mililít) và tổng tiền đã trả cho số tồn đó (hoặc Không mất tiền) — ra giá nhập ban đầu. Nguyên liệu mới mang nhãn "Chờ lưu" và chỉ vào Kho khi bấm Lưu.
-    - Riêng hũ: ô **Giá hũ** và khối **"Loại hũ & kích thước"**: chọn Loại hũ trong Kho, các cỡ hiện theo mã hũ cùng loại (xếp theo dung tích). Mỗi cỡ: tích Bán, phụ thu cỡ, sáp đổ, giờ cháy, nắp, kèm "Khách trả … · Vốn …". Không tạo mã hũ từ trang này; thêm cỡ thì tạo hũ cùng loại ở Kho.
+    - Riêng hũ: khối **"Loại hũ & kích thước"** nằm trước khối Giá & bán (chọn hũ, cỡ rồi mới đặt giá), rồi ô **Giá hũ**. Khối Loại hũ & kích thước: chọn Loại hũ trong Kho, các cỡ hiện theo mã hũ cùng loại (xếp theo dung tích). Mỗi cỡ: tích Bán, phụ thu cỡ, sáp đổ, giờ cháy, nắp, kèm "Khách trả … · Vốn …". Không tạo mã hũ từ trang này; thêm cỡ thì tạo hũ cùng loại ở Kho.
     - Các trường khác hiện theo component: dáng hũ, nắp, kiểu minh họa, "đứng một mình", `onlyWith`, `maxGrams`.
   - **Ô nhập & tuỳ chọn** (chỉ bước `inputs`): tuỳ chọn thêm cũng gắn nguyên liệu.
   - **Cài đặt:** tên, mô tả, icon, bắt buộc, số lựa chọn (Tối đa, Chọn 1, Chọn nhiều), vai trò minh họa, hệ số gram, phối tối đa, độ đậm (tỉ lệ hương), xóa bước.

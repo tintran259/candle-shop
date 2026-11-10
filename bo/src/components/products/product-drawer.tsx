@@ -18,7 +18,7 @@ import type { ProductsApi } from "@/hooks/use-products";
 import { slugify } from "@/lib/craft/groups";
 import { formatNumber } from "@/lib/format";
 import { toMap } from "@/lib/inventory/stock";
-import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
+import { MAX_FILE_MB, MAX_IMAGES, uploadError, uploadImages } from "@/lib/craft/image";
 import { aromaLevelLabels, discountPercent, toOptions } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 
@@ -40,6 +40,8 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
   const ready = useDeferredValue(true, false);
   const [form] = Form.useForm<ProductFormValues>();
   const [dirty, setDirty] = useState(false);
+  // Đang tải ảnh mới lên kho ảnh khi bấm Lưu
+  const [saving, setSaving] = useState(false);
   // Slug tự đi theo tên cho tới khi người dùng tự sửa slug (sản phẩm đã có thì giữ nguyên)
   const [slugLocked, setSlugLocked] = useState(!!product);
   const price = Form.useWatch("price", form) ?? 0;
@@ -58,11 +60,20 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
     });
   };
 
-  const finish = (values: ProductFormValues) => {
-    const next = fromFormValues(values, product, config, toMap(materials));
+  const finish = async (values: ProductFormValues) => {
+    if (saving) return;
+    let next = fromFormValues(values, product, config, toMap(materials));
     // Sản phẩm mới lấy slug làm id — trùng slug mà không chặn sẽ ghi đè sản phẩm cũ
     if (api.products.some((p) => p.id !== product?.id && (p.slug === next.slug || p.id === next.id))) {
       return form.setFields([{ name: "slug", errors: ["Slug đã được dùng cho sản phẩm khác."] }]);
+    }
+    setSaving(true);
+    try {
+      next = { ...next, images: await uploadImages(next.images, "products") };
+    } catch (e) {
+      return message.error(uploadError(e));
+    } finally {
+      setSaving(false);
     }
     if (!api.save(next)) return message.error("Bộ nhớ trình duyệt đã đầy — bớt ảnh rồi lưu lại.");
     message.success(product ? `Đã lưu ${next.name}` : `Đã thêm ${next.name}`);
@@ -109,7 +120,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
           <Button onClick={requestClose} style={{ marginLeft: "auto" }}>
             Hủy
           </Button>
-          <Button type="primary" onClick={() => form.submit()}>
+          <Button type="primary" loading={saving} onClick={() => form.submit()}>
             {product ? "Lưu thay đổi" : prefill ? "Tạo sản phẩm trưng bày" : "Thêm sản phẩm"}
           </Button>
         </Flex>
@@ -216,7 +227,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
 
             <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ☆ để đổi.`}>
               <Form.Item name="images" rules={[{ required: true, type: "array", min: 1, message: "Thêm ít nhất một ảnh." }]} style={{ marginBottom: 0 }}>
-                <ImageUpload folder="products" />
+                <ImageUpload />
               </Form.Item>
             </FormSection>
 
