@@ -2,7 +2,7 @@
 # Tạo: Render › New › Blueprint › chọn repo này. Bí mật (sync: false) nhập trên Render, không ghi vào đây.
 services:
   - type: web
-    name: candle-be
+    name: candle2510-be
     runtime: node
     # Cùng vùng với Neon (Singapore) để truy vấn nhanh
     region: singapore
@@ -52,7 +52,7 @@ services:
       - key: NODE_VERSION
         value: "24"
       - key: VITE_API_URL
-        value: https://candle-be.onrender.com/api
+        value: https://candle2510-be.onrender.com/api
       # Không tải trình duyệt của Playwright khi cài thư viện (chỉ dùng cho test)
       - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
         value: "1"
