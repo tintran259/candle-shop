@@ -1,5 +1,5 @@
 import { RightOutlined } from "@ant-design/icons";
-import { Button, Flex, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Button, Flex, Grid, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import dayjs from "dayjs";
 import { memo } from "react";
 import { CustomerAvatar, SegmentTag } from "@/components/customers/customer-view";
@@ -11,6 +11,34 @@ type Props = { items: CustomerRow[]; onOpen: (id: string) => void; pagination: T
 
 // Bảng khách hàng — bấm cả dòng để mở hồ sơ
 function CustomerTableView({ items, onOpen, pagination }: Props) {
+  const compact = Grid.useBreakpoint().sm === false;
+  // Điện thoại: tên, số điện thoại, nhóm, số đơn, đã chi gộp một ô — không phải vuốt ngang
+  const compactColumns: TableProps<CustomerRow>["columns"] = [
+    {
+      title: "Khách hàng",
+      key: "compact",
+      render: (_, { customer: c, stats }) => (
+        <Flex align="flex-start" gap={12}>
+          <CustomerAvatar customer={c} />
+          <Flex vertical gap={4} style={{ minWidth: 0, flex: 1 }}>
+            <Typography.Link strong onClick={() => onOpen(c.id)}>
+              {c.name}
+            </Typography.Link>
+            <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12 }}>
+              {c.phone}
+            </Typography.Text>
+            <Flex gap={6} wrap align="center">
+              <SegmentTag segment={stats.segment} blocked={c.blocked} />
+              <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12 }}>
+                {stats.orderCount} đơn · {spentText(stats.spent)}
+              </Typography.Text>
+            </Flex>
+          </Flex>
+          <RightOutlined style={{ color: "rgba(0,0,0,0.35)", marginTop: 12 }} aria-hidden />
+        </Flex>
+      ),
+    },
+  ];
   const columns: TableProps<CustomerRow>["columns"] = [
     {
       title: "Khách hàng",
@@ -124,10 +152,10 @@ function CustomerTableView({ items, onOpen, pagination }: Props) {
   return (
     <Table
       rowKey={(r) => r.customer.id}
-      columns={columns}
+      columns={compact ? compactColumns : columns}
       dataSource={items}
       pagination={pagination}
-      scroll={{ x: "max-content" }}
+      scroll={compact ? undefined : { x: "max-content" }}
       onRow={(r) => ({ onClick: () => onOpen(r.customer.id), style: { cursor: "pointer", opacity: r.customer.blocked ? 0.65 : 1 } })}
     />
   );

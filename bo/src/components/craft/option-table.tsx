@@ -12,6 +12,7 @@ import type { MaterialMap } from "@/lib/inventory/stock";
 import type { ShopSettings } from "@/lib/settings/types";
 import { formatMoney } from "@/lib/format";
 import { usePageQuery } from "@/lib/use-page-query";
+import { compactColumns, useCompactTable } from "@/components/compact-columns";
 
 type Props = {
   step: OptionStep;
@@ -32,12 +33,13 @@ export function OptionTable({ step, config, api, map, pricing, onEdit }: Props) 
   // Sáp, màu, hương: giá bán mỗi 100 g / mỗi ml
   const basis = amountBasis(step);
 
+  const compact = useCompactTable();
   const columns: TableProps<StepOption>["columns"] = [
     {
       title: "Lựa chọn",
       key: "name",
       render: (_, o) => (
-        <Flex align="center" gap={12} style={{ minWidth: 200 }}>
+        <Flex align="center" gap={12} style={{ minWidth: compact ? 0 : 200 }}>
           <MaterialAvatar item={o} />
           <Flex vertical style={{ minWidth: 0 }}>
             <Typography.Text strong>{o.name.vi}</Typography.Text>
@@ -132,10 +134,12 @@ export function OptionTable({ step, config, api, map, pricing, onEdit }: Props) 
       </Flex>
       <Table
         rowKey="id"
-        columns={columns}
+        // Điện thoại: giá và tồn kho dưới tên; giá vốn tối thiểu xem trong drawer
+        columns={compact ? compactColumns(columns, "name", ["priceDelta", "stock"], ["available", "actions"]) : columns}
+        size={compact ? "small" : undefined}
         dataSource={items}
         pagination={pager.paginationProps(items.length, "lựa chọn")}
-        scroll={{ x: "max-content" }}
+        scroll={compact ? undefined : { x: "max-content" }}
         onRow={(o) => ({ style: { opacity: o.available ? 1 : 0.6 } })}
         locale={{ emptyText: "Chưa có lựa chọn nào — bấm “Thêm lựa chọn”." }}
       />

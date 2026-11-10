@@ -1,4 +1,4 @@
-import { Flex, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Flex, Grid, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import { memo } from "react";
 import dayjs from "dayjs";
 import { ItemStack, PaymentTag, ReadyDate, StatusTag } from "@/components/orders/order-view";
@@ -8,29 +8,67 @@ import type { Order } from "@/lib/orders/types";
 
 type Props = { items: Order[]; onOpen: (id: string) => void; pagination: TablePaginationConfig; selected: string[]; onSelect: (ids: string[]) => void };
 
-// Bảng đơn hàng — bấm cả dòng để mở chi tiết, ô chọn ở đầu dòng để in nhiều đơn
+// Mã đơn kèm nhãn Gửi bù / Khiếu nại
+function CodeCell({ order: o, onOpen }: { order: Order; onOpen: (id: string) => void }) {
+  return (
+    <Flex gap={6} align="center" wrap>
+      <Typography.Link strong className="tabular" onClick={() => onOpen(o.id)}>
+        {o.code}
+      </Typography.Link>
+      {o.replacementFor && (
+        <Tag color="purple" style={{ marginInlineEnd: 0 }}>
+          Gửi bù
+        </Tag>
+      )}
+      {!!o.complaints?.length && (
+        <Tag color="volcano" style={{ marginInlineEnd: 0 }}>
+          Khiếu nại
+        </Tag>
+      )}
+    </Flex>
+  );
+}
+
+// Điện thoại: mỗi đơn một ô gọn (mã, tổng tiền, khách, trạng thái, thanh toán, ngày làm xong) — không phải vuốt ngang mới thấy trạng thái, tiền
+const compactColumns = (onOpen: (id: string) => void): TableProps<Order>["columns"] => [
+  {
+    title: "Đơn hàng",
+    key: "compact",
+    render: (_, o) => (
+      <Flex vertical gap={6}>
+        <Flex justify="space-between" align="flex-start" gap={8}>
+          <CodeCell order={o} onOpen={onOpen} />
+          <Typography.Text strong className="tabular" style={{ whiteSpace: "nowrap" }}>
+            {formatMoney(o.total)}
+          </Typography.Text>
+        </Flex>
+        <Typography.Text>
+          {o.customer.name}
+          <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12 }}>
+            {" "}
+            · {o.customer.phone} · {dayjs(o.createdAt).format("HH:mm DD/MM")}
+          </Typography.Text>
+        </Typography.Text>
+        <Flex gap={6} wrap align="center">
+          <StatusTag status={o.status} order={o} />
+          <PaymentTag order={o} />
+          <ReadyDate order={o} />
+        </Flex>
+      </Flex>
+    ),
+  },
+];
+
+// Bảng đơn hàng — bấm cả dòng để mở chi tiết, ô chọn ở đầu dòng để in nhiều đơn (điện thoại: bỏ ô chọn, mỗi đơn một ô gọn)
 function OrderTableView({ items, onOpen, pagination, selected, onSelect }: Props) {
+  const compact = Grid.useBreakpoint().sm === false;
   const columns: TableProps<Order>["columns"] = [
     {
       title: "Mã đơn",
       key: "code",
       render: (_, o) => (
         <Flex vertical>
-          <Flex gap={6} align="center" wrap>
-            <Typography.Link strong className="tabular" onClick={() => onOpen(o.id)}>
-              {o.code}
-            </Typography.Link>
-            {o.replacementFor && (
-              <Tag color="purple" style={{ marginInlineEnd: 0 }}>
-                Gửi bù
-              </Tag>
-            )}
-            {!!o.complaints?.length && (
-              <Tag color="volcano" style={{ marginInlineEnd: 0 }}>
-                Khiếu nại
-              </Tag>
-            )}
-          </Flex>
+          <CodeCell order={o} onOpen={onOpen} />
           <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12 }}>
             {dayjs(o.createdAt).format("HH:mm DD/MM")}
           </Typography.Text>
@@ -110,17 +148,21 @@ function OrderTableView({ items, onOpen, pagination, selected, onSelect }: Props
   return (
     <Table
       rowKey="id"
-      columns={columns}
+      columns={compact ? compactColumns(onOpen) : columns}
       dataSource={items}
       pagination={pagination}
-      scroll={{ x: "max-content" }}
-      rowSelection={{
-        selectedRowKeys: selected,
-        onChange: (keys) => onSelect(keys as string[]),
-        preserveSelectedRowKeys: true,
-        columnWidth: 40,
-        getCheckboxProps: (o) => ({ "aria-label": `Chọn đơn ${o.code}` }),
-      }}
+      scroll={compact ? undefined : { x: "max-content" }}
+      rowSelection={
+        compact
+          ? undefined
+          : {
+              selectedRowKeys: selected,
+              onChange: (keys) => onSelect(keys as string[]),
+              preserveSelectedRowKeys: true,
+              columnWidth: 40,
+              getCheckboxProps: (o) => ({ "aria-label": `Chọn đơn ${o.code}` }),
+            }
+      }
       onRow={(o) => ({
         // Bấm ô chọn thì không mở đơn
         onClick: (e) => !(e.target as HTMLElement).closest(".ant-table-selection-column") && onOpen(o.id),

@@ -16,6 +16,8 @@ type Props = {
 
 // Chân drawer Tạo / Sửa đơn: tổng đơn (màn hẹp), Hủy hoặc Bỏ đơn + Lưu nháp, nút Tạo đơn / Lưu thay đổi
 export function OrderFormFooter({ wide, total, editing, onClose, onDiscard, onSubmit }: Props) {
+  // Điện thoại: nút chính chiếm trọn một hàng (dễ bấm, không lệch trái)
+  const phone = Grid.useBreakpoint().sm === false;
   return (
     <Flex gap={12} align="center" wrap>
       {!wide && (
@@ -40,7 +42,7 @@ export function OrderFormFooter({ wide, total, editing, onClose, onDiscard, onSu
           <Button onClick={onClose}>Lưu nháp</Button>
         </>
       )}
-      <Button type="primary" onClick={onSubmit}>
+      <Button type="primary" onClick={onSubmit} block={phone} style={phone ? { flexBasis: "100%" } : undefined}>
         {editing ? "Lưu thay đổi" : "Tạo đơn"} · {formatMoney(total)}
       </Button>
     </Flex>

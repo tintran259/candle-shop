@@ -46,6 +46,7 @@ Bấm một thông báo để mở đúng đơn hoặc đúng bộ lọc.
 - **Thay đổi chưa lưu:** đóng drawer sửa hoặc rời trang Cài đặt sẽ được hỏi lại.
 - **Nút Dữ liệu mẫu:** có ở nhiều trang, xóa dữ liệu trên trình duyệt và quay về dữ liệu mẫu. Sẽ bỏ khi có BE.
 - **Khung tải:** mỗi trang có skeleton đúng bố cục, chạy hết chiều rộng màn hình.
+- **Điện thoại (dưới 576px):** không trang nào cuộn ngang. Bảng Đơn hàng, Khách hàng, Mã giảm giá, đơn gần đây ở Tổng quan, Kho, Danh mục, lựa chọn Thủ công gộp cột phụ xuống dưới cột chính — mỗi dòng một ô gọn (vd đơn: mã, tổng tiền, khách, trạng thái, thanh toán, ngày làm xong), chỉ giữ công tắc và nút thao tác (`bo/src/components/compact-columns.tsx`). Bảng Đơn hàng trên điện thoại bỏ ô chọn in nhiều đơn. Màn cảm ứng nới vùng chạm của công tắc nhỏ, ô tích, nút sao chép, nút phân trang lên ~40px. Ô tiêu đề cột ghim (khi bảng cuộn ngang trên màn vừa) có nền, không lộ chữ cột khác.
 
 ## Kiểm thử
 

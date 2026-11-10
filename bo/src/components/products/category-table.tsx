@@ -6,6 +6,7 @@ import { DragHandle, SortableHandle, SortableList } from "@/components/sortable"
 import type { CategoriesApi } from "@/hooks/use-categories";
 import { useSortableItem } from "@/hooks/use-sortable-item";
 import type { Category } from "@/lib/products/categories";
+import { compactColumns, useCompactTable } from "@/components/compact-columns";
 
 type Props = { api: CategoriesApi; count: (id: string) => number; onEdit: (id: string) => void };
 
@@ -23,6 +24,7 @@ export function CategoryTable({ api, count, onEdit }: Props) {
   const { message } = App.useApp();
   const { categories } = api;
 
+  const compact = useCompactTable();
   const columns: TableProps<Category>["columns"] = [
     { key: "sort", width: 56, align: "center", render: (_, c) => <DragHandle name={c.name.vi} /> },
     {
@@ -89,7 +91,15 @@ export function CategoryTable({ api, count, onEdit }: Props) {
 
   return (
     <SortableList ids={categories.map((c) => c.id)} name={(id) => api.byId.get(id)?.name.vi ?? ""} onMove={api.move}>
-      <Table rowKey="id" columns={columns} dataSource={categories} components={{ body: { row: SortableRow } }} pagination={false} scroll={{ x: "max-content" }} />
+      <Table
+        rowKey="id"
+        columns={compact ? compactColumns(columns, "name", ["products"], ["sort", "hidden", "actions"]) : columns}
+        dataSource={categories}
+        components={{ body: { row: SortableRow } }}
+        size={compact ? "small" : undefined}
+        pagination={false}
+        scroll={compact ? undefined : { x: "max-content" }}
+      />
     </SortableList>
   );
 }

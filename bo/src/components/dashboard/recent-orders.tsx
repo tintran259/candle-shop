@@ -7,6 +7,7 @@ import { useOrders } from "@/hooks/use-orders";
 import { formatMoney } from "@/lib/format";
 import { itemCount } from "@/lib/orders/labels";
 import type { Order } from "@/lib/orders/types";
+import { compactColumns, useCompactTable } from "@/components/compact-columns";
 
 const columns: TableProps<Order>["columns"] = [
   {
@@ -53,16 +54,18 @@ const columns: TableProps<Order>["columns"] = [
 export function RecentOrders() {
   const { orders } = useOrders();
   const navigate = useNavigate();
+  const compact = useCompactTable();
   const latest = [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 7);
 
   return (
     <Card title="Đơn hàng gần đây" extra={<MoreLink to="/orders">Tất cả đơn</MoreLink>} styles={{ body: { padding: "0 12px 12px" } }}>
       <Table
         rowKey="id"
-        columns={columns}
+        // Điện thoại: khách và trạng thái dưới mã đơn, tổng tiền bên phải
+        columns={compact ? compactColumns(columns, "code", ["customer", "status"], ["total"]) : columns}
         dataSource={latest}
         pagination={false}
-        scroll={{ x: "max-content" }}
+        scroll={compact ? undefined : { x: "max-content" }}
         onRow={(o) => ({ onClick: () => navigate(`/orders?order=${o.id}`), style: { cursor: "pointer" } })}
       />
     </Card>

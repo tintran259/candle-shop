@@ -9,6 +9,7 @@ import { formatNumber, formatUnitCost } from "@/lib/format";
 import { isMade } from "@/lib/inventory/production";
 import { categoryLabels, materialLevel, type Usage } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
+import { compactColumns, useCompactTable } from "@/components/compact-columns";
 
 type Props = {
   items: Material[];
@@ -27,12 +28,13 @@ const barColor = { out: "#ff7875", low: "#ffc069", ok: "#95de64", untracked: "#d
 
 // Bảng nguyên liệu — bấm dòng để mở chi tiết; nút + để ghi nhận nhập kho nhanh
 function MaterialTableView({ items, usage, unsaved, held, pagination, onOpen, onReceive }: Props) {
+  const compact = useCompactTable();
   const columns: TableProps<Material>["columns"] = [
     {
       title: "Nguyên liệu",
       key: "name",
       render: (_, m) => (
-        <Flex align="center" gap={12} style={{ minWidth: 220 }}>
+        <Flex align="center" gap={12} style={{ minWidth: compact ? 0 : 220 }}>
           <MaterialAvatar item={m} />
           <Flex vertical style={{ minWidth: 0 }}>
             <Typography.Link strong onClick={() => onOpen(m.id)}>
@@ -161,7 +163,15 @@ function MaterialTableView({ items, usage, unsaved, held, pagination, onOpen, on
   ];
 
   return (
-    <Table rowKey="id" columns={columns} dataSource={items} pagination={pagination} scroll={{ x: "max-content" }} onRow={(m) => ({ onClick: () => onOpen(m.id), style: { cursor: "pointer" } })} />
+    <Table
+      rowKey="id"
+      // Điện thoại: tồn kho hiện dưới tên, giữ nút nhập thêm / mở
+      columns={compact ? compactColumns(columns, "name", ["stock"], ["actions"]) : columns}
+      dataSource={items}
+      pagination={pagination}
+      scroll={compact ? undefined : { x: "max-content" }}
+      onRow={(m) => ({ onClick: () => onOpen(m.id), style: { cursor: "pointer" } })}
+    />
   );
 }
 

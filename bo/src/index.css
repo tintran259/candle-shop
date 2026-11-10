@@ -9,3 +9,35 @@
 @import "./styles/print.css";
 @import "./styles/orders-list.css";
 @import "./styles/login.css";
+
+/* Bảng có cột ghim (fixed) khi cuộn ngang: nền tiêu đề trong suốt (theme) làm chữ tiêu đề cột khác lộ qua ô ghim — ô tiêu đề ghim dùng nền như thẻ */
+.ant-table-thead > tr > th.ant-table-cell-fix-right,
+.ant-table-thead > tr > th.ant-table-cell-fix-left {
+  background: var(--ant-color-bg-container, #fff);
+}
+
+/* Màn cảm ứng: công tắc nhỏ, nút sao chép, ô tích nhỏ hơn ngón tay — nới vùng chạm (không đổi hình) lên ~44px */
+@media (pointer: coarse) {
+  .ant-switch-small,
+  .ant-typography-copy,
+  .ant-checkbox-wrapper,
+  .ant-table-pagination .ant-pagination-item,
+  .ant-table-pagination .ant-pagination-prev,
+  .ant-table-pagination .ant-pagination-next {
+    position: relative;
+  }
+  .ant-switch-small::after,
+  .ant-typography-copy::after,
+  .ant-checkbox-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: -12px -8px;
+  }
+  .ant-table-pagination .ant-pagination-item,
+  .ant-table-pagination .ant-pagination-prev,
+  .ant-table-pagination .ant-pagination-next {
+    min-width: 40px;
+    height: 40px;
+    line-height: 38px;
+  }
+}

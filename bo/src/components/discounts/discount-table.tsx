@@ -1,5 +1,5 @@
 import { EditOutlined } from "@ant-design/icons";
-import { Button, Flex, Progress, Switch, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Button, Flex, Grid, Progress, Switch, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import { memo } from "react";
 import dayjs from "dayjs";
 import type { DiscountsApi } from "@/hooks/use-discounts";
@@ -11,6 +11,49 @@ import { brand } from "@/theme";
 type Props = { items: Discount[]; api: DiscountsApi; onEdit: (id: string) => void; pagination: TablePaginationConfig };
 
 function DiscountTableView({ items, api, onEdit, pagination }: Props) {
+  const compact = Grid.useBreakpoint().sm === false;
+  // Điện thoại: mã, ưu đãi, trạng thái, lượt dùng gộp một ô; công tắc và nút sửa cỡ thường (dễ chạm) ở cột bên phải
+  const compactColumns: TableProps<Discount>["columns"] = [
+    {
+      title: "Mã",
+      key: "compact",
+      render: (_, d) => {
+        const s = discountStatus(d);
+        return (
+          <Flex vertical gap={4} style={{ minWidth: 0 }}>
+            <Typography.Text strong copyable={{ text: d.code, tooltips: ["Sao chép mã", "Đã sao chép"] }} className="tabular" style={{ letterSpacing: "0.04em" }}>
+              {d.code}
+            </Typography.Text>
+            <Typography.Text strong style={{ color: brand.emberDark }}>
+              {valueText(d)}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {conditionText(d)}
+            </Typography.Text>
+            <Flex gap={6} wrap align="center">
+              <Tag color={statusMeta[s].color} style={{ marginInlineEnd: 0 }}>
+                {statusMeta[s].label}
+              </Tag>
+              <Typography.Text type="secondary" className="tabular" style={{ fontSize: 12 }}>
+                Đã dùng {formatNumber(d.used)} / {d.usageLimit ? formatNumber(d.usageLimit) : "∞"}
+              </Typography.Text>
+            </Flex>
+          </Flex>
+        );
+      },
+    },
+    {
+      key: "actions",
+      width: 64,
+      align: "center",
+      render: (_, d) => (
+        <Flex vertical gap={12} align="center">
+          <Switch checked={d.active} onChange={(on) => api.patch(d.id, { active: on })} aria-label={`${d.active ? "Tạm dừng" : "Bật"} mã ${d.code}`} />
+          <Button icon={<EditOutlined />} aria-label={`Sửa mã ${d.code}`} onClick={() => onEdit(d.id)} />
+        </Flex>
+      ),
+    },
+  ];
   const columns: TableProps<Discount>["columns"] = [
     {
       title: "Mã",
@@ -122,10 +165,10 @@ function DiscountTableView({ items, api, onEdit, pagination }: Props) {
   return (
     <Table
       rowKey="id"
-      columns={columns}
+      columns={compact ? compactColumns : columns}
       dataSource={items}
       pagination={pagination}
-      scroll={{ x: "max-content" }}
+      scroll={compact ? undefined : { x: "max-content" }}
       onRow={(d) => ({ style: { opacity: ["expired", "paused"].includes(discountStatus(d)) ? 0.65 : 1 } })}
     />
   );

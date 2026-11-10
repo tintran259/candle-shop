@@ -84,7 +84,8 @@ test("E2E 15 — Trang Cài đặt và áp dụng vào tạo đơn", async ({ t 
   await go(base + "/orders?order=new", 2800);
   const radio = (await text(`${D} .ant-radio-wrapper`)).join(" | ");
   ok("O1 Chỉ hiện phương thức đang dùng", radio.includes("Tiêu chuẩn (3 ngày)") && radio.includes("Nội thành (2 ngày)") && !radio.includes("Nhanh"), radio);
-  ok("O2 Nút cọc theo cài đặt", (await text(`${D} .ant-radio-button-wrapper`)).join().includes("Cọc 30%"));
+  // Hình thức "Cọc"; % cọc là ô nhập riêng, điền sẵn theo Cài đặt (sửa được từng đơn)
+  ok("O2 Cọc theo cài đặt", (await text(`${D} .ant-radio-button-wrapper`)).join().includes("Cọc") && (await ev(`document.querySelector('${D} [aria-label="Phần trăm cọc"]')?.value`)) === "30");
   await clickText(`${D} button`, "Nến có sẵn");
   await sleep(300);
   await pick(`document.querySelectorAll('${D} [aria-label="Chọn sản phẩm"]')[0].closest('.ant-select')`, "Moon Morning", true);
