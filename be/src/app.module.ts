@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
+import { IdempotencyInterceptor } from './common/idempotency.interceptor.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
@@ -45,5 +47,7 @@ import { NewsletterModule } from './newsletter/newsletter.module.js';
     NewsletterModule,
   ],
   controllers: [AppController],
+  // Gửi lại cùng Idempotency-Key thì trả kết quả lần đầu (BO tự gửi lại khi mất mạng)
+  providers: [{ provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor }],
 })
 export class AppModule {}

@@ -16,15 +16,36 @@ export class ApiError extends Error {
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
+// Khóa chống ghi trùng của thao tác đang chạy trong hàng đợi (write-queue.ts). Mỗi yêu cầu ghi trong thao tác lấy khóa <gốc>:<thứ tự>,
+// gửi lại cả thao tác thì thứ tự đánh lại từ 0 → cùng khóa như lần trước, BE trả kết quả cũ thay vì ghi lần hai
+let writeKey: { base: string; n: number } | null = null;
+export async function runWithWriteKey<T>(base: string, task: () => Promise<T>) {
+  writeKey = { base, n: 0 };
+  try {
+    return await task();
+  } finally {
+    writeKey = null;
+  }
+}
+
+// Máy chủ không trả lời quá lâu (gồm cả lúc BE khởi động ~60 giây) thì coi như mất kết nối
+const TIMEOUT_MS = 90_000;
+
 export async function api<T = unknown>(method: Method, path: string, body?: unknown): Promise<T> {
   const token = getSession()?.token;
+  const key = method !== "GET" && writeKey ? `${writeKey.base}:${writeKey.n++}` : undefined;
   let res: Response;
   try {
     res = await watchSlow(
       fetch(`${API_URL}${path}`, {
         method,
-        headers: { ...(body !== undefined && { "Content-Type": "application/json" }), ...(token && { Authorization: `Bearer ${token}` }) },
+        headers: {
+          ...(body !== undefined && { "Content-Type": "application/json" }),
+          ...(token && { Authorization: `Bearer ${token}` }),
+          ...(key && { "Idempotency-Key": key }),
+        },
         body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
       }),
     );
   } catch {

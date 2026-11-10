@@ -48,6 +48,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 ## Kiến trúc cần nhớ
 
 - **Máy chủ chậm** (BE Render ngủ): request quá 5 giây thì BO hiện "Máy chủ đang khởi động…" (`watchSlow` trong `lib/notify.ts`, dùng ở `lib/api.ts` và đăng nhập). Swagger chỉ bật trên máy (Render có `RENDER=true`).
+- **Mất mạng / nhiều thiết bị:** hàng đợi ghi `bo/src/lib/write-queue.ts` giữ thao tác khi mất mạng, tự gửi lại kèm `Idempotency-Key` (BE: `common/idempotency.interceptor.ts`, nhớ 1 giờ) nên không ghi trùng; quay lại tab sau 30 giây thì tải lại các kho (`refreshStores`).
 - **BO đọc / ghi qua API** (`bo/src/lib/local-store.ts`): mỗi kho dữ liệu tải bằng `GET` khi có trang cần; thao tác sửa đổi ngay trên giao diện rồi `sync()` gửi BE ở nền (hàng đợi chung, chạy lần lượt); BE từ chối thì báo lỗi (`lib/notify.ts`) và tải lại. `lib/api.ts` gắn token, 401 thì đăng xuất.
 - **Chế độ dữ liệu** `bo/src/lib/data-mode.ts`: mặc định BE. `VITE_DATA_SOURCE=local` lưu localStorage như cũ — **chỉ dùng cho bộ e2e của BO** (playwright.config đặt sẵn).
 - **Đơn hàng:** BE tự giữ / trừ / hoàn Kho, đếm và trả lượt mã giảm giá, tạo hồ sơ khách, tạo sản phẩm hủy đơn, tất cả trong một giao dịch. Ở chế độ BE, BO **không** làm lại các việc này (các chỗ gọi có `if (!REMOTE)`). Giá từng dòng (nến tự phối) do BO tính theo Thủ công, BE tin giá này — khi nối web cho khách tự đặt thì BE phải tự tính giá.
@@ -64,6 +65,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 | `cd be && pnpm test` | Unit (vitest) |
 | `cd be && pnpm test:e2e` | Chạy trên **Neon, schema `bo_test`** (tự migrate, xóa trắng mỗi file test). Cần `be/.env`. ~1–2 phút |
 | `cd bo && npx playwright test` | ~310 test, ~30 phút, chế độ dữ liệu local, trình duyệt Edge. Chạy một file: `npx playwright test e2e/<file>` |
+| CI (`.github/workflows/ci.yml`) | Mỗi push: BE typecheck / lint / unit / build / e2e, BO typecheck / lint / build / `e2e/logic`, rồi e2e-be. Render chỉ deploy khi CI qua (`autoDeployTrigger: checksPass`). Secret GitHub `DATABASE_URL` |
 | `cd bo && pnpm test:e2e:be` | BO + BE thật (`bo/e2e-be/`, schema `bo_e2e`, cổng 4099 / 3013), luồng đơn chính + Thủ công Lưu, ~1,5 phút. Cần `be/.env`. Xem [docs/testing.md](docs/testing.md#e2e-với-be-thật) |
 
 - **Không chạy hai lần Playwright cùng lúc** (ghi đè `test-results`). Cổng 3011 đang bị server cũ chiếm thì tắt trước.
@@ -74,6 +76,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 ## Triển khai
 
 - **Render** qua Blueprint `render.yaml` (gói Free): **BE** https://candle2510-be.onrender.com (Node, Singapore; build = install + build + `db:deploy`; start `node dist/main.js`; health `/api/health` không chạm DB, `/api/health/db` kiểm DB; UptimeRobot gọi `/api/health` mỗi 10 phút để BE không ngủ, xem [docs/backend.md#giữ-be-không-ngủ-uptimerobot](docs/backend.md#giữ-be-không-ngủ-uptimerobot)) và **BO** `candle2510-bo` (Static Site, `VITE_API_URL=https://candle2510-be.onrender.com/api` gắn lúc build, rewrite mọi đường dẫn về `index.html`). Push `main` thì service có thư mục đổi tự deploy (`buildFilter`). `BO_URL` trên Render phải có địa chỉ BO (CORS). Hướng dẫn: [docs/backend.md#đưa-lên-render](docs/backend.md#đưa-lên-render).
+- **Sao lưu DB:** `.github/workflows/backup.yml` mỗi đêm 02:00 (VN), `pg_dump` schema public, mã hóa bằng secret `BACKUP_PASSPHRASE`, artifact 30 ngày. Khôi phục: [docs/backend.md#sao-lưu-db-tự-động](docs/backend.md#sao-lưu-db-tự-động).
 - Migration mới: `pnpm db:migrate` khi dev (hoặc tự viết SQL trong `be/prisma/migrations/<timestamp>_<tên>/`), `pnpm db:deploy` để áp; Render tự áp khi deploy.
 
 ## Trạng thái và việc còn lại (cập nhật 09/11/2026)

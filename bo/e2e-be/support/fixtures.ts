@@ -1,5 +1,5 @@
 // Mỗi test: nạp lại dữ liệu mẫu vào DB (file sao lưu BO mẫu, qua pnpm db:import), đăng nhập sẵn bằng token thật của BE.
-// api.get đọc thẳng BE để đối chiếu với những gì làm trên giao diện.
+// api.get / api.post gọi thẳng BE để đối chiếu / đổi dữ liệu ngoài giao diện (như thiết bị khác) với những gì làm trên giao diện.
 import { test as base, expect, type Page } from "@playwright/test";
 import { execSync } from "node:child_process";
 import { API, BE_DIR, PIN, SCHEMA } from "./env";
@@ -16,19 +16,23 @@ async function login() {
   return (await res.json()) as { token: string; name: string; expiresAt: number };
 }
 
-export type Api = { get: <T = unknown>(path: string) => Promise<T> };
+export type Api = { get: <T = unknown>(path: string) => Promise<T>; post: <T = unknown>(path: string, body?: unknown) => Promise<T> };
 
 export const test = base.extend<{ api: Api }>({
   api: async ({ page }, provide) => {
     seed();
     const session = await login();
     await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [SESSION_KEY, JSON.stringify(session)]);
-    const get = async <T>(path: string) => {
-      const res = await fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${session.token}` } });
-      if (!res.ok) throw new Error(`GET ${path}: ${res.status}`);
+    const call = async <T>(method: string, path: string, body?: unknown) => {
+      const res = await fetch(`${API}${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${session.token}`, ...(body !== undefined && { "Content-Type": "application/json" }) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`${method} ${path}: ${res.status}`);
       return (await res.json()) as T;
     };
-    await provide({ get });
+    await provide({ get: (path) => call("GET", path), post: (path, body) => call("POST", path, body) });
   },
 });
 

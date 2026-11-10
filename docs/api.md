@@ -9,6 +9,7 @@ Tài liệu mọi endpoint đang có của `be/`. Cách cài đặt, biến môi
 - **Địa chỉ:** `http://localhost:4000/api` khi chạy trên máy. Mọi đường dẫn dưới đây tính từ `/api`.
 - **Định dạng:** JSON (`Content-Type: application/json`).
 - **Đăng nhập:** mọi endpoint cần header `Authorization: Bearer <token>`, trừ `POST /auth/login` và `GET /health`. Lấy token ở `POST /auth/login`.
+- **Chống ghi trùng:** yêu cầu ghi (POST / PUT / PATCH / DELETE) có thể gắn header `Idempotency-Key: <chuỗi ≤ 100 ký tự>`. Gửi lại cùng khóa, cùng method và đường dẫn trong 1 giờ thì BE trả lại kết quả lần đầu, không làm lại (BO tự gửi lại khi mất mạng). Lần đầu lỗi thì không giữ, gửi lại sẽ chạy lại. Khóa nhớ trong bộ nhớ BE (khởi động lại thì quên).
 - **Tiền:** VNĐ, số nguyên (`150000` = 150.000 ₫).
 - **Ngày:** ngày kiểu `"YYYY-MM-DD"` (vd ngày mã giảm giá); thời điểm kiểu ISO 8601 (`"2026-11-09T03:48:18.000Z"`); hạn token là số mili giây (`expiresAt`).
 - **Trường không có giá trị** thì không có trong kết quả (không trả `null`), giống dữ liệu của BO.

@@ -103,7 +103,9 @@ Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 ## BO dùng API
 
 - **Chạy trên máy:** BE `pnpm start:dev` (cổng 4000), BO `pnpm dev`. BO gọi `VITE_API_URL` (mặc định `http://localhost:4000/api`); địa chỉ BO phải nằm trong `BO_URL` của BE.
-- **Cách BO đọc / ghi** (`bo/src/lib/local-store.ts`): mỗi kho dữ liệu tải bằng `GET` khi có trang đầu tiên cần. Thao tác sửa đổi ngay trên giao diện như trước, rồi gọi API ở nền; BE trả về thì lấy bản của BE, BE từ chối thì hiện thông báo lỗi của BE và tải lại để giao diện khớp dữ liệu thật. Các yêu cầu ghi chạy lần lượt theo thứ tự gọi (chung mọi kho).
+- **Cách BO đọc / ghi** (`bo/src/lib/local-store.ts`): mỗi kho dữ liệu tải bằng `GET` khi có trang đầu tiên cần. Thao tác sửa đổi ngay trên giao diện như trước, rồi gọi API ở nền; BE trả về thì lấy bản của BE, BE từ chối thì hiện thông báo lỗi của BE và tải lại để giao diện khớp dữ liệu thật. Các yêu cầu ghi chạy lần lượt theo thứ tự gọi (chung mọi kho, `bo/src/lib/write-queue.ts`).
+- **Mất mạng khi đang lưu:** không bỏ thao tác — giữ nguyên thứ tự, báo "Mất kết nối máy chủ — N thay đổi chưa lưu", tự gửi lại khi có mạng (hoặc mỗi 10 giây), xong thì báo "Đã kết nối lại". Còn thay đổi chưa gửi thì trình duyệt hỏi trước khi đóng trang. Mỗi thao tác gắn `Idempotency-Key` (`<khóa>:<thứ tự>`) nên gửi lại không ghi trùng kể cả khi BE đã làm mà BO mất phản hồi. Máy chủ không trả lời quá 90 giây cũng tính là mất kết nối.
+- **Dùng nhiều thiết bị:** quay lại tab / mở lại app sau hơn 30 giây thì BO tải lại các kho đang dùng (sau khi gửi xong thay đổi đang chờ), thấy thay đổi từ máy khác. Hai máy sửa cùng một thứ cùng lúc thì bản lưu sau thắng (chưa chặn xung đột); BE vẫn chặn bước sai (vd chuyển trạng thái đơn hai lần).
 - **Việc BE làm thay BO:** đơn hàng giữ / trừ / hoàn Kho, đếm và trả lượt mã giảm giá, tạo hồ sơ khách, tạo sản phẩm hủy đơn; Thủ công bấm Lưu tạo nguyên liệu mới. Sau các thao tác này BO tải lại Kho, mã giảm giá, khách, sản phẩm hủy đơn.
 - **Bản nháp Thủ công, đơn nháp:** lưu lên BE sau khi ngừng sửa (0,6 giây / 1 giây).
 - **Sao lưu:** Cài đặt › Sao lưu dữ liệu tải đủ mọi kho từ BE rồi xuất file (cùng định dạng cũ). Khôi phục làm trên máy chủ: `pnpm db:import <file>`.
@@ -167,13 +169,36 @@ Gói Free của Render cho BE ngủ sau 15 phút không có request; mở lại 
 
 Địa chỉ `*.onrender.com` cố định theo tên lúc tạo service, đổi tên sau không đổi được địa chỉ. Muốn địa chỉ khác thì đổi `name` trong `render.yaml` → Render tạo service mới → xóa service cũ trên Render (Blueprint không tự xóa). BO từng tên `candle-bo`, rồi `2510candle-bo` (Render không nhận), nay là `candle2510-bo` (10/11/2026). BE từng tên `candle-be`, đổi sang `candle2510-be` cho đồng bộ (tạo service mới: nhập lại `DATABASE_URL`, `ADMIN_PIN_HASH`, `BO_URL`; `JWT_SECRET` sinh mới nên phải đăng nhập lại).
 
-**Sau đó:** mỗi lần push lên `main` Render tự build và deploy lại service có thư mục thay đổi (`autoDeploy` + `buildFilter`). Sửa schema thì tạo migration như bình thường (`pnpm db:migrate`), lần deploy sau tự áp.
+**Sau đó:** mỗi lần push lên `main` Render tự build và deploy lại service có thư mục thay đổi (`buildFilter`) — **chỉ khi CI trên GitHub qua** (`autoDeployTrigger: checksPass`, xem [testing.md](./testing.md#kiểm-tra-tự-động-ci)). CI trượt thì bản đang chạy giữ nguyên. Nếu Render báo không nhận `autoDeployTrigger`: vào từng service › Settings › Build & Deploy › Auto-Deploy › chọn **After CI Checks Pass**. Sửa schema thì tạo migration như bình thường (`pnpm db:migrate`), lần deploy sau tự áp.
 
 **Lưu ý gói Free**
 
 - Không có request trong 15 phút thì service ngủ; lần gọi đầu sau đó chờ ~30–60 giây (màn đăng nhập BO sẽ chậm lần đầu).
 - 750 giờ chạy / tháng — đủ cho một service chạy cả tháng.
 - Đổi `JWT_SECRET` trên Render thì mọi phiên đăng nhập cũ hết hạn (cách đăng xuất mọi máy). Đổi PIN: thay `ADMIN_PIN_HASH`, Render tự khởi động lại.
+
+## Sao lưu DB tự động
+
+GitHub Actions (`.github/workflows/backup.yml`) sao lưu DB mỗi đêm **02:00 giờ Việt Nam** — gói Free của Neon chỉ giữ lịch sử khoảng 1 ngày.
+
+- Lấy schema `public` (dữ liệu thật) bằng `pg_dump` bản 18 (cùng bản với Neon), định dạng custom, **mã hóa AES-256** bằng mật khẩu `BACKUP_PASSPHRASE`, lưu thành artifact **30 ngày** (`db-YYYYMMDD-HHMM`).
+- Không cần máy bật: chạy trên máy chủ của GitHub. Lỗi thì GitHub gửi email báo workflow thất bại.
+
+**Cài đặt (một lần):** GitHub › repo › **Settings › Secrets and variables › Actions › New repository secret**:
+
+| Secret | Giá trị |
+|---|---|
+| `DATABASE_URL` | Connection string Neon (giống `be/.env`; bản `-pooler` cũng được, workflow tự đổi sang kết nối trực tiếp). CI cũng dùng secret này cho test (schema `bo_test`, `bo_e2e`, không đụng `public`) |
+| `BACKUP_PASSPHRASE` | Mật khẩu dài tự đặt (vd 5–6 từ ngẫu nhiên). **Cất ở nơi an toàn** (trình quản lý mật khẩu) — mất là không mở được bản sao lưu |
+
+Thử ngay: **Actions › Sao lưu DB › Run workflow**, xong thấy artifact `db-…` là chạy.
+
+**Khôi phục** (ghi đè dữ liệu hiện có — sao lưu bản hiện tại trước):
+
+1. Actions › Sao lưu DB › chọn lần chạy › tải artifact, giải nén được `candle2510-….dump.gpg`.
+2. Giải mã: `gpg --decrypt --output backup.dump candle2510-….dump.gpg` (nhập `BACKUP_PASSPHRASE`). Windows: cài Gpg4win, hoặc dùng Git Bash có sẵn `gpg`.
+3. Ghi vào DB (kết nối trực tiếp — bỏ `-pooler` trong địa chỉ): `docker run --rm -v "$PWD:/in" postgres:18 pg_restore --clean --if-exists --no-owner --no-privileges --schema=public -d "<DATABASE_URL không -pooler>" /in/backup.dump`. Không có Docker thì cài PostgreSQL 18 (chỉ cần `pg_restore`).
+4. Mở BO kiểm tra. Muốn thử trước mà không đụng dữ liệu thật: khôi phục vào một branch mới của Neon (Neon › Branches › Create branch) rồi trỏ `DATABASE_URL` tạm sang đó.
 
 ## Kiểm thử
 

@@ -1,0 +1,113 @@
+# Kiểm tra tự động mỗi lần push / mở PR (docs/testing.md#kiểm-tra-tự-động-ci).
+# Render chỉ deploy khi các kiểm tra này qua (render.yaml: autoDeployTrigger: checksPass).
+# Test cần DB (BE e2e trên schema bo_test, BO + BE thật trên schema bo_e2e) chỉ chạy khi repo có secret DATABASE_URL.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 10.33.4
+  NODE_VERSION: "24"
+
+jobs:
+  be:
+    name: BE — typecheck, lint, unit, build, e2e
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: be
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: be/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: npx tsc --noEmit -p tsconfig.json
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - name: E2E trên DB (schema bo_test)
+        if: env.DATABASE_URL != ''
+        run: pnpm test:e2e
+
+  bo:
+    name: BO — typecheck, lint, build, quy tắc nghiệp vụ
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bo
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: bo/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: npx tsc --noEmit -p tsconfig.json
+      - run: npx eslint src e2e-be playwright.be.config.ts
+      - run: pnpm build
+      # Quy tắc tính tiền, trạng thái… (không mở trình duyệt). Bộ kịch bản đầy đủ (~30 phút) vẫn chạy trên máy
+      - name: Quy tắc nghiệp vụ (e2e/logic)
+        run: npx playwright test e2e/logic
+
+  e2e-be:
+    name: BO + BE thật (e2e-be)
+    needs: [be, bo]
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PW_CHANNEL: chromium
+    steps:
+      - name: Bỏ qua khi chưa có secret DATABASE_URL
+        if: env.DATABASE_URL == ''
+        run: echo "::notice::Chưa có secret DATABASE_URL — bỏ qua e2e BO + BE thật."
+      - uses: actions/checkout@v4
+        if: env.DATABASE_URL != ''
+      - uses: pnpm/action-setup@v4
+        if: env.DATABASE_URL != ''
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        if: env.DATABASE_URL != ''
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            be/pnpm-lock.yaml
+            bo/pnpm-lock.yaml
+      - name: Cài thư viện BE, BO và Chromium
+        if: env.DATABASE_URL != ''
+        run: |
+          (cd be && pnpm install --frozen-lockfile)
+          (cd bo && pnpm install --frozen-lockfile && npx playwright install --with-deps chromium)
+      - name: Chạy e2e-be
+        if: env.DATABASE_URL != ''
+        working-directory: bo
+        run: pnpm test:e2e:be
+      - uses: actions/upload-artifact@v4
+        if: failure() && env.DATABASE_URL != ''
+        with:
+          name: playwright-report-be
+          path: bo/playwright-report-be
+          retention-days: 7

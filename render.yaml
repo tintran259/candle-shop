@@ -12,7 +12,8 @@ services:
     buildCommand: npx -y pnpm@10.33.4 install --frozen-lockfile && npx -y pnpm@10.33.4 run build && npx -y pnpm@10.33.4 run db:deploy
     startCommand: node dist/main.js
     healthCheckPath: /api/health
-    autoDeploy: true
+    # Chỉ deploy khi CI trên GitHub qua (.github/workflows/ci.yml)
+    autoDeployTrigger: checksPass
     # Chỉ build lại khi BE đổi (sửa bo/, docs/… không làm BE khởi động lại)
     buildFilter:
       paths:
@@ -50,7 +51,8 @@ services:
     rootDir: bo
     buildCommand: npx -y pnpm@10.33.4 install --frozen-lockfile && npx -y pnpm@10.33.4 run build
     staticPublishPath: dist
-    autoDeploy: true
+    # Chỉ deploy khi CI trên GitHub qua (.github/workflows/ci.yml)
+    autoDeployTrigger: checksPass
     buildFilter:
       paths:
         - bo/**

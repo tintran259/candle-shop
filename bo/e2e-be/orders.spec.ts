@@ -1,40 +1,7 @@
 // Luồng đơn hàng trên BE thật: thao tác trên giao diện BO, đọc lại BE để đối chiếu (trạng thái, tiền, Kho)
 import type { Page } from "@playwright/test";
-import { drawer, expect, modal, stockOf, test, type Api } from "./support/fixtures";
-
-type Order = { id: string; code: string; status: string; customer: { phone: string }; total: number; payments: { amount: number; status: string }[]; shipment?: { trackingCode?: string } };
-
-// Moon Morning (850.000 ₫): 1 hũ thủy tinh trong 150, 130 g sáp dừa, 10 ml White Tea, 1 bấc cotton
-const RECIPE = { "jar-clear-glass-150": 1, "wax-coconut": 130, "oil-white-tea": 10, "wick-cotton": 1 };
-const stocks = async (api: Api) => Object.fromEntries(await Promise.all(Object.keys(RECIPE).map(async (id) => [id, await stockOf(api, id)] as const)));
-const digits = (s: string) => s.replace(/\D/g, "");
-const findOrder = async (api: Api, phone: string) => (await api.get<Order[]>("/admin/orders")).find((o) => digits(o.customer.phone) === digits(phone));
-
-// Tạo đơn 1 Moon Morning trên giao diện, cọc 50% đã nhận tiền → đơn Đã thanh toán trên BE
-async function createOrder(page: Page, api: Api, phone: string) {
-  await page.goto("/orders");
-  await page.getByRole("button", { name: /Tạo đơn hàng|Tiếp tục đơn nháp/ }).click();
-  const o = drawer(page);
-  await o.locator("#name").fill("Khách BE");
-  await o.locator("#phone").fill(phone);
-  await o.locator("#address").fill("1 Hàng Bài, Hà Nội");
-  await o.getByRole("button", { name: "Nến có sẵn" }).click();
-  await expect(async () => {
-    await o.getByLabel("Chọn sản phẩm").last().click();
-    await page.keyboard.press("Control+A");
-    await page.keyboard.press("Backspace");
-    await page.keyboard.type("Moon Morning");
-    await page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: "Moon Morning" }).first().click();
-    await expect(o.locator("aside.order-summary")).toContainText("Moon Morning", { timeout: 2000 });
-  }).toPass({ timeout: 20_000 });
-  await o.getByLabel("Đã nhận tiền").click();
-  await o
-    .locator(".ant-drawer-footer")
-    .getByRole("button", { name: /^Tạo đơn/ })
-    .click();
-  await expect.poll(async () => (await findOrder(api, phone))?.status, { timeout: 20_000 }).toBe("paid");
-  return (await findOrder(api, phone))!;
-}
+import { drawer, expect, modal, test, type Api } from "./support/fixtures";
+import { createOrder, RECIPE, stocks, type Order } from "./support/orders";
 
 // Bấm nút bước kế tiếp trong drawer đơn (tên nút có kèm tên icon phía trước) rồi chờ BE ghi nhận trạng thái mới
 async function advance(page: Page, api: Api, order: Order, button: string, status: string) {
