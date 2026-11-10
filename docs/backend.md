@@ -18,7 +18,7 @@ NestJS + Prisma + PostgreSQL trên [Neon](https://neon.com) (gói miễn phí, r
 | `PORT` | Cổng chạy BE, mặc định 4000 |
 
 3. Tạo bảng: `pnpm db:deploy` (máy mới / server) hoặc `pnpm db:migrate` (khi sửa schema lúc dev).
-4. Chạy: `pnpm start:dev`. Tài liệu API: [api.md](./api.md); Swagger khi đang chạy: `http://localhost:4000/api/docs`.
+4. Chạy: `pnpm start:dev`. Tài liệu API: [api.md](./api.md); Swagger khi đang chạy: `http://localhost:4000/api/docs` (chỉ bật trên máy; trên Render tắt, trừ khi đặt `SWAGGER=true`).
 
 ## Nhập dữ liệu từ BO
 

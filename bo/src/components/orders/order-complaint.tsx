@@ -14,8 +14,7 @@ import { formatMoney, formatNumber } from "@/lib/format";
 import { buildReplacement, maxComplaintRefund, resolutionLabels } from "@/lib/orders/complaint";
 import { linesNeeds, shortages } from "@/lib/orders/materials";
 import type { ComplaintResolution, Order } from "@/lib/orders/types";
-
-const STAFF = "Admin 2510";
+import { staffName } from "@/lib/auth";
 
 type Values = {
   reason: string;
@@ -68,7 +67,7 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
     } finally {
       setSaving(false);
     }
-    const replacement = v.resolution === "resend" ? buildReplacement(order, picks, { readyDate: v.readyDate.format("YYYY-MM-DD"), reason: v.reason.trim(), by: STAFF }, api.orders) : undefined;
+    const replacement = v.resolution === "resend" ? buildReplacement(order, picks, { readyDate: v.readyDate.format("YYYY-MM-DD"), reason: v.reason.trim(), by: staffName() }, api.orders) : undefined;
     const saved = api.complain(order.id, {
       reason: v.reason,
       images,

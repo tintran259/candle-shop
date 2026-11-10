@@ -40,6 +40,7 @@ Bộ nhỏ ở `bo/e2e-be/`, chạy BO **chế độ API** với BE thật — b
 | File | Phủ |
 |---|---|
 | `orders.spec.ts` | Tạo đơn cọc 50% → Bắt đầu làm (BE trừ đúng Kho theo công thức) → Làm xong → Giao (mã vận đơn) → Khách nhận, thu nốt → Hoàn tất; tải lại trang đọc đúng. Hủy đơn đang làm, chưa làm → BE hoàn nguyên liệu |
+| `slow-server.spec.ts` | Request quá 5 giây (giả lập BE đang khởi động) → hiện "Máy chủ đang khởi động…", trả lời xong thì ẩn |
 | `craft.spec.ts` | Sửa giá Sáp ong → bản nháp lưu ở BE (bản web chưa đổi), tải lại không mất → Lưu thay đổi → BE đưa lên bản web, xóa bản nháp |
 
 ## Cấu trúc

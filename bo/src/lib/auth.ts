@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { API_URL } from "@/lib/api-url";
+import { watchSlow } from "@/lib/notify";
 
 // Đăng nhập BO bằng PIN 6 số qua BE (POST /api/auth/login, docs/api.md#đăng-nhập). Một người dùng, không phân quyền.
 // BE trả token: gửi kèm mọi API (Authorization: Bearer). Ghi nhớ thì giữ 30 ngày trong localStorage, không thì sessionStorage (12 giờ).
@@ -33,6 +34,9 @@ if (typeof window !== "undefined") window.addEventListener("storage", (e) => e.k
 
 export const getSession = () => (cached === undefined ? (cached = read()) : cached && cached.expiresAt > Date.now() ? cached : (cached = null));
 
+// Tên người thao tác ghi vào lịch sử đơn, phiếu kho (BE trả theo tài khoản đăng nhập)
+export const staffName = () => getSession()?.name ?? "Admin";
+
 export const PIN_LENGTH = 6;
 
 export type LoginResult =
@@ -47,7 +51,7 @@ export type LoginResult =
 export async function login(pin: string, remember: boolean): Promise<LoginResult> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin, remember }) });
+    res = await watchSlow(fetch(`${API_URL}/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin, remember }) }));
   } catch {
     return { ok: false, reason: "offline" };
   }

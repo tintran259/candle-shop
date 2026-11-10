@@ -1,4 +1,4 @@
-// ⚠️ DỮ LIỆU MẪU — 2 mã đầu khớp với web (fe/src/lib/checkout.ts). Ngày tính theo hôm nay.
+// ⚠️ DỮ LIỆU MẪU — dùng cho chế độ dữ liệu trên trình duyệt và test. Ngày tính theo hôm nay.
 import dayjs from "dayjs";
 import type { Discount } from "@/lib/discounts/types";
 

@@ -11,13 +11,13 @@ import { recordComplaint } from "@/lib/orders/complaint";
 import { applyEdit, type EditOrderInput } from "@/lib/orders/edit";
 import { shipmentNote, shipmentText } from "@/lib/orders/shipping";
 import type { CancelFault, CancelOutcome, ComplaintResolution, Order, OrderEvent, OrderStatus, Refund, ReturnCondition, Shipment } from "@/lib/orders/types";
+import { staffName } from "@/lib/auth";
 
 // Đơn hàng: /api/admin/orders (docs/api.md#đơn-hàng). Mỗi thao tác đổi ngay trên giao diện (tính như cũ), gọi BE rồi lấy đơn BE trả về;
 // BE tự giữ / trừ / hoàn Kho, đếm lượt mã, tạo hồ sơ khách, sản phẩm hủy đơn nên tải lại các kho đó sau thao tác.
 // Lưu trên trình duyệt (chế độ local): v4 — bắt đầu không có đơn
 const store = createLocalStore<Order[]>("bo-orders-v4", [], undefined, () => api<Order[]>("GET", "/admin/orders"));
 
-const STAFF = "Admin 2510";
 const now = () => new Date().toISOString();
 
 // Thao tác chỉ đụng tới store nên để ngoài hook — giữ nguyên tham chiếu giữa các lần render.
@@ -33,7 +33,7 @@ const patch = (id: string, fn: (o: Order) => Order, request?: () => Promise<Orde
       }),
   );
 
-const log = (o: Order, status: OrderStatus, note?: string, kind: OrderEvent["kind"] = "status") => [...o.history, { at: now(), kind, status, note, by: STAFF }];
+const log = (o: Order, status: OrderStatus, note?: string, kind: OrderEvent["kind"] = "status") => [...o.history, { at: now(), kind, status, note, by: staffName() }];
 
 // Ghi nhận đã thu phần còn lại
 const collect = (o: Order): Order => {
@@ -87,7 +87,7 @@ const updateShipment = (id: string, shipment: Shipment) =>
 const edit = (id: string, input: EditOrderInput) => {
   const order = store.get().find((o) => o.id === id);
   if (!order) return [];
-  const result = applyEdit(order, input, STAFF);
+  const result = applyEdit(order, input, staffName());
   if (result.changes.length)
     store.sync(
       store.get().map((o) => (o.id === id ? result.order : o)),
@@ -134,7 +134,7 @@ const complain = (id: string, input: ComplaintInput) => {
   const list = store.get();
   const order = list.find((o) => o.id === id);
   if (!order) return false;
-  const updated = recordComplaint(order, { ...input, by: STAFF });
+  const updated = recordComplaint(order, { ...input, by: staffName() });
   const { reason, images, resolution, refundAmount, refundImages, refundNote, picks, readyDate } = input;
   return store.sync([...(input.replacement ? [input.replacement] : []), ...list.map((o) => (o.id === id ? updated : o))], async () => {
     await api("POST", `/admin/orders/${id}/complaints`, { reason, images, resolution, refundAmount, refundImages, refundNote, ...(resolution === "resend" && { picks, readyDate }) });
@@ -168,7 +168,7 @@ const cancel = (id: string, { reason, outcome, fault }: CancelInput) =>
 const recordRefund = (id: string, refund: Omit<Refund, "at" | "by">) =>
   patch(
     id,
-    (o) => ({ ...o, refund: { ...refund, at: now(), by: STAFF }, history: log(o, o.status, `Đã hoàn ${refund.amount.toLocaleString("vi-VN")} ₫ cho khách`, "payment") }),
+    (o) => ({ ...o, refund: { ...refund, at: now(), by: staffName() }, history: log(o, o.status, `Đã hoàn ${refund.amount.toLocaleString("vi-VN")} ₫ cho khách`, "payment") }),
     () => orderAction(id, "POST", "refund", { amount: Math.round(refund.amount), images: refund.images, note: refund.note }),
   );
 

@@ -8,6 +8,7 @@ import { guessJar, type ManualMovement } from "@/lib/inventory/stock";
 import { api } from "@/lib/api";
 import { REMOTE } from "@/lib/data-mode";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
+import { staffName } from "@/lib/auth";
 
 // Kho nguyên liệu và phiếu kho: /api/admin/materials, /api/admin/stock-movements (docs/api.md#kho-nguyên-liệu).
 // Mỗi thao tác đổi ngay trên giao diện (tính như cũ), gọi BE rồi tải lại kho — BE là nơi tính số tồn, giá bình quân thật.
@@ -36,7 +37,6 @@ const store = createLocalStore<Inventory>(
   loadRemote,
 );
 
-const STAFF = "Admin 2510";
 const now = () => new Date().toISOString();
 // Giữ tối đa chừng này dòng lịch sử trên trình duyệt
 const MAX_MOVEMENTS = 500;
@@ -84,7 +84,20 @@ const saveMaterial = (material: Omit<Material, "updatedAt">, openingTotal?: numb
       const cost = total !== undefined ? unitPrice(total, next.stock) : undefined;
       const created = cost === undefined ? next : { ...next, unitCost: cost };
       const opening = tracked
-        ? [{ id: movementId(), materialId: next.id, type: "in" as const, change: next.stock, after: next.stock, note: "Tồn ban đầu", totalCost: total, unitCost: cost, by: STAFF, at: next.updatedAt }]
+        ? [
+            {
+              id: movementId(),
+              materialId: next.id,
+              type: "in" as const,
+              change: next.stock,
+              after: next.stock,
+              note: "Tồn ban đầu",
+              totalCost: total,
+              unitCost: cost,
+              by: staffName(),
+              at: next.updatedAt,
+            },
+          ]
         : [];
       return { materials: [...inv.materials, created], movements: [...opening, ...inv.movements].slice(0, MAX_MOVEMENTS) };
     },
@@ -124,7 +137,7 @@ const move = (materialId: string, type: ManualMovement, amount: number, note?: s
       if (!change && type !== "adjust") return inv;
       const total = type === "in" && lotTotal !== undefined && lotTotal >= 0 ? Math.round(lotTotal) : undefined;
       const cost = total !== undefined ? unitPrice(total, change) : undefined;
-      const movement = { id: movementId(), materialId, type, change, after, note: note?.trim() || undefined, totalCost: total, unitCost: cost, by: STAFF, at: now() };
+      const movement = { id: movementId(), materialId, type, change, after, note: note?.trim() || undefined, totalCost: total, unitCost: cost, by: staffName(), at: now() };
       const nextCost = cost === undefined ? m.unitCost : averageCost(m.stock, m.unitCost, change, cost);
       return {
         materials: inv.materials.map((x) => (x.id === materialId ? { ...x, stock: after, unitCost: nextCost, updatedAt: movement.at } : x)),
@@ -141,7 +154,7 @@ const setCost = (materialId: string, unitCost: number) =>
     (inv) => {
       const m = inv.materials.find((x) => x.id === materialId);
       if (!m || m.unitCost === unitCost) return inv;
-      const movement = { id: movementId(), materialId, type: "cost" as const, change: 0, after: m.stock, unitCost, previousCost: m.unitCost, by: STAFF, at: now() };
+      const movement = { id: movementId(), materialId, type: "cost" as const, change: 0, after: m.stock, unitCost, previousCost: m.unitCost, by: staffName(), at: now() };
       return {
         materials: inv.materials.map((x) => (x.id === materialId ? { ...x, unitCost, updatedAt: movement.at } : x)),
         movements: [movement, ...inv.movements].slice(0, MAX_MOVEMENTS),
@@ -163,7 +176,19 @@ const produce = (materialId: string, count: number, total: number, note?: string
       const uses = inv.materials.flatMap((m) => {
         const need = needs.get(m.id);
         return need && m.tracked
-          ? [{ id: movementId(), materialId: m.id, type: "make" as const, change: -need, after: m.stock - need, note: `Làm ${made.name} · ${count} ${unitLabel[made.unit]}`, batch, by: STAFF, at }]
+          ? [
+              {
+                id: movementId(),
+                materialId: m.id,
+                type: "make" as const,
+                change: -need,
+                after: m.stock - need,
+                note: `Làm ${made.name} · ${count} ${unitLabel[made.unit]}`,
+                batch,
+                by: staffName(),
+                at,
+              },
+            ]
           : [];
       });
       const lotTotal = Math.max(0, Math.round(total));
@@ -178,7 +203,7 @@ const produce = (materialId: string, count: number, total: number, note?: string
         batch,
         totalCost: lotTotal,
         unitCost: price,
-        by: STAFF,
+        by: staffName(),
         at,
       };
       const next = record(inv, [output, ...uses]);
@@ -204,7 +229,7 @@ export const consumeOrder = (orderCode: string, needs: Map<string, number>) =>
       inv,
       inv.materials.flatMap((m) => {
         const need = needs.get(m.id);
-        return need ? [{ id: movementId(), materialId: m.id, type: "order" as const, change: -need, after: m.stock - need, note: `Đơn ${orderCode}`, orderCode, by: STAFF, at: now() }] : [];
+        return need ? [{ id: movementId(), materialId: m.id, type: "order" as const, change: -need, after: m.stock - need, note: `Đơn ${orderCode}`, orderCode, by: staffName(), at: now() }] : [];
       }),
     ),
   );
@@ -216,7 +241,7 @@ export const restoreOrder = (orderCode: string) => {
   for (const mv of inv.movements) if (mv.orderCode === orderCode) used.set(mv.materialId, (used.get(mv.materialId) ?? 0) - mv.change);
   const back = inv.materials.flatMap((m) => {
     const amount = used.get(m.id) ?? 0;
-    return amount > 0 ? [{ id: movementId(), materialId: m.id, type: "in" as const, change: amount, after: m.stock + amount, note: "Hoàn kho do hủy đơn", orderCode, by: STAFF, at: now() }] : [];
+    return amount > 0 ? [{ id: movementId(), materialId: m.id, type: "in" as const, change: amount, after: m.stock + amount, note: "Hoàn kho do hủy đơn", orderCode, by: staffName(), at: now() }] : [];
   });
   if (back.length) store.set(record(inv, back));
   return back.length;

@@ -1,5 +1,5 @@
 // ⚠️ SẢN PHẨM MẪU — không nạp vào trang Sản phẩm trưng bày (app bắt đầu trống, sản phẩm tạo từ nguyên liệu trong Kho). Chỉ dùng cho test.
-// 6 sản phẩm đầu khớp với web (fe/src/lib/data.ts), giá quy đổi sang VNĐ.
+// Dữ liệu mẫu cho chế độ dữ liệu trên trình duyệt và test, giá VNĐ.
 import type { Product, RecipeLine } from "@/lib/products/types";
 
 type Seed = Omit<Product, "updatedAt" | "images" | "slug"> & { image: string };

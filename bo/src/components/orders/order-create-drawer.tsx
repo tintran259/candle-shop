@@ -6,7 +6,7 @@ import { CustomerFields } from "@/components/orders/order-form/customer-fields";
 import { DraftAlerts } from "@/components/orders/order-form/draft-alerts";
 import { NoteFields, OrderFormFooter } from "@/components/orders/order-form/footer";
 import { LineFields } from "@/components/orders/order-form/line-fields";
-import type { OrderFormValues } from "@/components/orders/order-form/model";
+import { fromOrder, type OrderFormValues } from "@/components/orders/order-form/model";
 import { OrderSummary } from "@/components/orders/order-form/order-summary";
 import { PaymentFields } from "@/components/orders/order-form/payment-fields";
 import { ShippingFields } from "@/components/orders/order-form/shipping-fields";
@@ -30,7 +30,7 @@ import { phoneKey } from "@/lib/customers/stats";
 import { linesNeeds, shortages } from "@/lib/orders/materials";
 import { itemsEditable } from "@/lib/orders/edit";
 import { paidAmount } from "@/lib/orders/labels";
-import { evaluateDiscount, goodsCheck, orderTotals, toLines, type DraftLine } from "@/lib/orders/create";
+import { evaluateDiscount, goodsCheck, orderTotals, type DraftLine } from "@/lib/orders/create";
 import type { Order } from "@/lib/orders/types";
 
 // order: sửa đơn có sẵn (docs/pages/orders.md#sửa-đơn); không có = tạo đơn mới
@@ -94,26 +94,7 @@ export function OrderCreateDrawer({ open, customerId, order, onClose, onCreated 
   const draft = useOrderFormDraft({ form, editing, customerId, products, suggestDate: () => workshop.suggest(0), fresh: freshValues, dirty, setDirty, watched, onClose });
 
   const initialValues = useMemo<Partial<OrderFormValues>>(
-    () =>
-      order
-        ? {
-            name: order.customer.name,
-            phone: order.customer.phone,
-            email: order.customer.email,
-            address: order.shippingAddress,
-            lines: toLines(order.items),
-            shippingMethod: order.shippingMethod,
-            carrierId: order.shipment?.carrierId ?? order.carrier?.id,
-            shippingFee: order.shippingFee,
-            readyDate: dayjs(order.readyDate),
-            discountCode: order.discountCode,
-            paymentPlan: order.paymentPlan,
-            depositPercent: order.depositPercent,
-            paymentMethod: order.paymentMethod,
-            note: order.note,
-            internalNote: order.internalNote,
-          }
-        : { ...freshValues(), ...(draft.restored ? draft.fromDraft(draft.restored) : {}) },
+    () => (order ? fromOrder(order) : { ...freshValues(), ...(draft.restored ? draft.fromDraft(draft.restored) : {}) }),
     // Chỉ tính một lần khi mount — dữ liệu khách đã tải xong trước khi mở drawer
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

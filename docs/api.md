@@ -1,6 +1,6 @@
 # API Backend
 
-Tài liệu mọi endpoint đang có của `be/`. Cách cài đặt, biến môi trường, bảng DB ở [backend.md](./backend.md). Khi chạy BE có thêm Swagger tại `/api/docs`.
+Tài liệu mọi endpoint đang có của `be/`. Cách cài đặt, biến môi trường, bảng DB ở [backend.md](./backend.md). Khi chạy BE trên máy có thêm Swagger tại `/api/docs` (trên Render tắt — Render đặt sẵn `RENDER=true`; muốn bật thì thêm biến `SWAGGER=true`).
 
 > **Trạng thái:** đã có đăng nhập (PIN), API nhóm 1 (cài đặt, danh mục, khách hàng, mã giảm giá), nhóm 2 (kho nguyên liệu, phiếu kho, sản xuất, sản phẩm), nhóm 3 (Thủ công, sản phẩm hủy đơn) và nhóm 4 (đơn hàng, đơn nháp, thông báo đã đọc) — đủ mọi trang của BO. BO đã dùng các API này (giai đoạn 4).
 

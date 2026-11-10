@@ -47,6 +47,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 
 ## Kiến trúc cần nhớ
 
+- **Máy chủ chậm** (BE Render ngủ): request quá 5 giây thì BO hiện "Máy chủ đang khởi động…" (`watchSlow` trong `lib/notify.ts`, dùng ở `lib/api.ts` và đăng nhập). Swagger chỉ bật trên máy (Render có `RENDER=true`).
 - **BO đọc / ghi qua API** (`bo/src/lib/local-store.ts`): mỗi kho dữ liệu tải bằng `GET` khi có trang cần; thao tác sửa đổi ngay trên giao diện rồi `sync()` gửi BE ở nền (hàng đợi chung, chạy lần lượt); BE từ chối thì báo lỗi (`lib/notify.ts`) và tải lại. `lib/api.ts` gắn token, 401 thì đăng xuất.
 - **Chế độ dữ liệu** `bo/src/lib/data-mode.ts`: mặc định BE. `VITE_DATA_SOURCE=local` lưu localStorage như cũ — **chỉ dùng cho bộ e2e của BO** (playwright.config đặt sẵn).
 - **Đơn hàng:** BE tự giữ / trừ / hoàn Kho, đếm và trả lượt mã giảm giá, tạo hồ sơ khách, tạo sản phẩm hủy đơn, tất cả trong một giao dịch. Ở chế độ BE, BO **không** làm lại các việc này (các chỗ gọi có `if (!REMOTE)`). Giá từng dòng (nến tự phối) do BO tính theo Thủ công, BE tin giá này — khi nối web cho khách tự đặt thì BE phải tự tính giá.

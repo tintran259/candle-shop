@@ -7,6 +7,17 @@ export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   server: { port: 3001 },
   preview: { port: 3001 },
-  // antd + React nằm chung chunk chính (~270KB gzip) — chấp nhận được với trang quản trị nội bộ
-  build: { chunkSizeWarningLimit: 900 },
+  // React tách file riêng: tên file theo nội dung nên trình duyệt lưu đệm lâu — sửa code BO không phải tải lại.
+  // antd để Vite tự chia theo trang (mỗi trang chỉ tải thành phần mình dùng); recharts nằm trong file của trang Tổng quan
+  build: {
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/.test(id)) return "react";
+        },
+      },
+    },
+  },
 });

@@ -1,6 +1,7 @@
 import type { FormInstance } from "antd";
 import { App } from "antd";
-import { guestProfile, STAFF, type OrderFormValues } from "@/components/orders/order-form/model";
+import { guestProfile, type OrderFormValues } from "@/components/orders/order-form/model";
+import { staffName } from "@/lib/auth";
 import type { CustomersApi } from "@/hooks/use-customers";
 import { releaseDiscount } from "@/hooks/use-discounts";
 import { saveOrderDraft } from "@/hooks/use-order-draft";
@@ -56,7 +57,7 @@ export function useOrderSubmit(a: Args) {
         channel: values.channel,
         note: values.note,
         internalNote: values.internalNote,
-        by: STAFF,
+        by: staffName(),
       },
       a.orders.orders,
     );

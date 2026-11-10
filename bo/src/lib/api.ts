@@ -2,6 +2,7 @@
 // Lỗi trả ApiError với thông báo tiếng Việt của BE (message) và các trường kèm theo (vd shortages, customerId)
 import { API_URL } from "@/lib/api-url";
 import { getSession, logout } from "@/lib/auth";
+import { watchSlow } from "@/lib/notify";
 
 export class ApiError extends Error {
   constructor(
@@ -19,11 +20,13 @@ export async function api<T = unknown>(method: Method, path: string, body?: unkn
   const token = getSession()?.token;
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
-      method,
-      headers: { ...(body !== undefined && { "Content-Type": "application/json" }), ...(token && { Authorization: `Bearer ${token}` }) },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    res = await watchSlow(
+      fetch(`${API_URL}${path}`, {
+        method,
+        headers: { ...(body !== undefined && { "Content-Type": "application/json" }), ...(token && { Authorization: `Bearer ${token}` }) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      }),
+    );
   } catch {
     throw new ApiError(0, "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.");
   }

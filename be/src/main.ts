@@ -19,8 +19,11 @@ async function bootstrap() {
   app.enableCors({ origin: origins, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const swaggerConfig = new DocumentBuilder().setTitle('Candle Shop API').setVersion('0.1').addBearerAuth().build();
-  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
+  // Tài liệu API (/api/docs) chỉ bật khi chạy trên máy. Render tự đặt RENDER=true → tắt, trừ khi đặt SWAGGER=true
+  if (!process.env.RENDER || process.env.SWAGGER === 'true') {
+    const swaggerConfig = new DocumentBuilder().setTitle('Candle Shop API').setVersion('0.1').addBearerAuth().build();
+    SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swaggerConfig));
+  }
 
   await app.listen(process.env.PORT ?? 4000);
 }

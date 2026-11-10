@@ -1,9 +1,7 @@
 // Kiểu và hằng dùng chung của form Tạo / Sửa đơn (order-create-drawer.tsx)
-import type { Dayjs } from "dayjs";
-import type { DraftLine, OrderChannel } from "@/lib/orders/create";
-import type { PaymentPlan, PaymentProvider, ShippingMethod } from "@/lib/orders/types";
-
-export const STAFF = "Admin 2510";
+import dayjs, { type Dayjs } from "dayjs";
+import { toLines, type DraftLine, type OrderChannel } from "@/lib/orders/create";
+import type { Order, PaymentPlan, PaymentProvider, ShippingMethod } from "@/lib/orders/types";
 
 // Hồ sơ khách vãng lai cho số điện thoại chưa có hồ sơ (sửa đơn đổi sang số mới)
 export const guestProfile = (v: { name: string; phone: string; email?: string }) => ({
@@ -43,3 +41,22 @@ export type OrderFormValues = {
 
 // Lọc lựa chọn Select theo chuỗi search (không dấu)
 export const searchFilter = (fold: (s: string) => string) => (input: string, o?: unknown) => fold((o as { search?: string })?.search ?? "").includes(fold(input.trim()));
+
+// Sửa đơn: giá trị form ban đầu lấy từ đơn đã tạo
+export const fromOrder = (order: Order): Partial<OrderFormValues> => ({
+  name: order.customer.name,
+  phone: order.customer.phone,
+  email: order.customer.email,
+  address: order.shippingAddress,
+  lines: toLines(order.items),
+  shippingMethod: order.shippingMethod,
+  carrierId: order.shipment?.carrierId ?? order.carrier?.id,
+  shippingFee: order.shippingFee,
+  readyDate: dayjs(order.readyDate),
+  discountCode: order.discountCode,
+  paymentPlan: order.paymentPlan,
+  depositPercent: order.depositPercent,
+  paymentMethod: order.paymentMethod,
+  note: order.note,
+  internalNote: order.internalNote,
+});
