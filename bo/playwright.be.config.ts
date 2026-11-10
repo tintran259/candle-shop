@@ -50,7 +50,8 @@ export default defineConfig({
     {
       command: `pnpm exec vite build --outDir dist-be && pnpm exec vite preview --outDir dist-be --port ${BO_PORT} --strictPort`,
       url: `http://localhost:${BO_PORT}`,
-      env: { VITE_API_URL: API, VITE_DATA_SOURCE: "api" },
+      // Sentry trỏ tới địa chỉ giả: test monitoring.spec.ts chặn gói gửi đi để kiểm tra; test khác không gửi được thì thôi
+      env: { VITE_API_URL: API, VITE_DATA_SOURCE: "api", VITE_SENTRY_DSN: "https://pubkey@sentry.invalid/1" },
       reuseExistingServer: false,
       timeout: 180_000,
     },

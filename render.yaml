@@ -43,6 +43,9 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      # Theo dõi lỗi Sentry (project Node). Để trống thì không gửi gì (docs/backend.md#theo-dõi-lỗi-sentry)
+      - key: SENTRY_DSN
+        sync: false
 
   # BO: trang tĩnh (Vite build), gọi BE qua VITE_API_URL — gán lúc build nên đổi địa chỉ BE thì phải build lại
   - type: web
@@ -62,6 +65,9 @@ services:
         value: "24"
       - key: VITE_API_URL
         value: https://candle2510-be.onrender.com/api
+      # Theo dõi lỗi Sentry (project React). Gắn lúc build — đổi thì build lại BO. Để trống thì không gửi gì
+      - key: VITE_SENTRY_DSN
+        sync: false
       # Không tải trình duyệt của Playwright khi cài thư viện (chỉ dùng cho test)
       - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
         value: "1"

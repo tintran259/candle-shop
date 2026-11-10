@@ -56,6 +56,7 @@ Bộ nhỏ ở `bo/e2e-be/`, chạy BO **chế độ API** với BE thật — b
 |---|---|
 | `orders.spec.ts` | Tạo đơn cọc 50% → Bắt đầu làm (BE trừ đúng Kho theo công thức) → Làm xong → Giao (mã vận đơn) → Khách nhận, thu nốt → Hoàn tất; tải lại trang đọc đúng. Hủy đơn đang làm, chưa làm → BE hoàn nguyên liệu |
 | `offline.spec.ts` | Mất phản hồi khi Bắt đầu làm (BE đã làm, BO không nhận được) → báo "1 thay đổi chưa lưu" → có mạng lại tự gửi lại cùng khóa → Kho chỉ trừ một lần, lịch sử một dòng. Ẩn tab hơn 30 giây, máy khác đổi đơn → quay lại thấy bản mới |
+| `monitoring.spec.ts` | BO build với Sentry DSN giả: API trả 500 ngay lần tải đầu → gửi lỗi lên Sentry (chặn gói ở `sentry.invalid`); 400 không gửi; gói không có tên / SĐT khách |
 | `session.spec.ts` | Cài đặt › Đăng xuất mọi thiết bị → về trang đăng nhập, token cũ bị 401, đăng nhập lại dùng được |
 | `slow-server.spec.ts` | Request quá 5 giây (giả lập BE đang khởi động) → hiện "Máy chủ đang khởi động…", trả lời xong thì ẩn |
 | `craft.spec.ts` | Sửa giá Sáp ong → bản nháp lưu ở BE (bản web chưa đổi), tải lại không mất → Lưu thay đổi → BE đưa lên bản web, xóa bản nháp |

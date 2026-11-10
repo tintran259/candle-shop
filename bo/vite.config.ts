@@ -2,7 +2,9 @@ import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
+// Bản build trên Render: mã commit (RENDER_GIT_COMMIT) làm phiên bản cho Sentry — biết lỗi thuộc bản nào
 export default defineConfig({
+  define: { "import.meta.env.VITE_RELEASE": JSON.stringify(process.env.RENDER_GIT_COMMIT ?? "") },
   plugins: [react()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   server: { port: 3001 },

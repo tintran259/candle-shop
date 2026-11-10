@@ -1,9 +1,12 @@
+// Sentry phải khởi tạo trước mọi thứ khác
+import './instrument.js';
 import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { rateLimit } from './common/rate-limit.js';
+import { SentryFilter } from './common/sentry.filter.js';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
@@ -25,6 +28,8 @@ async function bootstrap() {
     .filter(Boolean);
   app.enableCors({ origin: origins, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // Lỗi 5xx báo Sentry (khi có SENTRY_DSN)
+  app.useGlobalFilters(new SentryFilter(app.get(HttpAdapterHost).httpAdapter));
 
   // Tài liệu API (/api/docs) chỉ bật khi chạy trên máy. Render tự đặt RENDER=true → tắt, trừ khi đặt SWAGGER=true
   if (!process.env.RENDER || process.env.SWAGGER === 'true') {

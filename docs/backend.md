@@ -182,6 +182,26 @@ Gói Free của Render cho BE ngủ sau 15 phút không có request; mở lại 
 - 750 giờ chạy / tháng — đủ cho một service chạy cả tháng.
 - Đổi `JWT_SECRET` trên Render thì mọi phiên đăng nhập cũ hết hạn (cách đăng xuất mọi máy). Đổi PIN: thay `ADMIN_PIN_HASH`, Render tự khởi động lại.
 
+## Theo dõi lỗi (Sentry)
+
+Lỗi xảy ra khi đang dùng thật được gửi về [Sentry](https://sentry.io) (gói Developer miễn phí, ~5.000 lỗi / tháng) và báo qua email — không phải chờ người dùng kể lại.
+
+| Nơi | Gửi gì | Cấu hình |
+|---|---|---|
+| BE (`be/src/instrument.ts`, `common/sentry.filter.ts`) | Lỗi 5xx và lỗi chưa xử lý. Không gửi 4xx (dữ liệu sai, trùng, chưa đăng nhập) | `SENTRY_DSN` |
+| BO (`bo/src/lib/monitoring.ts`) | Lỗi chưa xử lý trên trang; API trả 5xx (`API GET /admin/orders → 500`). Thư viện tải sau khi mở trang, lỗi lúc đang tải được giữ lại gửi sau | `VITE_SENTRY_DSN` (gắn lúc build) |
+
+- **Không gửi dữ liệu khách:** tắt thông tin cá nhân (`sendDefaultPii: false`); BE bỏ nội dung request, cookie, header đăng nhập; BO chỉ giữ dấu vết gọi API / chuyển trang (không giữ thao tác bấm, gõ, console). Không ghi lại màn hình.
+- **Phiên bản:** gắn mã commit Render (`RENDER_GIT_COMMIT`) — biết lỗi thuộc bản deploy nào.
+- Thiếu DSN thì không làm gì (máy, test e2e local).
+
+**Cài đặt (một lần):**
+
+1. Đăng ký [sentry.io](https://sentry.io) (gói **Developer**, miễn phí). Tạo 2 project: **React** tên `candle2510-bo` và **Node.js** (hoặc Express) tên `candle2510-be`. Bỏ qua bước cài SDK Sentry hướng dẫn — code đã có.
+2. Mỗi project: **Settings › Client Keys (DSN)** → chép DSN (dạng `https://…@o….ingest….sentry.io/…`). DSN không phải bí mật (BO gửi từ trình duyệt), nhưng vẫn nhập trên Render thay vì ghi vào repo.
+3. Render › `candle2510-be` › Environment: `SENTRY_DSN` = DSN của project Node. Render › `candle2510-bo` › Environment: `VITE_SENTRY_DSN` = DSN của project React → **Manual Deploy** BO (biến gắn lúc build).
+4. Sentry › **Alerts**: project mới đã có sẵn cảnh báo email cho lỗi mới; muốn thêm thì tạo rule "A new issue is created".
+
 ## Sao lưu DB tự động
 
 GitHub Actions (`.github/workflows/backup.yml`) sao lưu DB mỗi đêm **02:00 giờ Việt Nam** — gói Free của Neon chỉ giữ lịch sử khoảng 1 ngày.

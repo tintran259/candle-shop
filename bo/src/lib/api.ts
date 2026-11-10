@@ -2,6 +2,7 @@
 // Lỗi trả ApiError với thông báo tiếng Việt của BE (message) và các trường kèm theo (vd shortages, customerId)
 import { API_URL } from "@/lib/api-url";
 import { getSession, logout } from "@/lib/auth";
+import { reportError } from "@/lib/monitoring";
 import { watchSlow } from "@/lib/notify";
 
 export class ApiError extends Error {
@@ -55,6 +56,8 @@ export async function api<T = unknown>(method: Method, path: string, body?: unkn
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (res.ok) return data as T;
   if (res.status === 401) logout();
+  // Lỗi phía máy chủ (5xx) là lỗi cần sửa — báo Sentry. Lỗi 4xx là BE từ chối hợp lệ (dữ liệu sai, trùng…), không báo
+  if (res.status >= 500) reportError(new ApiError(res.status, `API ${method} ${path.split("?")[0]} → ${res.status}`, data), { message: data.message });
   // Lỗi kiểm tra dữ liệu: message là danh sách
   const message = Array.isArray(data.message) ? data.message.join(" ") : typeof data.message === "string" ? data.message : `Lỗi máy chủ (${res.status}).`;
   throw new ApiError(res.status, message, data);
