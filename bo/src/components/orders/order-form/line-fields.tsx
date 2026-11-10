@@ -12,6 +12,7 @@ import type { Order } from "@/lib/orders/types";
 import type { Product } from "@/lib/products/types";
 import { fold } from "@/lib/search";
 import { brand } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 type Props = {
   form: FormInstance<OrderFormValues>;
@@ -66,7 +67,7 @@ export function LineFields({ form, lines, locked, products, config, map, onCraft
                       {custom ? (
                         <ExperimentOutlined style={{ color: brand.emberDark, fontSize: 18 }} />
                       ) : line?.image ? (
-                        <Avatar shape="square" size={44} src={line.image} alt="" />
+                        <Avatar shape="square" size={44} src={imageUrl(line.image, 44)} alt="" />
                       ) : (
                         <PlusOutlined style={{ color: "#b0a69b" }} />
                       )}

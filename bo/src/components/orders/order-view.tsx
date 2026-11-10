@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { deadline, paymentState, paymentStateMeta, statusOf } from "@/lib/orders/labels";
 import type { Order, OrderItem, OrderStatus } from "@/lib/orders/types";
 import { brand } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 // order: để đơn trả sau ghi "Chờ xác nhận / Đã xác nhận"
 export function StatusTag({ status, order }: { status: OrderStatus; order?: Pick<Order, "paymentPlan"> }) {
@@ -45,7 +46,7 @@ export function ItemThumb({ item, size = 40 }: { item: OrderItem; size?: number 
     <Avatar
       shape="square"
       size={size}
-      src={item.image}
+      src={imageUrl(item.image, 48)}
       icon={item.image ? undefined : <ExperimentOutlined />}
       alt=""
       style={{ borderRadius: 10, flexShrink: 0, background: brand.emberLight, color: brand.emberDark }}

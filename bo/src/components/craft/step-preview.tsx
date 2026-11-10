@@ -8,6 +8,7 @@ import type { CraftStep, IntensityLevel, StepOption, VesselOption } from "@/lib/
 import { formatMoney } from "@/lib/format";
 import { lidLevel, optionLevel, sellable as canSell, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import { brand } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 const price = (n: number) => (n ? `+${formatMoney(n)}` : "Đã gồm");
 const striped = "repeating-linear-gradient(45deg,#fff 0 4px,#eee8de 4px 8px)";
@@ -93,7 +94,7 @@ function Body({ step, map }: { step: CraftStep; map: MaterialMap }) {
             >
               <span className="sf-check">{on && <CheckOutlined style={{ fontSize: 10 }} />}</span>
               {o.images?.[0] ? (
-                <img src={o.images[0]} alt="" className="sf-media" />
+                <img src={imageUrl(o.images[0], 320, false)} alt="" className="sf-media" />
               ) : (
                 <span className="sf-media" style={{ background: o.swatch ?? striped, borderRadius: vessel ? "10px 10px 14px 14px" : "50%" }} />
               )}

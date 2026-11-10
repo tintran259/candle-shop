@@ -81,6 +81,24 @@ Tất cả dưới `/api/admin/…`, cần đăng nhập. Dữ liệu trả về
 
 Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 
+## Kho ảnh Cloudinary
+
+Ảnh (sản phẩm, lựa chọn Thủ công, ảnh khiếu nại, chứng từ hoàn tiền) lưu trên [Cloudinary](https://cloudinary.com); DB chỉ giữ URL `https://res.cloudinary.com/…`.
+
+**Cách chạy:** BO nén ảnh trên trình duyệt (cạnh dài ≤ 800px, WebP) → xin chữ ký ở BE (`POST /api/admin/uploads/sign`) → tải **thẳng** lên Cloudinary (không qua BE) → lưu URL. Khóa bí mật chỉ nằm ở BE. Thư mục: `candle2510/products`, `candle2510/craft`, `candle2510/orders`.
+
+**Hiển thị:** BO chèn tham số vào URL (`f_auto,q_auto` + cỡ ô, gấp đôi cho màn hình nét) để Cloudinary trả ảnh đúng cỡ, định dạng tốt nhất (WebP / AVIF). Ảnh trong bảng, ô ảnh dùng ảnh thu nhỏ; bấm xem ảnh chứng từ thì mở ảnh gốc (`bo/src/lib/craft/image-url.ts`). Không cần cài SDK `@cloudinary/react`.
+
+**Cấu hình:**
+
+1. Tạo tài khoản Cloudinary (gói Free) → **Settings › API Keys**: lấy **Cloud name**, **API Key**, **API Secret**.
+2. Điền vào `be/.env` (máy) và **Environment** của `candle2510-be` (Render): `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Không dán API Secret vào code, docs hay chat.
+3. Khởi động lại BE. Không cần cấu hình gì ở BO.
+
+**Chưa cấu hình** (thiếu một trong ba biến): BE trả 503, BO báo một lần "Chưa cấu hình kho ảnh" rồi lưu ảnh tạm trong DB (data URL) như trước. Ảnh đã lưu kiểu cũ vẫn hiển thị bình thường, không tự chuyển lên Cloudinary.
+
+**Chưa có:** xóa ảnh trên Cloudinary khi gỡ ảnh khỏi sản phẩm / xóa sản phẩm (ảnh cũ vẫn nằm trên Cloudinary).
+
 ## BO dùng API
 
 - **Chạy trên máy:** BE `pnpm start:dev` (cổng 4000), BO `pnpm dev`. BO gọi `VITE_API_URL` (mặc định `http://localhost:4000/api`); địa chỉ BO phải nằm trong `BO_URL` của BE.

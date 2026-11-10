@@ -3,6 +3,7 @@ import { Flex } from "antd";
 import type { ReactNode } from "react";
 import { matchRange, type SearchGroup, type SearchResult } from "@/lib/search";
 import { brand, radius } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 const groupIcons: Record<SearchGroup, ReactNode> = {
   pages: <FileTextOutlined />,
@@ -16,7 +17,7 @@ const groupIcons: Record<SearchGroup, ReactNode> = {
 // Ảnh nhỏ và chữ tô đậm phần khớp trong kết quả tìm nhanh
 export function ResultThumb({ r, recent }: { r: SearchResult; recent: boolean }) {
   const box = { width: 40, height: 40, borderRadius: radius.inner, flexShrink: 0 } as const;
-  if (r.image) return <img src={r.image} alt="" style={{ ...box, objectFit: "cover" }} />;
+  if (r.image) return <img src={imageUrl(r.image, 40)} alt="" style={{ ...box, objectFit: "cover" }} />;
   if (r.swatch) return <span aria-hidden style={{ ...box, background: r.swatch, boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)" }} />;
   const icon = recent ? <ClockCircleOutlined /> : r.key.startsWith("action:") ? <PlusOutlined /> : groupIcons[r.group];
   return (

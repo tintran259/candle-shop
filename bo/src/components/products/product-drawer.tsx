@@ -216,7 +216,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
 
             <FormSection title="Hình ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Ảnh đầu tiên là ảnh chính — bấm ☆ để đổi.`}>
               <Form.Item name="images" rules={[{ required: true, type: "array", min: 1, message: "Thêm ít nhất một ảnh." }]} style={{ marginBottom: 0 }}>
-                <ImageUpload />
+                <ImageUpload folder="products" />
               </Form.Item>
             </FormSection>
 

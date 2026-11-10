@@ -5,6 +5,7 @@ import type { StepOption, VesselOption } from "@/lib/craft/types";
 import { formatNumber } from "@/lib/format";
 import { levelMeta, materialLevel, vesselSizeLevel, type MaterialMap } from "@/lib/inventory/stock";
 import type { Material } from "@/lib/inventory/types";
+import { imageUrl } from "@/lib/craft/image";
 
 // Ảnh chính nếu có, không thì ô màu (hoặc sọc khi không có màu)
 export function MaterialAvatar({ item, swatch = true }: { item: Pick<StepOption, "images" | "swatch">; swatch?: boolean }) {
@@ -12,7 +13,7 @@ export function MaterialAvatar({ item, swatch = true }: { item: Pick<StepOption,
   if (count) {
     return (
       <Badge count={count > 1 ? count : 0} size="small" color="#0c0d12" offset={[-2, 34]}>
-        <Avatar shape="square" size={40} src={item.images![0]} alt="" />
+        <Avatar shape="square" size={40} src={imageUrl(item.images![0], 40)} alt="" />
       </Badge>
     );
   }

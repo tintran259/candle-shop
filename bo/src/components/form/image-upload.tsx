@@ -1,14 +1,15 @@
 import { DeleteOutlined, EyeOutlined, LoadingOutlined, PlusOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
 import { App, Button, Flex, Image, Tooltip, Upload } from "antd";
 import { useEffect, useRef, useState } from "react";
-import { compressImage, MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
+import { imageUrl, MAX_FILE_MB, MAX_IMAGES, storeImage, type ImageFolder } from "@/lib/craft/image";
 import { brand } from "@/theme";
 
 // Cạnh ô ảnh — ô "Thêm ảnh" dùng cùng kích thước (xem .image-upload-trigger trong index.css)
 const TILE = 112;
 
 // Upload nhiều ảnh; ảnh đầu tiên là ảnh chính. Dùng như một field của antd Form.
-export function ImageUpload({ value = [], onChange }: { value?: string[]; onChange?: (images: string[]) => void }) {
+// folder: thư mục trên kho ảnh (Cloudinary) theo nơi dùng — sản phẩm, Thủ công, đơn hàng
+export function ImageUpload({ value = [], onChange, folder = "misc" }: { value?: string[]; onChange?: (images: string[]) => void; folder?: ImageFolder }) {
   const { message } = App.useApp();
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(0);
@@ -31,11 +32,11 @@ export function ImageUpload({ value = [], onChange }: { value?: string[]; onChan
     pending.current += 1;
     setBusy(pending.current);
     try {
-      const url = await compressImage(file);
+      const url = await storeImage(file, folder);
       latest.current = [...latest.current, url];
       onChange?.(latest.current);
-    } catch {
-      message.error(`Không đọc được ${file.name}.`);
+    } catch (e) {
+      message.error(e instanceof Error && e.message.startsWith("Không tải") ? `${file.name}: ${e.message}` : `Không đọc được ${file.name}.`);
     } finally {
       pending.current -= 1;
       setBusy(pending.current);
@@ -59,7 +60,7 @@ export function ImageUpload({ value = [], onChange }: { value?: string[]; onChan
               className="image-tile"
               style={{ width: TILE, height: TILE, outlineColor: i === 0 ? brand.ember : undefined }}
             >
-              <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <img src={imageUrl(src, 112)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
               {i === 0 && (
                 <span
                   style={{
@@ -103,7 +104,7 @@ export function ImageUpload({ value = [], onChange }: { value?: string[]; onChan
           <Upload className="image-upload-trigger" listType="picture-card" accept="image/*" multiple showUploadList={false} beforeUpload={beforeUpload}>
             <button type="button" style={{ border: 0, background: "none", cursor: "pointer" }}>
               {busy ? <LoadingOutlined /> : <PlusOutlined />}
-              <div style={{ marginTop: 8 }}>{busy ? "Đang xử lý…" : "Thêm ảnh"}</div>
+              <div style={{ marginTop: 8 }}>{busy ? "Đang tải ảnh…" : "Thêm ảnh"}</div>
             </button>
           </Upload>
         )}

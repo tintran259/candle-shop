@@ -30,7 +30,7 @@ export function RefundModal({ open, order, api, onClose, overpaid: extra }: Prop
           <MoneyInput />
         </Form.Item>
         <Form.Item name="images" label="Ảnh chứng từ" rules={[{ required: true, type: "array", min: 1, message: "Thêm ít nhất một ảnh chứng từ." }]}>
-          <ImageUpload />
+          <ImageUpload folder="orders" />
         </Form.Item>
         <Form.Item name="note" label="Ghi chú" style={{ marginBottom: 0 }}>
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder="VD: Chuyển khoản Vietcombank, mã giao dịch…" />

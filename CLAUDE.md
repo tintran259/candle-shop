@@ -54,7 +54,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 - **Thủ công:** cấu hình JSON, bản đã lưu (web dùng) + bản nháp + nguyên liệu chờ tạo; bấm Lưu gọi `POST /api/admin/craft/publish`. "Dùng trên web" ở Kho tính theo bản đã lưu (bản nháp hiện nhãn "Chưa lưu").
 - **Đăng nhập:** PIN 6 số, JWT HS256, khóa chung toàn hệ thống khi sai 5 lần (15 phút → 1 giờ → 6 giờ → 24 giờ, bảng `LoginGuard`).
 - **Xóa toàn bộ dữ liệu** (Cài đặt): `POST /api/admin/reset {confirm: "XÓA HẾT"}`, giữ đăng nhập; Thủ công giữ bước, bỏ lựa chọn.
-- Ảnh hiện lưu dạng data URL trong DB (body JSON tối đa 10 MB) — nên chuyển sang kho file.
+- **Ảnh trên Cloudinary:** BO nén ảnh → xin chữ ký `POST /api/admin/uploads/sign` → tải thẳng lên Cloudinary → lưu URL. Hiển thị qua `imageUrl()` (`bo/src/lib/craft/image-url.ts`) chèn `f_auto,q_auto` + cỡ. Thiếu biến `CLOUDINARY_*` thì BE trả 503, BO lưu data URL như cũ (body JSON tối đa 10 MB). Xem [docs/backend.md#kho-ảnh-cloudinary](docs/backend.md#kho-ảnh-cloudinary).
 
 ## Kiểm thử
 
@@ -81,7 +81,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 Còn lại, theo thứ tự đề xuất:
 1. BE đã chạy trên Render (10/11/2026, DB Neon mới, chưa có dữ liệu). BO lên Render Static Site (`candle2510-bo`) — kiểm tra sau khi chủ dự án sync Blueprint và đặt `BO_URL`. Lỗi build / health thì đọc log Render họ gửi.
 2. Mang dữ liệu cũ sang DB mới nếu cần: file sao lưu BO + `pnpm db:import`.
-3. Chuyển ảnh sang kho file (Cloudinary / R2), DB chỉ giữ URL.
+3. Kho ảnh Cloudinary đã có code; chủ dự án cần điền `CLOUDINARY_*` ở `be/.env` và Render. Chưa xóa ảnh trên Cloudinary khi gỡ ảnh.
 4. Thêm vài e2e chạy với BE thật cho luồng chính (tạo đơn → làm → giao → hoàn tất, Thủ công Lưu).
 5. Tạo lại web `fe` và nối BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối. Các comment trong BO còn nhắc `fe/…` (dữ liệu mẫu, đồng bộ cấu hình Thủ công sang web khi chạy localhost) là của bản cũ.
 

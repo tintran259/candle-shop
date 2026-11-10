@@ -94,7 +94,7 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
           <Input.TextArea autoFocus autoSize={{ minRows: 2, maxRows: 4 }} maxLength={300} placeholder="VD: Hũ vỡ khi nhận hàng, nến cháy lệch tâm…" />
         </Form.Item>
         <Form.Item name="images" label="Ảnh khách gửi" extra="Không bắt buộc.">
-          <ImageUpload />
+          <ImageUpload folder="orders" />
         </Form.Item>
         <Form.Item name="resolution" label="Cách xử lý">
           <Radio.Group optionType="button" options={(["resend", "refund", "none"] as const).map((value) => ({ value, label: resolutionLabels[value] }))} />
@@ -158,7 +158,7 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
               <MoneyInput aria-label="Số tiền hoàn" />
             </Form.Item>
             <Form.Item name="refundImages" label="Ảnh chứng từ hoàn tiền" rules={[{ required: true, type: "array", min: 1, message: "Thêm ít nhất một ảnh chứng từ." }]}>
-              <ImageUpload />
+              <ImageUpload folder="orders" />
             </Form.Item>
             <Form.Item name="refundNote" label="Ghi chú" style={{ marginBottom: 0 }}>
               <Input.TextArea autoSize={{ minRows: 1, maxRows: 3 }} placeholder="VD: Chuyển khoản Vietcombank…" />

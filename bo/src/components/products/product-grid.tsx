@@ -8,6 +8,7 @@ import type { ProductReview } from "@/lib/products/pricing";
 import { sizeLabels } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { brand, radius } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 type Props = { items: Product[]; api: ProductsApi; onEdit: (id: string) => void; review: ReadonlyMap<string, ProductReview> };
 
@@ -19,7 +20,7 @@ function ProductGridView({ items, api, onEdit, review }: Props) {
         <Col key={p.id} xs={24} sm={12} lg={8} xxl={6}>
           <article style={{ background: "#fff", borderRadius: radius.card, overflow: "hidden", height: "100%", display: "flex", flexDirection: "column" }}>
             <button type="button" onClick={() => onEdit(p.id)} aria-label={`Sửa ${p.name}`} className="product-cover" style={{ aspectRatio: "4 / 3", background: brand.emberLight }}>
-              {p.images[0] && <img src={p.images[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: p.status === "hidden" ? 0.55 : 1 }} />}
+              {p.images[0] && <img src={imageUrl(p.images[0], 320, false)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: p.status === "hidden" ? 0.55 : 1 }} />}
               <span style={{ position: "absolute", left: 12, top: 12 }}>
                 <ProductBadges product={p} />
                 <RecipeTag product={p} />

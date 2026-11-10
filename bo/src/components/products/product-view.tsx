@@ -6,6 +6,7 @@ import { discountPercent } from "@/lib/products/labels";
 import type { Product } from "@/lib/products/types";
 import { formatMoney } from "@/lib/format";
 import { brand } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 // Giá bán; đang giảm thì hiện giá giảm + giá gốc gạch ngang + % giảm
 export function PriceText({ product, size = 14 }: { product: Pick<Product, "price" | "salePrice">; size?: number }) {
@@ -53,7 +54,7 @@ export function PriceFlag({ check }: { check?: ProductReview }) {
 
 export function ProductThumb({ product, size = 48 }: { product: Pick<Product, "images" | "status">; size?: number }) {
   return (
-    <Avatar shape="square" size={size} src={product.images[0]} alt="" style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight, opacity: product.status === "hidden" ? 0.55 : 1 }} />
+    <Avatar shape="square" size={size} src={imageUrl(product.images[0], size)} alt="" style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight, opacity: product.status === "hidden" ? 0.55 : 1 }} />
   );
 }
 

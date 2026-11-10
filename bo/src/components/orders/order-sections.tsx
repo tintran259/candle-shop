@@ -13,6 +13,7 @@ import type { OrdersApi } from "@/hooks/use-orders";
 import { unitLabel } from "@/lib/craft/groups";
 import { formatMoney, formatNumber } from "@/lib/format";
 import type { Order } from "@/lib/orders/types";
+import { imageUrl } from "@/lib/craft/image";
 
 type Props = { order: Order; api: OrdersApi };
 
@@ -193,7 +194,7 @@ export function ComplaintsSection({ order }: { order: Order }) {
               <Flex gap={6} wrap>
                 <Image.PreviewGroup>
                   {c.images.map((src, i) => (
-                    <Image key={i} src={src} alt={`Ảnh khách gửi ${i + 1}`} width={56} height={56} style={{ objectFit: "cover", borderRadius: 8 }} />
+                    <Image key={i} src={imageUrl(src, 56)} preview={{ src }} alt={`Ảnh khách gửi ${i + 1}`} width={56} height={56} style={{ objectFit: "cover", borderRadius: 8 }} />
                   ))}
                 </Image.PreviewGroup>
               </Flex>

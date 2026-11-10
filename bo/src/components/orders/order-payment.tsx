@@ -8,6 +8,7 @@ import type { OrdersApi } from "@/hooks/use-orders";
 import { formatMoney } from "@/lib/format";
 import { depositLabel, faultLabels, overpaid, paidAmount, partialRefunds, providerLabels, remaining } from "@/lib/orders/labels";
 import type { Order, Payment, PaymentStatus } from "@/lib/orders/types";
+import { imageUrl } from "@/lib/craft/image";
 
 const paymentStatus: Record<PaymentStatus, { label: string; color: string }> = {
   pending: { label: "Chờ thanh toán", color: "gold" },
@@ -154,7 +155,7 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
           <Flex gap={8} wrap>
             <Image.PreviewGroup>
               {order.refund.images.map((src, i) => (
-                <Image key={i} src={src} alt={`Ảnh chứng từ ${i + 1}`} width={64} height={64} style={{ objectFit: "cover", borderRadius: 8 }} />
+                <Image key={i} src={imageUrl(src, 64)} preview={{ src }} alt={`Ảnh chứng từ ${i + 1}`} width={64} height={64} style={{ objectFit: "cover", borderRadius: 8 }} />
               ))}
             </Image.PreviewGroup>
           </Flex>
@@ -178,7 +179,7 @@ export function PaymentSection({ order, api }: { order: Order; api: OrdersApi })
                 <Flex gap={6} wrap style={{ marginTop: 6 }}>
                   <Image.PreviewGroup>
                     {p.images.map((src, k) => (
-                      <Image key={k} src={src} alt={`Ảnh chứng từ ${k + 1}`} width={48} height={48} style={{ objectFit: "cover", borderRadius: 6 }} />
+                      <Image key={k} src={imageUrl(src, 48)} preview={{ src }} alt={`Ảnh chứng từ ${k + 1}`} width={48} height={48} style={{ objectFit: "cover", borderRadius: 6 }} />
                     ))}
                   </Image.PreviewGroup>
                 </Flex>

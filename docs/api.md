@@ -1133,3 +1133,24 @@ Xóa mọi dữ liệu BO trong một giao dịch: đơn hàng (kèm khoản thu
 **Gửi lên:** `{ "confirm": "XÓA HẾT" }` — đúng câu này (bỏ khoảng trắng đầu cuối, không phân biệt hoa thường) để không lỡ tay gọi nhầm.
 
 **Trả về 204.** **Lỗi:** 400 `"Gõ đúng \"XÓA HẾT\" để xác nhận."` (thiếu / sai câu); 401 chưa đăng nhập.
+
+---
+
+## Kho ảnh
+
+### `POST /admin/uploads/sign`
+
+Ký phép tải một ảnh lên Cloudinary. BO dùng kết quả để `POST` file thẳng tới Cloudinary (multipart: `file`, `api_key`, `timestamp`, `folder`, `signature`), lưu `secure_url` Cloudinary trả về vào dữ liệu (ảnh sản phẩm, lựa chọn Thủ công…). Khóa bí mật không rời BE.
+
+**Gửi lên:** `{ "folder": "products" }` — `products` \| `craft` \| `orders` \| `misc` (mặc định `misc`).
+
+**Trả về 200:**
+
+```json
+{ "uploadUrl": "https://api.cloudinary.com/v1_1/<cloud>/image/upload", "apiKey": "1234567890", "timestamp": 1731200000, "folder": "candle2510/products", "signature": "<sha1>" }
+```
+
+Chữ ký = SHA-1 của `folder=…&timestamp=…` + API Secret (cách Cloudinary quy định); Cloudinary nhận trong khoảng 1 giờ.
+
+**Lỗi:** 400 `folder` không hợp lệ; 401 chưa đăng nhập; 503 `"Chưa cấu hình kho ảnh (Cloudinary)."` (thiếu biến `CLOUDINARY_*` — BO tự lưu ảnh tạm trong DB).
+

@@ -110,7 +110,7 @@ export function ImageFields({ step, role, hasImage, hasSwatch }: { step: OptionS
   return (
     <FormSection title="Hình ảnh & màu" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Không có ảnh thì web dùng màu.`}>
       <Form.Item name="images" noStyle>
-        <ImageUpload />
+        <ImageUpload folder="craft" />
       </Form.Item>
       <Flex justify="space-between" align="center" gap={16} style={{ marginTop: 16 }}>
         <Flex vertical>

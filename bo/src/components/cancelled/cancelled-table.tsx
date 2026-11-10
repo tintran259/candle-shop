@@ -6,6 +6,7 @@ import { statusMeta } from "@/lib/cancelled/labels";
 import type { CancelledProduct } from "@/lib/cancelled/types";
 import { formatMoney } from "@/lib/format";
 import { brand } from "@/theme";
+import { imageUrl } from "@/lib/craft/image";
 
 type Props = {
   items: CancelledProduct[];
@@ -24,7 +25,7 @@ function CancelledTableView({ items, onOpen, onCreate, onDiscard, pagination }: 
       key: "product",
       render: (_, c) => (
         <Flex align="center" gap={12} style={{ minWidth: 150, maxWidth: screens.sm === false ? 150 : 240 }}>
-          <Avatar shape="square" size={48} src={c.images[0]} alt="" style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight }} />
+          <Avatar shape="square" size={48} src={imageUrl(c.images[0], 48)} alt="" style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight }} />
           <Flex vertical gap={4} align="flex-start" style={{ minWidth: 0 }}>
             <Typography.Link strong onClick={() => onOpen(c.id)} style={{ color: "inherit" }}>
               {c.name}

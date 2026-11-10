@@ -35,6 +35,13 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      # Kho ảnh Cloudinary (cloudinary.com › Settings › API Keys). Để trống thì BO lưu ảnh tạm trong DB
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
 
   # BO: trang tĩnh (Vite build), gọi BE qua VITE_API_URL — gán lúc build nên đổi địa chỉ BE thì phải build lại
   - type: web
