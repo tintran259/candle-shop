@@ -78,9 +78,15 @@ Phiên đăng nhập hiện tại.
 
 ### `GET /health`
 
-Không cần token. Kiểm tra máy chủ chạy và kết nối được DB (Render dùng để kiểm tra sức khỏe).
+Không cần token. Chỉ báo máy chủ còn chạy, **không truy vấn DB** — Render health check và dịch vụ giữ thức (UptimeRobot) gọi đường này, nên BE không ngủ mà DB Neon vẫn tự ngủ khi không ai dùng.
 
-**Trả về 200:** `{ "ok": true }` · **503:** `"Không kết nối được DB."`
+**Trả về 200:** `{ "ok": true }`
+
+### `GET /health/db`
+
+Không cần token. Kiểm tra thêm kết nối DB (`SELECT 1`, đánh thức DB nếu đang ngủ). Gọi tay khi cần xem DB còn kết nối được không; đừng cho dịch vụ giữ thức gọi đường này.
+
+**Trả về 200:** `{ "ok": true, "db": true }` · **503:** `"Không kết nối được DB."`
 
 ---
 

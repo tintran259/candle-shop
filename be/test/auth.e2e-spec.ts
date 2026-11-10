@@ -39,7 +39,19 @@ describe('Đăng nhập bằng PIN (e2e)', () => {
     await app.close();
   });
 
-  it('/api/health không cần đăng nhập', async () => {
+  it('/api/health không cần đăng nhập, không chạm DB (DB Neon vẫn được ngủ khi bị gọi giữ thức)', async () => {
+    const spy = vi.spyOn(app.get(PrismaService), '$queryRaw');
+    await http().get('/api/health').expect(200, { ok: true });
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('/api/health/db kiểm tra kết nối DB, không cần đăng nhập', async () => {
+    await http().get('/api/health/db').expect(200, { ok: true, db: true });
+  });
+
+  it('/api/health/db báo 503 khi DB không kết nối được; /api/health vẫn 200', async () => {
+    vi.spyOn(app.get(PrismaService), '$queryRaw').mockRejectedValue(new Error('DB tắt'));
+    await http().get('/api/health/db').expect(503);
     await http().get('/api/health').expect(200, { ok: true });
   });
 

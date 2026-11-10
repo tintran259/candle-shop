@@ -72,7 +72,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 
 ## Triển khai
 
-- **Render** qua Blueprint `render.yaml` (gói Free): **BE** https://candle2510-be.onrender.com (Node, Singapore; build = install + build + `db:deploy`; start `node dist/main.js`; health `/api/health`) và **BO** `candle2510-bo` (Static Site, `VITE_API_URL=https://candle2510-be.onrender.com/api` gắn lúc build, rewrite mọi đường dẫn về `index.html`). Push `main` thì service có thư mục đổi tự deploy (`buildFilter`). `BO_URL` trên Render phải có địa chỉ BO (CORS). Hướng dẫn: [docs/backend.md#đưa-lên-render](docs/backend.md#đưa-lên-render).
+- **Render** qua Blueprint `render.yaml` (gói Free): **BE** https://candle2510-be.onrender.com (Node, Singapore; build = install + build + `db:deploy`; start `node dist/main.js`; health `/api/health` không chạm DB, `/api/health/db` kiểm DB; UptimeRobot gọi `/api/health` mỗi 10 phút để BE không ngủ, xem [docs/backend.md#giữ-be-không-ngủ-uptimerobot](docs/backend.md#giữ-be-không-ngủ-uptimerobot)) và **BO** `candle2510-bo` (Static Site, `VITE_API_URL=https://candle2510-be.onrender.com/api` gắn lúc build, rewrite mọi đường dẫn về `index.html`). Push `main` thì service có thư mục đổi tự deploy (`buildFilter`). `BO_URL` trên Render phải có địa chỉ BO (CORS). Hướng dẫn: [docs/backend.md#đưa-lên-render](docs/backend.md#đưa-lên-render).
 - Migration mới: `pnpm db:migrate` khi dev (hoặc tự viết SQL trong `be/prisma/migrations/<timestamp>_<tên>/`), `pnpm db:deploy` để áp; Render tự áp khi deploy.
 
 ## Trạng thái và việc còn lại (cập nhật 09/11/2026)

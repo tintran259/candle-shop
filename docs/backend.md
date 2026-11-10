@@ -50,7 +50,8 @@ id giữ đúng id của BO. Tiền là VNĐ, số nguyên. Ảnh tạm lưu d�
 |---|---|
 | `POST /api/auth/login` | `{ pin, remember? }` → `{ token, name, expiresAt }`. Ghi nhớ thiết bị 30 ngày, không thì 12 giờ. PIN sai → 401 kèm `remaining` (số lần còn thử) |
 | `GET /api/auth/me` | Phiên hiện tại |
-| `GET /api/health` | Không cần đăng nhập. `{ ok: true }` khi kết nối được DB (Render health check) |
+| `GET /api/health` | Không cần đăng nhập. `{ ok: true }` khi BE còn chạy, không chạm DB (Render health check, UptimeRobot) |
+| `GET /api/health/db` | Không cần đăng nhập. `{ ok: true, db: true }` khi kết nối được DB, 503 nếu không |
 
 Mọi API khác cần `Authorization: Bearer <token>`, thiếu hoặc sai thì 401. Chưa đặt `ADMIN_PIN_HASH` / `JWT_SECRET` thì đăng nhập báo 503.
 
@@ -122,7 +123,7 @@ BE và BO chạy trên [Render](https://render.com), cấu hình ở `render.yam
 |---|---|
 | Build | `pnpm install --frozen-lockfile` → `pnpm run build` → `pnpm run db:deploy` (áp migration mới, không xóa dữ liệu — gói Free không có bước pre-deploy nên chạy trong build) |
 | Start | `node dist/main.js` (cổng do Render cấp qua `PORT`) |
-| Health check | `GET /api/health` — lỗi DB thì Render không chuyển sang bản mới |
+| Health check | `GET /api/health` — BE khởi động được thì Render chuyển sang bản mới. Không kiểm DB ở đây (để DB được ngủ); kết nối DB đã được thử ở bước build (`db:deploy`) |
 
 **Tạo lần đầu**
 
@@ -146,7 +147,21 @@ BE và BO chạy trên [Render](https://render.com), cấu hình ở `render.yam
 1. Push `render.yaml` có service `candle2510-bo` lên `main` → Render (Blueprint đã tạo) tự thêm service. Không thấy thì vào Blueprint › **Manual Sync**.
 2. Chờ build (~3 phút) → mở https://candle2510-bo.onrender.com (địa chỉ thật ở trang service).
 3. Trên `candle2510-be` › **Environment**: `BO_URL` = `https://candle2510-bo.onrender.com,http://localhost:3001` → Save (BE khởi động lại) — thiếu bước này BO báo "Không kết nối được máy chủ".
-4. Đăng nhập bằng PIN. Lần đầu sau 15 phút không dùng, BE trên Render đang ngủ nên chờ ~30–60 giây.
+4. Đăng nhập bằng PIN. Lần đầu sau 15 phút không dùng, BE trên Render đang ngủ nên chờ ~30–60 giây — tránh bằng UptimeRobot (mục dưới).
+
+### Giữ BE không ngủ (UptimeRobot)
+
+Gói Free của Render cho BE ngủ sau 15 phút không có request; mở lại phải chờ ~30–60 giây. Dùng [UptimeRobot](https://uptimerobot.com) (miễn phí) gọi BE định kỳ:
+
+1. Đăng ký UptimeRobot → **New monitor** (Add New Monitor).
+2. **Monitor type:** HTTP(s). **URL:** `https://candle2510-be.onrender.com/api/health`. **Interval:** 10 phút (dưới 15 phút là đủ). Tên tùy ý, vd `candle2510-be`.
+3. **Create monitor.** Có thể bật báo email khi BE sập.
+
+**Ảnh hưởng gói free:**
+
+- **Render:** gói Free có ~750 giờ chạy / tháng **chung cả tài khoản**. Giữ thức một BE cả tháng ≈ 720–744 giờ — vừa đủ. Thêm web service free thứ hai (vd web bán hàng chạy Node) mà cũng giữ thức thì vượt, Render tạm dừng các service free tới hết tháng. Static Site (BO, landing page) không tính giờ.
+- **Neon:** gói Free giới hạn giờ chạy DB mỗi tháng (xem **Usage** trong Neon console). `/api/health` **không chạm DB** nên DB vẫn tự ngủ sau ~5 phút không có truy vấn — UptimeRobot không làm tốn giờ DB. **Đừng** đặt monitor vào `/api/health/db` (sẽ giữ DB thức liên tục).
+- Mở BO sau lúc lâu không dùng: BE đã thức sẵn, DB thức lại trong ~1–2 giây.
 
 Đổi địa chỉ BE thì sửa `VITE_API_URL` của `candle2510-bo` rồi deploy lại (giá trị gắn vào lúc build).
 
