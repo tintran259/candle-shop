@@ -9,7 +9,8 @@ export default defineConfig({
     // Tạo bảng trong schema bo_test (Neon) trước khi chạy; các file test chạy lần lượt vì dùng chung schema
     globalSetup: ['./test/setup-db.ts'],
     fileParallelism: false,
-    testTimeout: 30_000,
+    // CI xa DB (Mỹ → Singapore) nên cho phép tăng qua biến môi trường
+    testTimeout: Number(process.env.E2E_TEST_TIMEOUT_MS) || 30_000,
     hookTimeout: 120_000,
   },
 });

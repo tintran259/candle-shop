@@ -1,7 +1,8 @@
 // Token đăng nhập dạng JWT HS256 (ký bằng JWT_SECRET), dùng crypto có sẵn của Node
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-export type TokenPayload = { sub: string; name: string; exp: number };
+// iat: thời điểm cấp (ms) — để thu hồi khi Đăng xuất mọi thiết bị; token cũ không có iat coi như cấp lúc 0
+export type TokenPayload = { sub: string; name: string; exp: number; iat?: number };
 
 const b64 = (s: string | Buffer) => Buffer.from(s).toString('base64url');
 const sign = (data: string, secret: string) => createHmac('sha256', secret).update(data).digest('base64url');

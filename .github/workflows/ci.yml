@@ -16,6 +16,9 @@ concurrency:
 env:
   PNPM_VERSION: 10.33.4
   NODE_VERSION: "24"
+  # Máy CI của GitHub ở Mỹ, DB Neon ở Singapore: mỗi truy vấn ~200 ms — nới giới hạn giao dịch và thời gian mỗi test
+  DB_TX_TIMEOUT_MS: "60000"
+  E2E_TEST_TIMEOUT_MS: "180000"
 
 jobs:
   be:
@@ -28,11 +31,11 @@ jobs:
       # Secret thô; bước "Chuẩn hóa DATABASE_URL" bỏ dấu nháy rồi đặt DATABASE_URL cho các bước sau
       RAW_DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -68,11 +71,11 @@ jobs:
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -97,13 +100,13 @@ jobs:
       - name: Bỏ qua khi chưa có secret DATABASE_URL
         if: env.RAW_DATABASE_URL == ''
         run: echo "::notice::Chưa có secret DATABASE_URL — bỏ qua e2e BO + BE thật."
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: env.RAW_DATABASE_URL != ''
       - uses: pnpm/action-setup@v4
         if: env.RAW_DATABASE_URL != ''
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         if: env.RAW_DATABASE_URL != ''
         with:
           node-version: ${{ env.NODE_VERSION }}

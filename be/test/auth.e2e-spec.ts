@@ -8,7 +8,7 @@ import { hashPassword } from '../src/auth/password.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 
 const PIN = '739214';
-type Guard = { id: string; failed: number; level: number; lockedUntil: Date | null };
+type Guard = { id: string; failed: number; level: number; lockedUntil: Date | null; revokedBefore?: Date | null };
 
 describe('Đăng nhập bằng PIN (e2e)', () => {
   let app: INestApplication<App>;
@@ -22,7 +22,9 @@ describe('Đăng nhập bằng PIN (e2e)', () => {
     process.env.ADMIN_PIN_HASH = await hashPassword(PIN);
     // Bảng LoginGuard giả trong bộ nhớ
     const loginGuard = {
-      upsert: async ({ create }: { create: { id: string } }) => (guard ??= { id: create.id, failed: 0, level: 0, lockedUntil: null }),
+      upsert: async ({ create, update }: { create: Partial<Guard> & { id: string }; update: Partial<Guard> }) =>
+        (guard = guard ? { ...guard, ...update } : { failed: 0, level: 0, lockedUntil: null, ...create }),
+      findUnique: async () => guard ?? null,
       update: async ({ data }: { data: Partial<Guard> }) => (guard = { ...guard!, ...data }),
     };
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -93,5 +95,18 @@ describe('Đăng nhập bằng PIN (e2e)', () => {
     for (let i = 0; i < 3; i++) await login('111222').expect(401);
     await login(PIN).expect(200);
     expect(guard).toMatchObject({ failed: 0, level: 0, lockedUntil: null });
+  });
+
+  it('Đăng xuất mọi thiết bị: mọi token đã cấp (kể cả máy đang dùng) bị từ chối; đăng nhập lại thì dùng được', async () => {
+    const a = (await login(PIN, true).expect(200)).body.token as string;
+    const b = (await login(PIN).expect(200)).body.token as string;
+    await http().get('/api/auth/me').set('Authorization', `Bearer ${a}`).expect(200);
+    await http().post('/api/auth/logout-all').expect(401);
+    await http().post('/api/auth/logout-all').set('Authorization', `Bearer ${a}`).expect(200, { ok: true });
+    await http().get('/api/auth/me').set('Authorization', `Bearer ${a}`).expect(401);
+    await http().get('/api/auth/me').set('Authorization', `Bearer ${b}`).expect(401);
+    await new Promise((r) => setTimeout(r, 5));
+    const c = (await login(PIN).expect(200)).body.token as string;
+    await http().get('/api/auth/me').set('Authorization', `Bearer ${c}`).expect(200);
   });
 });

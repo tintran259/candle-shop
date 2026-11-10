@@ -11,6 +11,7 @@ import { useTitle } from "@/lib/use-title";
 import { Preview } from "@/components/settings/settings-preview";
 import { BackupSection } from "@/components/settings/backup-section";
 import { ResetSection } from "@/components/settings/reset-section";
+import { SessionSection } from "@/components/settings/session-section";
 import { CarrierFields } from "@/components/settings/carrier-fields";
 import { ShippingOptionFields } from "@/components/settings/shipping-option-fields";
 
@@ -194,6 +195,8 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
               <CarrierFields />
 
               <BackupSection />
+
+              <SessionSection />
 
               <ResetSection />
             </Flex>

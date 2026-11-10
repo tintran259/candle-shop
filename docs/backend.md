@@ -50,10 +50,15 @@ id giữ đúng id của BO. Tiền là VNĐ, số nguyên. Ảnh tạm lưu d�
 |---|---|
 | `POST /api/auth/login` | `{ pin, remember? }` → `{ token, name, expiresAt }`. Ghi nhớ thiết bị 30 ngày, không thì 12 giờ. PIN sai → 401 kèm `remaining` (số lần còn thử) |
 | `GET /api/auth/me` | Phiên hiện tại |
+| `POST /api/auth/logout-all` | Đăng xuất mọi thiết bị (BO: Cài đặt › Phiên đăng nhập) |
 | `GET /api/health` | Không cần đăng nhập. `{ ok: true }` khi BE còn chạy, không chạm DB (Render health check, UptimeRobot) |
 | `GET /api/health/db` | Không cần đăng nhập. `{ ok: true, db: true }` khi kết nối được DB, 503 nếu không |
 
 Mọi API khác cần `Authorization: Bearer <token>`, thiếu hoặc sai thì 401. Chưa đặt `ADMIN_PIN_HASH` / `JWT_SECRET` thì đăng nhập báo 503.
+
+**Đăng xuất mọi thiết bị:** token có thời điểm cấp (`iat`); bấm nút thì BE ghi `LoginGuard.revokedBefore` = bây giờ, token cấp trước mốc này bị 401 (BE giữ mốc trong bộ nhớ, đọc lại DB mỗi 30 giây). Đổi `JWT_SECRET` cũng làm mọi phiên hết hạn.
+
+**Bảo vệ thêm:** header bảo mật bằng `helmet` (tắt CSP vì API trả JSON); giới hạn 600 request / phút mỗi IP (`RATE_LIMIT_PER_MIN`, `common/rate-limit.ts`, lấy IP thật sau proxy của Render bằng `trust proxy`).
 
 **PIN:** đúng 6 chữ số; lệnh `auth:pin` từ chối PIN dễ đoán (6 số giống nhau, dãy tăng / giảm như 123456, PIN phổ biến như 112233).
 

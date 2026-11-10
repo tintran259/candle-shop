@@ -14,6 +14,8 @@ export const REMEMBER_MS = 30 * DAY;
 export const SESSION_MS = 12 * 60 * 60 * 1000;
 const ADMIN = { sub: 'admin', name: 'Admin 2510' };
 const GUARD_ID = 'admin';
+// Mốc thu hồi đọc lại từ DB sau mỗi khoảng này (giữ trong bộ nhớ để không truy vấn DB mỗi request)
+const REVOKE_CACHE_MS = 30_000;
 
 const locked = (until: Date, now: number) =>
   new HttpException({ message: 'Nhập sai PIN nhiều lần, tạm khóa đăng nhập.', retryIn: Math.ceil((until.getTime() - now) / 1000) }, HttpStatus.TOO_MANY_REQUESTS);
@@ -21,6 +23,7 @@ const locked = (until: Date, now: number) =>
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private revoked = { value: 0, readAt: 0 };
 
   constructor(
     private readonly config: ConfigService,
@@ -53,7 +56,7 @@ export class AuthService {
     }
 
     await this.prisma.loginGuard.update({ where: { id: GUARD_ID }, data: { failed: 0, level: 0, lockedUntil: null } });
-    const session: TokenPayload = { ...ADMIN, exp: now + (remember ? REMEMBER_MS : SESSION_MS) };
+    const session: TokenPayload = { ...ADMIN, iat: now, exp: now + (remember ? REMEMBER_MS : SESSION_MS) };
     return { token: signToken(session, this.secret()), name: session.name, expiresAt: session.exp };
   }
 
@@ -61,5 +64,23 @@ export class AuthService {
   verify(token: string) {
     const secret = this.secret();
     return secret ? verifyToken(token, secret) : null;
+  }
+
+  // Token cấp trước lần "Đăng xuất mọi thiết bị" gần nhất
+  async isRevoked(session: TokenPayload) {
+    const now = Date.now();
+    if (now - this.revoked.readAt > REVOKE_CACHE_MS) {
+      const guard = await this.prisma.loginGuard.findUnique({ where: { id: GUARD_ID }, select: { revokedBefore: true } });
+      this.revoked = { value: guard?.revokedBefore?.getTime() ?? 0, readAt: now };
+    }
+    return (session.iat ?? 0) < this.revoked.value;
+  }
+
+  // Đăng xuất mọi thiết bị (kể cả máy đang dùng): mọi token đã cấp hết hiệu lực
+  async logoutAll() {
+    const at = new Date();
+    await this.prisma.loginGuard.upsert({ where: { id: GUARD_ID }, create: { id: GUARD_ID, revokedBefore: at }, update: { revokedBefore: at } });
+    this.revoked = { value: at.getTime(), readAt: Date.now() };
+    return { ok: true };
   }
 }

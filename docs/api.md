@@ -10,6 +10,7 @@ Tài liệu mọi endpoint đang có của `be/`. Cách cài đặt, biến môi
 - **Định dạng:** JSON (`Content-Type: application/json`).
 - **Đăng nhập:** mọi endpoint cần header `Authorization: Bearer <token>`, trừ `POST /auth/login` và `GET /health`. Lấy token ở `POST /auth/login`.
 - **Chống ghi trùng:** yêu cầu ghi (POST / PUT / PATCH / DELETE) có thể gắn header `Idempotency-Key: <chuỗi ≤ 100 ký tự>`. Gửi lại cùng khóa, cùng method và đường dẫn trong 1 giờ thì BE trả lại kết quả lần đầu, không làm lại (BO tự gửi lại khi mất mạng). Lần đầu lỗi thì không giữ, gửi lại sẽ chạy lại. Khóa nhớ trong bộ nhớ BE (khởi động lại thì quên).
+- **Giới hạn:** mỗi IP tối đa 600 request / phút (đổi bằng `RATE_LIMIT_PER_MIN`), vượt thì 429 `"Gọi máy chủ quá nhiều, thử lại sau ít phút."` kèm header `Retry-After`.
 - **Tiền:** VNĐ, số nguyên (`150000` = 150.000 ₫).
 - **Ngày:** ngày kiểu `"YYYY-MM-DD"` (vd ngày mã giảm giá); thời điểm kiểu ISO 8601 (`"2026-11-09T03:48:18.000Z"`); hạn token là số mili giây (`expiresAt`).
 - **Trường không có giá trị** thì không có trong kết quả (không trả `null`), giống dữ liệu của BO.
@@ -76,6 +77,12 @@ Phiên đăng nhập hiện tại.
 **Trả về 200:** `{ "name": "Admin 2510", "expiresAt": 1796788189978 }`
 
 **Lỗi:** 401 khi không có token, token sai hoặc hết hạn.
+
+### `POST /auth/logout-all`
+
+Đăng xuất mọi thiết bị (kể cả máy đang gọi): mọi token cấp trước thời điểm này bị từ chối (401). Dùng khi lỡ mất máy / nghi lộ phiên. Không gửi body. Mốc thu hồi lưu ở `LoginGuard.revokedBefore`; BE đọc lại mỗi 30 giây.
+
+**Trả về 200:** `{ "ok": true }` · **Lỗi:** 401 chưa đăng nhập.
 
 ### `GET /health`
 

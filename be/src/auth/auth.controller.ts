@@ -26,6 +26,14 @@ export class AuthController {
     return this.auth.login(body.pin, !!body.remember);
   }
 
+  // Đăng xuất mọi thiết bị (kể cả máy này) — lỡ mất máy / lộ phiên
+  @ApiBearerAuth()
+  @Post('logout-all')
+  @HttpCode(200)
+  logoutAll() {
+    return this.auth.logoutAll();
+  }
+
   // Phiên hiện tại
   @ApiBearerAuth()
   @Get('me')

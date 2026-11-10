@@ -2,6 +2,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import { rateLimit } from './common/rate-limit.js';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
@@ -9,6 +11,11 @@ async function bootstrap() {
   // Ảnh sản phẩm, nến hủy đơn đang gửi dạng data URL nên cần giới hạn lớn hơn mặc định 100 KB
   app.useBodyParser('json', { limit: '10mb' });
 
+  // Header bảo mật (chặn nhúng iframe, đoán kiểu file, buộc HTTPS…). API trả JSON nên tắt CSP (Swagger trên máy cần script nội tuyến)
+  app.use(helmet({ contentSecurityPolicy: false }));
+  // Render đứng sau proxy: lấy IP thật của người gọi từ X-Forwarded-For (để giới hạn request theo IP)
+  app.set('trust proxy', 1);
+  app.use(rateLimit());
   app.setGlobalPrefix('api');
   // Web (FRONTEND_URL) và Back Office (BO_URL) — mỗi biến có thể ghi nhiều địa chỉ, cách nhau dấu phẩy
   // Để trống cũng dùng giá trị mặc định (BO chạy dev ở cổng 3001, preview test 3011)

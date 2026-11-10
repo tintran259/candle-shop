@@ -36,6 +36,7 @@ GitHub Actions (`.github/workflows/ci.yml`) chạy mỗi lần push lên `main` 
 
 - Bộ kịch bản đầy đủ của BO (~310 test, ~30 phút) **không** chạy trên CI — vẫn chạy trên máy trước khi sửa lớn.
 - Secret `DATABASE_URL`: xem [backend.md](./backend.md#sao-lưu-db-tự-động). Chưa có secret thì các bước cần DB được bỏ qua (CI vẫn qua).
+- Máy CI của GitHub ở Mỹ, DB Neon ở Singapore (~200 ms mỗi truy vấn): CI đặt `DB_TX_TIMEOUT_MS=60000` (giới hạn giao dịch Prisma, mặc định 5 giây) và `E2E_TEST_TIMEOUT_MS=180000`. Trên máy và Render giữ mặc định.
 - Đừng chạy `pnpm test:e2e` (BE) hay `pnpm test:e2e:be` trên máy đúng lúc CI đang chạy — dùng chung schema test.
 
 ## E2E với BE thật
@@ -55,6 +56,7 @@ Bộ nhỏ ở `bo/e2e-be/`, chạy BO **chế độ API** với BE thật — b
 |---|---|
 | `orders.spec.ts` | Tạo đơn cọc 50% → Bắt đầu làm (BE trừ đúng Kho theo công thức) → Làm xong → Giao (mã vận đơn) → Khách nhận, thu nốt → Hoàn tất; tải lại trang đọc đúng. Hủy đơn đang làm, chưa làm → BE hoàn nguyên liệu |
 | `offline.spec.ts` | Mất phản hồi khi Bắt đầu làm (BE đã làm, BO không nhận được) → báo "1 thay đổi chưa lưu" → có mạng lại tự gửi lại cùng khóa → Kho chỉ trừ một lần, lịch sử một dòng. Ẩn tab hơn 30 giây, máy khác đổi đơn → quay lại thấy bản mới |
+| `session.spec.ts` | Cài đặt › Đăng xuất mọi thiết bị → về trang đăng nhập, token cũ bị 401, đăng nhập lại dùng được |
 | `slow-server.spec.ts` | Request quá 5 giây (giả lập BE đang khởi động) → hiện "Máy chủ đang khởi động…", trả lời xong thì ẩn |
 | `craft.spec.ts` | Sửa giá Sáp ong → bản nháp lưu ở BE (bản web chưa đổi), tải lại không mất → Lưu thay đổi → BE đưa lên bản web, xóa bản nháp |
 

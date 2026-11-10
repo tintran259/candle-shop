@@ -17,12 +17,12 @@ export class AuthGuard implements CanActivate {
     private readonly auth: AuthService,
   ) {}
 
-  canActivate(ctx: ExecutionContext) {
+  async canActivate(ctx: ExecutionContext) {
     if (this.reflector.getAllAndOverride<boolean>(PUBLIC, [ctx.getHandler(), ctx.getClass()])) return true;
     const req = ctx.switchToHttp().getRequest<AuthedRequest>();
     const [scheme, token] = (req.headers.authorization ?? '').split(' ');
     const session = scheme === 'Bearer' && token ? this.auth.verify(token) : null;
-    if (!session) throw new UnauthorizedException('Phiên đăng nhập hết hạn, đăng nhập lại.');
+    if (!session || (await this.auth.isRevoked(session))) throw new UnauthorizedException('Phiên đăng nhập hết hạn, đăng nhập lại.');
     req.session = session;
     return true;
   }
