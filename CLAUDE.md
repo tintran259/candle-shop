@@ -71,7 +71,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 
 ## Triển khai
 
-- **Render** qua Blueprint `render.yaml` (gói Free): **BE** https://candle-be.onrender.com (Node, Singapore; build = install + build + `db:deploy`; start `node dist/main.js`; health `/api/health`) và **BO** `2510candle-bo` (Static Site, `VITE_API_URL=https://candle-be.onrender.com/api` gắn lúc build, rewrite mọi đường dẫn về `index.html`). Push `main` thì service có thư mục đổi tự deploy (`buildFilter`). `BO_URL` trên Render phải có địa chỉ BO (CORS). Hướng dẫn: [docs/backend.md#đưa-lên-render](docs/backend.md#đưa-lên-render).
+- **Render** qua Blueprint `render.yaml` (gói Free): **BE** https://candle-be.onrender.com (Node, Singapore; build = install + build + `db:deploy`; start `node dist/main.js`; health `/api/health`) và **BO** `candle2510-bo` (Static Site, `VITE_API_URL=https://candle-be.onrender.com/api` gắn lúc build, rewrite mọi đường dẫn về `index.html`). Push `main` thì service có thư mục đổi tự deploy (`buildFilter`). `BO_URL` trên Render phải có địa chỉ BO (CORS). Hướng dẫn: [docs/backend.md#đưa-lên-render](docs/backend.md#đưa-lên-render).
 - Migration mới: `pnpm db:migrate` khi dev (hoặc tự viết SQL trong `be/prisma/migrations/<timestamp>_<tên>/`), `pnpm db:deploy` để áp; Render tự áp khi deploy.
 
 ## Trạng thái và việc còn lại (cập nhật 09/11/2026)
@@ -79,7 +79,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 Đã xong: BE đủ API mọi trang BO (docs/api.md), BO dùng API, đăng nhập PIN, Trả tiền sau / cọc % theo đơn, xóa toàn bộ dữ liệu, cấu hình Render.
 
 Còn lại, theo thứ tự đề xuất:
-1. BE đã chạy trên Render (10/11/2026, DB Neon mới, chưa có dữ liệu). BO lên Render Static Site (`2510candle-bo`) — kiểm tra sau khi chủ dự án sync Blueprint và đặt `BO_URL`. Lỗi build / health thì đọc log Render họ gửi.
+1. BE đã chạy trên Render (10/11/2026, DB Neon mới, chưa có dữ liệu). BO lên Render Static Site (`candle2510-bo`) — kiểm tra sau khi chủ dự án sync Blueprint và đặt `BO_URL`. Lỗi build / health thì đọc log Render họ gửi.
 2. Mang dữ liệu cũ sang DB mới nếu cần: file sao lưu BO + `pnpm db:import`.
 3. Chuyển ảnh sang kho file (Cloudinary / R2), DB chỉ giữ URL.
 4. Thêm vài e2e chạy với BE thật cho luồng chính (tạo đơn → làm → giao → hoàn tất, Thủ công Lưu).

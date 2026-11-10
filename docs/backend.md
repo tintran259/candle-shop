@@ -95,7 +95,7 @@ Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 BE và BO chạy trên [Render](https://render.com), cấu hình ở `render.yaml` ở gốc repo (Render Blueprint, gói Free):
 
 - **`candle-be`** — https://candle-be.onrender.com (Web Service Node, vùng Singapore cùng Neon).
-- **`2510candle-bo`** — trang tĩnh (Static Site) build từ `bo/`, gọi BE qua `VITE_API_URL=https://candle-be.onrender.com/api` (gán lúc build). Mọi đường dẫn trả `index.html` (React Router), file trong `assets/` cache lâu. Trang tĩnh không ngủ.
+- **`candle2510-bo`** — trang tĩnh (Static Site) build từ `bo/`, gọi BE qua `VITE_API_URL=https://candle-be.onrender.com/api` (gán lúc build). Mọi đường dẫn trả `index.html` (React Router), file trong `assets/` cache lâu. Trang tĩnh không ngủ.
 - Mỗi service chỉ build lại khi thư mục của nó (hoặc `render.yaml`) đổi (`buildFilter`).
 
 ### BE
@@ -116,7 +116,7 @@ BE và BO chạy trên [Render](https://render.com), cấu hình ở `render.yam
    |---|---|
    | `DATABASE_URL` | Connection string Neon, bản `-pooler` (giống `be/.env`) |
    | `ADMIN_PIN_HASH` | Phần sau `ADMIN_PIN_HASH=` trong `be/.env` (hoặc chạy lại `pnpm auth:pin <6 số>`) |
-   | `BO_URL` | `https://2510candle-bo.onrender.com,http://localhost:3001` (BO trên Render + BO chạy trên máy) |
+   | `BO_URL` | `https://candle2510-bo.onrender.com,http://localhost:3001` (BO trên Render + BO chạy trên máy) |
    | `FRONTEND_URL` | Địa chỉ web (fe), chưa có thì để `http://localhost:3000` |
    | `JWT_SECRET` | Render tự sinh — không cần nhập |
 
@@ -125,14 +125,14 @@ BE và BO chạy trên [Render](https://render.com), cấu hình ở `render.yam
 
 ### BO
 
-1. Push `render.yaml` có service `2510candle-bo` lên `main` → Render (Blueprint đã tạo) tự thêm service. Không thấy thì vào Blueprint › **Manual Sync**.
-2. Chờ build (~3 phút) → mở https://2510candle-bo.onrender.com (địa chỉ thật ở trang service).
-3. Trên `candle-be` › **Environment**: `BO_URL` = `https://2510candle-bo.onrender.com,http://localhost:3001` → Save (BE khởi động lại) — thiếu bước này BO báo "Không kết nối được máy chủ".
+1. Push `render.yaml` có service `candle2510-bo` lên `main` → Render (Blueprint đã tạo) tự thêm service. Không thấy thì vào Blueprint › **Manual Sync**.
+2. Chờ build (~3 phút) → mở https://candle2510-bo.onrender.com (địa chỉ thật ở trang service).
+3. Trên `candle-be` › **Environment**: `BO_URL` = `https://candle2510-bo.onrender.com,http://localhost:3001` → Save (BE khởi động lại) — thiếu bước này BO báo "Không kết nối được máy chủ".
 4. Đăng nhập bằng PIN. Lần đầu sau 15 phút không dùng, BE trên Render đang ngủ nên chờ ~30–60 giây.
 
-Đổi địa chỉ BE thì sửa `VITE_API_URL` của `2510candle-bo` rồi deploy lại (giá trị gắn vào lúc build).
+Đổi địa chỉ BE thì sửa `VITE_API_URL` của `candle2510-bo` rồi deploy lại (giá trị gắn vào lúc build).
 
-Địa chỉ `*.onrender.com` cố định theo tên lúc tạo service, đổi tên sau không đổi được địa chỉ. Muốn địa chỉ khác thì đổi `name` trong `render.yaml` → Render tạo service mới → xóa service cũ trên Render (Blueprint không tự xóa). BO từng tên `candle-bo`, đã đổi sang `2510candle-bo` (10/11/2026).
+Địa chỉ `*.onrender.com` cố định theo tên lúc tạo service, đổi tên sau không đổi được địa chỉ. Muốn địa chỉ khác thì đổi `name` trong `render.yaml` → Render tạo service mới → xóa service cũ trên Render (Blueprint không tự xóa). BO từng tên `candle-bo`, rồi `2510candle-bo` (Render không nhận), nay là `candle2510-bo` (10/11/2026).
 
 **Sau đó:** mỗi lần push lên `main` Render tự build và deploy lại service có thư mục thay đổi (`autoDeploy` + `buildFilter`). Sửa schema thì tạo migration như bình thường (`pnpm db:migrate`), lần deploy sau tự áp.
 
