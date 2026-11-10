@@ -25,7 +25,8 @@ jobs:
       run:
         working-directory: be
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Secret thô; bước "Chuẩn hóa DATABASE_URL" bỏ dấu nháy rồi đặt DATABASE_URL cho các bước sau
+      RAW_DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -41,8 +42,21 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
+      - name: Chuẩn hóa DATABASE_URL
+        if: env.RAW_DATABASE_URL != ''
+        run: |
+          # Chấp nhận secret dán kèm dấu nháy hoặc cả dòng "DATABASE_URL=..." (chép từ be/.env)
+          URL=$(printf '%s' "$RAW_DATABASE_URL" | tr -d '\r\n')
+          URL="${URL#DATABASE_URL=}"
+          URL="${URL#\"}"; URL="${URL%\"}"; URL="${URL#\'}"; URL="${URL%\'}"
+          echo "::add-mask::$URL"
+          case "$URL" in
+            postgres://*|postgresql://*) ;;
+            *) echo "::error::Secret DATABASE_URL phải bắt đầu bằng postgresql:// (dán đúng connection string Neon)."; exit 1 ;;
+          esac
+          echo "DATABASE_URL=$URL" >> "$GITHUB_ENV"
       - name: E2E trên DB (schema bo_test)
-        if: env.DATABASE_URL != ''
+        if: env.RAW_DATABASE_URL != ''
         run: pnpm test:e2e
 
   bo:
@@ -76,37 +90,51 @@ jobs:
     needs: [be, bo]
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Secret thô; bước "Chuẩn hóa DATABASE_URL" bỏ dấu nháy rồi đặt DATABASE_URL cho các bước sau
+      RAW_DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PW_CHANNEL: chromium
     steps:
       - name: Bỏ qua khi chưa có secret DATABASE_URL
-        if: env.DATABASE_URL == ''
+        if: env.RAW_DATABASE_URL == ''
         run: echo "::notice::Chưa có secret DATABASE_URL — bỏ qua e2e BO + BE thật."
       - uses: actions/checkout@v4
-        if: env.DATABASE_URL != ''
+        if: env.RAW_DATABASE_URL != ''
       - uses: pnpm/action-setup@v4
-        if: env.DATABASE_URL != ''
+        if: env.RAW_DATABASE_URL != ''
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
-        if: env.DATABASE_URL != ''
+        if: env.RAW_DATABASE_URL != ''
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: |
             be/pnpm-lock.yaml
             bo/pnpm-lock.yaml
+      - name: Chuẩn hóa DATABASE_URL
+        if: env.RAW_DATABASE_URL != ''
+        run: |
+          # Chấp nhận secret dán kèm dấu nháy hoặc cả dòng "DATABASE_URL=..." (chép từ be/.env)
+          URL=$(printf '%s' "$RAW_DATABASE_URL" | tr -d '\r\n')
+          URL="${URL#DATABASE_URL=}"
+          URL="${URL#\"}"; URL="${URL%\"}"; URL="${URL#\'}"; URL="${URL%\'}"
+          echo "::add-mask::$URL"
+          case "$URL" in
+            postgres://*|postgresql://*) ;;
+            *) echo "::error::Secret DATABASE_URL phải bắt đầu bằng postgresql:// (dán đúng connection string Neon)."; exit 1 ;;
+          esac
+          echo "DATABASE_URL=$URL" >> "$GITHUB_ENV"
       - name: Cài thư viện BE, BO và Chromium
-        if: env.DATABASE_URL != ''
+        if: env.RAW_DATABASE_URL != ''
         run: |
           (cd be && pnpm install --frozen-lockfile)
           (cd bo && pnpm install --frozen-lockfile && npx playwright install --with-deps chromium)
       - name: Chạy e2e-be
-        if: env.DATABASE_URL != ''
+        if: env.RAW_DATABASE_URL != ''
         working-directory: bo
         run: pnpm test:e2e:be
       - uses: actions/upload-artifact@v4
-        if: failure() && env.DATABASE_URL != ''
+        if: failure() && env.RAW_DATABASE_URL != ''
         with:
           name: playwright-report-be
           path: bo/playwright-report-be

@@ -12,15 +12,28 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Secret thô; bước "Chuẩn hóa DATABASE_URL" bỏ dấu nháy rồi đặt DATABASE_URL cho các bước sau
+      RAW_DATABASE_URL: ${{ secrets.DATABASE_URL }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
     steps:
       - name: Kiểm tra secrets
         run: |
-          if [ -z "$DATABASE_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+          if [ -z "$RAW_DATABASE_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
             echo "::error::Thiếu secret DATABASE_URL hoặc BACKUP_PASSPHRASE (GitHub › Settings › Secrets and variables › Actions)."
             exit 1
           fi
+      - name: Chuẩn hóa DATABASE_URL
+        run: |
+          # Chấp nhận secret dán kèm dấu nháy hoặc cả dòng "DATABASE_URL=..." (chép từ be/.env)
+          URL=$(printf '%s' "$RAW_DATABASE_URL" | tr -d '\r\n')
+          URL="${URL#DATABASE_URL=}"
+          URL="${URL#\"}"; URL="${URL%\"}"; URL="${URL#\'}"; URL="${URL%\'}"
+          echo "::add-mask::$URL"
+          case "$URL" in
+            postgres://*|postgresql://*) ;;
+            *) echo "::error::Secret DATABASE_URL phải bắt đầu bằng postgresql:// (dán đúng connection string Neon)."; exit 1 ;;
+          esac
+          echo "DATABASE_URL=$URL" >> "$GITHUB_ENV"
       - name: pg_dump (Postgres 18, cùng bản với Neon) và mã hóa
         run: |
           # pg_dump cần kết nối trực tiếp, không qua pooler
