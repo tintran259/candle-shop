@@ -63,6 +63,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 | `cd be && pnpm test` | Unit (vitest) |
 | `cd be && pnpm test:e2e` | Chạy trên **Neon, schema `bo_test`** (tự migrate, xóa trắng mỗi file test). Cần `be/.env`. ~1–2 phút |
 | `cd bo && npx playwright test` | ~310 test, ~30 phút, chế độ dữ liệu local, trình duyệt Edge. Chạy một file: `npx playwright test e2e/<file>` |
+| `cd bo && pnpm test:e2e:be` | BO + BE thật (`bo/e2e-be/`, schema `bo_e2e`, cổng 4099 / 3013), luồng đơn chính + Thủ công Lưu, ~1,5 phút. Cần `be/.env`. Xem [docs/testing.md](docs/testing.md#e2e-với-be-thật) |
 
 - **Không chạy hai lần Playwright cùng lúc** (ghi đè `test-results`). Cổng 3011 đang bị server cũ chiếm thì tắt trước.
 - Test đăng nhập BO giả lập BE (`bo/e2e/support/mock-auth.ts`, PIN `739214`).
@@ -82,7 +83,7 @@ Còn lại, theo thứ tự đề xuất:
 1. BE đã chạy trên Render (10/11/2026, DB Neon mới, chưa có dữ liệu). BO lên Render Static Site (`candle2510-bo`) — kiểm tra sau khi chủ dự án sync Blueprint và đặt `BO_URL`. Lỗi build / health thì đọc log Render họ gửi.
 2. Mang dữ liệu cũ sang DB mới nếu cần: file sao lưu BO + `pnpm db:import`.
 3. Kho ảnh Cloudinary đã có code; chủ dự án cần điền `CLOUDINARY_*` ở `be/.env` và Render. Chưa xóa ảnh trên Cloudinary khi gỡ ảnh.
-4. Thêm vài e2e chạy với BE thật cho luồng chính (tạo đơn → làm → giao → hoàn tất, Thủ công Lưu).
+4. E2E với BE thật đã có (`bo/e2e-be/`: luồng đơn, hủy hoàn Kho, Thủ công Lưu) — thêm dần khi đổi API (Kho nhập / sản xuất, sửa đơn, hoàn tiền).
 5. Tạo lại web `fe` và nối BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối. Các comment trong BO còn nhắc `fe/…` (dữ liệu mẫu, đồng bộ cấu hình Thủ công sang web khi chạy localhost) là của bản cũ.
 
 Dữ liệu thật đang cần chủ dự án xử lý: hai bấc chưa có giá (`wick-cotton-wick` "Bấc cotton", `wick-wooden-wick` "Bấc gỗ"); trùng tên "Bấc cotton" với `bac-cotton`.

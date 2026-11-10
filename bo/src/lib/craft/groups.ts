@@ -3,8 +3,7 @@ import { formatMoney } from "@/lib/format";
 import type { Unit, VesselShape, VesselSize } from "@/lib/craft/types";
 
 // Thông báo đầu trang Thủ công (dùng cả trong skeleton để khung không đổi chiều cao)
-export const CRAFT_PREVIEW_NOTICE =
-  "Sửa trên bản nháp — bấm “Lưu thay đổi” thì web mới dùng cấu hình mới. Chưa có BE nên bản đã lưu vẫn nằm trên trình duyệt này. Tồn kho quản lý ở trang Kho nguyên liệu.";
+export const CRAFT_PREVIEW_NOTICE = "Sửa trên bản nháp — bấm “Lưu thay đổi” thì web mới dùng cấu hình mới. Tồn kho quản lý ở trang Kho nguyên liệu.";
 
 export const unitLabel: Record<Unit, string> = { g: "g", ml: "ml", pcs: "cái" };
 // Tên đầy đủ cho ô chọn đơn vị

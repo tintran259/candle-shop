@@ -24,6 +24,24 @@ Trong thư mục `bo`:
 - **Chạy lần lượt:** nhiều kịch bản cũ có bước chờ cố định, chạy song song làm máy chậm và trượt giả. Cả bộ mất khoảng 25 phút.
 - **Lỗi console** cũng làm test trượt. Một thao tác không thấy phần tử sau 10 giây thì báo lỗi luôn.
 
+## E2E với BE thật
+
+Bộ nhỏ ở `bo/e2e-be/`, chạy BO **chế độ API** với BE thật — bắt lỗi BO và BE lệch nhau (đổi API, định dạng dữ liệu) mà bộ chính (dữ liệu trên trình duyệt) không thấy.
+
+| Lệnh (trong `bo`) | Việc |
+|---|---|
+| `pnpm test:e2e:be` | Build và chạy BE cổng 4099, build BO gọi BE đó, chạy cổng 3013, chạy cả bộ (~1,5 phút) |
+
+- **Cần `be/.env` có `DATABASE_URL`.** Dữ liệu nằm ở schema riêng **`bo_e2e`** (tự migrate trước khi chạy), không đụng `public` (dữ liệu thật) hay `bo_test` (test BE).
+- **Mỗi test nạp lại dữ liệu mẫu** từ `be/test/fixtures/bo-backup-sample.json` (`import-backup` với `DB_SCHEMA=bo_e2e`), đăng nhập bằng token thật của BE (PIN test `739214`, mã băm tạo mới mỗi lần chạy, không dùng PIN thật).
+- **Đối chiếu bằng API:** thao tác trên giao diện, rồi đọc thẳng BE (`api.get`) kiểm tra trạng thái, tiền, tồn kho.
+- Không có khóa Cloudinary: ảnh lưu data URL. Cổng 4099 / 3013 phải trống. Báo cáo ở `playwright-report-be/`.
+
+| File | Phủ |
+|---|---|
+| `orders.spec.ts` | Tạo đơn cọc 50% → Bắt đầu làm (BE trừ đúng Kho theo công thức) → Làm xong → Giao (mã vận đơn) → Khách nhận, thu nốt → Hoàn tất; tải lại trang đọc đúng. Hủy đơn đang làm, chưa làm → BE hoàn nguyên liệu |
+| `craft.spec.ts` | Sửa giá Sáp ong → bản nháp lưu ở BE (bản web chưa đổi), tải lại không mất → Lưu thay đổi → BE đưa lên bản web, xóa bản nháp |
+
 ## Cấu trúc
 
 | Thư mục, file | Nội dung |

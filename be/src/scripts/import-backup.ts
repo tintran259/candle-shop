@@ -14,7 +14,8 @@ if (!path) {
 }
 
 const { data, warnings } = mapBackup(JSON.parse(readFileSync(path, 'utf8')) as BackupFile);
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+// DB_SCHEMA: nhập vào schema khác public (bộ e2e BO + BE thật dùng bo_e2e)
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }, process.env.DB_SCHEMA ? { schema: process.env.DB_SCHEMA } : undefined) });
 
 await prisma.$transaction(
   async (tx) => {
