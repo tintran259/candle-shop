@@ -30,13 +30,13 @@ GitHub Actions (`.github/workflows/ci.yml`) chạy mỗi lần push lên `main` 
 
 | Job | Chạy |
 |---|---|
-| `be` | typecheck, lint, unit test, build; e2e trên DB (schema `bo_test`) nếu có secret `DATABASE_URL` |
+| `be` | typecheck, lint, unit test, build, e2e trên DB (schema `bo_test`) |
 | `bo` | typecheck, lint, build, quy tắc nghiệp vụ (`e2e/logic`, không mở trình duyệt) |
-| `e2e-be` | Sau khi `be`, `bo` qua: BO + BE thật (`pnpm test:e2e:be`, Chromium) nếu có secret `DATABASE_URL`. Trượt thì tải báo cáo ở artifact `playwright-report-be` |
+| `e2e-be` | BO + BE thật (`pnpm test:e2e:be`, Chromium). Trượt thì tải báo cáo ở artifact `playwright-report-be` |
 
 - Bộ kịch bản đầy đủ của BO (~310 test, ~30 phút) **không** chạy trên CI — vẫn chạy trên máy trước khi sửa lớn.
-- Secret `DATABASE_URL`: xem [backend.md](./backend.md#sao-lưu-db-tự-động). Chưa có secret thì các bước cần DB được bỏ qua (CI vẫn qua).
-- Máy CI của GitHub ở Mỹ, DB Neon ở Singapore (~200 ms mỗi truy vấn): CI đặt `DB_TX_TIMEOUT_MS=60000` (giới hạn giao dịch Prisma, mặc định 5 giây) và `E2E_TEST_TIMEOUT_MS=180000`. Trên máy và Render giữ mặc định.
+- **DB của CI:** Postgres 18 dựng ngay trong máy CI (service `postgres`, cùng bản với Neon), không gọi Neon — máy CI ở Mỹ cách Neon Singapore ~200 ms mỗi truy vấn (CI từng mất ~15 phút), lại tốn giờ chạy DB gói free. CI không cần secret; secret `DATABASE_URL` chỉ dùng cho sao lưu. Ba job chạy song song.
+- Gọi DB ở xa (vd chạy test trên máy với Neon chậm) thì nới bằng `DB_TX_TIMEOUT_MS` (giới hạn giao dịch Prisma, mặc định 5 giây) và `E2E_TEST_TIMEOUT_MS`.
 - Đừng chạy `pnpm test:e2e` (BE) hay `pnpm test:e2e:be` trên máy đúng lúc CI đang chạy — dùng chung schema test.
 
 ## E2E với BE thật

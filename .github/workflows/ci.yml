@@ -1,6 +1,7 @@
 # Kiểm tra tự động mỗi lần push / mở PR (docs/testing.md#kiểm-tra-tự-động-ci).
 # Render chỉ deploy khi các kiểm tra này qua (render.yaml: autoDeployTrigger: checksPass).
-# Test cần DB (BE e2e trên schema bo_test, BO + BE thật trên schema bo_e2e) chỉ chạy khi repo có secret DATABASE_URL.
+# Test cần DB chạy trên Postgres 18 dựng ngay trong máy CI (cùng bản với Neon) — không gọi Neon ở Singapore (chậm ~200 ms mỗi truy vấn,
+# tốn giờ chạy DB gói free), không cần secret. Ba job chạy song song.
 name: CI
 
 on:
@@ -16,9 +17,8 @@ concurrency:
 env:
   PNPM_VERSION: 10.33.4
   NODE_VERSION: "24"
-  # Máy CI của GitHub ở Mỹ, DB Neon ở Singapore: mỗi truy vấn ~200 ms — nới giới hạn giao dịch và thời gian mỗi test
-  DB_TX_TIMEOUT_MS: "60000"
-  E2E_TEST_TIMEOUT_MS: "180000"
+  # Postgres trong máy CI (service postgres bên dưới). Test dùng schema riêng (bo_test, bo_e2e)
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/candle
 
 jobs:
   be:
@@ -27,9 +27,14 @@ jobs:
     defaults:
       run:
         working-directory: be
-    env:
-      # Secret thô; bước "Chuẩn hóa DATABASE_URL" bỏ dấu nháy rồi đặt DATABASE_URL cho các bước sau
-      RAW_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: candle
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -45,21 +50,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm build
-      - name: Chuẩn hóa DATABASE_URL
-        if: env.RAW_DATABASE_URL != ''
-        run: |
-          # Chấp nhận secret dán kèm dấu nháy hoặc cả dòng "DATABASE_URL=..." (chép từ be/.env)
-          URL=$(printf '%s' "$RAW_DATABASE_URL" | tr -d '\r\n')
-          URL="${URL#DATABASE_URL=}"
-          URL="${URL#\"}"; URL="${URL%\"}"; URL="${URL#\'}"; URL="${URL%\'}"
-          echo "::add-mask::$URL"
-          case "$URL" in
-            postgres://*|postgresql://*) ;;
-            *) echo "::error::Secret DATABASE_URL phải bắt đầu bằng postgresql:// (dán đúng connection string Neon)."; exit 1 ;;
-          esac
-          echo "DATABASE_URL=$URL" >> "$GITHUB_ENV"
       - name: E2E trên DB (schema bo_test)
-        if: env.RAW_DATABASE_URL != ''
         run: pnpm test:e2e
 
   bo:
@@ -90,54 +81,38 @@ jobs:
 
   e2e-be:
     name: BO + BE thật (e2e-be)
-    needs: [be, bo]
     runs-on: ubuntu-latest
     env:
-      # Secret thô; bước "Chuẩn hóa DATABASE_URL" bỏ dấu nháy rồi đặt DATABASE_URL cho các bước sau
-      RAW_DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PW_CHANNEL: chromium
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: candle
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - name: Bỏ qua khi chưa có secret DATABASE_URL
-        if: env.RAW_DATABASE_URL == ''
-        run: echo "::notice::Chưa có secret DATABASE_URL — bỏ qua e2e BO + BE thật."
       - uses: actions/checkout@v5
-        if: env.RAW_DATABASE_URL != ''
       - uses: pnpm/action-setup@v4
-        if: env.RAW_DATABASE_URL != ''
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v5
-        if: env.RAW_DATABASE_URL != ''
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: |
             be/pnpm-lock.yaml
             bo/pnpm-lock.yaml
-      - name: Chuẩn hóa DATABASE_URL
-        if: env.RAW_DATABASE_URL != ''
-        run: |
-          # Chấp nhận secret dán kèm dấu nháy hoặc cả dòng "DATABASE_URL=..." (chép từ be/.env)
-          URL=$(printf '%s' "$RAW_DATABASE_URL" | tr -d '\r\n')
-          URL="${URL#DATABASE_URL=}"
-          URL="${URL#\"}"; URL="${URL%\"}"; URL="${URL#\'}"; URL="${URL%\'}"
-          echo "::add-mask::$URL"
-          case "$URL" in
-            postgres://*|postgresql://*) ;;
-            *) echo "::error::Secret DATABASE_URL phải bắt đầu bằng postgresql:// (dán đúng connection string Neon)."; exit 1 ;;
-          esac
-          echo "DATABASE_URL=$URL" >> "$GITHUB_ENV"
       - name: Cài thư viện BE, BO và Chromium
-        if: env.RAW_DATABASE_URL != ''
         run: |
           (cd be && pnpm install --frozen-lockfile)
           (cd bo && pnpm install --frozen-lockfile && npx playwright install --with-deps chromium)
       - name: Chạy e2e-be
-        if: env.RAW_DATABASE_URL != ''
         working-directory: bo
         run: pnpm test:e2e:be
       - uses: actions/upload-artifact@v4
-        if: failure() && env.RAW_DATABASE_URL != ''
+        if: failure()
         with:
           name: playwright-report-be
           path: bo/playwright-report-be

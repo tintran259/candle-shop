@@ -65,7 +65,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 | `cd be && pnpm test` | Unit (vitest) |
 | `cd be && pnpm test:e2e` | Chạy trên **Neon, schema `bo_test`** (tự migrate, xóa trắng mỗi file test). Cần `be/.env`. ~1–2 phút |
 | `cd bo && npx playwright test` | ~310 test, ~30 phút, chế độ dữ liệu local, trình duyệt Edge. Chạy một file: `npx playwright test e2e/<file>` |
-| CI (`.github/workflows/ci.yml`) | Mỗi push: BE typecheck / lint / unit / build / e2e, BO typecheck / lint / build / `e2e/logic`, rồi e2e-be. Render chỉ deploy khi CI qua (`autoDeployTrigger: checksPass`). Secret GitHub `DATABASE_URL` |
+| CI (`.github/workflows/ci.yml`) | Mỗi push, 3 job song song: BE typecheck / lint / unit / build / e2e, BO typecheck / lint / build / `e2e/logic`, e2e-be. DB là Postgres 18 dựng trong máy CI (không gọi Neon). Render chỉ deploy khi CI qua (`autoDeployTrigger: checksPass`) |
 | `cd bo && pnpm test:e2e:be` | BO + BE thật (`bo/e2e-be/`, schema `bo_e2e`, cổng 4099 / 3013), luồng đơn chính + Thủ công Lưu, ~1,5 phút. Cần `be/.env`. Xem [docs/testing.md](docs/testing.md#e2e-với-be-thật) |
 
 - **Không chạy hai lần Playwright cùng lúc** (ghi đè `test-results`). Cổng 3011 đang bị server cũ chiếm thì tắt trước.
