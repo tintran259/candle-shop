@@ -30,7 +30,7 @@ services:
       # Mã băm PIN: chạy `pnpm auth:pin <6 số>` trên máy, dán phần sau dấu =
       - key: ADMIN_PIN_HASH
         sync: false
-      # Địa chỉ BO được gọi API (CORS), nhiều địa chỉ cách nhau dấu phẩy, vd https://candle-bo.onrender.com,http://localhost:3001
+      # Địa chỉ BO được gọi API (CORS), nhiều địa chỉ cách nhau dấu phẩy, vd https://2510candle-bo.onrender.com,http://localhost:3001
       - key: BO_URL
         sync: false
       - key: FRONTEND_URL
@@ -38,7 +38,7 @@ services:
 
   # BO: trang tĩnh (Vite build), gọi BE qua VITE_API_URL — gán lúc build nên đổi địa chỉ BE thì phải build lại
   - type: web
-    name: candle-bo
+    name: 2510candle-bo
     runtime: static
     rootDir: bo
     buildCommand: npx -y pnpm@10.33.4 install --frozen-lockfile && npx -y pnpm@10.33.4 run build
