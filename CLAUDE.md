@@ -10,7 +10,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 |---|---|---|
 | `bo/` | Back Office cho chủ shop (một người dùng, không phân quyền) | Vite + React 19 + antd 6, pnpm, Playwright e2e (cổng 3011) |
 | `be/` | API cho BO | NestJS 12 + Prisma 7 (`@prisma/adapter-pg`) + Postgres trên Neon (Singapore) |
-| `fe/` | Web bán hàng cho khách | **Đã xóa (10/11/2026), sẽ tạo lại sau** — bản cũ Next.js còn trong lịch sử git (trước commit xóa) |
+| `fe/` | Web bán hàng cho khách | Next.js 16 + Tailwind 4 + GSAP, pnpm, cổng 3000. Làm lại 11/11/2026 theo bố cục Figma "Ember & Earth", chữ tiếng Việt, thương hiệu 2510 Candle: mới có trang chủ tĩnh, chưa nối BE — xem [docs/frontend.md](docs/frontend.md) |
 | `landing-page/` | Trang giới thiệu | Không đụng tới trừ khi được yêu cầu |
 | `docs/` | Tài liệu nghiệp vụ, API, test | Tiếng Việt |
 
@@ -34,6 +34,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 
 - **Mỗi file ≤ 300 dòng**; quá thì tách component / module. Không để code thừa.
 - **Prettier `--print-width 200`, chỉ chạy trên file vừa sửa** (chạy cả thư mục sẽ định dạng lại file không liên quan, vd `bo/src/lib/orders/sample.ts` — lỡ thì trả về bằng `git show HEAD:…`).
+- FE: `pnpm typecheck`, `pnpm lint`, `pnpm build`. Next 16 khác bản cũ — đọc `fe/node_modules/next/dist/docs/` trước khi dùng API lạ.
 - BO: `npx tsc --noEmit -p tsconfig.json`, `npx eslint src`. BE: `npx tsc --noEmit -p tsconfig.json`, `pnpm lint` (oxlint), `pnpm build`.
 - Tiền là VNĐ, số nguyên. Định dạng tiền dùng `Intl` (`vi-VN`) — dấu cách trước ₫ là dấu cách không ngắt (test so chuỗi phải đổi NBSP về dấu cách).
 - Script sửa file nhiều chỗ: viết file Python bằng công cụ Write rồi chạy (heredoc bash có dấu nháy, backtick hay hỏng). Script tạm để trong thư mục scratchpad, không để trong repo.
@@ -89,6 +90,6 @@ Còn lại, theo thứ tự đề xuất:
 2. Mang dữ liệu cũ sang DB mới nếu cần: file sao lưu BO + `pnpm db:import`.
 3. Kho ảnh Cloudinary đã có code; chủ dự án cần điền `CLOUDINARY_*` ở `be/.env` và Render. Chưa xóa ảnh trên Cloudinary khi gỡ ảnh.
 4. E2E với BE thật đã có (`bo/e2e-be/`: luồng đơn, hủy hoàn Kho, Thủ công Lưu) — thêm dần khi đổi API (Kho nhập / sản xuất, sửa đơn, hoàn tiền).
-5. Tạo lại web `fe` và nối BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối. Các comment trong BO còn nhắc `fe/…` (dữ liệu mẫu, đồng bộ cấu hình Thủ công sang web khi chạy localhost) là của bản cũ.
+5. Web `fe`: trang chủ đã có (tiếng Việt, giá mẫu). Tiếp: ảnh sản phẩm thật, nối BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối. Các comment trong BO còn nhắc `fe/…` (dữ liệu mẫu, đồng bộ cấu hình Thủ công sang web khi chạy localhost) là của bản cũ.
 
 Dữ liệu thật đang cần chủ dự án xử lý: hai bấc chưa có giá (`wick-cotton-wick` "Bấc cotton", `wick-wooden-wick` "Bấc gỗ"); trùng tên "Bấc cotton" với `bac-cotton`.

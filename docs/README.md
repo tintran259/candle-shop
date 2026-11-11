@@ -38,6 +38,10 @@ Test E2E bằng Playwright ở `bo/e2e/`, chạy `pnpm test:e2e` trong `bo`. Đ�
 | [backend.md](./backend.md) | Cài đặt BE (Neon), bảng, nhập dữ liệu từ BO, đăng nhập PIN |
 | [api.md](./api.md) | Mọi endpoint của BE: đầu vào, đầu ra, mã lỗi, ví dụ |
 
+## Web bán hàng
+
+[frontend.md](./frontend.md): trang chủ `fe` (Next.js + GSAP) theo Figma "Ember & Earth" — bóc tách design, màu chữ, hiệu ứng, ảnh, chỗ chưa nối.
+
 Yêu cầu dữ liệu đơn hàng cho BE nằm ở [orders.md](./pages/orders.md#việc-của-be).
 
 ## Giới hạn hiện tại

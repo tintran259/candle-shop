@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+/* Màu, chữ theo Figma "Ember & Earth" */
+@theme {
+  --color-cream: #f5f2e9; /* nền trang */
+  --color-ink: #312d28; /* tiêu đề phụ */
+  --color-muted: #615e54; /* chữ thường, nhãn */
+  --color-wine: #650f21; /* tiêu đề lớn, tên nến, liên kết */
+  --color-night: #282720; /* thanh thông báo */
+  --color-smoke: #39372f; /* nền hero khi ảnh chưa tải */
+  --color-rule: #bbb4a4; /* đường kẻ */
+  --color-divider: #c9c3b4; /* vạch dọc giữa cam kết */
+  --color-field: #9d9585; /* gạch chân ô email */
+  --color-linen: #f5f2e9; /* chữ sáng trên hero */
+  --color-sand: #e2d7bd; /* nhãn trên hero */
+  --color-mist: #eee9de; /* đoạn văn trên hero */
+  --color-copper: #876042; /* logo trên nền kem — màu gốc của logo 2510 */
+
+  --font-display: var(--font-cormorant), "Times New Roman", serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-wine);
+  color: var(--color-cream);
+}
+
+/* Vòng focus bàn phím cho nút / liên kết — để trong layer base để class tiện ích (vd ô email: focus-visible:outline-none) đè được */
+@layer base {
+  :focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: 4px;
+  }
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.05;
+    font-variant-numeric: lining-nums;
+  }
+  /* Nhãn nhỏ in hoa giãn chữ */
+  .eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+  /* Liên kết nhỏ có mũi tên ↗ */
+  .link-sm {
+    font-size: 11px;
+    letter-spacing: 0.09em;
+  }
+}
+
+/* Phần tử có hiệu ứng ẩn sẵn tới khi GSAP chạy (tránh nháy); lưới an toàn tự hiện sau 3 giây nếu script lỗi.
+   Không có JS hoặc bật giảm chuyển động thì hiện bình thường */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal],
+  .js [data-intro] {
+    visibility: hidden;
+    animation: reveal-fallback 0s 3s forwards;
+  }
+}
+@keyframes reveal-fallback {
+  to {
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Chrome tự điền email: giữ nền kem, chữ tối thay vì nền xanh nhạt mặc định */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-cream) inset;
+  -webkit-text-fill-color: var(--color-ink);
+  caret-color: var(--color-ink);
+}
