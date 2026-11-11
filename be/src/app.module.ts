@@ -22,6 +22,7 @@ import { SettingsModule } from './settings/settings.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
 import { NewsletterModule } from './newsletter/newsletter.module.js';
+import { ShopModule } from './shop/shop.module.js';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { NewsletterModule } from './newsletter/newsletter.module.js';
     PaymentsModule,
     ReviewsModule,
     NewsletterModule,
+    ShopModule,
   ],
   controllers: [AppController],
   // Gửi lại cùng Idempotency-Key thì trả kết quả lần đầu (BO tự gửi lại khi mất mạng)

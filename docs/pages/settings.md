@@ -16,7 +16,7 @@
 | Số lần giao tối đa | 1–10 lần | 3 | Giao hàng lỗi: hết số lần thì đơn tự hoàn về | Đang dùng |
 | Phí gửi lại đơn | Từ 0 ₫ | 30.000 ₫, số tạm | Gửi lại đơn: phí mặc định, sửa được | Đang dùng |
 | Phương thức giao | Tên, phí, số ngày, bật/tắt | Tiêu chuẩn miễn phí 3 ngày; Nhanh 50.000 ₫ 1 ngày | Tạo đơn, chi tiết đơn. Phí phương thức đang bật đầu tiên dùng để kiểm tra giá sản phẩm khi khách bỏ cọc | Đang dùng |
-| Người gửi | Tên shop (bắt buộc), SĐT, địa chỉ lấy hàng | 2510 Candle, SĐT và địa chỉ trống | Nhãn giao hàng, phiếu đơn | Đang dùng |
+| Người gửi | Tên shop (bắt buộc), SĐT, địa chỉ lấy hàng | 2510 Candle, SĐT và địa chỉ trống | Nhãn giao hàng, phiếu đơn; SĐT là số Zalo của nút "Liên hệ đặt nến" trên web (chưa có SĐT thì web ẩn nút) | Đang dùng |
 | Đơn vị vận chuyển | Tên, link tra cứu, bắt buộc mã, bật/tắt | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Tạo đơn (chọn đơn vị), Giao cho vận chuyển, Tra cứu | Đang dùng |
 
 Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh" để tính phí theo khu vực.

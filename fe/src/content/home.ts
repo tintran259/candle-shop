@@ -10,16 +10,25 @@ export const announcement = "Mỗi hũ nến được đổ tay theo đơn của
 
 export const nav = {
   shop: [
-    { label: "Cửa hàng", href: "#collection" },
-    { label: "Câu chuyện", href: "#story" },
-    { label: "Cẩm nang", href: "#care" },
+    { label: "Sản phẩm", href: "/products" },
+    { label: "Câu chuyện", href: "/#story" },
+    { label: "Cẩm nang", href: "/#care" },
   ] satisfies Link[],
-  // Chưa có trang tìm kiếm / tài khoản / giỏ hàng
-  utility: [
-    { label: "Tìm kiếm", href: "#" },
-    { label: "Tài khoản", href: "#" },
-    { label: "Giỏ hàng (0)", href: "#" },
-  ] satisfies Link[],
+  // Nút mở hộp tìm kiếm (phím tắt Ctrl / ⌘ + K)
+  search: "Tìm kiếm",
+};
+
+export const search = {
+  title: "Tìm kiếm",
+  close: "Đóng",
+  placeholder: "Tìm mẫu nến, mùi hương…",
+  loading: "Đang tải sản phẩm…",
+  error: "Chưa tải được sản phẩm — thử lại sau ít phút.",
+  suggest: "Gợi ý cho bạn",
+  found: (n: number) => `${n} kết quả`,
+  none: (q: string) => `Không tìm thấy mẫu nến nào cho “${q}”`,
+  all: (n: number) => `Xem tất cả ${n} kết quả`,
+  browse: "Xem tất cả sản phẩm",
 };
 
 export const hero = {
@@ -66,7 +75,7 @@ export const collection = {
       photo: { src: "/images/into-the-woods.jpg", alt: "Nến Vào Rừng — hũ gốm đen viền đồng trên nền vải màu cát", width: 1024, height: 1024 },
     },
   ] satisfies { name: string; category: string; price: string; notes: string; details: string; photo: Photo }[],
-  more: { label: "Xem tất cả nến", href: "#collection" },
+  more: { label: "Xem tất cả nến", href: "/products" },
 };
 
 export const story = {
@@ -118,16 +127,16 @@ export const footer = {
     {
       title: "Khám phá",
       links: [
-        { label: "Tất cả nến", href: "#collection" },
-        { label: "Câu chuyện", href: "#story" },
-        { label: "Cẩm nang về nến", href: "#care" },
+        { label: "Tất cả nến", href: "/products" },
+        { label: "Câu chuyện", href: "/#story" },
+        { label: "Cẩm nang về nến", href: "/#care" },
       ],
     },
     {
       title: "Hỗ trợ",
       links: [
         { label: "Giao hàng & đổi trả", href: "#" },
-        { label: "Chăm sóc nến", href: "#care" },
+        { label: "Chăm sóc nến", href: "/#care" },
         { label: "Liên hệ", href: "#" },
       ],
     },
@@ -144,4 +153,41 @@ export const footer = {
     { label: "Điều khoản", href: "#" },
   ] satisfies Link[],
   photo: { src: "/images/footer.jpg", alt: "Hũ nến và nắp đồng trên bậc đá travertine ngập nắng, bóng lá ô liu", width: 1200, height: 896 } satisfies Photo,
+};
+
+// Trang Sản phẩm (/products) — dữ liệu sản phẩm lấy từ BE
+export const productsPage = {
+  eyebrow: "Bộ sưu tập 2510",
+  title: "Sản phẩm",
+  text: "Mỗi hũ nến được đổ tay theo đơn của bạn và hoàn thành trong 2–3 ngày. Chọn mùi hương hợp với khoảnh khắc của bạn.",
+  all: "Tất cả",
+  sort: { label: "Sắp xếp", featured: "Nổi bật", priceAsc: "Giá thấp đến cao", priceDesc: "Giá cao đến thấp" },
+  count: (n: number) => `${n} mẫu nến`,
+  range: (from: number, to: number, n: number) => `${from}–${to} / ${n} mẫu nến`,
+  pageSize: 9,
+  pagination: { label: "Phân trang", prev: "Trước", next: "Sau", page: (n: number) => `Trang ${n}` },
+  empty: "Chưa có mẫu nến nào trong mục này.",
+  results: (q: string) => `Kết quả cho “${q}”`,
+  clear: "Xóa tìm kiếm",
+  error: "Chưa tải được sản phẩm — máy chủ có thể đang khởi động. Bạn thử tải lại sau ít phút nhé.",
+  retry: "Tải lại",
+  badgeNew: "Mới",
+  // Nút trên thẻ sản phẩm: mở chat Zalo theo SĐT người gửi ở BO › Cài đặt (GET /api/shop/contact); chưa có SĐT thì ẩn nút
+  contact: { label: "Liên hệ đặt nến", aria: (name: string) => `Liên hệ qua Zalo để đặt nến ${name} (mở cửa sổ mới)` },
+  burn: (h: number) => `cháy khoảng ${h} giờ`,
+};
+
+// Trang chi tiết sản phẩm (/products/<slug>)
+export const productDetail = {
+  home: "Trang chủ",
+  products: "Sản phẩm",
+  specs: { scent: "Mùi hương", aroma: "Mức hương", size: "Kích cỡ", wax: "Loại sáp", burn: "Thời gian cháy" },
+  burn: (h: number) => `Khoảng ${h} giờ`,
+  madeToOrder: "Đổ tay theo đơn của bạn · Hoàn thành trong 2–3 ngày",
+  noContact: "Liên hệ shop để đặt mẫu này.",
+  back: "Xem tất cả sản phẩm",
+  care: "Để nến cháy đẹp",
+  gallery: (n: number, total: number) => `Ảnh ${n} / ${total}`,
+  suggest: { eyebrow: "Gợi ý cho bạn", title: "Có thể bạn cũng thích", more: "Xem tất cả nến" },
+  notFound: { title: "Không tìm thấy mẫu nến", text: "Mẫu nến này không còn bán hoặc đường dẫn chưa đúng.", back: "Xem các mẫu đang có" },
 };

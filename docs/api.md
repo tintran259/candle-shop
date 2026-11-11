@@ -115,7 +115,7 @@ Lần đầu (DB chưa có cài đặt) tự tạo giá trị mặc định gi�
 | `leadDays` | number | 3 | Số ngày làm tối thiểu |
 | `minMargin` | number | 50 | Lãi tối thiểu (%) |
 | `priceMarkup` | number | 2.5 | Hệ số gợi ý giá |
-| `sender` | `{ name, phone, address }` | `{ "2510 Candle", "", "" }` | Người gửi in trên nhãn, phiếu đơn |
+| `sender` | `{ name, phone, address }` | `{ "2510 Candle", "", "" }` | Người gửi in trên nhãn, phiếu đơn. `name`, `phone` cũng hiện trên web (`GET /shop/contact`) |
 | `shippingOptions` | `ShippingOption[]` | Tiêu chuẩn 0 ₫ 3 ngày; Nhanh 50.000 ₫ 1 ngày | Theo thứ tự hiển thị |
 | `carriers` | `Carrier[]` | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Theo thứ tự hiển thị |
 
@@ -1168,3 +1168,37 @@ Chữ ký = SHA-1 của `folder=…&timestamp=…` + API Secret (cách Cloudinar
 
 **Lỗi:** 400 `folder` không hợp lệ; 401 chưa đăng nhập; 503 `"Chưa cấu hình kho ảnh (Cloudinary)."` (thiếu biến `CLOUDINARY_*` — BO tự lưu ảnh tạm trong DB).
 
+
+---
+
+## Web bán hàng
+
+API **công khai** (không cần token) cho web khách `fe`, chỉ đọc. Không trả dữ liệu nội bộ: công thức (`recipe`), lựa chọn Thủ công (`build`), số đã bán, trạng thái, giá vốn. Web gọi từ máy chủ Next (không qua trình duyệt khách) nên không cần thêm CORS.
+
+### `GET /shop/products`
+
+Sản phẩm **Đang bán** (`status: "active"`) thuộc danh mục **không ẩn**; nổi bật trước, rồi mới tạo trước. `categories`: chỉ danh mục đang có sản phẩm trong danh sách, theo thứ tự ở BO.
+
+**Trả về 200:**
+
+```json
+{
+  "categories": [{ "id": "nature", "name": "Thiên nhiên", "nameEn": "Nature" }],
+  "products": [
+    {
+      "id": "brown-relac", "name": "Brown Relac", "slug": "brown-relac", "description": "…",
+      "price": 925000, "salePrice": 825000, "images": ["https://res.cloudinary.com/…"], "categoryId": "nature",
+      "aromaLevel": "medium", "size": "medium", "scent": "Gỗ đàn hương, vani", "waxType": "Sáp đậu nành", "burnTime": 35,
+      "isNew": false, "isFeatured": true, "rating": 4.8, "reviewCount": 12
+    }
+  ]
+}
+```
+
+Trường không có giá trị thì bỏ khỏi kết quả (`description`, `salePrice`, `scent`, `waxType`, `burnTime`).
+
+### `GET /shop/contact`
+
+Liên hệ của shop cho web (nút "Liên hệ đặt nến" mở Zalo): tên shop và SĐT ở **Cài đặt › Người gửi**. Không trả địa chỉ lấy hàng. Chưa lưu Cài đặt thì `name` mặc định, `phone` rỗng.
+
+**Trả về 200:** `{ "name": "2510 Candle", "phone": "0901 234 567" }`

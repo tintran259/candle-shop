@@ -1,12 +1,49 @@
 # Web bán hàng `fe`
 
-Trang chủ dựng theo Figma **"Ember & Earth — Luxury candle atelier"** ([file](https://www.figma.com/design/lIIOeOxyYe1yCN25kWrXSU/Untitled?node-id=0-1), khung `2:2`, rộng 1440). Next.js 16 + Tailwind 4 + GSAP 3.15 (ScrollTrigger, SplitText). Hiện mới có **trang chủ tĩnh**: bố cục theo design, **chữ tiếng Việt, thương hiệu 2510 Candle** (logo, ảnh hero do chủ shop gửi); sản phẩm / giá / nốt hương là dữ liệu mẫu (VNĐ), chưa nối BE.
+Trang chủ dựng theo Figma **"Ember & Earth — Luxury candle atelier"** ([file](https://www.figma.com/design/lIIOeOxyYe1yCN25kWrXSU/Untitled?node-id=0-1), khung `2:2`, rộng 1440). Next.js 16 + Tailwind 4 + GSAP 3.15 (ScrollTrigger, SplitText). Có **trang chủ** và **trang Sản phẩm** (`/products`, dữ liệu thật từ BE). Trang chủ tĩnh: bố cục theo design, **chữ tiếng Việt, thương hiệu 2510 Candle** (logo, ảnh hero do chủ shop gửi); sản phẩm / giá / nốt hương là dữ liệu mẫu (VNĐ), chưa nối BE.
 
 ```bash
 cd fe && pnpm install
 pnpm dev            # http://localhost:3000
 pnpm typecheck && pnpm lint && pnpm build
 ```
+
+Biến môi trường (`fe/.env.local`, mẫu ở `fe/.env.example`): `API_URL` — địa chỉ API của BE mà máy chủ Next gọi, mặc định `http://localhost:4000/api`; trên Render đặt `https://candle2510-be.onrender.com/api`.
+
+**Dữ liệu giả để thử giao diện:** đặt `SHOP_MOCK=1` trong `fe/.env.local` → trang Sản phẩm dùng 20 mẫu nến giả (`src/lib/shop-mock.ts`: 4 danh mục, có giá giảm, nhãn Mới, nổi bật, ảnh thứ hai khi rê chuột; ảnh lấy từ `public/images`), không gọi BE, không đụng DB. Bỏ dòng đó (rồi chạy lại `pnpm dev`) để đọc BE thật. Không bật biến này trên Render.
+
+## Trang Sản phẩm (`/products`)
+
+Menu **Sản phẩm**, "Xem tất cả nến" và "Tất cả nến" ở chân trang dẫn tới đây. Dữ liệu: `GET /api/shop/products` ([api.md](./api.md#web-bán-hàng)) — sản phẩm trưng bày **Đang bán** ở BO, thuộc danh mục không ẩn.
+
+- Dựng ở máy chủ Next mỗi lượt xem (`src/app/products/page.tsx` đọc `?q=`), dữ liệu BE lưu đệm 60 giây (`lib/shop.ts`): sửa sản phẩm ở BO thì web đổi sau tối đa 1 phút. BE lỗi / đang khởi động thì hiện thông báo + nút Tải lại, lần sau tự thử lại.
+- Thanh danh mục (Tất cả + từng danh mục, kèm số mẫu; điện thoại vuốt ngang), sắp xếp Nổi bật (thứ tự BE trả) / giá thấp → cao / cao → thấp — ô chọn tự dựng (`components/products/sort-select.tsx`, thay `<select>` vì danh sách của `<select>` do trình duyệt vẽ không đổi kiểu được), dùng được bằng bàn phím theo mẫu combobox (↑ ↓, Enter, Esc) — giá giảm tính theo `salePrice`. Đổi lựa chọn thì thẻ hiện lại so le (GSAP).
+- **Phân trang** (`components/products/pagination.tsx`): tối đa **9 mẫu / trang** (`productsPage.pageSize` trong `content/home.ts`), ← Trước · số trang · Sau →; nhiều trang thì rút gọn bằng "…" (giữ trang đầu, trang cuối, hai trang quanh trang đang xem). Chuyển trang thì cuộn lên đầu danh sách; đổi danh mục / sắp xếp thì về trang 1. Dòng đếm hiện "10–18 / 23 mẫu nến". Trang đang xem chưa ghi lên URL (tải lại trang về trang 1).
+- Thẻ (`components/products/product-card.tsx`): ảnh vuông (Cloudinary tự cắt vuông + đổi định dạng; rê chuột phóng nhẹ, có ảnh thứ hai thì chuyển sang), nhãn **Mới** / **−x%**, danh mục, tên, giá (giá giảm màu rượu vang + giá gốc gạch), nốt hương, mức hương · cỡ · giờ cháy, nút **Liên hệ đặt nến** mở chat Zalo của shop (tab mới). Ảnh lỗi / chưa có ảnh thì hiện logo nhạt. Thẻ là cột co giãn cao bằng thẻ cao nhất cùng hàng, nút luôn ở đáy (cách chữ tối thiểu 20px) → mô tả dài / ngắn thì nút các thẻ vẫn thẳng hàng. **Số Zalo:** lấy SĐT người gửi ở **BO › Cài đặt › Người gửi** qua `GET /api/shop/contact` (làm mới mỗi 60 giây); chuẩn hóa `0901 234 567` / `+84 901…` → `zalo.me/0901234567` (`zaloUrl` trong `lib/shop.ts`). Chưa có SĐT hoặc không gọi được BE thì ẩn nút. Chế độ dữ liệu giả dùng số giả `0901 234 567`.
+- Bấm ảnh / tên thẻ mở trang chi tiết (liên kết ở tên phủ cả thẻ; nút Liên hệ nằm trên lớp đó nên vẫn bấm riêng). `?category=<id>` mở sẵn một danh mục (breadcrumb, "Xem tất cả nến" ở trang chi tiết).
+
+## Trang chi tiết (`/products/<slug>`)
+
+`src/app/products/[slug]/page.tsx` — tìm theo `slug` trong `GET /api/shop/products` (cùng lưu đệm 60 giây, BE không cần API riêng). Mẫu không còn bán / sai slug → trang 404 (`src/app/not-found.tsx`, cùng khung trang).
+
+- Breadcrumb: Trang chủ / Sản phẩm / <danh mục> / <tên>.
+- Bộ ảnh (`components/products/product-gallery.tsx`): ảnh lớn vuông + hàng ảnh nhỏ (từ 2 ảnh, tối đa 8); bấm hoặc ← → đổi ảnh, ảnh lớn mờ dần sang ảnh mới. Nhãn Mới / −x%.
+- Cột thông tin (máy tính: đứng yên khi cuộn cạnh ảnh): danh mục, tên, giá (giá giảm + giá gốc gạch), mô tả (xuống dòng đôi = đoạn mới), bảng thông số (mùi hương, mức hương, kích cỡ, loại sáp, thời gian cháy — trường trống thì ẩn dòng), "Đổ tay theo đơn · 2–3 ngày", nút **Liên hệ đặt nến** nền rượu vang (`components/products/contact-button.tsx`, dùng chung với thẻ; chưa có SĐT ở Cài đặt thì hiện "Liên hệ shop để đặt mẫu này."), mẹo đốt nến (3 bước như trang chủ).
+- **Gợi ý cho bạn** (`suggestProducts` trong `lib/shop.ts`): 4 mẫu, cùng danh mục trước, thiếu thì thêm mẫu khác; trong mỗi nhóm giữ thứ tự BE (nổi bật trước). Lưới 2 cột (điện thoại) / 4 cột, dùng lại thẻ sản phẩm.
+- Tiêu đề / mô tả trang, ảnh chia sẻ (Open Graph) và dữ liệu có cấu trúc schema.org `Product` (giá VND, `MadeToOrder`) cho máy tìm kiếm.
+- Hộp tìm kiếm: chọn một mẫu → trang chi tiết của mẫu đó.
+
+## Tìm kiếm
+
+- Thanh điều hướng: Sản phẩm · Câu chuyện · Cẩm nang, bên phải nút **Tìm kiếm** (kính lúp; điện thoại: nút kính lúp cạnh Menu, và mục "Tìm kiếm" trong menu). Phím tắt **Ctrl / ⌘ + K** ở mọi trang. Đã bỏ Tài khoản, Giỏ hàng.
+- Hộp tìm kiếm (`components/search/search-dialog.tsx`, gắn vào `<body>` bằng portal — thanh điều hướng bị dịch khi ẩn / hiện): nền tối mờ, khung nền kem trượt xuống, ô nhập chữ lớn. Chưa gõ: gợi ý 4 mẫu đầu (nổi bật trước). Gõ: tối đa 6 kết quả ngay (ảnh, tên, danh mục · nốt hương, giá) + "Xem tất cả N kết quả".
+- Khớp (`lib/search.ts`): không phân biệt hoa / thường và dấu, mọi từ gõ phải khớp **đầu một từ** trong tên / nốt hương / mô tả / loại sáp / danh mục ("hong" khớp "Hồng", không khớp "phong"); khớp tên xếp trước.
+- Bàn phím: ↑ ↓ chọn, Enter mở kết quả đang chọn (chưa chọn thì xem tất cả), Esc đóng và trả focus về nút đã mở, Tab không thoát khỏi hộp.
+- Dữ liệu: `/api/products` của chính web (`src/app/api/products/route.ts`) — máy chủ Next lấy từ BE, cùng lưu đệm 60 giây với trang Sản phẩm; tải một lần khi mở hộp lần đầu.
+- Kết quả đầy đủ: `/products?q=<từ khóa>` — trang Sản phẩm lọc theo từ khóa, hiện "Kết quả cho “…”" + "Xóa tìm kiếm"; số đếm danh mục theo kết quả, ẩn danh mục không có kết quả. Chọn một mẫu trong hộp → `/products?q=<tên mẫu>` (chưa có trang chi tiết).
+- Hiệu ứng lặp lại theo thao tác (dòng kết quả, lưới sản phẩm, menu điện thoại) dùng `gsap.fromTo` có đích cố định: `gsap.from` chạy chồng khi gõ / bấm nhanh sẽ lấy trạng thái đang mờ dở làm đích, phần tử bị kẹt mờ.
+
+Khung chung mọi trang: `components/site-shell.tsx` (bỏ qua tới nội dung, thanh điều hướng, chân trang, nút về đầu trang, hiệu ứng cuộn). `overHero` (trang chủ): thanh điều hướng trong suốt trên hero; trang khác luôn nền kem. Mục đang xem có gạch chân. Liên kết sang mục trang chủ dùng `/#story`, `/#care` để bấm được từ trang khác.
 
 ## Bóc tách design
 
@@ -80,6 +117,6 @@ Mọi chữ, giá, liên kết ở `src/content/home.ts`.
 ## Việc còn lại
 
 1. Ảnh 3 sản phẩm, câu chuyện, nhận tin, chân trang vẫn là ảnh Figma (hũ in chữ EMBER & EARTH) — thay bằng ảnh hũ 2510; rà lại câu chữ, tên / giá / nốt hương mẫu.
-2. Đọc sản phẩm và Cài đặt từ BE (cần API công khai); trang sản phẩm, giỏ hàng, đặt hàng, nến tự phối — BE phải tự tính giá.
+2. Trang chi tiết sản phẩm, giỏ hàng, đặt hàng, nến tự phối (BE phải tự tính giá); khối "Xưởng nến" ở trang chủ đọc sản phẩm nổi bật từ BE.
 3. API nhận tin / liên hệ.
-4. Đưa lên Render (thêm service vào `render.yaml`), thêm job `fe` vào CI.
+4. Đưa lên Render (thêm service Node vào `render.yaml`, đặt `API_URL`), thêm job `fe` vào CI.

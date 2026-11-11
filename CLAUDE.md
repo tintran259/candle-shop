@@ -10,7 +10,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 |---|---|---|
 | `bo/` | Back Office cho chủ shop (một người dùng, không phân quyền) | Vite + React 19 + antd 6, pnpm, Playwright e2e (cổng 3011) |
 | `be/` | API cho BO | NestJS 12 + Prisma 7 (`@prisma/adapter-pg`) + Postgres trên Neon (Singapore) |
-| `fe/` | Web bán hàng cho khách | Next.js 16 + Tailwind 4 + GSAP, pnpm, cổng 3000. Làm lại 11/11/2026 theo bố cục Figma "Ember & Earth", chữ tiếng Việt, thương hiệu 2510 Candle: mới có trang chủ tĩnh, chưa nối BE — xem [docs/frontend.md](docs/frontend.md) |
+| `fe/` | Web bán hàng cho khách | Next.js 16 + Tailwind 4 + GSAP, pnpm, cổng 3000. Làm lại 11/11/2026 theo bố cục Figma "Ember & Earth", chữ tiếng Việt, thương hiệu 2510 Candle: trang chủ + trang Sản phẩm (đọc `GET /api/shop/products`, biến `API_URL`) — xem [docs/frontend.md](docs/frontend.md) |
 | `landing-page/` | Trang giới thiệu | Không đụng tới trừ khi được yêu cầu |
 | `docs/` | Tài liệu nghiệp vụ, API, test | Tiếng Việt |
 

@@ -174,7 +174,7 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
 
               <ShippingOptionFields />
 
-              <FormSection title="Người gửi" description="In trên nhãn giao hàng và phiếu đơn.">
+              <FormSection title="Người gửi" description="In trên nhãn giao hàng và phiếu đơn. Số điện thoại cũng hiện trên web: nút “Liên hệ đặt nến” mở Zalo theo số này.">
                 <Row gutter={16}>
                   <Col xs={24} sm={12}>
                     <Form.Item name={["sender", "name"]} label="Tên shop" rules={[{ required: true, whitespace: true, message: "Nhập tên shop." }]}>
