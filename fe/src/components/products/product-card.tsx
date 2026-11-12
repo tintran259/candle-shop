@@ -11,7 +11,20 @@ import { aromaLabels, cloudinary, formatPrice, productUrl, sizeLabels, type Shop
 import { cx, Logo } from "@/components/ui/primitives";
 import { ContactButton } from "@/components/products/contact-button";
 
-export function ProductCard({ product: p, category, contactUrl, heading: H = "h2" }: { product: ShopProduct; category?: string; contactUrl: string | null; heading?: "h2" | "h3" }) {
+// eager: thẻ ở hàng đầu (thấy ngay khi mở trang) — ảnh chính tải ngay, ưu tiên cao (ảnh là phần tử LCP của trang Sản phẩm)
+export function ProductCard({
+  product: p,
+  category,
+  contactUrl,
+  heading: H = "h2",
+  eager = false,
+}: {
+  product: ShopProduct;
+  category?: string;
+  contactUrl: string | null;
+  heading?: "h2" | "h3";
+  eager?: boolean;
+}) {
   const [broken, setBroken] = useState<number[]>([]);
   const images = p.images.slice(0, 2).filter((_, i) => !broken.includes(i));
   const off = p.salePrice ? Math.round((1 - p.salePrice / p.price) * 100) : 0;
@@ -29,6 +42,7 @@ export function ProductCard({ product: p, category, contactUrl, heading: H = "h2
               fill
               unoptimized
               sizes="(min-width: 768px) 30vw, 50vw"
+              {...(eager && i === 0 && { loading: "eager" as const, fetchPriority: "high" as const })}
               onError={() => setBroken((b) => [...b, p.images.indexOf(src)])}
               className={cx(
                 "object-cover transition-[scale,opacity] duration-700 ease-out group-hover:scale-[1.04]",

@@ -9,7 +9,7 @@ import { ContactButton } from "@/components/products/contact-button";
 import { ProductCard } from "@/components/products/product-card";
 import { ProductGallery } from "@/components/products/product-gallery";
 import { care, productDetail as t, productsPage } from "@/content/home";
-import { aromaLabels, formatDay, formatPrice, withoutDataImages, saleEndsOn, getShopContact, getShopProducts, sizeLabels, suggestProducts, zaloUrl } from "@/lib/shop";
+import { aromaLabels, formatDay, formatPrice, withoutDataImages, saleEndsOn, getShopContact, getShopProducts, productUrl, sizeLabels, suggestProducts, zaloUrl } from "@/lib/shop";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -24,7 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: `${t.notFound.title} — 2510 Candle` };
   const description = (product.description ?? product.scent ?? "").replace(/\s+/g, " ").slice(0, 160);
   const image = product.images.find((s) => s.startsWith("https://"));
-  return { title: `${product.name} — 2510 Candle`, description, openGraph: { title: product.name, description, images: image ? [image] : undefined } };
+  const url = productUrl(product);
+  return { title: `${product.name} — 2510 Candle`, description, alternates: { canonical: url }, openGraph: { title: product.name, description, url, images: image ? [image] : undefined } };
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -78,7 +79,8 @@ export default async function ProductDetailPage({ params }: Props) {
           </nav>
 
           <div className="mt-6 grid gap-10 md:mt-8 md:grid-cols-[1.1fr_1fr] md:gap-14 xl:gap-20">
-            <div data-reveal="fade">
+            {/* Không gắn data-reveal: ảnh chính ở đầu trang là phần tử LCP, không ẩn chờ JS */}
+            <div>
               <ProductGallery
                 images={p.images}
                 name={p.name}

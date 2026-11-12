@@ -15,7 +15,8 @@ export function Hero({ content: hero }: { content: HeroContent }) {
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         const title = SplitText.create("[data-intro=title]", { type: "lines", mask: "lines" });
-        const mark = SplitText.create("[data-intro=mark]", { type: "chars", mask: "chars" });
+        // Câu lớn: bản tách chữ aria-hidden, trình đọc màn hình đọc bản sr-only bên cạnh → không gắn aria-label lên <p>
+        const mark = SplitText.create("[data-intro=mark]", { type: "chars", mask: "chars", aria: "none" });
         gsap
           .timeline({ defaults: { ease: "power3.out" } })
           .fromTo("[data-intro=photo]", { autoAlpha: 0, scale: 1.15 }, { autoAlpha: 1, scale: 1, duration: 2.6, ease: "power2.out" })
@@ -81,7 +82,8 @@ export function Hero({ content: hero }: { content: HeroContent }) {
         </p>
 
         {/* Câu lớn ở dải tối dưới ảnh (vị trí chữ thương hiệu 148px trong Figma), chữ có chân màu sáng */}
-        <p data-intro="mark" className="display mt-auto pb-5 text-center text-[clamp(20px,7.9vw,116px)] leading-none tracking-[0.01em] whitespace-nowrap text-linen">
+        <p className="sr-only">{hero.mark}</p>
+        <p data-intro="mark" aria-hidden className="display mt-auto pb-5 text-center text-[clamp(20px,7.9vw,116px)] leading-none tracking-[0.01em] whitespace-nowrap text-linen">
           {hero.mark}
         </p>
       </div>

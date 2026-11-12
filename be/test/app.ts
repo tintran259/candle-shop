@@ -17,6 +17,8 @@ export async function createTestApp() {
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   app.useBodyParser('json', { limit: '10mb' });
   app.setGlobalPrefix('api');
+  // Như main.ts: tin 1 proxy (Render) — req.ip lấy từ X-Forwarded-For (test chống spam theo IP)
+  app.set('trust proxy', 1);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   await app.init();
   const prisma = app.get(PrismaService);

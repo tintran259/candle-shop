@@ -12,11 +12,14 @@ export function ProductGallery({ images, name, badges }: { images: string[]; nam
   const [index, setIndex] = useState(0);
   const [broken, setBroken] = useState<string[]>([]);
   const main = useRef<HTMLDivElement>(null);
+  // Lần đầu mở trang: ảnh hiện ngay (là phần tử LCP), chỉ mờ dần khi đổi sang ảnh khác
+  const first = useRef(true);
   const list = images.filter((s) => !broken.includes(s)).slice(0, 8);
   const current = list[Math.min(index, list.length - 1)];
 
   useGSAP(
     () => {
+      if (first.current) return void (first.current = false);
       gsap.matchMedia().add(MOTION_OK, () => {
         gsap.fromTo("[data-gallery-main]", { opacity: 0, scale: 1.04 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power2.out", overwrite: true });
       });
@@ -44,7 +47,8 @@ export function ProductGallery({ images, name, badges }: { images: string[]; nam
             alt={list.length > 1 ? `${name} — ${t.gallery(index + 1, list.length)}` : name}
             fill
             unoptimized
-            priority
+            loading="eager"
+            fetchPriority="high"
             sizes="(min-width: 768px) 50vw, 100vw"
             onError={() => fail(current)}
             className="object-cover"

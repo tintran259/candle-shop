@@ -118,7 +118,13 @@ export const contact = {
   errors: { name: "Vui lòng nhập họ tên.", phone: "Số điện thoại không đúng.", email: "Email không đúng.", message: "Vui lòng nhập nội dung." },
   note: "Thông tin chỉ dùng để liên lạc lại với bạn.",
   sending: "Đang gửi…",
-  done: "Cảm ơn bạn! Chúng tôi đã nhận được lời nhắn và sẽ liên lạc lại sớm.",
+  // Gửi xong: form được thay bằng lời cảm ơn (sections/contact-form.tsx)
+  thanks: {
+    eyebrow: "Đã gửi lời nhắn",
+    title: (name: string) => `Cảm ơn ${name}!`,
+    text: (phone: string) => `Chúng tôi đã nhận được lời nhắn và sẽ nhắn Zalo hoặc gọi lại qua số ${phone} trong ngày.`,
+    again: "Gửi lời nhắn khác",
+  },
   failed: "Chưa gửi được, bạn thử lại sau ít phút nhé.",
   photo: { src: "/images/newsletter.jpg", alt: "Bàn tay đặt cạnh hũ nến đang cháy trên khối đá travertine", width: 928, height: 1152 } satisfies Photo,
 };
@@ -169,7 +175,7 @@ export const productsPage = {
   retry: "Tải lại",
   badgeNew: "Mới",
   // Nút trên thẻ sản phẩm: mở chat Zalo theo SĐT người gửi ở BO › Cài đặt (GET /api/shop/contact); chưa có SĐT thì ẩn nút
-  contact: { label: "Liên hệ đặt nến", aria: (name: string) => `Liên hệ qua Zalo để đặt nến ${name} (mở cửa sổ mới)` },
+  contact: { label: "Liên hệ đặt nến", aria: (name: string) => `Liên hệ đặt nến ${name} qua Zalo (mở cửa sổ mới)` },
   burn: (h: number) => `cháy khoảng ${h} giờ`,
 };
 

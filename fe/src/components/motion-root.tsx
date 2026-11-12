@@ -13,6 +13,8 @@ import { gsap, MOTION_OK, MOTION_REDUCE, ScrollTrigger, SplitText, useGSAP } fro
 // Chạy một lần khi vào màn, không chạy ngược khi cuộn lên. Không dùng `once: true`: mở trang ở giữa (vd /#story, /#care từ chân trang)
 // thì phần tử phía trên đã qua mốc ngay lúc tạo, ScrollTrigger tự hủy giữa lúc khởi tạo → lỗi "reading 'end'" + tràn ngăn xếp
 const PLAY_ONCE = "play none none none";
+// aria-label chỉ hợp lệ trên tiêu đề (thẻ <p> không có role thì Lighthouse / trình đọc màn hình báo lỗi) — thẻ khác giữ nguyên chữ để đọc
+const ariaFor = (el: Element) => (/^H[1-6]$/.test(el.tagName) ? "auto" : "none");
 const onEnter = (el: Element, start = "top 88%") => ({ trigger: el, start, toggleActions: PLAY_ONCE });
 
 export function MotionRoot({ children }: { children: React.ReactNode }) {
@@ -28,6 +30,7 @@ export function MotionRoot({ children }: { children: React.ReactNode }) {
         q('[data-reveal="lines"]').forEach((el) => {
           gsap.set(el, { autoAlpha: 1 });
           SplitText.create(el, {
+            aria: ariaFor(el),
             type: "lines",
             mask: "lines",
             autoSplit: true,
@@ -37,6 +40,7 @@ export function MotionRoot({ children }: { children: React.ReactNode }) {
         q('[data-reveal="chars"]').forEach((el) => {
           gsap.set(el, { autoAlpha: 1 });
           SplitText.create(el, {
+            aria: ariaFor(el),
             type: "chars,lines",
             mask: "lines",
             autoSplit: true,
@@ -46,6 +50,7 @@ export function MotionRoot({ children }: { children: React.ReactNode }) {
         q('[data-reveal="words"]').forEach((el) => {
           gsap.set(el, { autoAlpha: 1 });
           SplitText.create(el, {
+            aria: ariaFor(el),
             type: "words",
             autoSplit: true,
             onSplit: (s) => gsap.from(s.words, { opacity: 0.12, stagger: 0.1, ease: "none", scrollTrigger: { trigger: el, start: "top 80%", end: "bottom 45%", scrub: true } }),

@@ -91,7 +91,7 @@ export function ProductBrowser({ data, contactUrl }: { data: ShopData | null; co
                       concept === c.id ? "border-wine bg-wine text-cream" : "border-rule text-ink hover:border-wine hover:text-wine",
                     )}
                   >
-                    {c.id === "all" ? t.allConcepts : c.name} <span className="tabular-nums opacity-60">{!c.count && "startsOn" in c && isUpcoming(c) ? `· ${t.soon}` : `(${c.count})`}</span>
+                    {c.id === "all" ? t.allConcepts : c.name} <span className="tabular-nums">{!c.count && "startsOn" in c && isUpcoming(c) ? `· ${t.soon}` : `(${c.count})`}</span>
                   </button>
                 </li>
               ))}
@@ -110,7 +110,7 @@ export function ProductBrowser({ data, contactUrl }: { data: ShopData | null; co
                     onClick={() => update({ category: c.id, page: undefined })}
                     className={cx("group relative py-4 text-[11px] tracking-[0.12em] uppercase transition-colors duration-300", category === c.id ? "text-wine" : "text-muted hover:text-ink")}
                   >
-                    {c.name} <span className="tabular-nums opacity-60">({c.count})</span>
+                    {c.name} <span className="tabular-nums">({c.count})</span>
                     <span className={cx("absolute inset-x-0 -bottom-px h-px origin-left bg-wine transition-transform duration-500", category === c.id ? "scale-x-100" : "scale-x-0")} />
                   </button>
                 </li>
@@ -147,9 +147,9 @@ export function ProductBrowser({ data, contactUrl }: { data: ShopData | null; co
         <ConceptEmpty key={emptyConcept.id} concept={emptyConcept} contactUrl={contactUrl} />
       ) : list.length ? (
         <ul ref={grid} className="mt-10 grid grid-cols-2 gap-x-4 gap-y-12 md:mt-12 md:grid-cols-3 md:gap-x-8 md:gap-y-16">
-          {shown.map((p) => (
+          {shown.map((p, i) => (
             <li key={p.id} className="flex">
-              <ProductCard product={p} category={names.get(p.categoryId)} contactUrl={contactUrl} />
+              <ProductCard product={p} category={names.get(p.categoryId)} contactUrl={contactUrl} eager={i < 3} />
             </li>
           ))}
         </ul>

@@ -1314,9 +1314,9 @@ Liên hệ của shop cho web (nút "Liên hệ đặt nến" mở Zalo): tên s
 
 Công khai — form "Gửi lời nhắn" ở trang chủ web gửi thẳng từ trình duyệt (CORS: `FRONTEND_URL`). Xem [pages/messages.md](./pages/messages.md).
 
-**Body:** `{ "name": "Lan", "phone": "0901 234 567", "email"?: "lan@example.com", "message": "…", "website"?: "" }` — `website` là ô bẫy bot (web để trống, có giá trị thì không lưu).
+**Body:** `{ "name": "Lan", "phone": "0901 234 567", "email"?: "lan@example.com", "message": "…", "website"?: "", "elapsed": 8000 }` — `website` là ô bẫy bot; `elapsed` = mili giây từ lúc form hiện ra (dưới 3000 hoặc thiếu thì coi là bot). Bot, hoặc trùng SĐT + nội dung trong 24 giờ: vẫn trả 201 nhưng không lưu ([chống spam](./pages/messages.md#chống-spam)).
 
-**Trả về 201:** `{ "ok": true }`. **Lỗi:** 400 (`Vui lòng nhập họ tên.`, `Số điện thoại không đúng.`, `Email không đúng.`, `Vui lòng nhập nội dung.`, `Nội dung tối đa 1000 ký tự.`), 429 quá 5 lời nhắn / 10 phút mỗi IP.
+**Trả về 201:** `{ "ok": true }`. **Lỗi:** 400 (`Vui lòng nhập họ tên.`, `Số điện thoại không đúng.`, `Email không đúng.`, `Vui lòng nhập nội dung.`, `Nội dung tối đa 1000 ký tự.`), 429 quá 5 lời nhắn / 10 phút mỗi IP, hoặc quá 3 lời nhắn / 24 giờ mỗi SĐT.
 
 ## Liên hệ
 

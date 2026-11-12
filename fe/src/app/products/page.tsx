@@ -13,6 +13,8 @@ import { getShopContact, getShopProducts, listable, zaloUrl } from "@/lib/shop";
 export const metadata: Metadata = {
   title: "Sản phẩm — 2510 Candle",
   description: "Các mẫu nến thơm đổ tay theo đơn của 2510 Candle — chọn theo mùi hương, danh mục và giá.",
+  alternates: { canonical: "/products" },
+  openGraph: { title: "Sản phẩm — 2510 Candle", description: "Các mẫu nến thơm đổ tay theo đơn của 2510 Candle — chọn theo mùi hương, danh mục và giá.", url: "/products" },
 };
 
 export default async function ProductsPage() {
