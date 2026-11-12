@@ -133,6 +133,29 @@ Chữ, liên kết còn lại ở `src/content/home.ts` (cũng là giá trị d�
 - **Search / Account / Bag, Shipping & returns, Contact us, Instagram, Pinterest, Privacy / Terms / USD:** đang trỏ `#` (chưa có trang).
 - Menu Shop all / Our story / The journal và các liên kết trong trang cuộn tới khối tương ứng.
 
+## Đưa lên Vercel
+
+Web chạy trên **Vercel** (nền tảng của Next.js: không ngủ, CDN, tối ưu ảnh sẵn). BE vẫn ở Render. `fe/vercel.json`: chạy hàm máy chủ ở **Singapore** (`sin1`, gần BE + Neon), chỉ build lại khi thư mục `fe/` đổi (`ignoreCommand`). CI có job **Web (fe)** (typecheck, lint, build bằng dữ liệu giả) — Vercel tự deploy khi push, không chờ CI.
+
+**Lần đầu (chủ dự án làm trên vercel.com):**
+
+1. **Add New › Project** → chọn repo GitHub này → **Root Directory: `fe`** (Framework tự nhận Next.js, pnpm theo `packageManager`).
+2. **Environment Variables** (Production):
+
+   | Biến | Giá trị |
+   |---|---|
+   | `API_URL` | `https://candle2510-be.onrender.com/api` |
+   | `SITE_URL` | Địa chỉ Vercel cấp, vd `https://candle2510.vercel.app` (biết sau lần deploy đầu — điền rồi **Redeploy**) |
+   | `REVALIDATE_SECRET` | Chuỗi ngẫu nhiên (vd `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`), **cùng giá trị** đặt ở BE |
+   | `SHOP_MOCK` | Không đặt |
+
+3. **Deploy**. Xong thì copy địa chỉ `https://….vercel.app`, điền `SITE_URL` (bước 2) và Redeploy.
+4. **BE trên Render** (service `candle2510-be` › Environment): `FRONTEND_URL` = địa chỉ web (có thể thêm `,http://localhost:3000` để dev vẫn chạy), `REVALIDATE_SECRET` = cùng giá trị bước 2 → Save (BE tự khởi động lại).
+
+**Kiểm tra sau deploy:** trang chủ hiện nội dung từ BO (không có chữ "Dữ liệu giả"); `/products` có mẫu thật; đăng giao diện ở BO → web đổi ngay; gửi thử form "Gửi lời nhắn" → hiện ở BO › Liên hệ (lỗi CORS = `FRONTEND_URL` chưa đúng); `/robots.txt`, `/sitemap.xml` trỏ đúng địa chỉ web.
+
+**Lưu ý:** BE gói Free ngủ sau 15 phút — giữ UptimeRobot gọi `/api/health` để web không chờ BE thức. Bản xem trước (preview) của Vercel có địa chỉ khác nên form lời nhắn bị CORS chặn — chỉ bản Production gửi được. Đổi sang tên miền riêng sau này: thêm ở Vercel › Domains, rồi đổi `SITE_URL` (Vercel) và `FRONTEND_URL` (Render). Gói Hobby (miễn phí) của Vercel chỉ cho mục đích phi thương mại theo điều khoản của Vercel — bán hàng thật nên cân nhắc gói Pro.
+
 ## Việc còn lại
 
 1. Ảnh 3 sản phẩm, câu chuyện, nhận tin, chân trang vẫn là ảnh Figma (hũ in chữ EMBER & EARTH) — thay bằng ảnh hũ 2510; rà lại câu chữ, tên / giá / nốt hương mẫu.

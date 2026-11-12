@@ -79,6 +79,30 @@ jobs:
       - name: Quy tắc nghiệp vụ (e2e/logic)
         run: npx playwright test e2e/logic
 
+  fe:
+    name: Web (fe) — typecheck, lint, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fe
+    # Build bằng dữ liệu giả: CI không có BE (web thật trên Vercel đọc BE Render qua API_URL)
+    env:
+      SHOP_MOCK: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: fe/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+
   e2e-be:
     name: BO + BE thật (e2e-be)
     runs-on: ubuntu-latest
