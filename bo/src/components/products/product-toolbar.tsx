@@ -2,6 +2,7 @@ import { AppstoreOutlined, SearchOutlined, UnorderedListOutlined } from "@ant-de
 import { Button, Flex, Input, Segmented, Select } from "antd";
 import { defaultFilters, type ProductFilters, type ViewMode } from "@/lib/products/filters";
 import { useCategories } from "@/hooks/use-categories";
+import { useConcepts } from "@/hooks/use-concepts";
 import { sizeLabels, sortOptions, toOptions } from "@/lib/products/labels";
 
 type Props = {
@@ -15,8 +16,9 @@ type Props = {
 // Thanh lọc 2 hàng: (1) trạng thái · sắp xếp + kiểu xem, (2) tìm kiếm + bộ lọc thuộc tính
 export function ProductToolbar({ filters, onChange, counts, view, onViewChange }: Props) {
   const { categories } = useCategories();
+  const concepts = useConcepts();
   const set = (patch: Partial<ProductFilters>) => onChange({ ...filters, ...patch });
-  const dirty = filters.q || filters.status !== "all" || filters.categoryId || filters.size;
+  const dirty = filters.q || filters.status !== "all" || filters.categoryId || filters.conceptId || filters.size;
 
   return (
     <Flex vertical gap={12}>
@@ -63,6 +65,15 @@ export function ProductToolbar({ filters, onChange, counts, view, onViewChange }
           onChange={(categoryId) => set({ categoryId })}
           options={categories.map((c) => ({ value: c.id, label: c.name.vi }))}
           style={{ flex: "0 1 160px", minWidth: 130 }}
+        />
+        <Select
+          allowClear
+          placeholder="Concept"
+          aria-label="Lọc theo concept"
+          value={filters.conceptId}
+          onChange={(conceptId) => set({ conceptId })}
+          options={concepts.items.map((c) => ({ value: c.id, label: c.name.vi }))}
+          style={{ flex: "0 1 150px", minWidth: 120 }}
         />
         <Select
           allowClear

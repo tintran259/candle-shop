@@ -6,6 +6,7 @@ export type ProductFilters = {
   q: string;
   status: "all" | "active" | "hidden";
   categoryId?: string;
+  conceptId?: string;
   size?: ProductSize;
   sort: SortKey;
   // Chỉ sản phẩm cần xem lại giá (thấp hơn vốn / lãi dưới mức)
@@ -21,6 +22,7 @@ export function applyFilters(list: Product[], f: ProductFilters, review?: Readon
   return list
     .filter((p) => f.status === "all" || p.status === f.status)
     .filter((p) => !f.categoryId || p.categoryId === f.categoryId)
+    .filter((p) => !f.conceptId || !!p.conceptIds?.includes(f.conceptId))
     .filter((p) => !f.size || p.size === f.size)
     .filter((p) => !f.review || !!review?.has(p.id))
     .filter((p) => !q || slugify(p.name).includes(q) || p.slug.includes(q))

@@ -42,7 +42,7 @@ Sản phẩm lưu trước khi có trang này dùng trường loại hương `fr
 ## Chưa có
 
 - **Web chưa đọc danh mục từ BO.** Sản phẩm và bộ lọc trên web vẫn lấy từ dữ liệu cứng của web.
-- Mỗi sản phẩm chỉ thuộc 1 danh mục.
+- Mỗi sản phẩm chỉ thuộc 1 danh mục. Phân loại thứ hai, nhiều–nhiều, theo dịp lễ: [Concept](./concepts.md) (dùng chung bảng / modal với trang này).
 
 ## Kiểm thử
 

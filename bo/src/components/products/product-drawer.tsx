@@ -12,6 +12,8 @@ import { BuildSummary, PriceCheckLine } from "@/components/products/product-pric
 import { RatingText } from "@/components/products/product-view";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import { useCategories } from "@/hooks/use-categories";
+import { useConcepts } from "@/hooks/use-concepts";
+import { ConceptSelect } from "@/components/products/concept-select";
 import { useCraftConfig } from "@/hooks/use-craft-config";
 import { useInventory } from "@/hooks/use-inventory";
 import type { ProductsApi } from "@/hooks/use-products";
@@ -25,8 +27,12 @@ import type { Product } from "@/lib/products/types";
 // prefill: giá trị điền sẵn khi tạo mới (từ nến hủy đơn); onCreated chạy sau khi tạo mới thành công
 type Props = { open: boolean; product?: Product; prefill?: ProductFormValues; source?: string; api: ProductsApi; onCreated?: (product: Product) => void; onClose: () => void };
 
-// Sản phẩm mới chưa có danh mục thì chọn sẵn danh mục đầu tiên đang hiện
-const withCategory = (v: ProductFormValues, fallback?: string) => (v.categoryId ? v : { ...v, categoryId: fallback });
+// Sản phẩm mới chưa có danh mục thì chọn sẵn danh mục đầu tiên đang hiện. Concept đã bị xóa thì bỏ khỏi lựa chọn (lưu lên BE sẽ bị từ chối)
+const withCategory = (v: ProductFormValues, fallback: string | undefined, concepts: Set<string>) => ({
+  ...v,
+  categoryId: v.categoryId || fallback,
+  conceptIds: (v.conceptIds ?? []).filter((id) => concepts.has(id)),
+});
 
 // Drawer thêm/sửa sản phẩm. Trang mount lại theo key nên form luôn bắt đầu từ dữ liệu mới.
 export function ProductDrawer({ open, product, prefill, source, api, onCreated, onClose }: Props) {
@@ -36,6 +42,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
   const { materials } = useInventory();
   const { config } = useCraftConfig();
   const { categories } = useCategories();
+  const concepts = useConcepts();
   // Drawer trượt ra ngay với khung xương; form (nặng) mount ngay sau ở chế độ ưu tiên thấp để không chặn hiệu ứng
   const ready = useDeferredValue(true, false);
   const [form] = Form.useForm<ProductFormValues>();
@@ -130,7 +137,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
         <Form
           form={form}
           layout="vertical"
-          initialValues={withCategory(prefill ?? toFormValues(product, config), categories.find((c) => !c.hidden)?.id)}
+          initialValues={withCategory(prefill ?? toFormValues(product, config), categories.find((c) => !c.hidden)?.id, new Set(concepts.byId.keys()))}
           onFinish={finish}
           onValuesChange={(changed: Partial<ProductFormValues>) => {
             setDirty(true);
@@ -205,6 +212,17 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
                 rules={[{ required: true, message: "Chọn danh mục." }]}
               >
                 <Select placeholder="Chọn danh mục" options={categories.map((c) => ({ value: c.id, label: c.hidden ? `${c.name.vi} (đang ẩn trên web)` : c.name.vi }))} />
+              </Form.Item>
+              <Form.Item
+                name="conceptIds"
+                label="Concept"
+                extra={
+                  <>
+                    Dịp lễ / bộ sưu tập (Noel, Tết…) — không bắt buộc, chọn được nhiều. Thêm, sửa ở trang <Link to="/concepts">Concept</Link>.
+                  </>
+                }
+              >
+                <ConceptSelect />
               </Form.Item>
               <Row gutter={16}>
                 <Col xs={24} sm={12}>

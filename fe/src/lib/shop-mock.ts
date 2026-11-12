@@ -12,7 +12,38 @@ const categories = [
   { id: "trai-cay", name: "Trái cây", nameEn: "Fruity" },
 ];
 
+// Concept (dịp lễ) và các mẫu thuộc từng concept — một mẫu có thể thuộc nhiều concept, nhiều mẫu không thuộc concept nào
+// Noel đang trong mùa; Tết, Valentine sắp tới → mẫu chỉ thuộc Tết / Valentine đang đóng bán (ẩn), như BE; Quà tặng chưa có mẫu
+const concepts = [
+  { id: "noel", name: "Noel", nameEn: "Christmas", startsOn: "2026-11-01", endsOn: "2026-12-26" },
+  { id: "tet", name: "Tết", nameEn: "Lunar New Year", startsOn: "2027-01-20", endsOn: "2027-02-20" },
+  { id: "valentine", name: "Valentine", nameEn: "Valentine", startsOn: "2027-02-01", endsOn: "2027-02-14" },
+  // Không đặt ngày, chưa gắn mẫu → web báo "chưa có mẫu"
+  { id: "qua-tang", name: "Quà tặng", nameEn: "Gifts", startsOn: null, endsOn: null },
+];
+const today = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+const inSeason = (id: string) => {
+  const c = concepts.find((x) => x.id === id)!;
+  return (!c.startsOn || c.startsOn <= today) && (!c.endsOn || today <= c.endsOn);
+};
+const conceptOf: Record<string, string[]> = {
+  "Giờ Vàng": ["noel", "tet"],
+  "Hổ Phách Đêm": ["noel"],
+  "Cam Quế": ["noel", "tet"],
+  "Gỗ Trầm": ["noel"],
+  "Tuyết Tùng": ["noel"],
+  "Hoa Bưởi": ["tet"],
+  "Đào Mật": ["tet"],
+  "Hồng Nhung": ["valentine"],
+  "Mộc Lan": ["valentine"],
+  "Nhài Trắng": ["valentine"],
+};
+
 const img = (n: string) => `/images/${n}.jpg`;
+// Ảnh dạng data URL (như khi BO chưa cấu hình Cloudinary) — để thử: danh sách / tìm kiếm bỏ ảnh này, trang chi tiết vẫn hiện
+const DATA_IMAGE =
+  "data:image/svg+xml;base64," +
+  Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#650f21"/><circle cx="5" cy="5" r="3" fill="#f5f2e9"/></svg>').toString("base64");
 
 // [tên, danh mục, giá, giá giảm, mức hương, cỡ, giờ cháy, nốt hương, ảnh, mới, nổi bật]
 type Row = [string, string, number, number | null, ShopProduct["aromaLevel"], ShopProduct["size"], number, string, string[], boolean, boolean];
@@ -54,28 +85,43 @@ const slug = (s: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-");
 
+const allProducts = rows
+  .map(([name, categoryId, price, sale, aromaLevel, size, burnTime, scent, images, isNew, isFeatured]) => ({
+    id: slug(name),
+    name,
+    slug: slug(name),
+    price,
+    ...(sale && { salePrice: sale }),
+    description: descriptions[name] ?? `${name} mang hương ${scent.toLowerCase()}, đổ tay từ sáp đậu nành và bấc cotton. Một hũ nến nhỏ cho những khoảnh khắc bạn muốn chậm lại.`,
+    images: [...images.map(img), ...(name === "Đêm Yên" ? [DATA_IMAGE] : [])],
+    categoryId,
+    conceptIds: conceptOf[name] ?? [],
+    aromaLevel,
+    size,
+    scent,
+    waxType: "Sáp đậu nành",
+    burnTime,
+    isNew,
+    isFeatured,
+    rating: 0,
+    reviewCount: 0,
+  }))
+  .sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured));
+
+// Như BE: bán khi không có concept hoặc có concept đang trong mùa; conceptIds chỉ giữ concept đang trong mùa
+const products = allProducts.filter((p) => !p.conceptIds.length || p.conceptIds.some(inSeason)).map((p) => ({ ...p, conceptIds: p.conceptIds.filter(inSeason) }));
+
 export const mockShopData: ShopData = {
   categories,
-  // Nổi bật trước như BE trả
-  products: rows
-    .map(([name, categoryId, price, sale, aromaLevel, size, burnTime, scent, images, isNew, isFeatured]) => ({
-      id: slug(name),
-      name,
-      slug: slug(name),
-      price,
-      ...(sale && { salePrice: sale }),
-      description: descriptions[name] ?? `${name} mang hương ${scent.toLowerCase()}, đổ tay từ sáp đậu nành và bấc cotton. Một hũ nến nhỏ cho những khoảnh khắc bạn muốn chậm lại.`,
-      images: images.map(img),
-      categoryId,
-      aromaLevel,
-      size,
-      scent,
-      waxType: "Sáp đậu nành",
-      burnTime,
-      isNew,
-      isFeatured,
-      rating: 0,
-      reviewCount: 0,
-    }))
-    .sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured)),
+  // Như BE: mọi concept chưa kết thúc (Tết, Valentine sắp tới → web đếm ngược)
+  concepts: concepts.filter((c) => !c.endsOn || today <= c.endsOn),
+  products,
+};
+
+// Trang chủ giả (như GET /shop/home): giao diện mặc định có thanh thông báo riêng, 3 mẫu đầu (nổi bật trước)
+const featured = products.slice(0, 3);
+export const mockHome = {
+  theme: { conceptId: null, announcementOn: true, announcement: "Dữ liệu giả · Mỗi hũ nến được đổ tay theo đơn của bạn", logo: {}, hero: {} },
+  featured,
+  categories: categories.filter((c) => featured.some((p) => p.categoryId === c.id)),
 };

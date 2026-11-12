@@ -11,12 +11,13 @@ export const MAX_FILE_MB = 10;
 const MAX_SIDE = 800;
 
 // Thư mục trên Cloudinary theo nơi dùng ảnh (BE chỉ nhận các giá trị này)
-export type ImageFolder = "products" | "craft" | "orders" | "misc";
+export type ImageFolder = "products" | "craft" | "orders" | "site" | "misc";
 
 // Nén ảnh vừa chọn → data URL (ảnh chờ tải lên khi Lưu)
-export async function prepareImage(file: File): Promise<string> {
+// maxSide: cạnh dài tối đa (ảnh hero cần lớn hơn ảnh sản phẩm). WebP giữ nền trong suốt (logo PNG)
+export async function prepareImage(file: File, maxSide = MAX_SIDE): Promise<string> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);

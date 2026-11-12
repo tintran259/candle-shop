@@ -161,6 +161,9 @@ export const productsPage = {
   title: "Sản phẩm",
   text: "Mỗi hũ nến được đổ tay theo đơn của bạn và hoàn thành trong 2–3 ngày. Chọn mùi hương hợp với khoảnh khắc của bạn.",
   all: "Tất cả",
+  allConcepts: "Mọi dịp",
+  soon: "Sắp mở",
+  byConcept: "Theo dịp",
   sort: { label: "Sắp xếp", featured: "Nổi bật", priceAsc: "Giá thấp đến cao", priceDesc: "Giá cao đến thấp" },
   count: (n: number) => `${n} mẫu nến`,
   range: (from: number, to: number, n: number) => `${from}–${to} / ${n} mẫu nến`,
@@ -181,13 +184,28 @@ export const productsPage = {
 export const productDetail = {
   home: "Trang chủ",
   products: "Sản phẩm",
+  concepts: "Thuộc dịp",
   specs: { scent: "Mùi hương", aroma: "Mức hương", size: "Kích cỡ", wax: "Loại sáp", burn: "Thời gian cháy" },
   burn: (h: number) => `Khoảng ${h} giờ`,
   madeToOrder: "Đổ tay theo đơn của bạn · Hoàn thành trong 2–3 ngày",
+  saleUntil: (names: string[], date: string) => `Bán theo dịp ${names.join(", ")} đến hết ${date}`,
   noContact: "Liên hệ shop để đặt mẫu này.",
   back: "Xem tất cả sản phẩm",
   care: "Để nến cháy đẹp",
   gallery: (n: number, total: number) => `Ảnh ${n} / ${total}`,
   suggest: { eyebrow: "Gợi ý cho bạn", title: "Có thể bạn cũng thích", more: "Xem tất cả nến" },
   notFound: { title: "Không tìm thấy mẫu nến", text: "Mẫu nến này không còn bán hoặc đường dẫn chưa đúng.", back: "Xem các mẫu đang có" },
+};
+
+// Concept (dịp lễ) đang chọn chưa có mẫu: đếm ngược tới ngày mở bán / báo chưa có mẫu
+export const conceptEmpty = {
+  upcomingEyebrow: "Sắp mở bán",
+  upcomingTitle: (name: string) => `Bộ sưu tập ${name} sẽ mở bán sau`,
+  units: ["Ngày", "Giờ", "Phút", "Giây"],
+  opensOn: (start: string, end: string | null) => (end ? `Mở bán từ ${start} đến hết ${end}` : `Mở bán từ ${start}`),
+  preorderHint: "Muốn đặt trước? Nhắn cho shop qua Zalo.",
+  emptyEyebrow: "Chưa có mẫu",
+  emptyTitle: (name: string) => `Dịp ${name} chưa có mẫu nến nào`,
+  emptyText: "Các mẫu nến cho dịp này đang được chuẩn bị. Bạn quay lại sau ít hôm, hoặc nhắn shop để được tư vấn đổ nến riêng theo ý bạn.",
+  customHint: "Shop nhận đổ nến riêng theo dịp — nhắn qua Zalo để được tư vấn.",
 };

@@ -1,13 +1,14 @@
 "use client";
-// Thanh thông báo + điều hướng (Figma: Announcement + Navigation).
+// Thanh thông báo + điều hướng (Figma: Announcement + Navigation). Chữ thông báo, logo sáng / tối từ BO › Giao diện web (chrome).
 // overHero (trang chủ): trong suốt trên hero, chữ sáng; qua hero: nền kem, chữ tối. Trang khác: luôn nền kem. Cuộn xuống ẩn, cuộn lên hiện.
 // Mục đang xem có gạch chân. Nút Tìm kiếm (hoặc Ctrl / ⌘ + K) mở hộp tìm kiếm. Điện thoại: nút kính lúp + nút Menu mở lớp phủ.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { announcement, brand, nav } from "@/content/home";
+import { brand, nav } from "@/content/home";
+import type { Chrome } from "@/lib/home";
 import { gsap, MOTION_OK, MOTION_REDUCE, ScrollTrigger, useGSAP } from "@/lib/gsap";
-import { cx, Logo } from "@/components/ui/primitives";
+import { BrandLogo, cx } from "@/components/ui/primitives";
 import { SearchDialog } from "@/components/search/search-dialog";
 
 const SearchIcon = () => (
@@ -20,7 +21,7 @@ const SearchIcon = () => (
 const navLink = "group relative py-2 text-[11px] uppercase tracking-[0.09em]";
 const underline = "absolute bottom-0 left-0 h-px w-full origin-right scale-x-0 bg-current transition-transform duration-500 group-hover:origin-left group-hover:scale-x-100";
 
-export function SiteHeader({ overHero = false }: { overHero?: boolean }) {
+export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; chrome: Chrome }) {
   const root = useRef<HTMLElement>(null);
   const path = usePathname();
   const [solid, setSolid] = useState(!overHero);
@@ -92,7 +93,7 @@ export function SiteHeader({ overHero = false }: { overHero?: boolean }) {
   const tone = light ? "text-linen" : "text-ink";
   return (
     <header ref={root} className="fixed inset-x-0 top-0 z-50">
-      <p className="bg-night px-5 py-[7px] text-center text-[10px] leading-[14px] tracking-[0.1em] text-[#f8f5ee]">{announcement}</p>
+      {chrome.announcement && <p className="bg-night px-5 py-[7px] text-center text-[10px] leading-[14px] tracking-[0.1em] text-[#f8f5ee]">{chrome.announcement}</p>}
       <div className={cx("transition-colors duration-500", solid && !open && "bg-cream/92 backdrop-blur")}>
         <div
           className={cx(
@@ -101,7 +102,7 @@ export function SiteHeader({ overHero = false }: { overHero?: boolean }) {
           )}
         >
           <Link href="/" data-intro="nav" aria-label="2510 Candle — về trang chủ" className={cx("justify-self-start py-2 transition-colors duration-500", light ? "text-linen" : "text-copper")}>
-            <Logo className="w-[124px] md:w-[150px]" />
+            <BrandLogo src={light ? chrome.logo.light : chrome.logo.dark} className="w-[124px] md:w-[150px]" />
           </Link>
           <nav aria-label="Điều hướng chính" className="hidden md:block">
             <ul className="flex gap-10">

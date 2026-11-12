@@ -30,6 +30,12 @@ await prisma.$transaction(
     await tx.category.createMany({ data: data.categories });
     await tx.product.createMany({ data: data.products });
     await tx.productRecipeLine.createMany({ data: data.productRecipe });
+    await tx.concept.createMany({ data: data.concepts });
+    await tx.siteTheme.createMany({ data: data.siteTheme });
+    // Bảng nối nhiều–nhiều không có model riêng: gắn concept qua từng sản phẩm
+    const byProduct = new Map<string, string[]>();
+    for (const l of data.productConcepts) byProduct.set(l.productId, [...(byProduct.get(l.productId) ?? []), l.conceptId]);
+    for (const [productId, ids] of byProduct) await tx.product.update({ where: { id: productId }, data: { concepts: { connect: ids.map((id) => ({ id })) } } });
     await tx.customer.createMany({ data: data.customers });
     await tx.discount.createMany({ data: data.discounts });
     await tx.discountCustomer.createMany({ data: data.discountCustomers });

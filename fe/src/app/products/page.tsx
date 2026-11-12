@@ -1,22 +1,22 @@
-// Trang Sản phẩm: danh sách mẫu nến Đang bán từ BE (GET /api/shop/products), lọc theo danh mục, sắp xếp.
-// Dựng ở máy chủ, làm mới sau mỗi 60 giây (ISR); BE lỗi / đang khởi động thì hiện thông báo thử lại
+// Trang Sản phẩm: danh sách mẫu nến Đang bán từ BE (GET /api/shop/products), lọc theo dịp / danh mục, sắp xếp, phân trang.
+// Bộ lọc nằm trên URL (?q=&concept=&category=&sort=&page=, đọc ở client bằng useSearchParams). Dựng ở máy chủ mỗi lượt xem (connection())
+// để HTML có sẵn danh sách đúng bộ lọc; dữ liệu BE lưu đệm 60 giây. BE lỗi / đang khởi động thì hiện thông báo thử lại.
+// Ảnh data URL (chưa cấu hình Cloudinary) bỏ khỏi danh sách — nặng HTML (listable trong lib/shop.ts)
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/site-shell";
 import { Container } from "@/components/ui/primitives";
 import { ProductBrowser } from "@/components/products/product-browser";
 import { productsPage } from "@/content/home";
-import { getShopContact, getShopProducts, zaloUrl } from "@/lib/shop";
+import { connection } from "next/server";
+import { getShopContact, getShopProducts, listable, zaloUrl } from "@/lib/shop";
 
 export const metadata: Metadata = {
   title: "Sản phẩm — 2510 Candle",
   description: "Các mẫu nến thơm đổ tay theo đơn của 2510 Candle — chọn theo mùi hương, danh mục và giá.",
 };
 
-// ?q=: hiện kết quả tìm kiếm (từ hộp tìm kiếm); ?category=: mở sẵn một danh mục (breadcrumb trang chi tiết). Dữ liệu vẫn lưu đệm 60 giây theo từng lần gọi BE
-export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: string | string[]; category?: string | string[] }> }) {
-  const params = await searchParams;
-  const q = [params.q].flat()[0]?.trim() ?? "";
-  const category = [params.category].flat()[0];
+export default async function ProductsPage() {
+  await connection();
   const [data, contact] = await Promise.all([getShopProducts(), getShopContact()]);
   return (
     <SiteShell>
@@ -33,7 +33,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
               {productsPage.text}
             </p>
           </div>
-          <ProductBrowser key={`${q}|${category}`} query={q} initialCategory={category} data={data} contactUrl={zaloUrl(contact?.phone)} />
+          <ProductBrowser data={data && listable(data)} contactUrl={zaloUrl(contact?.phone)} />
         </Container>
       </section>
     </SiteShell>

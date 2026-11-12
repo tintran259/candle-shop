@@ -28,6 +28,8 @@ export type Product = {
   images: string[];
   // Danh mục (loại hương) ở trang Danh mục
   categoryId: string;
+  // Concept (dịp lễ) ở trang Concept — không bắt buộc, nhiều concept
+  conceptIds?: string[];
   aromaLevel: AromaLevel;
   // Cỡ trên web, suy ra từ dung tích hũ
   size: ProductSize;

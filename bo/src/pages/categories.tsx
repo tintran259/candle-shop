@@ -1,11 +1,12 @@
 import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Flex, Popconfirm, Typography } from "antd";
 import { useState } from "react";
-import { CategoryModal } from "@/components/products/category-modal";
-import { CategoryTable } from "@/components/products/category-table";
+import { TaxonomyModal } from "@/components/products/taxonomy-modal";
+import { TaxonomyTable } from "@/components/products/taxonomy-table";
 import { CategoriesSkeleton } from "@/components/skeletons";
 import { useCategories } from "@/hooks/use-categories";
 import { useProducts } from "@/hooks/use-products";
+import { categoryKind } from "@/lib/products/categories";
 import { useTitle } from "@/lib/use-title";
 
 // Danh mục sản phẩm trưng bày (loại hương): thứ tự ở đây là thứ tự trong bộ lọc của web
@@ -41,10 +42,10 @@ export function CategoriesPage() {
       </Flex>
 
       <Card styles={{ body: { padding: 12 } }}>
-        <CategoryTable api={api} count={count} onEdit={setEditing} />
+        <TaxonomyTable api={api} kind={categoryKind} count={count} onEdit={setEditing} />
       </Card>
 
-      <CategoryModal key={editing ?? "closed"} open={editing !== null && (editing === "new" || !!current)} category={current} api={api} onClose={() => setEditing(null)} />
+      <TaxonomyModal key={editing ?? "closed"} open={editing !== null && (editing === "new" || !!current)} item={current} api={api} kind={categoryKind} onClose={() => setEditing(null)} />
     </Flex>
   );
 }

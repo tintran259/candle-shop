@@ -10,6 +10,8 @@ export type ShopProduct = {
   salePrice?: number;
   images: string[];
   categoryId: string;
+  // Concept (dịp lễ: Noel, Tết…) — có thể rỗng
+  conceptIds: string[];
   aromaLevel: "soft" | "medium" | "strong";
   size: "small" | "medium" | "big";
   scent?: string;
@@ -20,7 +22,9 @@ export type ShopProduct = {
   rating: number;
   reviewCount: number;
 };
-export type ShopData = { categories: ShopCategory[]; products: ShopProduct[] };
+// Concept (dịp lễ): như danh mục + thời gian bán (YYYY-MM-DD, null = không giới hạn). BE chỉ trả concept đang trong mùa
+export type ShopConcept = ShopCategory & { startsOn?: string | null; endsOn?: string | null };
+export type ShopData = { categories: ShopCategory[]; concepts: ShopConcept[]; products: ShopProduct[] };
 export type ShopContact = { name: string; phone: string };
 
 // Máy chủ Next gọi BE: API_URL (vd https://candle2510-be.onrender.com/api), mặc định BE trên máy
@@ -33,7 +37,9 @@ export async function getShopProducts(): Promise<ShopData | null> {
   try {
     const res = await fetch(`${API_URL}/shop/products`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(20_000) });
     if (!res.ok) return null;
-    return (await res.json()) as ShopData;
+    const data = (await res.json()) as ShopData;
+    // BE cũ chưa có concept: coi như chưa có concept nào
+    return { ...data, concepts: data.concepts ?? [], products: data.products.map((p) => ({ ...p, conceptIds: p.conceptIds ?? [] })) };
   } catch {
     return null;
   }
@@ -41,10 +47,15 @@ export async function getShopProducts(): Promise<ShopData | null> {
 
 export const productUrl = (p: Pick<ShopProduct, "slug">) => `/products/${encodeURIComponent(p.slug)}`;
 
-// Gợi ý ở trang chi tiết: cùng danh mục trước, thiếu thì thêm mẫu khác; trong mỗi nhóm giữ thứ tự BE (nổi bật trước, mới trước)
+// Gợi ý ở trang chi tiết: mẫu chung concept (dịp lễ) trước, rồi cùng danh mục, thiếu thì thêm mẫu khác; cùng mức thì giữ thứ tự BE (nổi bật trước, mới trước)
 export function suggestProducts(all: ShopProduct[], current: ShopProduct, n = 4) {
-  const others = all.filter((p) => p.id !== current.id);
-  return [...others.filter((p) => p.categoryId === current.categoryId), ...others.filter((p) => p.categoryId !== current.categoryId)].slice(0, n);
+  const score = (p: ShopProduct) => p.conceptIds.filter((c) => current.conceptIds.includes(c)).length * 2 + (p.categoryId === current.categoryId ? 1 : 0);
+  return all
+    .filter((p) => p.id !== current.id)
+    .map((p, i) => ({ p, i, s: score(p) }))
+    .sort((a, b) => b.s - a.s || a.i - b.i)
+    .slice(0, n)
+    .map((r) => r.p);
 }
 
 // Liên hệ của shop: tên + SĐT người gửi ở BO › Cài đặt. Lỗi thì null (trang vẫn hiện, chỉ ẩn nút liên hệ)
@@ -75,3 +86,34 @@ export function cloudinary(src: string, width: number) {
   if (!src.startsWith("https://res.cloudinary.com/") || !src.includes("/image/upload/")) return src;
   return src.replace("/image/upload/", `/image/upload/f_auto,q_auto,c_fill,g_auto,ar_1:1,w_${width}/`);
 }
+
+// Ảnh Cloudinary thu về bề ngang tối đa, giữ nguyên tỉ lệ (không cắt) — dùng cho hero, logo
+export function cloudinaryFit(src: string, width: number) {
+  if (!src.startsWith("https://res.cloudinary.com/") || !src.includes("/image/upload/")) return src;
+  return src.replace("/image/upload/", `/image/upload/f_auto,q_auto,c_limit,w_${width}/`);
+}
+
+// Ngày bán cuối của mẫu theo concept: mọi concept của mẫu đều có ngày kết thúc thì lấy ngày muộn nhất; có concept không giới hạn thì null
+export function saleEndsOn(p: ShopProduct, concepts: ShopConcept[]) {
+  const mine = concepts.filter((c) => p.conceptIds.includes(c.id));
+  if (!mine.length || mine.some((c) => !c.endsOn)) return null;
+  return {
+    date: mine
+      .map((c) => c.endsOn!)
+      .sort()
+      .at(-1)!,
+    names: mine.map((c) => c.name),
+  };
+}
+
+export const formatDay = (d: string) => d.split("-").reverse().join("/");
+
+// Concept chưa tới ngày mở bán (giờ VN)
+const todayVN = () => new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
+export const isUpcoming = (c: Pick<ShopConcept, "startsOn">) => !!c.startsOn && c.startsOn > todayVN();
+
+// Ảnh lưu thẳng trong DB dạng data URL (khi chưa cấu hình Cloudinary) có thể vài trăm KB – vài MB mỗi ảnh: nhúng vào HTML danh sách
+// thì trang rất nặng. Danh sách, tìm kiếm, gợi ý bỏ các ảnh này (thẻ hiện logo thay thế); trang chi tiết vẫn hiện
+export const isDataUrl = (src: string) => src.startsWith("data:");
+export const withoutDataImages = (p: ShopProduct): ShopProduct => (p.images.some(isDataUrl) ? { ...p, images: p.images.filter((s) => !isDataUrl(s)) } : p);
+export const listable = (d: ShopData): ShopData => ({ ...d, products: d.products.map(withoutDataImages) });

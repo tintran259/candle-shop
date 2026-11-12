@@ -1,5 +1,6 @@
 import { Flex, Form, Typography } from "antd";
 import { CategoryTag } from "@/components/products/category-tag";
+import { ConceptTags } from "@/components/products/concept-select";
 import type { ProductFormValues } from "@/components/products/product-form";
 import { PriceText, ProductBadges, ProductThumb } from "@/components/products/product-view";
 import { useCraftConfig } from "@/hooks/use-craft-config";
@@ -28,6 +29,7 @@ export function ProductPreview() {
           </Typography.Title>
           <Flex gap={6} align="center" wrap>
             <CategoryTag id={v.categoryId} />
+            <ConceptTags ids={v.conceptIds} active={v.active} />
             <Typography.Text type="secondary" style={{ fontSize: 13 }}>
               {capacity ? `${capacity}ml · cỡ ${sizeLabels[sizeFromCapacity(capacity)].toLowerCase()}` : "Chưa chọn hũ"} · Hương {aromaLevelLabels[v.aromaLevel].toLowerCase()}
               {v.burnTime ? ` · ~${v.burnTime} giờ` : ""}

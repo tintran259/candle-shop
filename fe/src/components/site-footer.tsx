@@ -1,18 +1,18 @@
 // Chân trang (Figma 2:12): tên thương hiệu, khẩu hiệu, 3 cột liên kết (trái); ảnh "nắng vàng trên đá travertine" (phải);
 // đường kẻ; bản quyền + liên kết pháp lý
 import { brand, footer } from "@/content/home";
-import { Container, Logo, Photo } from "@/components/ui/primitives";
+import { BrandLogo, Container, Photo } from "@/components/ui/primitives";
 
 const link = "relative inline-block py-1.5 text-[11px] leading-[14px] text-muted transition-colors duration-300 hover:text-wine";
 
-export function SiteFooter() {
+export function SiteFooter({ logo }: { logo?: string }) {
   return (
     <footer className="pt-6 pb-6">
       <Container>
         <div className="grid gap-12 md:grid-cols-[800fr_512fr] md:gap-0">
           <div className="md:pt-[23px]">
             <div data-reveal="clip" className="text-copper">
-              <Logo label="2510 Candle" className="w-[clamp(200px,20vw,290px)]" />
+              <BrandLogo src={logo} label="2510 Candle" className="w-[clamp(200px,20vw,290px)]" />
             </div>
             <p data-reveal="fade" className="mt-5 pl-0.5 text-[12px] text-muted">
               {footer.tagline}

@@ -4,6 +4,8 @@
 
 **Mục đích:** để admin tự đổi các con số về tiền cọc, giao hàng, phí vận chuyển, người gửi và đơn vị vận chuyển.
 
+Thanh thông báo, logo, hero của web: trang riêng [Giao diện web](./site-theme.md) (mục con dưới Cài đặt).
+
 ## Các mục cài đặt
 
 | Mục | Khoảng cho phép | Mặc định | Dùng ở đâu | Tình trạng |

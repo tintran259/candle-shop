@@ -28,9 +28,9 @@ export function ProductsPage() {
   const api = useProducts();
   const cancelled = useCancelledProducts();
   const screens = Grid.useBreakpoint();
-  // ?category= từ trang Danh mục: mở sẵn bộ lọc theo danh mục đó
+  // ?category= / ?concept= từ trang Danh mục / Concept: mở sẵn bộ lọc theo mục đó
   const [params] = useSearchParams();
-  const [filters, setFiltersState] = useState<ProductFilters>(() => ({ ...defaultFilters, categoryId: params.get("category") ?? undefined }));
+  const [filters, setFiltersState] = useState<ProductFilters>(() => ({ ...defaultFilters, categoryId: params.get("category") ?? undefined, conceptId: params.get("concept") ?? undefined }));
   // Giá vốn theo giá nhập hiện tại: giá nhập tăng sau khi tạo sản phẩm thì báo lại ở đây
   const inventory = useInventory();
   const { settings } = useSettings();

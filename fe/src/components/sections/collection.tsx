@@ -1,9 +1,10 @@
 // Bộ sưu tập (Figma 2:7): "ATELIER" lớn trái, câu dẫn + ghi chú canh phải; nhãn bộ sưu tập; 3 thẻ nến (ảnh vuông-ngang 416×420,
 // nhóm hương, tên + giá, nốt hương, dung tích); liên kết "Explore all candles ↗" góc phải dưới
 import { collection } from "@/content/home";
-import { ArrowLink, Container, Photo } from "@/components/ui/primitives";
+import { ArrowLink, Container, Logo, Photo } from "@/components/ui/primitives";
+import type { FeaturedCard } from "@/lib/home";
 
-export function Collection() {
+export function Collection({ cards }: { cards: FeaturedCard[] }) {
   return (
     <section id="collection" aria-labelledby="collection-title" className="pt-10 pb-20 md:pt-12 md:pb-[60px]">
       <Container>
@@ -26,10 +27,22 @@ export function Collection() {
         </p>
 
         <ul className="mt-10 grid gap-12 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-8">
-          {collection.products.map((p, i) => (
-            <li key={p.name} className="group">
-              <a href={collection.more.href} className="block">
-                <Photo photo={p.photo} sizes="(min-width: 768px) 30vw, (min-width: 640px) 50vw, 100vw" className="aspect-[416/420]" parallax={i === 1 ? 6 : 4} zoom />
+          {cards.map((p, i) => (
+            <li key={p.key} className="group">
+              <a href={p.href} className="block">
+                {p.photo ? (
+                  <Photo
+                    photo={{ ...p.photo, width: 1024, height: 1024 }}
+                    sizes="(min-width: 768px) 30vw, (min-width: 640px) 50vw, 100vw"
+                    className="aspect-[416/420]"
+                    parallax={i === 1 ? 6 : 4}
+                    zoom
+                  />
+                ) : (
+                  <div data-reveal="clip" className="grid aspect-[416/420] place-items-center bg-rule/25 text-rule">
+                    <Logo className="w-[46%]" />
+                  </div>
+                )}
                 <div data-reveal="fade" className="pt-[26px]">
                   <p className="text-[9px] tracking-[0.11em] text-muted uppercase">{p.category}</p>
                   <div className="mt-2.5 flex items-baseline justify-between gap-4">

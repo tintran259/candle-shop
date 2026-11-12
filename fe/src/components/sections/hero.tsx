@@ -1,12 +1,13 @@
 "use client";
-// Hero (Figma 2:5): ảnh chiến dịch toàn khung + lớp tối nhẹ, khối chữ trái (nhãn, tiêu đề 2 dòng, đoạn văn, nút viền, ghi chú), tên thương hiệu cỡ lớn ở đáy.
+// Hero (Figma 2:5) — chữ / ảnh từ BO › Giao diện web (lib/home.ts, trống thì nội dung có sẵn): ảnh chiến dịch toàn khung + lớp tối nhẹ, khối chữ trái (nhãn, tiêu đề 2 dòng, đoạn văn, nút viền, ghi chú), tên thương hiệu cỡ lớn ở đáy.
 // Mở trang: ảnh thu nhỏ dần + sáng lên, tiêu đề trồi từng dòng, chữ thương hiệu trồi từng chữ cái. Cuộn: ảnh trôi chậm, chữ lớn trôi ngược và mờ dần
 import Image from "next/image";
 import { useRef } from "react";
-import { brand, hero } from "@/content/home";
+import { brand } from "@/content/home";
+import type { HeroContent } from "@/lib/home";
 import { gsap, MOTION_OK, MOTION_REDUCE, SplitText, useGSAP } from "@/lib/gsap";
 
-export function Hero() {
+export function Hero({ content: hero }: { content: HeroContent }) {
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -42,7 +43,7 @@ export function Hero() {
     <section ref={root} id="top" aria-label={brand} className="relative h-[max(640px,min(100svh,948px))] overflow-hidden bg-smoke text-linen md:h-[max(720px,min(100svh,948px))]">
       <div data-hero-parallax className="absolute inset-0">
         <div data-intro="photo" className="absolute inset-0">
-          <Image src={hero.photo.src} alt={hero.photo.alt} fill priority sizes="100vw" className="object-cover object-[62%_center]" />
+          <Image src={hero.photo.src} alt={hero.photo.alt} fill priority sizes="100vw" unoptimized={hero.photo.remote} className="object-cover" style={{ objectPosition: hero.photo.position }} />
         </div>
       </div>
       {/* Lớp tối như Figma (17%) + đậm thêm phía trái / đáy trên màn hẹp để chữ sáng luôn đọc được */}

@@ -20,6 +20,7 @@ export type ProductFormValues = {
   salePrice?: number | null;
   images: string[];
   categoryId?: string;
+  conceptIds: string[];
   aromaLevel: AromaLevel;
   scent?: string;
   burnTime?: number | null;
@@ -49,6 +50,7 @@ export function toFormValues(p: Product | undefined, config: CraftConfig): Produ
     salePrice: p?.salePrice ?? null,
     images: p?.images ?? [],
     categoryId: p?.categoryId,
+    conceptIds: p?.conceptIds ?? [],
     aromaLevel: p?.aromaLevel ?? "medium",
     scent: p?.scent,
     burnTime: p?.burnTime ?? null,
@@ -108,6 +110,7 @@ export function fromFormValues(v: ProductFormValues, previous: Product | undefin
     salePrice: v.salePrice ? Math.round(v.salePrice) : undefined,
     images: v.images ?? [],
     categoryId: v.categoryId ?? "",
+    conceptIds: v.conceptIds ?? [],
     aromaLevel: v.aromaLevel,
     size: capacity ? sizeFromCapacity(capacity) : (previous?.size ?? "medium"),
     scent: clean(v.scent),

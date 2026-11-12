@@ -38,7 +38,7 @@ Giá bán (hoặc giá giảm nếu có) so với giá vốn công thức 1 cây
 | Nguyên liệu | Các bước Thủ công giống popup Tự phối nến | Xem mục Công thức theo Thủ công |
 | Phụ kiện khác | Nguyên liệu từ Kho, lượng và giá bán cho 1 cây | Không trùng; giá bán không bắt buộc |
 | Tóm tắt nguyên liệu | Mô tả, cỡ, giá theo Thủ công, giá vốn, công thức, số cây Kho đủ làm | Chỉ xem, có nút Dùng giá này |
-| Phân loại & đặc tính | Danh mục, độ thơm, nốt hương, thời gian cháy | Danh mục bắt buộc, lấy từ trang [Danh mục](./categories.md), sản phẩm mới chọn sẵn danh mục đầu tiên đang hiện. Cỡ trên web và loại sáp tự suy ra, không chọn tay |
+| Phân loại & đặc tính | Danh mục, concept, độ thơm, nốt hương, thời gian cháy | Danh mục bắt buộc, lấy từ trang [Danh mục](./categories.md), sản phẩm mới chọn sẵn danh mục đầu tiên đang hiện. Concept (dịp lễ) không bắt buộc, chọn nhiều, lấy từ trang [Concept](./concepts.md). Cỡ trên web và loại sáp tự suy ra, không chọn tay |
 | Hình ảnh | Nhiều ảnh, ảnh đầu là ảnh chính | Bắt buộc ít nhất 1 ảnh |
 | Hiển thị | Đang bán, nhãn Mới, Nổi bật | Tắt Đang bán thì ẩn khỏi web |
 | Số liệu | Đánh giá, số đã bán | Chỉ xem khi sửa |

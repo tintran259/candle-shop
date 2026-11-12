@@ -36,6 +36,9 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      # Cùng giá trị với REVALIDATE_SECRET của web (fe) — đăng / gỡ giao diện web thì báo web làm mới ngay
+      - key: REVALIDATE_SECRET
+        sync: false
       # Kho ảnh Cloudinary (cloudinary.com › Settings › API Keys). Để trống thì BO lưu ảnh tạm trong DB
       - key: CLOUDINARY_CLOUD_NAME
         sync: false

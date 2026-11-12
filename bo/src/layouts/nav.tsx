@@ -1,5 +1,7 @@
 import {
   AppstoreOutlined,
+  BgColorsOutlined,
+  GiftOutlined,
   CommentOutlined,
   DashboardOutlined,
   ExperimentOutlined,
@@ -35,6 +37,7 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { label: "Sản phẩm trưng bày", path: "/products", icon: <ShoppingOutlined /> },
       { label: "Danh mục", path: "/categories", icon: <AppstoreOutlined /> },
+      { label: "Concept", path: "/concepts", icon: <GiftOutlined /> },
       { label: "Sản phẩm hủy đơn", path: "/cancelled-products", icon: <RollbackOutlined /> },
     ],
   },
@@ -46,13 +49,17 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
       { label: "Phiếu kho", path: "/inventory/movements", icon: <SwapOutlined />, sub: true },
     ],
   },
-  { label: "Hệ thống", items: [{ label: "Cài đặt", path: "/settings", icon: <SettingOutlined /> }] },
+  {
+    label: "Hệ thống",
+    items: [
+      { label: "Cài đặt", path: "/settings", icon: <SettingOutlined /> },
+      { label: "Giao diện web", path: "/settings/site-theme", icon: <BgColorsOutlined />, sub: true },
+    ],
+  },
 ];
 
 export const allNavItems = navGroups.flatMap((g) => g.items);
 
 // Mục khớp dài nhất: /inventory/movements là Phiếu kho, không phải Kho nguyên liệu
 export const findNavItem = (pathname: string) =>
-  allNavItems
-    .filter((i) => (i.path === "/" ? pathname === "/" : pathname === i.path || pathname.startsWith(`${i.path}/`)))
-    .sort((a, b) => b.path.length - a.path.length)[0];
+  allNavItems.filter((i) => (i.path === "/" ? pathname === "/" : pathname === i.path || pathname.startsWith(`${i.path}/`))).sort((a, b) => b.path.length - a.path.length)[0];

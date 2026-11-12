@@ -50,7 +50,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
   const { list, total } = useMemo(() => {
     if (!data) return { list: [], total: 0 };
     if (!query.trim()) return { list: data.products.slice(0, 4), total: 0 };
-    const all = searchProducts(data.products, data.categories, query);
+    const all = searchProducts(data.products, data.categories, query, data.concepts);
     return { list: all.slice(0, LIMIT), total: all.length };
   }, [data, query]);
   const catName = useMemo(() => new Map(data?.categories.map((c) => [c.id, c.name])), [data]);

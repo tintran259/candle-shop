@@ -23,6 +23,8 @@ import { PaymentsModule } from './payments/payments.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
 import { NewsletterModule } from './newsletter/newsletter.module.js';
 import { ShopModule } from './shop/shop.module.js';
+import { ConceptsModule } from './concepts/concepts.module.js';
+import { SiteThemeModule } from './site-theme/site-theme.module.js';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { ShopModule } from './shop/shop.module.js';
     ReviewsModule,
     NewsletterModule,
     ShopModule,
+    ConceptsModule,
+    SiteThemeModule,
   ],
   controllers: [AppController],
   // Gửi lại cùng Idempotency-Key thì trả kết quả lần đầu (BO tự gửi lại khi mất mạng)

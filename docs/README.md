@@ -16,6 +16,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Đơn hàng | `/orders` | [orders.md](./pages/orders.md) | Đã có, gồm hoàn tiền và giao hàng lỗi |
 | Sản phẩm trưng bày | `/products` | [products.md](./pages/products.md) | Đã có |
 | Danh mục | `/categories` | [categories.md](./pages/categories.md) | Đã có, web chưa đọc |
+| Concept (dịp lễ) | `/concepts` | [concepts.md](./pages/concepts.md) | Đã có, web lọc theo concept |
 | Sản phẩm hủy đơn | `/cancelled-products` | [cancelled-products.md](./pages/cancelled-products.md) | Đã có |
 | Thủ công | `/craft` | [craft.md](./pages/craft.md) | Đã có |
 | Kho nguyên liệu | `/inventory` | [inventory.md](./pages/inventory.md) | Đã có |
@@ -24,6 +25,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Đánh giá | `/reviews` | Chưa có | Trang tạm, chưa làm |
 | Mã giảm giá | `/discounts` | [discounts.md](./pages/discounts.md) | Đã có |
 | Cài đặt | `/settings` | [settings.md](./pages/settings.md) | Đã có |
+| Giao diện web | `/settings/site-theme` | [site-theme.md](./pages/site-theme.md) | Đã có: danh sách + chi tiết giao diện (thông báo, logo, hero), gắn concept; nháp / đăng riêng từng giao diện |
 
 ## Kiểm thử
 

@@ -19,6 +19,8 @@ export class ProductDto {
   // Ảnh đầu tiên là ảnh chính: URL hoặc data URL (BO đang lưu ảnh dạng chuỗi)
   @ArrayMinSize(1, { message: 'Cần ít nhất 1 ảnh.' }) @ArrayMaxSize(10) @IsString({ each: true }) images: string[];
   @IsString() @MinLength(1, { message: 'Chọn danh mục.' }) categoryId: string;
+  // Concept (dịp lễ) — không bắt buộc, nhiều concept. Sửa toàn bộ (PUT) mà không gửi thì sản phẩm rời mọi concept
+  @IsOptional() @ArrayMaxSize(20) @IsString({ each: true }) conceptIds?: string[];
   @IsIn(AROMA) aromaLevel: (typeof AROMA)[number];
   // Cỡ trên web, BO suy ra từ dung tích hũ
   @IsIn(SIZES) size: (typeof SIZES)[number];

@@ -155,7 +155,7 @@ export function RouteSkeleton({ pathname }: { pathname: string }) {
   if (pathname.startsWith("/cancelled-products")) return <CancelledSkeleton />;
   if (pathname.startsWith("/settings")) return <SettingsSkeleton />;
   if (pathname.startsWith("/discounts")) return <DiscountsSkeleton />;
-  if (pathname.startsWith("/categories")) return <CategoriesSkeleton />;
+  if (pathname.startsWith("/categories") || pathname.startsWith("/concepts")) return <CategoriesSkeleton />;
   if (pathname.startsWith("/customers")) return <CustomersSkeleton />;
   if (pathname.startsWith("/inventory/movements"))
     return <ListPageSkeleton label="Đang tải phiếu kho…" toolbar={<ToolbarSkeleton rows={[{ fields: [{ flex: "1 1 260px" }, { width: 160 }, { width: 200 }, { width: 240 }] }]} />} />;

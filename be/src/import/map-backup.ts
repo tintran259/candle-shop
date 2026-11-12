@@ -10,6 +10,8 @@ export type BackupFile = { app: string; version: number; exportedAt: string; dat
 const KEYS = {
   settings: "bo-settings-v1",
   categories: "bo-categories-v1",
+  concepts: "bo-concepts-v1",
+  siteTheme: "bo-site-themes-v1",
   products: "bo-products-v2",
   inventory: "bo-inventory-v2",
   customers: "bo-customers-v1",
@@ -142,6 +144,39 @@ export function mapBackup(file: BackupFile) {
   }));
   const productRecipe = productList.flatMap((p) => recipeLines(p.id, p.recipe, "Sản phẩm").map((r) => ({ productId: p.id, ...r })));
 
+  // ---- Giao diện web (danh sách: Mặc định + giao diện theo concept, mỗi cái có bản đã đăng / nháp)
+  const themeList: J[] = read(file, KEYS.siteTheme) ?? [];
+  const siteTheme = themeList.map((t, i) => ({
+    id: t.id,
+    name: t.name || "Giao diện",
+    published: t.published ?? undefined,
+    draft: t.draft ?? undefined,
+    publishedAt: date(t.publishedAt) ?? null,
+    createdAt: new Date(now.getTime() + i),
+  }));
+
+  // ---- Concept (dịp lễ) + thời gian + liên kết với sản phẩm. Bản sao lưu cũ chưa có concept thì bỏ qua
+  const day = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00.000Z`) : null);
+  const conceptList: J[] = read(file, KEYS.concepts) ?? [];
+  const concepts = conceptList.map((c, i) => ({
+    id: c.id,
+    nameVi: c.name?.vi ?? c.id,
+    nameEn: c.name?.en || c.name?.vi || c.id,
+    color: c.color ?? "default",
+    hidden: !!c.hidden,
+    startsOn: day(c.startsOn),
+    endsOn: day(c.endsOn),
+    sortOrder: i,
+  }));
+  const conceptIds = new Set(concepts.map((c) => c.id));
+  const productConcepts = productList.flatMap((p) =>
+    [...new Set<string>(p.conceptIds ?? [])].flatMap((conceptId) => {
+      if (conceptIds.has(conceptId)) return [{ productId: p.id as string, conceptId }];
+      warnings.push(`Sản phẩm ${p.id}: concept ${conceptId} không còn — bỏ qua`);
+      return [];
+    }),
+  );
+
   // ---- Khách, mã giảm giá
   const customerList: J[] = read(file, KEYS.customers) ?? [];
   const customers = customerList.map((c) => ({
@@ -231,6 +266,9 @@ export function mapBackup(file: BackupFile) {
       movements,
       products,
       productRecipe,
+      concepts,
+      productConcepts,
+      siteTheme,
       customers,
       discounts,
       discountCustomers,

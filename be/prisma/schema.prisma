@@ -62,6 +62,21 @@ model Category {
   products  Product[]
 }
 
+// Concept: phân loại thứ hai bên cạnh danh mục, theo dịp lễ / bộ sưu tập (Noel, Tết…). Admin tự thêm ở trang Concept.
+// Nhiều–nhiều với sản phẩm (bảng nối _ConceptToProduct); xóa concept thì sản phẩm chỉ rời khỏi concept đó
+model Concept {
+  id        String    @id
+  nameVi    String
+  nameEn    String
+  color     String    @default("default")
+  hidden    Boolean   @default(false)
+  sortOrder Int       @default(0)
+  // Thời gian áp dụng (ngày, giờ Việt Nam), trống = mọi ngày. Sản phẩm thuộc concept chỉ hiện trên web khi có concept (không ẩn) đang trong khoảng này
+  startsOn  DateTime? @db.Date
+  endsOn    DateTime? @db.Date
+  products  Product[]
+}
+
 enum AromaLevel {
   soft
   medium
@@ -89,6 +104,8 @@ model Product {
   images      String[]
   categoryId  String
   category    Category            @relation(fields: [categoryId], references: [id])
+  // Concept (dịp lễ: Noel, Tết…) — không bắt buộc, một sản phẩm có thể thuộc nhiều concept
+  concepts    Concept[]
   aromaLevel  AromaLevel
   size        ProductSize
   scent       String?
@@ -507,6 +524,19 @@ model CancelledProduct {
 
 // Cấu hình trang Thủ công dạng tài liệu (bước → lựa chọn → cỡ…): luôn sửa và lưu nguyên khối, đẩy lên web.
 // id "saved" = bản web đang dùng, "draft" = bản nháp đang sửa (kèm nguyên liệu chờ tạo)
+// Giao diện trang chủ web (docs/pages/site-theme.md): JSON { base, concepts[] } — id "published" (web đang dùng) / "draft" (đang sửa ở BO)
+// Giao diện web (docs/pages/site-theme.md): "default" = Mặc định, còn lại gắn concept (conceptIds trong nội dung).
+// published / draft: nội dung (thông báo, logo, hero) — bản đã đăng (web dùng) và bản nháp, null = chưa có
+model SiteTheme {
+  id          String    @id
+  name        String
+  published   Json?
+  draft       Json?
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model CraftConfig {
   id               String   @id
   config           Json

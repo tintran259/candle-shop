@@ -61,4 +61,42 @@ describe("mapBackup", () => {
     expect(r.data.discountCustomers).toHaveLength(0);
     expect(r.warnings).toHaveLength(2);
   });
+
+  it("concept: đọc danh sách, thời gian, liên kết với sản phẩm; concept không còn thì bỏ và báo; bản cũ chưa có concept thì rỗng", () => {
+    expect(mapBackup(sample).data.concepts).toEqual([]);
+    const file: BackupFile = JSON.parse(JSON.stringify(sample));
+    file.data["bo-concepts-v1"] = JSON.stringify([
+      { id: "noel", name: { vi: "Noel", en: "Christmas" }, color: "red", hidden: false, startsOn: "2026-12-01", endsOn: "2026-12-26" },
+      { id: "tet", name: { vi: "Tết", en: "" }, hidden: true },
+    ]);
+    const products = JSON.parse(file.data["bo-products-v2"]);
+    products[0].conceptIds = ["noel", "tet", "khong-con"];
+    file.data["bo-products-v2"] = JSON.stringify(products);
+    const r = mapBackup(file);
+    expect(r.data.concepts).toEqual([
+      { id: "noel", nameVi: "Noel", nameEn: "Christmas", color: "red", hidden: false, startsOn: new Date("2026-12-01T00:00:00.000Z"), endsOn: new Date("2026-12-26T00:00:00.000Z"), sortOrder: 0 },
+      { id: "tet", nameVi: "Tết", nameEn: "Tết", color: "default", hidden: true, startsOn: null, endsOn: null, sortOrder: 1 },
+    ]);
+    expect(r.data.productConcepts).toEqual([
+      { productId: products[0].id, conceptId: "noel" },
+      { productId: products[0].id, conceptId: "tet" },
+    ]);
+    expect(r.warnings.some((w) => w.includes("khong-con"))).toBe(true);
+  });
+
+  it("giao diện web: giữ từng giao diện (đã đăng, nháp, thứ tự); bản cũ chưa có thì rỗng", () => {
+    expect(mapBackup(sample).data.siteTheme).toEqual([]);
+    const file: BackupFile = JSON.parse(JSON.stringify(sample));
+    const published = { announcement: "Xin chào" };
+    file.data["bo-site-themes-v1"] = JSON.stringify([
+      { id: "default", name: "Mặc định", isDefault: true, published, draft: null, publishedAt: "2026-11-12T00:00:00.000Z" },
+      { id: "noel", name: "Noel", isDefault: false, published: null, draft: { conceptIds: ["noel"] }, publishedAt: null },
+    ]);
+    const rows = mapBackup(file).data.siteTheme;
+    expect(rows).toMatchObject([
+      { id: "default", name: "Mặc định", published, draft: undefined, publishedAt: new Date("2026-11-12T00:00:00.000Z") },
+      { id: "noel", name: "Noel", published: undefined, draft: { conceptIds: ["noel"] }, publishedAt: null },
+    ]);
+    expect(rows[0].createdAt < rows[1].createdAt).toBe(true);
+  });
 });

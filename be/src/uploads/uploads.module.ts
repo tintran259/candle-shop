@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { IsIn, IsOptional } from 'class-validator';
 
 // Thư mục trên Cloudinary theo nơi dùng ảnh
-export const FOLDERS = ['products', 'craft', 'orders', 'misc'] as const;
+export const FOLDERS = ['products', 'craft', 'orders', 'site', 'misc'] as const;
 const ROOT = 'candle2510';
 
 class SignDto {

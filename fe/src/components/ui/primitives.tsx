@@ -1,6 +1,7 @@
 // Thành phần nhỏ dùng lại giữa các section
 import Image from "next/image";
 import type { Photo as PhotoData } from "@/content/home";
+import { cloudinaryFit } from "@/lib/shop";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
@@ -27,6 +28,12 @@ export function Logo({ className, label }: { className?: string; label?: string 
   return <span role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true} className={cx("block bg-current", className)} style={LOGO_MASK} />;
 }
 
+// Logo tải lên ở BO › Giao diện web (src) hoặc logo mặt nạ có sẵn tô theo màu chữ. Đặt chiều rộng qua className
+export function BrandLogo({ src, className, label }: { src?: string; className?: string; label?: string }) {
+  if (!src) return <Logo className={className} label={label} />;
+  return <Image src={cloudinaryFit(src, 600)} alt={label ?? ""} width={600} height={140} unoptimized className={cx("block h-auto max-h-16 object-contain object-left", className)} />;
+}
+
 // Liên kết chữ nhỏ + mũi tên ↗; rê chuột: gạch chân chạy ra, mũi tên nhích lên phải
 export function ArrowLink({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
   return (
@@ -47,7 +54,7 @@ export function Photo({ photo, sizes, className, parallax = 6, zoom }: { photo: 
   return (
     <div data-reveal="clip" className={cx("relative overflow-hidden bg-rule/30", className)}>
       <div data-parallax={parallax} className={cx("absolute inset-x-0 -inset-y-[8%]", zoom && "transition-[scale] duration-700 ease-out group-hover:scale-105")}>
-        <Image src={photo.src} alt={photo.alt} fill sizes={sizes} className="object-cover" />
+        <Image src={photo.src} alt={photo.alt} fill sizes={sizes} unoptimized={!photo.src.startsWith("/")} className="object-cover" />
       </div>
     </div>
   );

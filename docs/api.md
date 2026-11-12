@@ -205,6 +205,24 @@ Sắp xếp lại (kéo thả trên BO).
 
 ---
 
+## Concept
+
+Dịp lễ / bộ sưu tập (Noel, Tết…) — phân loại thứ hai bên cạnh danh mục. Quy tắc ở [pages/concepts.md](./pages/concepts.md).
+
+**`Concept`:** như `Category` + thời gian bán: `{ id, name: { vi, en }, color, hidden, startsOn: string | null, endsOn: string | null }` — ngày `YYYY-MM-DD` (giờ Việt Nam), `null` = không giới hạn đầu đó.
+
+| Endpoint | Gửi lên | Trả về | Lỗi |
+|---|---|---|---|
+| `GET /admin/concepts` | | `Concept[]` theo thứ tự | |
+| `POST /admin/concepts` | `{ id?, name: { vi, en }, color?, hidden?, startsOn?, endsOn? }` — bỏ trống `id` thì tạo từ tên, `en` rỗng thì lấy `vi` | 201 `Concept` | 409 `"Đã có concept tên này."` (so không dấu), 409 `"Mã concept đã tồn tại."` |
+| `PATCH /admin/concepts/:id` | `{ name?, color?, hidden?, startsOn?, endsOn? }` — không gửi ngày thì giữ, `null` thì bỏ | `Concept` | 404, 409 tên trùng |
+| `PUT /admin/concepts/order` | `{ ids }` — đủ và đúng mọi concept | `Concept[]` | 409 `"Danh sách sắp xếp không khớp concept hiện có."` |
+| `DELETE /admin/concepts/:id` | | 204 — sản phẩm đang gắn concept này chỉ rời khỏi concept | 404 |
+
+Lỗi ngày (thêm / sửa): 400 `"Ngày không đúng định dạng."` (không phải `YYYY-MM-DD`), `"Ngày không đúng."` (vd 30/02), `"Ngày kết thúc phải sau hoặc trùng ngày bắt đầu."`.
+
+---
+
 ## Khách hàng
 
 Hồ sơ gộp theo số điện thoại. Số đơn, đã chi, nhóm khách (VIP, Khách quen…) BO tự tính từ đơn — API chỉ giữ hồ sơ.
@@ -561,6 +579,7 @@ Mẫu nến hiện trên web. Không có số tồn thành phẩm: khách đặt
 | `salePrice` | number? | Giá giảm, nhỏ hơn `price` |
 | `images` | string[] | Ảnh đầu là ảnh chính. URL hoặc data URL |
 | `categoryId` | string | |
+| `conceptIds` | string[] | Concept (dịp lễ), theo thứ tự ở trang Concept. Có thể rỗng |
 | `aromaLevel` | `"soft"` \| `"medium"` \| `"strong"` | |
 | `size` | `"small"` \| `"medium"` \| `"big"` | Cỡ trên web |
 | `scent`, `waxType` | string? | Nốt hương, loại sáp |
@@ -592,6 +611,7 @@ Mẫu nến hiện trên web. Không có số tồn thành phẩm: khách đặt
 | `salePrice` | | Nhỏ hơn `price` |
 | `images` | ✔ | 1–10 ảnh |
 | `categoryId` | ✔ | Danh mục có thật |
+| `conceptIds` | | Concept có thật (trùng thì bỏ), tối đa 20. `PUT` không gửi thì sản phẩm rời mọi concept. Lỗi 400 `"Có concept không còn — tải lại trang rồi chọn lại."` |
 | `aromaLevel`, `size`, `status`, `isNew`, `isFeatured` | ✔ | |
 | `recipe` | | Nguyên liệu có thật, không trùng, lượng > 0 |
 | `description`, `scent`, `waxType`, `burnTime`, `build` | | `description` ≤ 2000, `scent` và `waxType` ≤ 120 ký tự; `burnTime` 1–1000 |
@@ -1171,23 +1191,83 @@ Chữ ký = SHA-1 của `folder=…&timestamp=…` + API Secret (cách Cloudinar
 
 ---
 
+## Giao diện web
+
+Trang BO: [pages/site-theme.md](./pages/site-theme.md). **Danh sách giao diện**: `default` (Mặc định, luôn có — chưa có dòng trong DB thì `GET` trả bản trống, lưu lần đầu tự tạo) + các giao diện gắn concept. Mỗi giao diện có **bản đã đăng** (web dùng) và **bản nháp** riêng. Mọi thao tác trả về **cả danh sách** (Mặc định trước, rồi theo ngày tạo).
+
+Một giao diện:
+
+```json
+{
+  "id": "theme-a1b2c3d4", "name": "Giáng sinh 2026", "isDefault": false,
+  "published": { "conceptIds": ["noel"], "announcement": "Noel đã mở bán", "hero": { "image": "https://res.cloudinary.com/…", "mark": "Giáng sinh an lành" } },
+  "draft": null,
+  "publishedAt": "2026-11-12T04:43:00.000Z", "updatedAt": "2026-11-12T04:43:00.000Z"
+}
+```
+
+**Nội dung** (`published`, `draft`, body của nháp / đăng) — mọi trường không bắt buộc (trống = lấy của Mặc định / nội dung có sẵn của web):
+
+| Trường | Ghi chú |
+|---|---|
+| `announcementOn` | boolean, **chỉ Mặc định** (giao diện khác gửi thì bỏ) |
+| `conceptIds` | string[], **chỉ giao diện khác Mặc định** (Mặc định gửi thì bỏ). Concept không còn / trùng thì bỏ. Concept đã thuộc giao diện khác (bản nháp hoặc đã đăng) → 400 `Concept "Noel" đã thuộc giao diện "Giáng sinh 2026".` |
+| `announcement` | tối đa 90 ký tự |
+| `logo` | `{ light?, dark? }` — URL `https://` hoặc data URL ảnh (khi chưa cấu hình kho ảnh), tối đa 3 MB |
+| `hero` | `{ image?, focus?, eyebrow?, title?, text?, cta?, mark? }` — `focus`: `left` / `center` / `right`; `eyebrow` 60, `text` 220, `cta` 30, `mark` 32 ký tự; `title` tối đa 2 dòng × 30 ký tự |
+
+### `GET /admin/site-themes`
+
+**Trả về 200:** danh sách giao diện.
+
+### `POST /admin/site-themes`
+
+Body `{ "id"?: "theme-…", "name": "Giáng sinh 2026" }` (`id`: chữ thường, số, `-`; không gửi thì BE tạo). Giao diện mới chưa có nội dung. Lỗi 400: thiếu tên, mã đã có. **Trả về 201.**
+
+### `PATCH /admin/site-themes/:id`
+
+Body `{ "name": "…" }` — đổi tên (cả Mặc định). 404 nếu không có.
+
+### `DELETE /admin/site-themes/:id`
+
+Xóa giao diện (web thôi dùng ngay). Mặc định → 400. **Trả về 200.**
+
+### `PUT /admin/site-themes/:id/draft`
+
+Body là nội dung — lưu bản nháp, web chưa đổi. Lỗi 400 như bảng trên, 404 nếu không có giao diện.
+
+### `DELETE /admin/site-themes/:id/draft`
+
+Bỏ bản nháp. **Trả về 200.**
+
+### `POST /admin/site-themes/:id/publish`
+
+Body là nội dung — thành bản đã đăng, xóa nháp, ghi `publishedAt`. Web đổi sau tối đa 1 phút. **Trả về 200.**
+
+### `POST /admin/site-themes/:id/unpublish`
+
+Gỡ khỏi web: bỏ bản đã đăng, nội dung giữ làm bản nháp (nếu chưa có nháp). Mặc định → 400. **Trả về 200.**
+
 ## Web bán hàng
 
 API **công khai** (không cần token) cho web khách `fe`, chỉ đọc. Không trả dữ liệu nội bộ: công thức (`recipe`), lựa chọn Thủ công (`build`), số đã bán, trạng thái, giá vốn. Web gọi từ máy chủ Next (không qua trình duyệt khách) nên không cần thêm CORS.
 
 ### `GET /shop/products`
 
-Sản phẩm **Đang bán** (`status: "active"`) thuộc danh mục **không ẩn**; nổi bật trước, rồi mới tạo trước. `categories`: chỉ danh mục đang có sản phẩm trong danh sách, theo thứ tự ở BO.
+Sản phẩm **Đang bán** (`status: "active"`) thuộc danh mục **không ẩn**; nổi bật trước, rồi mới tạo trước. `categories`, `concepts`: chỉ danh mục / concept đang có sản phẩm trong danh sách, theo thứ tự ở BO. Concept **ẩn** không trả, và bị bỏ khỏi `conceptIds` của sản phẩm.
+
+**Mùa:** sản phẩm có concept (không ẩn) mà không concept nào đang trong thời gian bán (giờ VN) thì **không trả** (đóng bán); `conceptIds` chỉ gồm concept đang trong mùa. `concepts` (hàng lọc) gồm **mọi concept không ẩn chưa kết thúc** — kể cả chưa có mẫu / chưa tới ngày bắt đầu (web đếm ngược hoặc báo chưa có mẫu), kèm `startsOn` / `endsOn`. Sản phẩm không thuộc concept nào luôn trả. Quy tắc: [pages/concepts.md#thời-gian](./pages/concepts.md#thời-gian).
 
 **Trả về 200:**
 
 ```json
 {
   "categories": [{ "id": "nature", "name": "Thiên nhiên", "nameEn": "Nature" }],
+  "concepts": [{ "id": "noel", "name": "Noel", "nameEn": "Christmas", "startsOn": "2026-12-01", "endsOn": "2026-12-26" }],
   "products": [
     {
       "id": "brown-relac", "name": "Brown Relac", "slug": "brown-relac", "description": "…",
-      "price": 925000, "salePrice": 825000, "images": ["https://res.cloudinary.com/…"], "categoryId": "nature",
+      "price": 925000, "salePrice": 825000, "images": ["https://res.cloudinary.com/…"], "categoryId": "nature", "conceptIds": ["noel"],
       "aromaLevel": "medium", "size": "medium", "scent": "Gỗ đàn hương, vani", "waxType": "Sáp đậu nành", "burnTime": 35,
       "isNew": false, "isFeatured": true, "rating": 4.8, "reviewCount": 12
     }
@@ -1196,6 +1276,29 @@ Sản phẩm **Đang bán** (`status: "active"`) thuộc danh mục **không ẩ
 ```
 
 Trường không có giá trị thì bỏ khỏi kết quả (`description`, `salePrice`, `scent`, `waxType`, `burnTime`).
+
+### `GET /shop/home`
+
+Trang chủ web: giao diện đang dùng (BE chọn concept **đầu tiên theo thứ tự** trang Concept, không ẩn, đang trong mùa, có giao diện **đã đăng** gắn với nó, rồi ghép từng trường lên bản đã đăng của Mặc định — [pages/site-theme.md](./pages/site-theme.md#web-chọn-giao-diện-thế-nào)) và 3 mẫu cho khối "Xưởng nến" (lấy từ danh sách `GET /shop/products`, nổi bật trước).
+
+**Trả về 200:**
+
+```json
+{
+  "theme": {
+    "themeId": "theme-a1b2c3d4",
+    "conceptId": "noel",
+    "announcementOn": true,
+    "announcement": "Mỗi hũ nến được đổ tay theo đơn của bạn",
+    "logo": { "light": "https://res.cloudinary.com/…" },
+    "hero": { "image": "https://res.cloudinary.com/…", "focus": "right", "mark": "Giáng sinh an lành" }
+  },
+  "featured": [{ "id": "brown-relac", "name": "Brown Relac", "…": "như một sản phẩm của /shop/products" }],
+  "categories": [{ "id": "nature", "name": "Thiên nhiên", "nameEn": "Nature" }]
+}
+```
+
+Không có giao diện concept nào áp dụng: `themeId`, `conceptId` là `null` (dùng Mặc định). Chưa cấu hình gì: `announcementOn: true`, `logo: {}`, `hero: {}` — web dùng nội dung có sẵn. `categories`: danh mục của các mẫu trong `featured`.
 
 ### `GET /shop/contact`
 

@@ -2,6 +2,7 @@ import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, StarFi
 import { Button, Flex, Popconfirm, Switch, Table, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
 import { memo, useState } from "react";
 import { CategoryTag } from "@/components/products/category-tag";
+import { ConceptTags } from "@/components/products/concept-select";
 import { PriceFlag, PriceText, ProductBadges, ProductThumb, RatingText, RecipeTag } from "@/components/products/product-view";
 import type { ProductsApi } from "@/hooks/use-products";
 import type { ProductReview } from "@/lib/products/pricing";
@@ -46,6 +47,7 @@ function ProductTableView({ items, api, onEdit, pagination, review }: Props) {
       render: (_, p) => (
         <Flex vertical gap={4} align="flex-start">
           <CategoryTag id={p.categoryId} />
+          <ConceptTags ids={p.conceptIds} active={p.status === "active"} />
           <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
             Cỡ {sizeLabels[p.size].toLowerCase()} · Hương {aromaLevelLabels[p.aromaLevel].toLowerCase()}
           </Typography.Text>

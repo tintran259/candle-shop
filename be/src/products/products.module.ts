@@ -7,8 +7,9 @@ import { Prisma, type Product, type ProductRecipeLine } from '../generated/prism
 import { PrismaService } from '../prisma/prisma.service.js';
 import { BulkPatchDto, IdsDto, ProductDto } from './products.dto.js';
 
-const withRecipe = { recipe: { orderBy: { sortOrder: 'asc' } } } as const;
-type Row = Product & { recipe: ProductRecipeLine[] };
+// Kèm công thức và concept (chỉ id, theo thứ tự ở trang Concept)
+const withRecipe = { recipe: { orderBy: { sortOrder: 'asc' } }, concepts: { select: { id: true }, orderBy: { sortOrder: 'asc' } } } as const;
+type Row = Product & { recipe: ProductRecipeLine[]; concepts: { id: string }[] };
 const opt = <T>(v: T | null) => v ?? undefined;
 
 const toDto = (p: Row) => ({
@@ -20,6 +21,7 @@ const toDto = (p: Row) => ({
   salePrice: opt(p.salePrice),
   images: p.images,
   categoryId: p.categoryId,
+  conceptIds: p.concepts.map((c) => c.id),
   aromaLevel: p.aromaLevel,
   size: p.size,
   scent: opt(p.scent),
@@ -59,6 +61,11 @@ export class ProductsService {
     if (same && same.id !== selfId) throw new ConflictException(`Slug “${slug}” đã được dùng cho ${same.name}.`);
     if (dto.salePrice && dto.salePrice >= dto.price) throw new BadRequestException('Giá giảm phải thấp hơn giá bán.');
     if (!(await this.prisma.category.findUnique({ where: { id: dto.categoryId } }))) throw new BadRequestException('Danh mục không còn — chọn danh mục khác.');
+    const conceptIds = [...new Set(dto.conceptIds ?? [])];
+    if (conceptIds.length) {
+      const found = await this.prisma.concept.findMany({ where: { id: { in: conceptIds } }, select: { id: true } });
+      if (found.length !== conceptIds.length) throw new BadRequestException('Có concept không còn — tải lại trang rồi chọn lại.');
+    }
     const recipe = dto.recipe ?? [];
     const ids = recipe.map((r) => r.materialId);
     if (new Set(ids).size !== ids.length) throw new BadRequestException('Công thức có nguyên liệu bị trùng.');
@@ -67,7 +74,7 @@ export class ProductsService {
       const missing = ids.filter((x) => !found.some((m) => m.id === x));
       if (missing.length) throw new BadRequestException(`Không có nguyên liệu ${missing.join(', ')} trong Kho.`);
     }
-    return { slug, recipe };
+    return { slug, recipe, conceptIds };
   }
 
   private data(dto: ProductDto, slug: string) {
@@ -92,11 +99,16 @@ export class ProductsService {
   }
 
   async create(dto: ProductDto) {
-    const { slug, recipe } = await this.validate(dto);
+    const { slug, recipe, conceptIds } = await this.validate(dto);
     const id = dto.id ?? slug;
     if (await this.prisma.product.findUnique({ where: { id } })) throw new ConflictException('Mã sản phẩm đã tồn tại.');
     const row = await this.prisma.product.create({
-      data: { id, ...this.data(dto, slug), recipe: { create: recipe.map((r, i) => ({ materialId: r.materialId, quantity: r.quantity, sortOrder: i })) } },
+      data: {
+        id,
+        ...this.data(dto, slug),
+        recipe: { create: recipe.map((r, i) => ({ materialId: r.materialId, quantity: r.quantity, sortOrder: i })) },
+        concepts: { connect: conceptIds.map((c) => ({ id: c })) },
+      },
       include: withRecipe,
     });
     return toDto(row);
@@ -105,7 +117,7 @@ export class ProductsService {
   // Sửa toàn bộ (drawer sửa). Giữ đánh giá, số đã bán, ngày tạo. Không gửi build thì bỏ build cũ
   async replace(id: string, dto: ProductDto) {
     await this.get(id);
-    const { slug, recipe } = await this.validate(dto, id);
+    const { slug, recipe, conceptIds } = await this.validate(dto, id);
     const data = this.data(dto, slug);
     const row = await this.prisma.product.update({
       where: { id },
@@ -113,6 +125,7 @@ export class ProductsService {
         ...data,
         build: data.build ?? Prisma.DbNull,
         recipe: { deleteMany: {}, create: recipe.map((r, i) => ({ materialId: r.materialId, quantity: r.quantity, sortOrder: i })) },
+        concepts: { set: conceptIds.map((c) => ({ id: c })) },
       },
       include: withRecipe,
     });

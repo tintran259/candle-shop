@@ -7,13 +7,19 @@ import { Story } from "@/components/sections/story";
 import { Care } from "@/components/sections/care";
 import { Reminder } from "@/components/sections/reminder";
 import { Newsletter } from "@/components/sections/newsletter";
+import { featuredCards, getHome, heroContent } from "@/lib/home";
 
-export default function HomePage() {
+// Dựng lại tối đa mỗi 60 giây — BO đăng giao diện mới / concept vào mùa thì web đổi theo
+export const revalidate = 60;
+
+// Hero + Xưởng nến đọc từ BE (GET /shop/home, lưu đệm 60 giây); BE lỗi thì nội dung có sẵn
+export default async function HomePage() {
+  const home = await getHome();
   return (
     <SiteShell overHero>
-      <Hero />
+      <Hero content={heroContent(home?.theme.hero)} />
       <Promises />
-      <Collection />
+      <Collection cards={featuredCards(home)} />
       <Story />
       <Care />
       <Reminder />

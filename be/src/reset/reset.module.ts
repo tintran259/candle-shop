@@ -2,6 +2,7 @@
 import { BadRequestException, Body, Controller, HttpCode, Module, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
+import { WebRevalidate } from '../common/web-revalidate.js';
 import { wipeBoData } from '../common/wipe.js';
 import { DEFAULT_CRAFT } from '../craft/default-config.js';
 import type { Prisma } from '../generated/prisma/client.js';
@@ -24,7 +25,10 @@ class ResetDto {
 @ApiBearerAuth()
 @Controller('admin/reset')
 export class ResetController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly web: WebRevalidate,
+  ) {}
 
   // Lần GET cài đặt sau đó tự tạo lại giá trị mặc định; Thủ công ghi sẵn các bước không có lựa chọn
   @Post()
@@ -38,8 +42,10 @@ export class ResetController {
       },
       { timeout: 60_000 },
     );
+    // Giao diện web đã đăng bị xóa → web về nội dung có sẵn ngay
+    this.web.siteTheme();
   }
 }
 
-@Module({ controllers: [ResetController] })
+@Module({ controllers: [ResetController], providers: [WebRevalidate] })
 export class ResetModule {}

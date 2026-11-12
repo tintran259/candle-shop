@@ -39,6 +39,9 @@ const remove = (ids: string[]) =>
   );
 const reset = () => store.set(null);
 
+// Concept bị xóa: gỡ khỏi các sản phẩm (BE tự gỡ — chỉ cập nhật bản đang hiển thị / bản lưu trên trình duyệt)
+export const forgetConcept = (id: string) => store.set(store.get().map((p) => (p.conceptIds?.includes(id) ? { ...p, conceptIds: p.conceptIds.filter((c) => c !== id) } : p)));
+
 export function useProducts() {
   const { data: products, loading } = useLocalStore(store);
   return useMemo(() => ({ products, loading, save, patch, remove, reset }), [products, loading]);
