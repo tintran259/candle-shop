@@ -1,5 +1,9 @@
 // Chỉ lỗi phía máy chủ (5xx, lỗi chưa xử lý) mới báo Sentry; lỗi 4xx thì không
-import { BadRequestException, HttpException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import * as Sentry from '@sentry/node';
 import { SentryFilter } from './sentry.filter.js';
@@ -10,7 +14,9 @@ describe('SentryFilter', () => {
   const filter = new SentryFilter();
   beforeEach(() => {
     vi.mocked(Sentry.captureException).mockClear();
-    vi.spyOn(BaseExceptionFilter.prototype, 'catch').mockImplementation(() => undefined);
+    vi.spyOn(BaseExceptionFilter.prototype, 'catch').mockImplementation(
+      () => undefined,
+    );
   });
 
   it('lỗi chưa xử lý và 5xx: báo Sentry, vẫn trả lỗi như mặc định', () => {
