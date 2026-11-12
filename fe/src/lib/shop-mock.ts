@@ -3,7 +3,15 @@
 import type { ShopContact, ShopData, ShopProduct } from "@/lib/shop";
 
 // SĐT giả — chỉ để nút "Liên hệ đặt nến" hiện ra khi thử giao diện
-export const mockShopContact: ShopContact = { name: "2510 Candle", phone: "0901 234 567" };
+export const mockShopContact: ShopContact = {
+  name: "2510 Candle",
+  phone: "0901 234 567",
+  socials: [
+    { platform: "instagram", label: "Instagram", url: "https://instagram.com/" },
+    { platform: "facebook", label: "Facebook", url: "https://facebook.com/" },
+    { platform: "tiktok", label: "TikTok", url: "https://tiktok.com/" },
+  ],
+};
 
 const categories = [
   { id: "thu-gian", name: "Thư giãn", nameEn: "Relax" },
@@ -118,10 +126,19 @@ export const mockShopData: ShopData = {
   products,
 };
 
-// Trang chủ giả (như GET /shop/home): giao diện mặc định có thanh thông báo riêng, 3 mẫu đầu (nổi bật trước)
-const featured = products.slice(0, 3);
+// Trang chủ giả (như GET /shop/home): giao diện mặc định có thanh thông báo riêng + Xưởng nến như chủ shop đã chọn 8 mẫu
+// (hơn 3 → web chạy băng chuyền tự cuộn). Muốn xem lưới 3 thẻ thì đặt MOCK_FEATURED = 3
+const MOCK_FEATURED = 8;
+const featured = products.filter((p) => p.images.some((s) => !s.startsWith("data:"))).slice(0, MOCK_FEATURED);
 export const mockHome = {
-  theme: { conceptId: null, announcementOn: true, announcement: "Dữ liệu giả · Mỗi hũ nến được đổ tay theo đơn của bạn", logo: {}, hero: {} },
+  theme: {
+    conceptId: null,
+    announcementOn: true,
+    announcement: "Dữ liệu giả · Mỗi hũ nến được đổ tay theo đơn của bạn",
+    logo: {},
+    hero: {},
+    collection: { heading: "Tám mẫu cho những ngày chậm lại.", productIds: featured.map((p) => p.id) },
+  },
   featured,
   categories: categories.filter((c) => featured.some((p) => p.categoryId === c.id)),
 };

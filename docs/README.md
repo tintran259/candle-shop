@@ -22,6 +22,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Kho nguyên liệu | `/inventory` | [inventory.md](./pages/inventory.md) | Đã có |
 | Phiếu kho | `/inventory/movements` | [stock-movements.md](./pages/stock-movements.md) | Đã có |
 | Khách hàng | `/customers` | [customers.md](./pages/customers.md) | Đã có |
+| Liên hệ | `/messages` | [messages.md](./pages/messages.md) | Đã có: lời nhắn khách gửi ở form cuối trang chủ web, lọc, nhắn Zalo, đánh dấu đã xử lý, xóa |
 | Đánh giá | `/reviews` | Chưa có | Trang tạm, chưa làm |
 | Mã giảm giá | `/discounts` | [discounts.md](./pages/discounts.md) | Đã có |
 | Cài đặt | `/settings` | [settings.md](./pages/settings.md) | Đã có |

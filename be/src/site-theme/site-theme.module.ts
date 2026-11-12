@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { Prisma } from '../generated/prisma/client.js';
 import { WebRevalidate } from '../common/web-revalidate.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { DEFAULT_THEME, FOCUS, type ThemeContent } from './theme.js';
+import { COLLECTION_MAX, DEFAULT_THEME, FOCUS, type ThemeContent } from './theme.js';
 
 // Ảnh: URL Cloudinary (https) hoặc data URL khi chưa cấu hình kho ảnh
 const IMAGE = /^(https:\/\/|data:image\/)/;
@@ -29,12 +29,21 @@ class HeroDto {
   @IsOptional() @IsString() @MaxLength(32, { message: 'Câu lớn tối đa 32 ký tự.' }) mark?: string;
 }
 
+class CollectionDto {
+  @IsOptional() @IsString() @MaxLength(20, { message: 'Tên khối Xưởng nến tối đa 20 ký tự.' }) title?: string;
+  @IsOptional() @IsString() @MaxLength(60, { message: 'Câu dẫn Xưởng nến tối đa 60 ký tự.' }) heading?: string;
+  @IsOptional() @IsString() @MaxLength(60, { message: 'Ghi chú Xưởng nến tối đa 60 ký tự.' }) note?: string;
+  @IsOptional() @IsString() @MaxLength(40, { message: 'Nhãn bộ sưu tập tối đa 40 ký tự.' }) eyebrow?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(COLLECTION_MAX, { message: `Chọn tối đa ${COLLECTION_MAX} mẫu cho Xưởng nến.` }) @IsString({ each: true }) productIds?: string[];
+}
+
 export class ThemeContentDto {
   @IsOptional() @IsBoolean() announcementOn?: boolean;
   @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) conceptIds?: string[];
   @IsOptional() @IsString() @MaxLength(90, { message: 'Thông báo tối đa 90 ký tự.' }) announcement?: string;
   @IsOptional() @ValidateNested() @Type(() => LogoDto) logo?: LogoDto;
   @IsOptional() @ValidateNested() @Type(() => HeroDto) hero?: HeroDto;
+  @IsOptional() @ValidateNested() @Type(() => CollectionDto) collection?: CollectionDto;
 }
 
 class CreateThemeDto {
@@ -112,7 +121,12 @@ export class SiteThemeService {
   // concept đã thuộc giao diện khác (bản nháp hoặc đã đăng) thì báo lỗi
   private async clean(id: string, dto: ThemeContentDto): Promise<ThemeContent> {
     checkTitle(dto);
-    const { announcementOn, conceptIds, ...part } = dto;
+    const { announcementOn, conceptIds, ...rest } = dto;
+    // Mẫu Xưởng nến: bỏ mẫu không còn / trùng
+    const pickedIds = [...new Set(rest.collection?.productIds ?? [])];
+    const known = pickedIds.length ? new Set((await this.prisma.product.findMany({ where: { id: { in: pickedIds } }, select: { id: true } })).map((p) => p.id)) : new Set<string>();
+    const c = rest.collection;
+    const part = c ? { ...rest, collection: { title: c.title, heading: c.heading, note: c.note, eyebrow: c.eyebrow, productIds: pickedIds.filter((p) => known.has(p)) } } : rest;
     if (id === DEFAULT_THEME) return { ...part, ...(announcementOn !== undefined && { announcementOn }) };
     const concepts = await this.prisma.concept.findMany({ select: { id: true, nameVi: true } });
     const ids = [...new Set(conceptIds ?? [])].filter((c) => concepts.some((x) => x.id === c));

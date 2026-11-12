@@ -49,7 +49,8 @@ describe('Cài đặt', () => {
   it('lưu rồi đọc lại đúng, giữ thứ tự', async () => {
     await t.put('/api/admin/settings', settings()).expect(200);
     const r = await t.get('/api/admin/settings').expect(200);
-    expect(r.body).toEqual(settings());
+    // Không gửi mạng xã hội thì danh sách giữ nguyên (đang trống)
+    expect(r.body).toEqual({ ...settings(), socials: [] });
   });
 
   it('chặn: tắt hết phương thức, tên trùng, link thiếu {code}, mức cọc ngoài 1–99', async () => {

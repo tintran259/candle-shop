@@ -118,6 +118,7 @@ Lần đầu (DB chưa có cài đặt) tự tạo giá trị mặc định gi�
 | `sender` | `{ name, phone, address }` | `{ "2510 Candle", "", "" }` | Người gửi in trên nhãn, phiếu đơn. `name`, `phone` cũng hiện trên web (`GET /shop/contact`) |
 | `shippingOptions` | `ShippingOption[]` | Tiêu chuẩn 0 ₫ 3 ngày; Nhanh 50.000 ₫ 1 ngày | Theo thứ tự hiển thị |
 | `carriers` | `Carrier[]` | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Theo thứ tự hiển thị |
+| `socials` | `{ id, platform, label, url, enabled }[]` | `[]` | Mạng xã hội ở chân trang web, theo thứ tự. `platform`: `facebook` / `instagram` / `tiktok` / `youtube` / `threads` / `zalo` / `shopee` / `other`; `label` trống = tên nền tảng |
 
 `ShippingOption`: `{ id: string, name: string, fee: number, days: number, enabled: boolean }`
 
@@ -150,6 +151,7 @@ Lưu **toàn bộ** cài đặt, thay hết phương thức giao và đơn vị 
 | `sender.name` | Bắt buộc, ≤ 60 ký tự. `phone` ≤ 20, `address` ≤ 200 |
 | `shippingOptions` | ≥ 1 phương thức; ≥ 1 phương thức `enabled`; tên không trùng (không phân biệt hoa thường). Mỗi phương thức: `name` ≤ 40, `fee` ≥ 0, `days` 0–60 |
 | `carriers` | ≥ 1 đơn vị; ≥ 1 đơn vị `enabled`; tên không trùng. `trackingUrl` (nếu có) bắt đầu bằng `http` và chứa `{code}` |
+| `socials` | Không bắt buộc (không gửi thì giữ nguyên). Tối đa 10 (`Tối đa 10 mạng xã hội.`); `platform` trong danh sách (`Nền tảng không hợp lệ.`); `url` bắt đầu bằng `https://` (`Link mạng xã hội phải bắt đầu bằng https://`); `label` ≤ 30 ký tự |
 
 **Trả về 200:** `ShopSettings` sau khi lưu.
 
@@ -1215,6 +1217,7 @@ Một giao diện:
 | `announcement` | tối đa 90 ký tự |
 | `logo` | `{ light?, dark? }` — URL `https://` hoặc data URL ảnh (khi chưa cấu hình kho ảnh), tối đa 3 MB |
 | `hero` | `{ image?, focus?, eyebrow?, title?, text?, cta?, mark? }` — `focus`: `left` / `center` / `right`; `eyebrow` 60, `text` 220, `cta` 30, `mark` 32 ký tự; `title` tối đa 2 dòng × 30 ký tự |
+| `collection` | Khối Xưởng nến: `{ title?, heading?, note?, eyebrow?, productIds? }` — `title` 20, `heading` 60, `note` 60, `eyebrow` 40 ký tự; `productIds` tối đa 12 mã sản phẩm theo thứ tự (quá 12 → 400 `Chọn tối đa 12 mẫu cho Xưởng nến.`; mã không có / trùng tự bỏ khi lưu) |
 
 ### `GET /admin/site-themes`
 
@@ -1279,7 +1282,7 @@ Trường không có giá trị thì bỏ khỏi kết quả (`description`, `sa
 
 ### `GET /shop/home`
 
-Trang chủ web: giao diện đang dùng (BE chọn concept **đầu tiên theo thứ tự** trang Concept, không ẩn, đang trong mùa, có giao diện **đã đăng** gắn với nó, rồi ghép từng trường lên bản đã đăng của Mặc định — [pages/site-theme.md](./pages/site-theme.md#web-chọn-giao-diện-thế-nào)) và 3 mẫu cho khối "Xưởng nến" (lấy từ danh sách `GET /shop/products`, nổi bật trước).
+Trang chủ web: giao diện đang dùng (BE chọn concept **đầu tiên theo thứ tự** trang Concept, không ẩn, đang trong mùa, có giao diện **đã đăng** gắn với nó, rồi ghép từng trường lên bản đã đăng của Mặc định — [pages/site-theme.md](./pages/site-theme.md#web-chọn-giao-diện-thế-nào)) và 3 mẫu cho khối "Xưởng nến" (lấy từ danh sách `GET /shop/products`: mẫu chọn ở giao diện — `collection.productIds` của giao diện đang dùng, trống thì của Mặc định — theo thứ tự, bỏ mẫu không còn bán / ngoài mùa — còn từ 3 mẫu thì trả hết (tối đa 12, web chạy băng chuyền khi hơn 3); dưới 3 thì bù mẫu nổi bật, rồi mẫu khác cho đủ 3).
 
 **Trả về 200:**
 
@@ -1291,17 +1294,42 @@ Trang chủ web: giao diện đang dùng (BE chọn concept **đầu tiên theo 
     "announcementOn": true,
     "announcement": "Mỗi hũ nến được đổ tay theo đơn của bạn",
     "logo": { "light": "https://res.cloudinary.com/…" },
-    "hero": { "image": "https://res.cloudinary.com/…", "focus": "right", "mark": "Giáng sinh an lành" }
+    "hero": { "image": "https://res.cloudinary.com/…", "focus": "right", "mark": "Giáng sinh an lành" },
+    "collection": { "heading": "Quà Noel", "productIds": ["moon-morning"] }
   },
   "featured": [{ "id": "brown-relac", "name": "Brown Relac", "…": "như một sản phẩm của /shop/products" }],
   "categories": [{ "id": "nature", "name": "Thiên nhiên", "nameEn": "Nature" }]
 }
 ```
 
-Không có giao diện concept nào áp dụng: `themeId`, `conceptId` là `null` (dùng Mặc định). Chưa cấu hình gì: `announcementOn: true`, `logo: {}`, `hero: {}` — web dùng nội dung có sẵn. `categories`: danh mục của các mẫu trong `featured`.
+Không có giao diện concept nào áp dụng: `themeId`, `conceptId` là `null` (dùng Mặc định). Chưa cấu hình gì: `announcementOn: true`, `logo: {}`, `hero: {}`, `collection: {}` — web dùng nội dung có sẵn. `categories`: danh mục của các mẫu trong `featured`.
 
 ### `GET /shop/contact`
 
 Liên hệ của shop cho web (nút "Liên hệ đặt nến" mở Zalo): tên shop và SĐT ở **Cài đặt › Người gửi**. Không trả địa chỉ lấy hàng. Chưa lưu Cài đặt thì `name` mặc định, `phone` rỗng.
 
-**Trả về 200:** `{ "name": "2510 Candle", "phone": "0901 234 567" }`
+**Trả về 200:** `{ "name": "2510 Candle", "phone": "0901 234 567", "socials": [{ "platform": "instagram", "label": "Instagram", "url": "https://instagram.com/2510candle" }] }` — `socials`: mạng xã hội **đang bật** ở Cài đặt, theo thứ tự; `label` đã điền sẵn tên nền tảng khi trống.
+
+### `POST /shop/messages`
+
+Công khai — form "Gửi lời nhắn" ở trang chủ web gửi thẳng từ trình duyệt (CORS: `FRONTEND_URL`). Xem [pages/messages.md](./pages/messages.md).
+
+**Body:** `{ "name": "Lan", "phone": "0901 234 567", "email"?: "lan@example.com", "message": "…", "website"?: "" }` — `website` là ô bẫy bot (web để trống, có giá trị thì không lưu).
+
+**Trả về 201:** `{ "ok": true }`. **Lỗi:** 400 (`Vui lòng nhập họ tên.`, `Số điện thoại không đúng.`, `Email không đúng.`, `Vui lòng nhập nội dung.`, `Nội dung tối đa 1000 ký tự.`), 429 quá 5 lời nhắn / 10 phút mỗi IP.
+
+## Liên hệ
+
+BO › Bán hàng › Liên hệ ([pages/messages.md](./pages/messages.md)). `ContactMessage`: `{ id, name, phone, email, message, handled, createdAt }` (`email` trống nếu khách không để lại).
+
+### `GET /admin/messages`
+
+Mọi lời nhắn, mới nhất trước.
+
+### `PATCH /admin/messages/:id`
+
+`{ "handled": true }` — đánh dấu đã xử lý (`false` để chuyển về). Trả lại danh sách. Không có → 404.
+
+### `DELETE /admin/messages/:id`
+
+Xóa một lời nhắn, trả lại danh sách. Không có → 404.

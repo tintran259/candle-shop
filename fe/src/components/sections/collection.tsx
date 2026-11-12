@@ -1,67 +1,87 @@
-// Bộ sưu tập (Figma 2:7): "ATELIER" lớn trái, câu dẫn + ghi chú canh phải; nhãn bộ sưu tập; 3 thẻ nến (ảnh vuông-ngang 416×420,
-// nhóm hương, tên + giá, nốt hương, dung tích); liên kết "Explore all candles ↗" góc phải dưới
+// Bộ sưu tập (Figma 2:7): "ATELIER" lớn trái, câu dẫn + ghi chú canh phải; nhãn bộ sưu tập; thẻ nến; liên kết "Xem tất cả nến ↗" góc phải dưới.
+// 3 thẻ: lưới như design. Hơn 3 (chủ shop chọn ở BO › Giao diện web, tối đa 12): băng chuyền tự cuộn vô hạn — nhân đôi danh sách rồi trượt
+// nửa chiều dài (animate-marquee, globals.css), rê chuột / focus thì dừng; bật giảm chuyển động thì thành hàng vuốt ngang, không tự chạy
+import type { CSSProperties } from "react";
 import { collection } from "@/content/home";
-import { ArrowLink, Container, Logo, Photo } from "@/components/ui/primitives";
-import type { FeaturedCard } from "@/lib/home";
+import { ArrowLink, Container } from "@/components/ui/primitives";
+import { CollectionCard } from "@/components/sections/collection-card";
+import type { CollectionText, FeaturedCard } from "@/lib/home";
 
-export function Collection({ cards }: { cards: FeaturedCard[] }) {
+// Giây cho mỗi thẻ đi qua — càng nhiều thẻ vòng càng dài, tốc độ giữ nguyên
+const SECONDS_PER_CARD = 7;
+
+function Grid({ cards }: { cards: FeaturedCard[] }) {
+  return (
+    <ul className="mt-10 grid gap-12 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-8">
+      {cards.map((p, i) => (
+        <li key={p.key}>
+          <CollectionCard card={p} parallax={i === 1 ? 6 : 4} sizes="(min-width: 768px) 30vw, (min-width: 640px) 50vw, 100vw" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Marquee({ cards }: { cards: FeaturedCard[] }) {
+  const style = { "--marquee-duration": `${cards.length * SECONDS_PER_CARD}s` } as CSSProperties;
+  return (
+    // Nằm ngoài Container: tràn hết bề ngang màn hình (kể cả màn rộng hơn 1440px) để thẻ trôi vào / ra đúng mép màn hình
+    <div
+      aria-label="Các mẫu nến, tự cuộn — rê chuột để dừng"
+      role="region"
+      className="group/marquee mt-10 overflow-hidden motion-reduce:snap-x motion-reduce:snap-mandatory motion-reduce:overflow-x-auto"
+    >
+      <ul style={style} className="flex w-max animate-marquee group-focus-within/marquee:[animation-play-state:paused] group-hover/marquee:[animation-play-state:paused] motion-reduce:animate-none">
+        {[...cards, ...cards].map((p, i) => {
+          const copy = i >= cards.length;
+          return (
+            // Bản sao (nửa sau) chỉ để nối vòng: ẩn với trình đọc màn hình, không nhận focus; giảm chuyển động thì bỏ hẳn
+            <li
+              key={`${p.key}-${copy ? "b" : "a"}`}
+              aria-hidden={copy || undefined}
+              inert={copy}
+              className={`w-[78vw] shrink-0 pl-5 sm:w-[44vw] md:w-[31vw] md:pl-8 xl:w-[min(29vw,448px)] motion-reduce:snap-start ${copy ? "motion-reduce:hidden" : ""}`}
+            >
+              <CollectionCard card={p} parallax={4} sizes="(min-width: 768px) 31vw, (min-width: 640px) 44vw, 78vw" />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+export function Collection({ cards, text }: { cards: FeaturedCard[]; text: CollectionText }) {
+  const marquee = cards.length > 3;
   return (
     <section id="collection" aria-labelledby="collection-title" className="pt-10 pb-20 md:pt-12 md:pb-[60px]">
       <Container>
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <h2 id="collection-title" data-reveal="chars" className="display text-[clamp(56px,6.25vw,90px)] leading-none tracking-[0.1em] text-wine uppercase">
-            {collection.title}
+            {text.title}
           </h2>
           <div className="md:pt-[52px] md:text-right">
             <p data-reveal="lines" className="display text-[clamp(24px,2.2vw,32px)] leading-tight text-ink">
-              {collection.heading}
+              {text.heading}
             </p>
             <p data-reveal="fade" className="mt-4 text-[11px] tracking-[0.11em] text-muted uppercase">
-              {collection.note}
+              {text.note}
             </p>
           </div>
         </div>
 
         <p data-reveal="fade" className="eyebrow mt-12 md:mt-[37px]">
-          {collection.eyebrow}
+          {text.eyebrow}
         </p>
 
-        <ul className="mt-10 grid gap-12 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-8">
-          {cards.map((p, i) => (
-            <li key={p.key} className="group">
-              <a href={p.href} className="block">
-                {p.photo ? (
-                  <Photo
-                    photo={{ ...p.photo, width: 1024, height: 1024 }}
-                    sizes="(min-width: 768px) 30vw, (min-width: 640px) 50vw, 100vw"
-                    className="aspect-[416/420]"
-                    parallax={i === 1 ? 6 : 4}
-                    zoom
-                  />
-                ) : (
-                  <div data-reveal="clip" className="grid aspect-[416/420] place-items-center bg-rule/25 text-rule">
-                    <Logo className="w-[46%]" />
-                  </div>
-                )}
-                <div data-reveal="fade" className="pt-[26px]">
-                  <p className="text-[9px] tracking-[0.11em] text-muted uppercase">{p.category}</p>
-                  <div className="mt-2.5 flex items-baseline justify-between gap-4">
-                    <h3 className="display text-[27px] tracking-[0.02em] text-wine">
-                      <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-500 group-hover:bg-[length:100%_1px]">
-                        {p.name}
-                      </span>
-                    </h3>
-                    <span className="text-[13px] text-muted">{p.price}</span>
-                  </div>
-                  <p className="mt-2 text-[12px] text-muted">{p.notes}</p>
-                  <p className="mt-4 text-[10px] text-muted">{p.details}</p>
-                </div>
-              </a>
-            </li>
-          ))}
-        </ul>
+        {!marquee && <Grid cards={cards} />}
+      </Container>
 
-        <div data-reveal="fade" className="mt-10 flex justify-end md:mt-1.5">
+      {marquee && <Marquee cards={cards} />}
+
+      <Container>
+        {/* Cách thẻ một khoảng rõ (thẻ có giá + dòng mô tả nhỏ, link sát quá trông dính vào thẻ cuối) */}
+        <div data-reveal="fade" className="mt-12 flex justify-end md:mt-14">
           <ArrowLink href={collection.more.href} className="text-wine uppercase">
             {collection.more.label}
           </ArrowLink>

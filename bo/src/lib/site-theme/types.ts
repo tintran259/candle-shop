@@ -5,7 +5,10 @@ import { seasonOf, type Concept } from "@/lib/products/concepts";
 
 export type Focus = "left" | "center" | "right";
 export type HeroTheme = { image?: string; focus?: Focus; eyebrow?: string; title?: string; text?: string; cta?: string; mark?: string };
-export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme };
+// Khối "Xưởng nến": chữ + tối đa 12 mẫu chọn tay (theo thứ tự; hơn 3 mẫu thì web chạy băng chuyền tự cuộn). Giao diện concept không chọn mẫu thì dùng mẫu của Mặc định; không ai chọn thì web tự lấy mẫu nổi bật
+export type CollectionTheme = { title?: string; heading?: string; note?: string; eyebrow?: string; productIds?: string[] };
+export const COLLECTION_MAX = 12;
+export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme; collection?: CollectionTheme };
 // Phần form sửa (announcementOn chỉ ở Mặc định)
 export type BaseTheme = ThemePart & { announcementOn?: boolean };
 // Nội dung lưu: thêm concept áp dụng (chỉ giao diện khác Mặc định; mỗi concept thuộc tối đa một giao diện)
@@ -24,7 +27,7 @@ export const DEFAULT_THEME = "default";
 export const defaultTheme = (): SiteTheme => ({ id: DEFAULT_THEME, name: "Mặc định", isDefault: true, published: null, draft: null, publishedAt: null, updatedAt: new Date(0).toISOString() });
 
 // Giới hạn — khớp BE (site-theme.module.ts) và bố cục trang chủ
-export const LIMITS = { name: 60, announcement: 90, eyebrow: 60, titleLine: 30, text: 220, cta: 30, mark: 32 };
+export const LIMITS = { name: 60, announcement: 90, eyebrow: 60, titleLine: 30, text: 220, cta: 30, mark: 32, collTitle: 20, collHeading: 60, collNote: 60, collEyebrow: 40 };
 
 // Nội dung có sẵn của web khi chưa cấu hình (chép từ fe/src/content/home.ts — đổi ở web thì đổi ở đây) — dùng làm chữ gợi ý và xem trước
 export const webDefaults = {
@@ -34,6 +37,7 @@ export const webDefaults = {
   text: "Những hũ nến đổ tay dành cho những khoảnh khắc bạn muốn chậm lại. Làm chậm rãi. Cháy thật đẹp.",
   cta: "Tìm ánh nến của bạn",
   mark: "Made by hand, never twice.",
+  collection: { title: "Xưởng nến", heading: "Ngày đẹp bắt đầu từ một ánh nến.", note: "Đổ tay tỉ mỉ. Chăm chút từng chi tiết.", eyebrow: "Bộ sưu tập đặc trưng" },
 };
 
 // Ảnh có sẵn của web (chép từ fe/public sang bo/public/site-preview) — hiện khi chưa chọn ảnh, và ở phần minh họa dưới hero của khung xem trước
@@ -64,6 +68,10 @@ export function merged(base: ThemeContent, over?: ThemeContent): BaseTheme {
     announcement: pick(over?.announcement, base.announcement),
     logo: { light: pick(over?.logo?.light, base.logo?.light), dark: pick(over?.logo?.dark, base.logo?.dark) },
     hero: Object.fromEntries((["image", "focus", "eyebrow", "title", "text", "cta", "mark"] as const).map((k) => [k, pick(over?.hero?.[k], base.hero?.[k])])),
+    collection: {
+      ...Object.fromEntries((["title", "heading", "note", "eyebrow"] as const).map((k) => [k, pick(over?.collection?.[k], base.collection?.[k])])),
+      productIds: over?.collection?.productIds?.length ? over.collection.productIds : base.collection?.productIds,
+    },
   };
 }
 

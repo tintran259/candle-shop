@@ -1,6 +1,6 @@
 # Web bán hàng `fe`
 
-Trang chủ dựng theo Figma **"Ember & Earth — Luxury candle atelier"** ([file](https://www.figma.com/design/lIIOeOxyYe1yCN25kWrXSU/Untitled?node-id=0-1), khung `2:2`, rộng 1440). Next.js 16 + Tailwind 4 + GSAP 3.15 (ScrollTrigger, SplitText). Có **trang chủ** và **trang Sản phẩm** (`/products`, dữ liệu thật từ BE). Trang chủ: bố cục theo design, **chữ tiếng Việt, thương hiệu 2510 Candle**; thanh thông báo, logo, hero và 3 mẫu "Xưởng nến" đọc từ BE ([Giao diện web](#giao-diện-web-từ-bo)), phần còn lại là nội dung tĩnh.
+Trang chủ dựng theo Figma **"Ember & Earth — Luxury candle atelier"** ([file](https://www.figma.com/design/lIIOeOxyYe1yCN25kWrXSU/Untitled?node-id=0-1), khung `2:2`, rộng 1440). Next.js 16 + Tailwind 4 + GSAP 3.15 (ScrollTrigger, SplitText). Có **trang chủ** và **trang Sản phẩm** (`/products`, dữ liệu thật từ BE). Trang chủ: bố cục theo design, **chữ tiếng Việt, thương hiệu 2510 Candle**; thanh thông báo, logo, hero và khối "Xưởng nến" (chữ + 3 mẫu chọn ở BO) đọc từ BE ([Giao diện web](#giao-diện-web-từ-bo)), phần còn lại là nội dung tĩnh.
 
 ```bash
 cd fe && pnpm install
@@ -20,7 +20,8 @@ Chủ shop sửa ở BO › Cài đặt › Giao diện web ([pages/site-theme.m
 - **Giao diện web làm mới ngay:** `fetch` `/shop/home` gắn tag riêng `site-theme` (`SITE_THEME_TAG` trong `lib/home.ts`). Đăng / gỡ / xóa giao diện ở BO thì BE gọi `POST /api/revalidate?tag=site-theme` (`src/app/api/revalidate/route.ts`: chỉ nhận tag trong danh sách, header `x-revalidate-secret` = `REVALIDATE_SECRET`; chưa đặt mã thì chỉ nhận khi không phải production) → `revalidateTag('site-theme', { expire: 0 })`, lượt xem kế tiếp lấy bản mới — không cần xóa cache. 60 giây vẫn giữ cho việc tự đổi giao diện theo mùa lúc nửa đêm. Trang chủ build lúc BE không chạy thì chưa gắn tag — có tác dụng từ lần làm mới 60 giây đầu tiên.
 - `getChrome()` — thanh thông báo (tắt ở BO thì ẩn) + logo sáng / tối cho **mọi trang** (`SiteShell` là server component async, truyền xuống `SiteHeader`, `SiteFooter`). Logo tải lên hiện bằng `BrandLogo` (`components/ui/primitives.tsx`); không có thì logo mặt nạ cũ tô theo màu chữ.
 - `heroContent()` — trường trống lấy `hero` trong `content/home.ts`. Ảnh tải lên: Cloudinary `c_limit,w_2400` (không cắt), `object-position` theo điểm lấy nét (trái 30% / giữa 50% / phải 70%); ảnh có sẵn giữ 62%.
-- `featuredCards()` — BE trả đủ 3 mẫu thì "Xưởng nến" hiện mẫu thật (tên, danh mục, giá, mùi hương, cỡ · giờ cháy; bấm mở trang chi tiết; ảnh data URL bỏ → khung logo), thiếu thì 3 thẻ có sẵn.
+- `collectionText()` — chữ khối "Xưởng nến" (tên khối, câu dẫn, ghi chú, nhãn) từ `theme.collection`, trống thì `content/home.ts`.
+- `featuredCards()` — BE trả từ 3 mẫu (mẫu chọn ở BO trước, BE đã xếp sẵn, tối đa 12) thì "Xưởng nến" hiện mẫu thật: 3 thẻ là lưới, **hơn 3 là băng chuyền tự cuộn vô hạn** (`sections/collection.tsx`: danh sách nhân đôi, `animate-marquee` trong `globals.css` trượt nửa chiều dài, 7 giây mỗi thẻ; nằm ngoài `Container` nên tràn hết bề ngang màn hình, kể cả màn rộng hơn 1440px; rê chuột / focus thì dừng; bản sao `inert` + `aria-hidden`; giảm chuyển động thì hàng vuốt ngang, bỏ bản sao). Thẻ: `sections/collection-card.tsx` (tên, danh mục, giá, mùi hương, cỡ · giờ cháy; bấm mở trang chi tiết; ảnh data URL bỏ → khung logo), thiếu thì 3 thẻ có sẵn.
 
 `SHOP_MOCK=1`: `mockHome` trong `lib/shop-mock.ts` (thanh thông báo "Dữ liệu giả…", 3 mẫu giả đầu tiên).
 
@@ -70,10 +71,10 @@ Khung chung mọi trang: `components/site-shell.tsx` (bỏ qua tới nội dung,
 | `2:8` | Câu chuyện | Nhãn + "CRAFTING ATMOSPHERE" + ảnh 760×510 (trái); "OUR ESSENCE" 82px, tiêu đề phụ, 2 đoạn văn, liên kết (phải); đường kẻ khép | `sections/story.tsx` |
 | `2:9` | Cách đốt nến | "The art of a good burn" 76px, liên kết nhỏ, 3 bước đánh số 01–03 ngăn bằng đường kẻ; ảnh hốc đá 512×506 | `sections/care.tsx` |
 | `2:10` | Lời nhắn | Nhãn, trích dẫn 49px màu rượu vang canh giữa, chữ ký | `sections/reminder.tsx` |
-| `2:11` | Nhận tin | Ảnh 590×600 (trái); "STAY A LITTLE" 86px, tiêu đề phụ, mô tả, ô email gạch chân + "Join us ↗", dòng đồng ý | `sections/newsletter.tsx`, `newsletter-form.tsx` |
-| `2:12` | Chân trang | Tên thương hiệu 48px, khẩu hiệu, 3 cột liên kết (Explore / Here to help / Stay a little), ảnh 512×338, đường kẻ, bản quyền + Privacy / Terms / USD | `components/site-footer.tsx` |
+| `2:11` | Gửi lời nhắn (thay khối Nhận tin của Figma) | Ảnh 590×600 (trái); "Gửi lời nhắn" 86px, câu dẫn, mô tả, form liên hệ ô gạch chân (họ tên, SĐT, email, nội dung) + nút "Gửi lời nhắn ↗" | `sections/contact.tsx`, `contact-form.tsx` |
+| `2:12` | Chân trang | Tên thương hiệu 48px, khẩu hiệu, 3 cột liên kết (Explore / Here to help / Stay a little), ảnh 512×338, đường kẻ, bản quyền + Privacy / Terms / USD. Cột "Theo dõi" lấy mạng xã hội đang bật ở BO › Cài đặt (`GET /shop/contact`, `SiteShell` truyền vào), mở tab mới; chưa có thì ẩn cột | `components/site-footer.tsx` |
 
-Thêm ngoài Figma: **nút về đầu trang** (`components/back-to-top.tsx`) — hiện khi cuộn qua một màn hình, vòng tròn chạy theo tiến độ cuộn, bấm thì cuộn mượt lên đầu và đưa focus về logo; liên kết **"Bỏ qua tới nội dung chính"** (Tab đầu tiên); menu điện thoại đóng bằng Esc, mở thì focus vào menu.
+Thêm ngoài Figma: **nút về đầu trang** (`components/back-to-top.tsx`) — hiện khi cuộn qua một màn hình, vòng tròn chạy theo tiến độ cuộn, bấm thì cuộn mượt lên đầu và đưa focus về logo; liên kết **"Bỏ qua tới nội dung chính"** (Tab đầu tiên); menu điện thoại đóng bằng Esc, mở thì focus vào menu. **Hiệu ứng menu điện thoại** (`site-header.tsx`): mở — nền kem buông từ mép trên xuống như tấm rèm (`clip-path`, 0,75 giây), đường kẻ đồng chạy ngang, các mục trồi lên so le; đóng — các mục trôi lên mờ đi, rèm kéo ngược lên rồi mới gỡ lớp menu (`shown` giữ lớp menu tới khi hiệu ứng xong, khóa cuộn tới lúc đó); giảm chuyển động thì hiện / ẩn ngay. Hiệu ứng trượt khi cuộn đặt trên lớp trong header (không phải `<header>`), để lớp menu `fixed` luôn phủ kín màn hình.
 
 **Focus:** vòng focus chung (`:focus-visible`) nằm trong `@layer base` — viết ngoài layer thì đè mất class Tailwind (vd ô email `focus-visible:outline-none`, ô này báo focus bằng gạch chân đỏ). Ô email bị Chrome tự điền vẫn giữ nền kem. Liên kết nhỏ có vùng bấm nới bằng đệm dọc + lề âm (bố cục không đổi).
 
@@ -124,7 +125,8 @@ Riêng: hero mở đầu (ảnh thu nhỏ + sáng dần, "EMBER & EARTH" trồi 
 
 Chữ, liên kết còn lại ở `src/content/home.ts` (cũng là giá trị dự phòng khi BO để trống / BE lỗi).
 
-- **Nhận tin:** chưa có API — email hợp lệ thì hiện "Thank you — sign-ups open very soon." (`newsletter.pending`).
+- **Gửi lời nhắn** (`#contact`, chân trang Hỗ trợ › Liên hệ dẫn tới): trình duyệt gửi thẳng `POST {API_URL}/shop/messages` (địa chỉ truyền từ máy chủ vào form; BE cho phép qua CORS `FRONTEND_URL`), có ô bẫy bot, lỗi từng ô, đang gửi / thành công / lỗi — xem [pages/messages.md](./pages/messages.md).
+- **Hiệu ứng cuộn khi mở trang ở giữa** (`/#story`, `/#care`, `/#contact` từ chân trang): `motion-root.tsx` không dùng `once: true` (ScrollTrigger tự hủy giữa lúc tạo → lỗi "reading 'end'"), dùng `toggleActions: "play none none none"`; chữ "fade" hiện cả khi cuộn ngược lên, và sau cú nhảy tới `#…` (nghe sự kiện cuộn gốc, dừng 150 ms) thì hiện nốt phần đã qua mốc — phần phía trên màn hình hiện ngay, phần trong màn trồi lên so le.
 - **Search / Account / Bag, Shipping & returns, Contact us, Instagram, Pinterest, Privacy / Terms / USD:** đang trỏ `#` (chưa có trang).
 - Menu Shop all / Our story / The journal và các liên kết trong trang cuộn tới khối tương ứng.
 

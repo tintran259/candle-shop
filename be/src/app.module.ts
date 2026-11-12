@@ -21,7 +21,7 @@ import { UploadsModule } from './uploads/uploads.module.js';
 import { SettingsModule } from './settings/settings.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
-import { NewsletterModule } from './newsletter/newsletter.module.js';
+import { ContactModule } from './contact/contact.module.js';
 import { ShopModule } from './shop/shop.module.js';
 import { ConceptsModule } from './concepts/concepts.module.js';
 import { SiteThemeModule } from './site-theme/site-theme.module.js';
@@ -47,7 +47,7 @@ import { SiteThemeModule } from './site-theme/site-theme.module.js';
     UploadsModule,
     PaymentsModule,
     ReviewsModule,
-    NewsletterModule,
+    ContactModule,
     ShopModule,
     ConceptsModule,
     SiteThemeModule,

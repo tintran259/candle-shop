@@ -1,5 +1,6 @@
 import { Col, Flex, Form, Input, Radio, Row, Switch } from "antd";
 import { FormSection } from "@/components/form/form-section";
+import { CollectionFields } from "@/components/site-theme/collection-fields";
 import { SingleImage } from "@/components/site-theme/single-image";
 import { focusLabels, LIMITS, webAssets, webDefaults, type BaseTheme, type Focus } from "@/lib/site-theme/types";
 
@@ -15,6 +16,11 @@ type Values = {
   text?: string;
   cta?: string;
   mark?: string;
+  cTitle?: string;
+  cHeading?: string;
+  cNote?: string;
+  cEyebrow?: string;
+  productIds?: string[];
 };
 
 const toValues = (p: BaseTheme): Values => ({
@@ -23,6 +29,11 @@ const toValues = (p: BaseTheme): Values => ({
   logoLight: p.logo?.light,
   logoDark: p.logo?.dark,
   ...p.hero,
+  cTitle: p.collection?.title,
+  cHeading: p.collection?.heading,
+  cNote: p.collection?.note,
+  cEyebrow: p.collection?.eyebrow,
+  productIds: p.collection?.productIds ?? [],
 });
 const fromValues = (v: Values, isBase: boolean): BaseTheme => ({
   ...(isBase && { announcementOn: v.announcementOn }),
@@ -36,6 +47,13 @@ const fromValues = (v: Values, isBase: boolean): BaseTheme => ({
     text: v.text || undefined,
     cta: v.cta || undefined,
     mark: v.mark || undefined,
+  },
+  collection: {
+    title: v.cTitle || undefined,
+    heading: v.cHeading || undefined,
+    note: v.cNote || undefined,
+    eyebrow: v.cEyebrow || undefined,
+    productIds: v.productIds?.length ? v.productIds : undefined,
   },
 });
 
@@ -134,6 +152,8 @@ export function ThemeForm({ part, isBase, fallback, onChange }: Props) {
             </Col>
           </Row>
         </FormSection>
+
+        <CollectionFields isBase={isBase} fallback={fallback.collection} />
       </Flex>
     </Form>
   );

@@ -108,16 +108,18 @@ export const reminder = {
   signature: "Theo cách của 2510 Candle",
 };
 
-export const newsletter = {
-  title: ["Ở lại", "một chút"],
-  heading: "Một chút ấm áp trong hộp thư của bạn.",
-  text: "Mùi hương mới, cảm hứng nhẹ nhàng và được biết trước những điều hay.",
-  placeholder: "Địa chỉ email của bạn",
-  submit: "Đăng ký",
-  invalid: "Vui lòng nhập email hợp lệ.",
-  consent: ["Khi đăng ký, bạn đồng ý với Chính sách bảo mật của chúng tôi.", "Chỉ gửi điều hay. Hủy đăng ký bất cứ lúc nào."],
-  // Chưa có API đăng ký nhận tin — hiện thông báo này sau khi kiểm tra email
-  pending: "Cảm ơn bạn — chúng tôi sẽ sớm mở đăng ký nhận tin.",
+// Khối "Gửi lời nhắn" cuối trang chủ (sections/contact.tsx): khách để lại tên, SĐT, nội dung → BO › Liên hệ
+export const contact = {
+  title: ["Gửi", "lời nhắn"],
+  heading: "Cần tư vấn chọn nến hay đặt quà?",
+  text: "Để lại lời nhắn, chúng tôi sẽ nhắn Zalo hoặc gọi lại cho bạn trong ngày.",
+  fields: { name: "Họ và tên", phone: "Số điện thoại (Zalo)", email: "Email (không bắt buộc)", message: "Bạn cần chúng tôi giúp gì?" },
+  submit: "Gửi lời nhắn",
+  errors: { name: "Vui lòng nhập họ tên.", phone: "Số điện thoại không đúng.", email: "Email không đúng.", message: "Vui lòng nhập nội dung." },
+  note: "Thông tin chỉ dùng để liên lạc lại với bạn.",
+  sending: "Đang gửi…",
+  done: "Cảm ơn bạn! Chúng tôi đã nhận được lời nhắn và sẽ liên lạc lại sớm.",
+  failed: "Chưa gửi được, bạn thử lại sau ít phút nhé.",
   photo: { src: "/images/newsletter.jpg", alt: "Bàn tay đặt cạnh hũ nến đang cháy trên khối đá travertine", width: 928, height: 1152 } satisfies Photo,
 };
 
@@ -134,20 +136,11 @@ export const footer = {
     },
     {
       title: "Hỗ trợ",
-      links: [
-        { label: "Giao hàng & đổi trả", href: "#" },
-        { label: "Chăm sóc nến", href: "/#care" },
-        { label: "Liên hệ", href: "#" },
-      ],
-    },
-    {
-      title: "Theo dõi",
-      links: [
-        { label: "Instagram", href: "#" },
-        { label: "Pinterest", href: "#" },
-      ],
+      links: [{ label: "Liên hệ", href: "/#contact" }],
     },
   ] satisfies { title: string; links: Link[] }[],
+  // Cột mạng xã hội: lấy từ BO › Cài đặt › Mạng xã hội (GET /shop/contact), chưa có mạng nào thì ẩn cột
+  follow: "Theo dõi",
   legal: [
     { label: "Chính sách bảo mật", href: "#" },
     { label: "Điều khoản", href: "#" },

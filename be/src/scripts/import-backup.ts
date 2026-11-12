@@ -24,6 +24,7 @@ await prisma.$transaction(
     await tx.shopSettings.create({ data: data.settings });
     await tx.shippingOption.createMany({ data: data.shippingOptions });
     await tx.carrier.createMany({ data: data.carriers });
+    await tx.socialLink.createMany({ data: data.socials });
     await tx.material.createMany({ data: data.materials });
     await tx.materialRecipeLine.createMany({ data: data.materialRecipe });
     await tx.stockMovement.createMany({ data: data.movements });

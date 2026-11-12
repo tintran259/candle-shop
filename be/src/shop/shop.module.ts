@@ -8,6 +8,7 @@ import type { Category, Concept, Product } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { dayOf, inSeason, sellableNow, todayVN } from '../concepts/season.js';
 import { resolveTheme, type ThemeRow } from '../site-theme/theme.js';
+import { socialLabel } from '../settings/socials.js';
 
 const opt = <T>(v: T | null) => v ?? undefined;
 
@@ -89,7 +90,7 @@ export class ShopService {
     };
   }
 
-  // Trang chủ: giao diện đã ghép theo mùa (site-theme/theme.ts) + 3 mẫu cho khối Xưởng nến (nổi bật trước, thiếu thì mẫu mới).
+  // Trang chủ: giao diện đã ghép theo mùa (site-theme/theme.ts) + mẫu cho khối Xưởng nến (mẫu chọn ở giao diện, tối đa 12; chưa đủ 3 thì bù mẫu nổi bật rồi mẫu khác).
   // Chưa cấu hình giao diện thì theme rỗng — web dùng nội dung có sẵn
   async home() {
     const [themes, concepts, shop] = await Promise.all([
@@ -97,23 +98,30 @@ export class ShopService {
       this.prisma.concept.findMany({ orderBy: [{ sortOrder: 'asc' }, { nameVi: 'asc' }], select: { id: true, hidden: true, startsOn: true, endsOn: true } }),
       this.products(),
     ]);
-    const featured = [...shop.products.filter((p) => p.isFeatured), ...shop.products.filter((p) => !p.isFeatured)].slice(0, 3);
+    const theme = resolveTheme(themes as ThemeRow[], concepts, todayVN());
+    // Xưởng nến: mẫu chọn ở giao diện (đang bán, đúng mùa) theo thứ tự — đủ 3 thì trả hết (tối đa 12, web chạy băng chuyền khi hơn 3),
+    // thiếu thì bù mẫu nổi bật rồi mẫu khác cho đủ 3
+    const picked = (theme.collection.productIds ?? []).map((id) => shop.products.find((p) => p.id === id)).filter((p) => !!p);
+    const rest = shop.products.filter((p) => !picked.includes(p));
+    const featured = picked.length >= 3 ? picked : [...picked, ...rest.filter((p) => p.isFeatured), ...rest.filter((p) => !p.isFeatured)].slice(0, 3);
     return {
-      theme: resolveTheme(themes as ThemeRow[], concepts, todayVN()),
+      theme,
       featured,
       categories: shop.categories.filter((c) => featured.some((p) => p.categoryId === c.id)),
     };
   }
 
   // Liên hệ trên web (nút "Liên hệ đặt nến" mở Zalo): lấy từ Cài đặt › Người gửi. Chưa lưu Cài đặt thì dùng mặc định, SĐT rỗng
+  // Mạng xã hội đang bật (theo thứ tự ở Cài đặt) cho chân trang: tên hiện trống thì tên nền tảng
   async contact() {
-    const row = await this.prisma.shopSettings.findUnique({
-      where: { id: 'shop' },
-      select: { senderName: true, senderPhone: true },
-    });
+    const [row, socials] = await Promise.all([
+      this.prisma.shopSettings.findUnique({ where: { id: 'shop' }, select: { senderName: true, senderPhone: true } }),
+      this.prisma.socialLink.findMany({ where: { enabled: true }, orderBy: { sortOrder: 'asc' } }),
+    ]);
     return {
       name: row?.senderName || '2510 Candle',
       phone: row?.senderPhone ?? '',
+      socials: socials.map((s) => ({ platform: s.platform, label: socialLabel(s), url: s.url })),
     };
   }
 }

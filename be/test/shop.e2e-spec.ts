@@ -65,11 +65,7 @@ it('GET /api/shop/products: không cần token, lọc sản phẩm ẩn / danh m
   });
 
   const r = await t.anon().get('/api/shop/products').expect(200);
-  expect(r.body.products.map((p: { id: string }) => p.id)).toEqual([
-    'noi-bat',
-    'moi',
-    'cu',
-  ]);
+  expect(r.body.products.map((p: { id: string }) => p.id)).toEqual(['noi-bat', 'moi', 'cu']);
   expect(r.body.categories).toEqual([
     { id: 'qua-tang', name: 'Quà tặng', nameEn: 'Gift' },
     { id: 'thu-gian', name: 'Thư giãn', nameEn: 'Relax' },
@@ -83,8 +79,7 @@ it('GET /api/shop/products: không cần token, lọc sản phẩm ẩn / danh m
     categoryId: 'thu-gian',
     isNew: false,
   });
-  for (const k of ['recipe', 'build', 'sold', 'status', 'createdAt'])
-    expect(cu).not.toHaveProperty(k);
+  for (const k of ['recipe', 'build', 'sold', 'status', 'createdAt']) expect(cu).not.toHaveProperty(k);
   expect(r.body.products[0].salePrice).toBe(199000);
 });
 
@@ -92,6 +87,7 @@ it('GET /api/shop/contact: tên shop + SĐT người gửi ở Cài đặt, khô
   expect((await t.anon().get('/api/shop/contact').expect(200)).body).toEqual({
     name: '2510 Candle',
     phone: '',
+    socials: [],
   });
   await t.prisma.shopSettings.create({
     data: {
@@ -104,5 +100,32 @@ it('GET /api/shop/contact: tên shop + SĐT người gửi ở Cài đặt, khô
   expect((await t.anon().get('/api/shop/contact').expect(200)).body).toEqual({
     name: 'Nến 2510',
     phone: '0901 234 567',
+    socials: [],
   });
+});
+
+it('Mạng xã hội: lưu ở Cài đặt (thứ tự, tên hiện trống = tên nền tảng), web chỉ nhận mạng đang bật; link phải https, nền tảng lạ / quá 10 mạng → 400; không gửi socials thì giữ nguyên', async () => {
+  const settings = (await t.get('/api/admin/settings').expect(200)).body;
+  expect(settings.socials).toEqual([]);
+  const socials = [
+    { id: 's1', platform: 'instagram', label: '', url: 'https://instagram.com/2510candle', enabled: true },
+    { id: 's2', platform: 'facebook', label: 'Fanpage 2510', url: 'https://facebook.com/2510candle', enabled: true },
+    { id: 's3', platform: 'tiktok', label: '', url: 'https://tiktok.com/@2510candle', enabled: false },
+  ];
+  const saved = (await t.put('/api/admin/settings', { ...settings, socials }).expect(200)).body;
+  expect(saved.socials).toEqual(socials);
+  expect((await t.anon().get('/api/shop/contact').expect(200)).body.socials).toEqual([
+    { platform: 'instagram', label: 'Instagram', url: 'https://instagram.com/2510candle' },
+    { platform: 'facebook', label: 'Fanpage 2510', url: 'https://facebook.com/2510candle' },
+  ]);
+
+  const bad = async (list: object[]) => JSON.stringify((await t.put('/api/admin/settings', { ...settings, socials: list }).expect(400)).body.message);
+  expect(await bad([{ ...socials[0], url: 'http://instagram.com/x' }])).toContain('Link mạng xã hội phải bắt đầu bằng https://');
+  expect(await bad([{ ...socials[0], platform: 'myspace' }])).toContain('Nền tảng không hợp lệ.');
+  expect(await bad(Array.from({ length: 11 }, (_, i) => ({ ...socials[0], id: `x${i}` })))).toContain('Tối đa 10 mạng xã hội.');
+
+  // BO cũ không gửi socials: giữ nguyên
+  const { socials: _drop, ...old } = settings;
+  await t.put('/api/admin/settings', old).expect(200);
+  expect((await t.get('/api/admin/settings').expect(200)).body.socials).toHaveLength(3);
 });

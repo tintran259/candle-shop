@@ -146,3 +146,41 @@ it('web: tới ngày concept thì tự đổi giao diện, hết mùa tự về 
     vi.useRealTimers();
   }
 });
+
+it('Xưởng nến: chọn tối đa 12 mẫu theo giao diện (đủ 3 thì trả hết theo thứ tự) (bỏ mẫu không có), web hiện mẫu chọn trước theo thứ tự rồi bù mẫu nổi bật; mẫu tạm ẩn thì bỏ qua', async () => {
+  await t.post('/api/admin/categories', { id: 'am', name: { vi: 'Ấm', en: '' } }).expect(201);
+  await t.post('/api/admin/concepts', { id: 'noel', name: { vi: 'Noel', en: '' } }).expect(201);
+  const add = async (name: string, isFeatured = false) =>
+    (await t.post('/api/admin/products', { name, price: 250000, images: ['a.jpg'], categoryId: 'am', aromaLevel: 'medium', size: 'small', status: 'active', isNew: false, isFeatured }).expect(201))
+      .body as { id: string };
+  const [mot, hai, ba, bon] = [await add('Mot'), await add('Hai', true), await add('Ba'), await add('Bon')];
+  const names = async () => (await t.anon().get('/api/shop/home').expect(200)).body.featured.map((p: { name: string }) => p.name);
+
+  // Quá 12 mẫu: 400
+  const tooMany = await t.post(`${URL}/default/publish`, { collection: { productIds: Array.from({ length: 13 }, (_, i) => `m${i}`) } }).expect(400);
+  expect(JSON.stringify(tooMany.body.message)).toContain('Chọn tối đa 12 mẫu cho Xưởng nến.');
+  // Chọn 4 mẫu (hơn 3 — web chạy băng chuyền): trả đủ 4 theo thứ tự, không bù
+  await t.post(`${URL}/default/publish`, { collection: { productIds: [bon.id, mot.id, ba.id, hai.id] } }).expect(200);
+  expect(await names()).toEqual(['Bon', 'Mot', 'Ba', 'Hai']);
+  // Mẫu không có bị bỏ khi lưu
+  const list = (await t.post(`${URL}/default/publish`, { collection: { title: 'Xưởng', heading: 'Ngày đẹp', productIds: [ba.id, 'khong-co', mot.id] } }).expect(200)).body;
+  expect(byId(list, 'default').published).toMatchObject({ collection: { title: 'Xưởng', heading: 'Ngày đẹp', productIds: [ba.id, mot.id] } });
+  expect(await names()).toEqual(['Ba', 'Mot', 'Hai']);
+  expect((await t.anon().get('/api/shop/home').expect(200)).body.theme.collection).toEqual({ title: 'Xưởng', heading: 'Ngày đẹp', productIds: [ba.id, mot.id] });
+
+  // Giao diện Noel chọn mẫu riêng + đổi câu dẫn; tên khối lấy của Mặc định
+  await t.post(URL, { id: 'noel-theme', name: 'Noel' }).expect(201);
+  await t.post(`${URL}/noel-theme/publish`, { conceptIds: ['noel'], collection: { heading: 'Quà Noel', productIds: [bon.id] } }).expect(200);
+  const home = (await t.anon().get('/api/shop/home').expect(200)).body;
+  expect(home.theme.collection).toEqual({ title: 'Xưởng', heading: 'Quà Noel', productIds: [bon.id] });
+  const shown = home.featured.map((p: { name: string }) => p.name);
+  // Mẫu chọn trước, rồi mẫu nổi bật, rồi mẫu khác (theo thứ tự danh sách sản phẩm)
+  expect(shown.slice(0, 2)).toEqual(['Bon', 'Hai']);
+  expect(shown).toHaveLength(3);
+
+  // Mẫu chọn bị tạm ẩn: bỏ qua, bù mẫu khác
+  await t.patch(`/api/admin/products`, { ids: [bon.id], status: 'hidden' }).expect(200);
+  const after = await names();
+  expect(after[0]).toBe('Hai');
+  expect(after.sort()).toEqual(['Ba', 'Hai', 'Mot']);
+});

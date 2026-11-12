@@ -21,9 +21,11 @@ export async function wipeBoData(tx: Prisma.TransactionClient) {
   await tx.cancelledProduct.deleteMany();
   await tx.craftConfig.deleteMany();
   await tx.siteTheme.deleteMany();
+  await tx.contactMessage.deleteMany();
   await tx.orderDraft.deleteMany();
   await tx.notificationRead.deleteMany();
   await tx.shippingOption.deleteMany();
   await tx.carrier.deleteMany();
+  await tx.socialLink.deleteMany();
   await tx.shopSettings.deleteMany();
 }

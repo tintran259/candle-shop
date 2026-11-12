@@ -45,6 +45,7 @@ const router = createBrowserRouter([
           { path: "discounts", lazy: async () => ({ Component: (await import("@/pages/discounts")).DiscountsPage }) },
           { path: "products", lazy: async () => ({ Component: (await import("@/pages/products")).ProductsPage }) },
           { path: "categories", lazy: async () => ({ Component: (await import("@/pages/categories")).CategoriesPage }) },
+          { path: "messages", lazy: async () => ({ Component: (await import("@/pages/messages")).MessagesPage }) },
           { path: "concepts", lazy: async () => ({ Component: (await import("@/pages/concepts")).ConceptsPage }) },
           { path: "cancelled-products", lazy: async () => ({ Component: (await import("@/pages/cancelled-products")).CancelledProductsPage }) },
           { path: "settings", lazy: async () => ({ Component: (await import("@/pages/settings")).SettingsPage }) },

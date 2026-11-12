@@ -13,6 +13,7 @@ import { BackupSection } from "@/components/settings/backup-section";
 import { ResetSection } from "@/components/settings/reset-section";
 import { SessionSection } from "@/components/settings/session-section";
 import { CarrierFields } from "@/components/settings/carrier-fields";
+import { SocialFields } from "@/components/settings/social-fields";
 import { ShippingOptionFields } from "@/components/settings/shipping-option-fields";
 
 export function SettingsPage() {
@@ -50,6 +51,7 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
       shippingOptions: v.shippingOptions.map((o) => ({ ...o, name: o.name.trim() })),
       sender: { name: v.sender.name?.trim() ?? "", phone: v.sender.phone?.trim() ?? "", address: v.sender.address?.trim() ?? "" },
       carriers: v.carriers.map((c) => ({ ...c, name: c.name.trim(), trackingUrl: c.trackingUrl?.trim() || undefined })),
+      socials: (v.socials ?? []).map((s) => ({ ...s, label: s.label?.trim() ?? "", url: s.url.trim() })),
     });
     setDirty(false);
     message.success("Đã lưu cài đặt. Áp dụng cho đơn tạo từ bây giờ.");
@@ -193,6 +195,8 @@ function SettingsForm({ settings, save }: { settings: ShopSettings; save: (s: Sh
               </FormSection>
 
               <CarrierFields />
+
+              <SocialFields />
 
               <BackupSection />
 

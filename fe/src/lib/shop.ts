@@ -25,10 +25,12 @@ export type ShopProduct = {
 // Concept (dịp lễ): như danh mục + thời gian bán (YYYY-MM-DD, null = không giới hạn). BE chỉ trả concept đang trong mùa
 export type ShopConcept = ShopCategory & { startsOn?: string | null; endsOn?: string | null };
 export type ShopData = { categories: ShopCategory[]; concepts: ShopConcept[]; products: ShopProduct[] };
-export type ShopContact = { name: string; phone: string };
+// Mạng xã hội đang bật ở BO › Cài đặt (theo thứ tự) — cột "Theo dõi" ở chân trang
+export type ShopSocial = { platform: string; label: string; url: string };
+export type ShopContact = { name: string; phone: string; socials?: ShopSocial[] };
 
 // Máy chủ Next gọi BE: API_URL (vd https://candle2510-be.onrender.com/api), mặc định BE trên máy
-const API_URL = (process.env.API_URL || "http://localhost:4000/api").replace(/\/$/, "");
+export const API_URL = (process.env.API_URL || "http://localhost:4000/api").replace(/\/$/, "");
 
 // null = không tải được (BE đang khởi động / lỗi) — trang hiện thông báo, lần sau tự thử lại.
 // SHOP_MOCK=1: dùng dữ liệu giả (lib/shop-mock.ts), không gọi BE — chỉ để thử giao diện trên máy

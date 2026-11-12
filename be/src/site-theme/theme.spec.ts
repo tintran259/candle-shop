@@ -22,7 +22,15 @@ const themes: ThemeRow[] = [
 
 describe('resolveTheme', () => {
   it('chưa có giao diện nào: rỗng, thanh thông báo bật', () => {
-    expect(resolveTheme([], [], today)).toEqual({ themeId: null, conceptId: null, announcementOn: true, announcement: undefined, logo: { light: undefined, dark: undefined }, hero: {} });
+    expect(resolveTheme([], [], today)).toEqual({
+      themeId: null,
+      conceptId: null,
+      announcementOn: true,
+      announcement: undefined,
+      logo: { light: undefined, dark: undefined },
+      hero: {},
+      collection: {},
+    });
   });
 
   it('không concept nào trong mùa: dùng Mặc định', () => {
@@ -70,5 +78,15 @@ describe('resolveTheme', () => {
     expect(resolveTheme(rows, cs, '2026-12-20').themeId).toBe('le-tet');
     expect(resolveTheme(rows, cs, '2026-12-27').themeId).toBe('le-tet');
     expect(resolveTheme(rows, cs, '2027-01-01').themeId).toBeNull();
+  });
+
+  it('Xưởng nến: chữ ghép từng trường; mẫu chọn của giao diện thay cả danh sách, không chọn thì lấy của Mặc định', () => {
+    const base: ThemeRow = { id: 'default', published: { collection: { title: 'Xưởng nến', heading: 'Ngày đẹp', productIds: ['a', 'b', 'c'] } } };
+    const noel: ThemeRow = { id: 'noel-theme', published: { conceptIds: ['noel'], collection: { heading: 'Mùa Noel', note: '', productIds: ['n1', 'n2'] } } };
+    const tet: ThemeRow = { id: 'tet-theme', published: { conceptIds: ['tet'], collection: { eyebrow: 'Tết', productIds: [] } } };
+    const cs = [concept('noel', null, null), concept('tet', null, null)];
+    expect(resolveTheme([base, noel], cs, today).collection).toEqual({ title: 'Xưởng nến', heading: 'Mùa Noel', productIds: ['n1', 'n2'] });
+    expect(resolveTheme([base, tet], cs, today).collection).toEqual({ title: 'Xưởng nến', heading: 'Ngày đẹp', eyebrow: 'Tết', productIds: ['a', 'b', 'c'] });
+    expect(resolveTheme([base], [], today).collection).toEqual({ title: 'Xưởng nến', heading: 'Ngày đẹp', productIds: ['a', 'b', 'c'] });
   });
 });

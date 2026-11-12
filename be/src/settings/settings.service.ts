@@ -1,7 +1,7 @@
-// Cài đặt cửa hàng (một bản ghi "shop" + phương thức giao + đơn vị vận chuyển), trả đúng dạng ShopSettings của BO
+// Cài đặt cửa hàng (một bản ghi "shop" + phương thức giao + đơn vị vận chuyển + mạng xã hội), trả đúng dạng ShopSettings của BO
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { SettingsDto } from './settings.dto.js';
+import type { SettingsDto, SocialDto } from './settings.dto.js';
 
 const ID = 'shop';
 
@@ -38,9 +38,10 @@ export class SettingsService {
         return tx.shopSettings.create({ data: { id: ID } });
       });
     }
-    const [options, carriers] = await Promise.all([
+    const [options, carriers, socials] = await Promise.all([
       this.prisma.shippingOption.findMany({ orderBy: { sortOrder: 'asc' } }),
       this.prisma.carrier.findMany({ orderBy: { sortOrder: 'asc' } }),
+      this.prisma.socialLink.findMany({ orderBy: { sortOrder: 'asc' } }),
     ]);
     return {
       depositPercent: row.depositPercent,
@@ -53,6 +54,7 @@ export class SettingsService {
       sender: { name: row.senderName, phone: row.senderPhone, address: row.senderAddress },
       shippingOptions: options.map(({ id, name, fee, days, enabled }) => ({ id, name, fee, days, enabled })),
       carriers: carriers.map(({ id, name, trackingUrl, requireCode, enabled }) => ({ id, name, ...(trackingUrl ? { trackingUrl } : {}), requireCode, enabled })),
+      socials: socials.map(({ id, platform, label, url, enabled }) => ({ id, platform: platform as SocialDto['platform'], label, url, enabled })),
     };
   }
 
@@ -82,6 +84,14 @@ export class SettingsService {
       this.prisma.carrier.createMany({
         data: dto.carriers.map((c, i) => ({ id: c.id, name: c.name.trim(), trackingUrl: c.trackingUrl?.trim() || null, requireCode: c.requireCode, enabled: c.enabled, sortOrder: i })),
       }),
+      ...(dto.socials
+        ? [
+            this.prisma.socialLink.deleteMany(),
+            this.prisma.socialLink.createMany({
+              data: dto.socials.map((s, i) => ({ id: s.id, platform: s.platform, label: s.label.trim(), url: s.url.trim(), enabled: s.enabled, sortOrder: i })),
+            }),
+          ]
+        : []),
     ]);
     return this.get();
   }

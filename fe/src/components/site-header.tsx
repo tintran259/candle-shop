@@ -23,9 +23,20 @@ const underline = "absolute bottom-0 left-0 h-px w-full origin-right scale-x-0 b
 
 export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; chrome: Chrome }) {
   const root = useRef<HTMLElement>(null);
+  // Lớp trượt lên / xuống khi cuộn (thanh thông báo + thanh điều hướng). Không đặt transform lên <header>: lớp menu điện thoại
+  // (fixed inset-0) nằm trong header sẽ bị tính theo khung header thay vì cả màn hình — sau khi cuộn chỉ phủ phần trên
+  const bar = useRef<HTMLDivElement>(null);
   const path = usePathname();
   const [solid, setSolid] = useState(!overHero);
+  // open: menu điện thoại đang (hoặc sắp) mở; shown: lớp menu còn trên trang — giữ thêm lúc đóng cho hiệu ứng kéo rèm lên chạy xong
   const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(false);
+  const panel = useRef<HTMLDivElement>(null);
+  const toggleMenu = () => {
+    if (open) return setOpen(false);
+    setShown(true);
+    setOpen(true);
+  };
   const [searching, setSearching] = useState(false);
   const trigger = useRef<HTMLElement | null>(null);
   const openSearch = (from: HTMLElement | null) => {
@@ -52,7 +63,6 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
 
   useGSAP(
     () => {
-      const bar = root.current!;
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         gsap.fromTo("[data-intro=nav]", { autoAlpha: 0, y: -14 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07, delay: 0.9, ease: "power3.out" });
@@ -69,87 +79,117 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
         onUpdate: (self) => {
           const next = !hero || hero.getBoundingClientRect().bottom <= 96;
           if (next !== isSolid) setSolid((isSolid = next));
-          gsap.to(bar, { yPercent: isSolid && self.direction === 1 ? -100 : 0, duration: 0.45, ease: "power2.out", overwrite: "auto" });
+          gsap.to(bar.current, { yPercent: isSolid && self.direction === 1 ? -100 : 0, duration: 0.45, ease: "power2.out", overwrite: "auto" });
         },
       });
     },
     { scope: root },
   );
 
-  // Menu điện thoại: khóa cuộn trang phía sau, liên kết trồi lên so le
+  // Menu điện thoại: khóa cuộn trang phía sau (tới khi rèm kéo lên xong)
   useEffect(() => {
-    document.documentElement.style.overflow = open ? "hidden" : "";
+    document.documentElement.style.overflow = shown ? "hidden" : "";
+  }, [shown]);
+  useEffect(() => {
     if (!open) return;
+    // Mở menu lúc thanh đang ẩn (vừa cuộn xuống): kéo thanh về để thấy nút Đóng
+    gsap.set(bar.current, { yPercent: 0 });
     root.current?.querySelector<HTMLElement>("#mobile-menu a")?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
-  useGSAP(() => {
-    if (open) gsap.fromTo("[data-menu-item]", { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.8, stagger: 0.06, ease: "power3.out" });
-  }, [open]);
+  // Hiệu ứng nền menu như tấm rèm: mở — nền kem buông từ mép trên xuống (clip-path), đường kẻ đồng chạy ngang, rồi các mục trồi lên so le;
+  // đóng — các mục trôi lên mờ đi, rèm kéo ngược lên, xong mới bỏ lớp menu. Giảm chuyển động: hiện / ẩn ngay
+  useGSAP(
+    () => {
+      const el = panel.current;
+      if (!el) return;
+      const items = el.querySelectorAll("[data-menu-item]");
+      const rule = el.querySelector("[data-menu-rule]");
+      if (window.matchMedia(MOTION_REDUCE).matches) {
+        if (!open) setShown(false);
+        return;
+      }
+      const tl = gsap.timeline({ defaults: { overwrite: "auto" } });
+      if (open) {
+        tl.fromTo(el, { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.75, ease: "power4.inOut" })
+          .fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "power3.inOut" }, 0.35)
+          .fromTo(items, { yPercent: 100, autoAlpha: 0 }, { yPercent: 0, autoAlpha: 1, duration: 0.8, stagger: 0.06, ease: "power3.out" }, 0.4);
+      } else {
+        tl.to(items, { yPercent: -40, autoAlpha: 0, duration: 0.3, stagger: 0.03, ease: "power2.in" })
+          .to(rule, { scaleX: 0, transformOrigin: "right", duration: 0.35, ease: "power2.in" }, 0)
+          .to(el, { clipPath: "inset(0% 0% 100% 0%)", duration: 0.6, ease: "power4.inOut" }, 0.15)
+          .call(() => setShown(false));
+      }
+    },
+    { dependencies: [open, shown] },
+  );
 
-  const light = !solid && !open;
+  const light = !solid && !shown;
   const tone = light ? "text-linen" : "text-ink";
   return (
-    <header ref={root} className="fixed inset-x-0 top-0 z-50">
-      {chrome.announcement && <p className="bg-night px-5 py-[7px] text-center text-[10px] leading-[14px] tracking-[0.1em] text-[#f8f5ee]">{chrome.announcement}</p>}
-      <div className={cx("transition-colors duration-500", solid && !open && "bg-cream/92 backdrop-blur")}>
-        <div
-          className={cx(
-            "relative mx-auto grid max-w-[1440px] grid-cols-[1fr_auto] items-center px-5 transition-[height] duration-500 md:grid-cols-[1fr_auto_1fr] md:px-10 xl:px-16",
-            solid ? "h-16" : "h-[72px] md:h-[100px]",
-          )}
-        >
-          <Link href="/" data-intro="nav" aria-label="2510 Candle — về trang chủ" className={cx("justify-self-start py-2 transition-colors duration-500", light ? "text-linen" : "text-copper")}>
-            <BrandLogo src={light ? chrome.logo.light : chrome.logo.dark} className="w-[124px] md:w-[150px]" />
-          </Link>
-          <nav aria-label="Điều hướng chính" className="hidden md:block">
-            <ul className="flex gap-10">
-              {nav.shop.map((n) => (
-                <li key={n.label} data-intro="nav">
-                  <Link href={n.href} aria-current={n.href === path ? "page" : undefined} className={cx(navLink, tone)}>
-                    {n.label}
-                    <span className={cx(underline, n.href === path && "scale-x-100")} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="flex items-center justify-end">
-            <button
-              type="button"
-              data-intro="nav"
-              aria-haspopup="dialog"
-              aria-keyshortcuts="Control+K Meta+K"
-              onClick={(e) => openSearch(e.currentTarget)}
-              className={cx(navLink, "flex items-center gap-2.5 max-md:hidden", tone)}
-            >
-              <SearchIcon />
-              {nav.search}
-              <span className={underline} />
-            </button>
-            <button
-              type="button"
-              data-intro="nav"
-              aria-label={nav.search}
-              aria-haspopup="dialog"
-              onClick={(e) => openSearch(e.currentTarget)}
-              className={cx("grid size-11 place-items-center md:hidden", tone)}
-            >
-              <SearchIcon />
-            </button>
-            <button type="button" data-intro="nav" aria-expanded={open} aria-controls="mobile-menu" onClick={() => setOpen((o) => !o)} className={cx(navLink, "-mr-3 px-3 py-3 md:hidden", tone)}>
-              {open ? "Đóng" : "Menu"}
-            </button>
+    // header không nhận chuột (thanh trượt lên vẫn để lại khung trống); thanh và menu nhận lại
+    <header ref={root} className="pointer-events-none fixed inset-x-0 top-0 z-50">
+      <div ref={bar} className="pointer-events-auto">
+        {chrome.announcement && <p className="bg-night px-5 py-[7px] text-center text-[10px] leading-[14px] tracking-[0.1em] text-[#f8f5ee]">{chrome.announcement}</p>}
+        <div className={cx("transition-colors duration-500", solid && !shown && "bg-cream/92 backdrop-blur")}>
+          <div
+            className={cx(
+              "relative mx-auto grid max-w-[1440px] grid-cols-[1fr_auto] items-center px-5 transition-[height] duration-500 md:grid-cols-[1fr_auto_1fr] md:px-10 xl:px-16",
+              solid ? "h-16" : "h-[72px] md:h-[100px]",
+            )}
+          >
+            <Link href="/" data-intro="nav" aria-label="2510 Candle — về trang chủ" className={cx("justify-self-start py-2 transition-colors duration-500", light ? "text-linen" : "text-copper")}>
+              <BrandLogo src={light ? chrome.logo.light : chrome.logo.dark} className="w-[124px] md:w-[150px]" />
+            </Link>
+            <nav aria-label="Điều hướng chính" className="hidden md:block">
+              <ul className="flex gap-10">
+                {nav.shop.map((n) => (
+                  <li key={n.label} data-intro="nav">
+                    <Link href={n.href} aria-current={n.href === path ? "page" : undefined} className={cx(navLink, tone)}>
+                      {n.label}
+                      <span className={cx(underline, n.href === path && "scale-x-100")} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                data-intro="nav"
+                aria-haspopup="dialog"
+                aria-keyshortcuts="Control+K Meta+K"
+                onClick={(e) => openSearch(e.currentTarget)}
+                className={cx(navLink, "flex items-center gap-2.5 max-md:hidden", tone)}
+              >
+                <SearchIcon />
+                {nav.search}
+                <span className={underline} />
+              </button>
+              <button
+                type="button"
+                data-intro="nav"
+                aria-label={nav.search}
+                aria-haspopup="dialog"
+                onClick={(e) => openSearch(e.currentTarget)}
+                className={cx("grid size-11 place-items-center md:hidden", tone)}
+              >
+                <SearchIcon />
+              </button>
+              <button type="button" data-intro="nav" aria-expanded={open} aria-controls="mobile-menu" onClick={toggleMenu} className={cx(navLink, "-mr-3 px-3 py-3 md:hidden", tone)}>
+                {open ? "Đóng" : "Menu"}
+              </button>
+            </div>
+            {/* Đường kẻ dưới thanh, thụt lề như Figma */}
+            <span data-intro="nav-rule" className={cx("absolute inset-x-5 bottom-0 h-px origin-left md:inset-x-10 xl:inset-x-16", light ? "bg-linen/35" : "bg-rule")} />
           </div>
-          {/* Đường kẻ dưới thanh, thụt lề như Figma */}
-          <span data-intro="nav-rule" className={cx("absolute inset-x-5 bottom-0 h-px origin-left md:inset-x-10 xl:inset-x-16", light ? "bg-linen/35" : "bg-rule")} />
         </div>
       </div>
 
-      {open && (
-        <div id="mobile-menu" className="fixed inset-0 -z-10 flex flex-col bg-cream px-5 pt-36 pb-10 md:hidden">
+      {shown && (
+        <div ref={panel} id="mobile-menu" className="pointer-events-auto fixed inset-0 -z-10 flex flex-col bg-cream px-5 pt-36 pb-10 md:hidden">
           <ul className="space-y-1">
             {nav.shop.map((n) => (
               <li key={n.label} className="overflow-hidden">
@@ -164,7 +204,8 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
               </button>
             </li>
           </ul>
-          <p data-menu-item className="eyebrow mt-auto">
+          <span data-menu-rule aria-hidden className="mt-auto mb-5 block h-px origin-left bg-copper/50" />
+          <p data-menu-item className="eyebrow">
             {brand}
           </p>
         </div>

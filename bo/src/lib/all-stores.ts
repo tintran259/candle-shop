@@ -12,3 +12,4 @@ import "@/hooks/use-orders";
 import "@/hooks/use-products";
 import "@/hooks/use-settings";
 import "@/hooks/use-site-themes";
+import "@/hooks/use-messages";

@@ -20,13 +20,14 @@ Thanh thông báo, logo, hero của web: trang riêng [Giao diện web](./site-t
 | Phương thức giao | Tên, phí, số ngày, bật/tắt | Tiêu chuẩn miễn phí 3 ngày; Nhanh 50.000 ₫ 1 ngày | Tạo đơn, chi tiết đơn. Phí phương thức đang bật đầu tiên dùng để kiểm tra giá sản phẩm khi khách bỏ cọc | Đang dùng |
 | Người gửi | Tên shop (bắt buộc), SĐT, địa chỉ lấy hàng | 2510 Candle, SĐT và địa chỉ trống | Nhãn giao hàng, phiếu đơn; SĐT là số Zalo của nút "Liên hệ đặt nến" trên web (chưa có SĐT thì web ẩn nút) | Đang dùng |
 | Đơn vị vận chuyển | Tên, link tra cứu, bắt buộc mã, bật/tắt | GHN, GHTK, Viettel Post, J&T Express, Shop tự giao | Tạo đơn (chọn đơn vị), Giao cho vận chuyển, Tra cứu | Đang dùng |
+| Mạng xã hội | Nền tảng, tên hiện, link, bật/tắt (tối đa 10) | Trống | Chân trang web, cột "Theo dõi" | Đang dùng |
 
 Tự đặt tên được, nên có thể tạo "Nội thành", "Ngoại tỉnh" để tính phí theo khu vực.
 
 ## Bố cục
 
 - **Đầu trang:** dòng "Có thay đổi chưa lưu", nút Mặc định, nút Lưu cài đặt.
-- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển, Sao lưu dữ liệu, Xóa toàn bộ dữ liệu.
+- **Bên trái:** các khối Đặt cọc, Xưởng, Giá bán, Giao hàng, Phí vận chuyển, Người gửi, Đơn vị vận chuyển, Mạng xã hội, Sao lưu dữ liệu, Xóa toàn bộ dữ liệu.
 - **Bên phải:** Xem trước tiền trên đơn mẫu 1.000.000 ₫, cập nhật theo số đang nhập.
 
 ## Quy tắc
@@ -57,6 +58,14 @@ Chọn phương thức thì ô Phí vận chuyển tự điền. Admin sửa đ�
 - Tắt Bắt buộc mã cho đơn vị không có mã (Shop tự giao, xe ôm, Grab).
 - Phải có ít nhất một đơn vị đang dùng, tên không trùng. Đơn đã giao giữ tên và link lúc giao.
 
+## Mạng xã hội
+
+- Thêm như Đơn vị vận chuyển: bấm **Thêm mạng xã hội**, mỗi dòng gồm công tắc Dùng, **Nền tảng** (Facebook, Instagram, TikTok, YouTube, Threads, Zalo, Shopee, Khác), **Tên hiện**, **Link**, nút xóa. Tối đa 10.
+- Tên hiện để trống thì web ghi tên nền tảng (vd "Instagram"); nền tảng **Khác** bắt buộc nhập tên (vd "Lazada").
+- Link phải bắt đầu bằng `https://` (ô link gợi ý dạng link theo nền tảng).
+- Web: cột **"Theo dõi"** ở chân trang mọi trang hiện các mạng **đang bật**, đúng thứ tự trong Cài đặt, mở tab mới. Chưa có mạng nào bật thì ẩn cả cột. Web đổi sau tối đa 1 phút (lưu đệm). Không còn link giả `#`.
+- Bảng `SocialLink` (`be/src/settings/socials.ts` giữ danh sách nền tảng); BO cũ không gửi `socials` khi lưu thì BE giữ nguyên danh sách.
+
 ## Sao lưu dữ liệu
 
 Dữ liệu nằm trên máy chủ (BE). Khối **Sao lưu dữ liệu** cuối trang để cất thêm một bản riêng:
@@ -83,7 +92,7 @@ Khối cuối cột trái, nút đỏ **Xóa toàn bộ dữ liệu…**: đưa 
 
 ## Chưa có
 
-Web chưa đọc Cài đặt.
+Web đọc tên shop + SĐT người gửi (nút Liên hệ đặt nến qua Zalo) và Mạng xã hội (chân trang) qua `GET /shop/contact`.
 
 ## Kiểm thử
 
@@ -92,6 +101,7 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 **Đã có test:**
 
 - `workshop-cost`: lưu số cây mỗi ngày và số ngày làm tối thiểu; `logic/costs-capacity`: tính tải xưởng, ngày gợi ý, lịch 7 ngày.
+- `settings-socials`: thêm mạng xã hội, link không phải https / nền tảng Khác thiếu tên thì báo lỗi, tắt, xóa, lưu đúng thứ tự, tải lại. BE: `be/test/shop.e2e-spec.ts` (lưu, `/shop/contact` chỉ trả mạng đang bật, tên trống = tên nền tảng, chặn link http / nền tảng lạ / quá 10, không gửi thì giữ nguyên).
 - `settings`: giá trị mặc định, xem trước, hỏi khi rời trang chưa lưu, chặn tên trùng và tắt hết phương thức, lưu, tải lại, áp dụng vào tạo đơn, đơn cũ không lỗi, nút Mặc định.
 - `misc-extra`: mức cọc ngoài 1–99% không lưu được.
 - `craft-pricing`: Lãi tối thiểu và Hệ số gợi ý giá có giá trị mặc định, lưu được.

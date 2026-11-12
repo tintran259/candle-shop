@@ -82,7 +82,7 @@ test("Thêm giao diện cho concept: gắn concept, Lưu nháp, Lưu và đăng 
   await expect(page.getByText("Đã lưu nháp")).toBeVisible();
   await expect(page.getByText("Bản nháp chưa đăng lên web")).toBeVisible();
   const id = page.url().split("/").at(-1);
-  expect((await theme(page, id)).draft).toEqual({ conceptIds: ["noel"], logo: {}, hero: { mark: "Giáng sinh an lành" } });
+  expect((await theme(page, id)).draft).toEqual({ conceptIds: ["noel"], logo: {}, hero: { mark: "Giáng sinh an lành" }, collection: {} });
 
   // Nháp chưa đăng: web vẫn dùng Mặc định
   await page.getByRole("link", { name: "Về danh sách giao diện" }).click();
@@ -164,6 +164,57 @@ test("Nhiều concept chưa tới mùa: báo các khoảng thời gian, hỏi l�
   await expect(row(page, "Mùa lễ")).toContainText(`20/01 – 10/02/${y + 1} (Tết)`);
   await expect(row(page, "Mặc định")).toContainText("Đang sử dụng");
   await expect(page.getByText('Web đang sử dụng giao diện "Mặc định".')).toBeVisible();
+});
+
+test("Xưởng nến: chọn mẫu theo thứ tự (mẫu tạm ẩn không chọn được), sửa chữ, xem trước đổi theo — hơn 3 mẫu thì băng chuyền; giao diện concept để trống thì dùng mẫu của Mặc định", async ({
+  page,
+  t,
+}) => {
+  void t;
+  await page.goto("/settings/site-theme/default");
+  const pick = page.getByRole("region", { name: "Xưởng nến" });
+  await expect(pick).toBeVisible();
+  await expect(pick.getByText("Không chọn = web tự lấy mẫu nổi bật (rồi mẫu mới).")).toBeVisible();
+
+  await page.getByLabel("Mẫu Xưởng nến").click();
+  const option = (name) => page.locator(".ant-select-dropdown:not(.ant-select-dropdown-hidden) .ant-select-item-option").filter({ hasText: name });
+  await expect(option("Lavender Dream")).toHaveClass(/ant-select-item-option-disabled/);
+  await expect(option("Lavender Dream")).toContainText("Tạm ẩn");
+  await option("Woman Secret").click();
+  await option("Beach Sunshine").click();
+  await page.keyboard.press("Escape");
+  await page.getByLabel("Câu dẫn Xưởng nến").fill("Ba mẫu cho mùa đông");
+  await page.getByLabel("Tên khối Xưởng nến").fill("Xưởng");
+
+  // Xem trước: chữ mới, 2 mẫu chọn đứng đầu theo thứ tự rồi bù một mẫu nổi bật — lưới 3 thẻ
+  await expect(preview(page)).toContainText("Ba mẫu cho mùa đông");
+  const text = await preview(page).innerText();
+  expect(text.indexOf("Woman Secret")).toBeGreaterThan(-1);
+  expect(text.indexOf("Woman Secret")).toBeLessThan(text.indexOf("Beach Sunshine"));
+  await expect(preview(page)).not.toContainText("Sáng Chủ Nhật");
+  await expect(page.getByLabel("Băng chuyền Xưởng nến")).toHaveCount(0);
+
+  // Hơn 3 mẫu: băng chuyền tự cuộn
+  await page.getByLabel("Mẫu Xưởng nến").click();
+  await option("Moon Morning").click();
+  await option("Citrus Bloom").click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("Băng chuyền Xưởng nến")).toBeVisible();
+  await expect(page.getByLabel("Băng chuyền Xưởng nến")).toContainText("Citrus Bloom");
+
+  await page.getByRole("button", { name: "Lưu và đăng lên web" }).click();
+  await expect(page.getByText(/Đã đăng giao diện lên web/)).toBeVisible();
+  const saved = (await theme(page, "default")).published.collection;
+  expect(saved).toMatchObject({ title: "Xưởng", heading: "Ba mẫu cho mùa đông" });
+  expect(saved.productIds).toHaveLength(4);
+
+  // Giao diện concept: chưa chọn mẫu thì ghi rõ dùng mẫu của Mặc định
+  await page.goto("/settings/site-theme");
+  await page.getByRole("button", { name: "Thêm giao diện" }).click();
+  await page.getByLabel("Tên giao diện").fill("Noel");
+  await page.getByRole("button", { name: "Thêm và sửa" }).click();
+  await expect(page.getByText("Không chọn = dùng mẫu của Mặc định: Woman Secret, Beach Sunshine, Moon Morning, Citrus Bloom.")).toBeVisible();
+  await expect(page.getByLabel("Câu dẫn Xưởng nến")).toHaveAttribute("placeholder", "Ba mẫu cho mùa đông");
 });
 
 test("Đường dẫn giao diện không tồn tại: báo không tìm thấy", async ({ page, t }) => {

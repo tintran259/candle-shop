@@ -6,6 +6,7 @@ import { GlobalSearch } from "@/components/header/global-search";
 import { NotificationBell } from "@/components/header/notification-bell";
 import { RouteSkeleton } from "@/components/skeletons";
 import { useInventory } from "@/hooks/use-inventory";
+import { useMessages } from "@/hooks/use-messages";
 import { useStorefrontSync } from "@/hooks/use-storefront-sync";
 import { useOrders } from "@/hooks/use-orders";
 import { findNavItem, navGroups, type NavItem } from "@/layouts/nav";
@@ -50,10 +51,13 @@ export function AppLayout() {
   const { orders, loading } = useOrders();
   // Nguyên liệu hết hàng — lựa chọn dùng chúng đang bị khóa trên web
   const inventory = useInventory();
+  // Lời nhắn khách gửi ở web chưa xử lý
+  const messages = useMessages();
   useStorefrontSync();
   const menuItems = buildMenu({
     orders: loading ? 0 : orders.filter((o) => ["pending", "paid", "delivery_failed", "returned"].includes(o.status)).length,
     inventory: inventory.loading ? 0 : inventory.materials.filter((m) => m.tracked && m.stock <= 0).length,
+    messages: messages.loading ? 0 : messages.items.filter((m) => !m.handled).length,
   });
   // Đang tải code của trang sắp mở → hiện khung xương đúng trang đó thay vì giữ trang cũ
   const navigation = useNavigation();
@@ -87,16 +91,8 @@ export function AppLayout() {
         <Link to="/" aria-label="2510 Scented Candle — Back office">
           <Flex vertical align="center" gap={6} className="sider-brand" style={{ padding: compact ? "20px 0 16px" : "24px 0 18px" }}>
             {/* Thu gọn: chỉ chữ số 2510 có ngọn lửa; mở rộng: đủ logo kèm CANDLE */}
-            <img
-              src={compact ? "/logo-2510-mark-light.png" : "/logo-2510-light.png"}
-              alt="2510 Candle"
-              style={{ height: compact ? 30 : 64, width: "auto", transition: "height .2s ease-out" }}
-            />
-            {!compact && (
-              <Typography.Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, letterSpacing: "0.3em" }}>
-                BACK OFFICE
-              </Typography.Text>
-            )}
+            <img src={compact ? "/logo-2510-mark-light.png" : "/logo-2510-light.png"} alt="2510 Candle" style={{ height: compact ? 30 : 64, width: "auto", transition: "height .2s ease-out" }} />
+            {!compact && <Typography.Text style={{ color: "rgba(255,255,255,0.72)", fontSize: 10, letterSpacing: "0.3em" }}>BACK OFFICE</Typography.Text>}
           </Flex>
         </Link>
 
@@ -147,13 +143,7 @@ export function AppLayout() {
         </Flex>
       </Sider>
 
-      {mobile && open && (
-        <div
-          aria-hidden
-          onClick={() => setOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 99 }}
-        />
-      )}
+      {mobile && open && <div aria-hidden onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 99 }} />}
 
       <Layout>
         <Header
@@ -179,9 +169,7 @@ export function AppLayout() {
           </Flex>
         </Header>
 
-        <Content style={{ padding: mobile ? GAP : `${GAP}px ${GAP * 1.5}px ${GAP * 1.5}px` }}>
-          {nextPath && nextPath !== pathname ? <RouteSkeleton pathname={nextPath} /> : <Outlet />}
-        </Content>
+        <Content style={{ padding: mobile ? GAP : `${GAP}px ${GAP * 1.5}px ${GAP * 1.5}px` }}>{nextPath && nextPath !== pathname ? <RouteSkeleton pathname={nextPath} /> : <Outlet />}</Content>
       </Layout>
     </Layout>
   );

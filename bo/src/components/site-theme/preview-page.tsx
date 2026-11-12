@@ -1,10 +1,15 @@
 import type { CSSProperties } from "react";
+import { useCategories } from "@/hooks/use-categories";
+import { useConcepts } from "@/hooks/use-concepts";
+import { useProducts } from "@/hooks/use-products";
 import { imageUrl } from "@/lib/craft/image";
-import { PAGE, type Device } from "@/lib/site-theme/preview";
+import { formatMoney } from "@/lib/format";
+import { outOfSeason } from "@/lib/products/concepts";
+import { PAGE, previewCards, type Device } from "@/lib/site-theme/preview";
 import { focusPosition, webAssets, webDefaults, type BaseTheme } from "@/lib/site-theme/types";
 
 // Trang chủ web thu nhỏ để xem trước (kích thước px như web ở bề ngang PAGE.w, khung ngoài thu phóng bằng CSS zoom).
-// Thanh thông báo + điều hướng, hero theo giao diện đang sửa; phần dưới hero là minh họa (web thật lấy mẫu nổi bật từ BE)
+// Thanh thông báo + điều hướng, hero, Xưởng nến theo giao diện đang sửa (mẫu chọn như BE, thiếu thì 3 thẻ có sẵn); phần còn lại là minh họa
 
 const C = {
   cream: "#f5f2e9",
@@ -88,12 +93,40 @@ export function PreviewHeader({ theme, device, solid }: { theme: BaseTheme; devi
   );
 }
 
+const MARQUEE_CSS = "@keyframes preview-marquee { to { transform: translateX(-50%) } } .preview-marquee:hover > div { animation-play-state: paused }";
+
+type Card = { key: string; name: string; category: string; price: string; image?: string };
+function PreviewCard({ c }: { c: Card }) {
+  return (
+    <div>
+      {c.image ? (
+        <img src={c.image} alt="" style={{ width: "100%", aspectRatio: "416 / 420", objectFit: "cover", display: "block" }} />
+      ) : (
+        <div style={{ width: "100%", aspectRatio: "416 / 420", background: C.mist }} />
+      )}
+      <div style={{ marginTop: 26, fontSize: 9, letterSpacing: "0.11em", textTransform: "uppercase" }}>{c.category}</div>
+      <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+        <span style={{ fontFamily: serif, fontSize: 27, color: C.wine }}>{c.name}</span>
+        <span style={{ fontSize: 13, flexShrink: 0 }}>{c.price}</span>
+      </div>
+    </div>
+  );
+}
+
 export function PreviewPage({ theme, device }: { theme: BaseTheme; device: Device }) {
   const mobile = device === "mobile";
   const p = PAGE[device];
   const hero = theme.hero ?? {};
   const pad = mobile ? 20 : 64;
   const title = (hero.title || webDefaults.title).split("\n");
+  const coll = { ...webDefaults.collection, ...Object.fromEntries(Object.entries(theme.collection ?? {}).filter(([, v]) => v)) };
+  const { products = [] } = useProducts();
+  const { categories = [] } = useCategories();
+  const concepts = useConcepts();
+  const real = previewCards(theme.collection?.productIds, products, categories, (p) => !outOfSeason(p.conceptIds, concepts.byId));
+  const cards: Card[] = real
+    ? real.map((c) => ({ key: c.id, name: c.name, category: c.category, price: formatMoney(c.price), image: c.image && imageUrl(c.image, 420, false) }))
+    : webAssets.cards.map((c) => ({ key: c.name, ...c }));
 
   return (
     <div style={{ width: p.w, background: C.cream, color: C.muted, fontFamily: sans }}>
@@ -145,28 +178,36 @@ export function PreviewPage({ theme, device }: { theme: BaseTheme; device: Devic
         ))}
       </div>
 
-      {/* Xưởng nến (minh họa) */}
+      {/* Xưởng nến */}
       <section style={{ padding: `40px ${pad}px 60px` }}>
         <div style={{ display: "flex", flexDirection: mobile ? "column" : "row", justifyContent: "space-between", gap: 24 }}>
-          <div style={{ fontFamily: serif, fontSize: mobile ? 56 : 90, lineHeight: 1, letterSpacing: "0.1em", color: C.wine, textTransform: "uppercase" }}>Xưởng nến</div>
+          <div style={{ fontFamily: serif, fontSize: mobile ? 56 : 90, lineHeight: 1, letterSpacing: "0.1em", color: C.wine, textTransform: "uppercase" }}>{coll.title}</div>
           <div style={{ textAlign: mobile ? "left" : "right", paddingTop: mobile ? 0 : 52 }}>
-            <div style={{ fontFamily: serif, fontSize: mobile ? 24 : 32, color: C.ink }}>Ngày đẹp bắt đầu từ một ánh nến.</div>
-            <div style={{ marginTop: 16, fontSize: 11, letterSpacing: "0.11em", textTransform: "uppercase" }}>Đổ tay tỉ mỉ. Chăm chút từng chi tiết.</div>
+            <div style={{ fontFamily: serif, fontSize: mobile ? 24 : 32, color: C.ink }}>{coll.heading}</div>
+            <div style={{ marginTop: 16, fontSize: 11, letterSpacing: "0.11em", textTransform: "uppercase" }}>{coll.note}</div>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "repeat(3, 1fr)", gap: mobile ? 48 : 32, marginTop: 40 }}>
-          {webAssets.cards.map((c) => (
-            <div key={c.name}>
-              <img src={c.image} alt="" style={{ width: "100%", aspectRatio: "416 / 420", objectFit: "cover", display: "block" }} />
-              <div style={{ marginTop: 26, fontSize: 9, letterSpacing: "0.11em", textTransform: "uppercase" }}>{c.category}</div>
-              <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                <span style={{ fontFamily: serif, fontSize: 27, color: C.wine }}>{c.name}</span>
-                <span style={{ fontSize: 13 }}>{c.price}</span>
-              </div>
+        <div style={{ marginTop: 37, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" }}>{coll.eyebrow}</div>
+        {cards.length > 3 ? (
+          // Hơn 3 mẫu: băng chuyền tự cuộn vô hạn như web (nhân đôi danh sách, trượt nửa chiều dài), rê chuột thì dừng
+          <div className="preview-marquee" style={{ margin: `32px -${pad}px 0`, overflow: "hidden" }} aria-label="Băng chuyền Xưởng nến">
+            <style>{MARQUEE_CSS}</style>
+            <div style={{ display: "flex", width: "max-content", animation: `preview-marquee ${cards.length * 7}s linear infinite` }}>
+              {[...cards, ...cards].map((c, i) => (
+                <div key={`${c.key}-${i}`} style={{ width: mobile ? p.w * 0.78 : (p.w - 2 * pad - 64) / 3, paddingLeft: mobile ? 20 : 32, flexShrink: 0, boxSizing: "content-box" }}>
+                  <PreviewCard c={c} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 24, fontSize: 11, color: C.muted, fontStyle: "italic" }}>Minh họa — web thật hiện 3 mẫu nổi bật đang bán.</div>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "repeat(3, 1fr)", gap: mobile ? 48 : 32, marginTop: 32 }}>
+            {cards.map((c) => (
+              <PreviewCard key={c.key} c={c} />
+            ))}
+          </div>
+        )}
+        {!real && <div style={{ marginTop: 24, fontSize: 11, color: C.muted, fontStyle: "italic" }}>Chưa đủ 3 mẫu đang bán — web hiện 3 thẻ có sẵn này.</div>}
       </section>
 
       {/* Chân trang */}

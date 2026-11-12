@@ -6,6 +6,7 @@ import {
   DashboardOutlined,
   ExperimentOutlined,
   InboxOutlined,
+  MailOutlined,
   RollbackOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
@@ -16,9 +17,9 @@ import {
 } from "@ant-design/icons";
 import type { ReactNode } from "react";
 
-// badge: tên bộ đếm động — layout tự tính số ("orders" = đơn đang chờ xử lý, "inventory" = nguyên liệu hết hàng).
+// badge: tên bộ đếm động — layout tự tính số ("orders" = đơn đang chờ xử lý, "inventory" = nguyên liệu hết hàng, "messages" = lời nhắn chưa xử lý).
 // sub: mục con, thụt vào dưới mục ngay trên (vd Phiếu kho dưới Kho nguyên liệu)
-export type NavItem = { label: string; path: string; icon: ReactNode; badge?: "orders" | "inventory"; sub?: boolean };
+export type NavItem = { label: string; path: string; icon: ReactNode; badge?: "orders" | "inventory" | "messages"; sub?: boolean };
 
 export const navGroups: { label: string; items: NavItem[] }[] = [
   { label: "Tổng quan", items: [{ label: "Dashboard", path: "/", icon: <DashboardOutlined /> }] },
@@ -28,6 +29,7 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { label: "Đơn hàng", path: "/orders", icon: <ShoppingCartOutlined />, badge: "orders" },
       { label: "Khách hàng", path: "/customers", icon: <TeamOutlined /> },
+      { label: "Liên hệ", path: "/messages", icon: <MailOutlined />, badge: "messages" },
       { label: "Đánh giá", path: "/reviews", icon: <CommentOutlined /> },
       { label: "Mã giảm giá", path: "/discounts", icon: <TagOutlined /> },
     ],

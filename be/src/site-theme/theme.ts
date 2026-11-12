@@ -19,7 +19,10 @@ export type HeroTheme = {
   // Câu lớn ở dải tối dưới ảnh
   mark?: string;
 };
-export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme };
+// Khối "Xưởng nến" ở trang chủ: chữ của khối + tối đa 12 mẫu chọn tay (theo thứ tự; hơn 3 mẫu thì web chạy băng chuyền tự cuộn). Không chọn mẫu thì lấy mẫu của Mặc định, Mặc định cũng không thì BE tự lấy mẫu nổi bật
+export type CollectionTheme = { title?: string; heading?: string; note?: string; eyebrow?: string; productIds?: string[] };
+export const COLLECTION_MAX = 12;
+export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme; collection?: CollectionTheme };
 // Nội dung một giao diện: announcementOn chỉ ở Mặc định, conceptIds chỉ ở giao diện khác (mỗi concept thuộc tối đa một giao diện)
 export type ThemeContent = ThemePart & { announcementOn?: boolean; conceptIds?: string[] };
 export type ThemeRow = { id: string; published: ThemeContent | null };
@@ -47,6 +50,13 @@ export function resolveTheme(themes: ThemeRow[], concepts: ConceptSeason[], toda
     const v = pick(over.hero?.[k], base.hero?.[k]);
     if (v !== undefined && v !== '') (hero as Record<string, string>)[k] = v;
   }
+  const collection: CollectionTheme = {};
+  for (const k of ['title', 'heading', 'note', 'eyebrow'] as const) {
+    const v = pick(over.collection?.[k], base.collection?.[k]);
+    if (v) collection[k] = v;
+  }
+  const ids = over.collection?.productIds?.length ? over.collection.productIds : base.collection?.productIds;
+  if (ids?.length) collection.productIds = ids;
   return {
     // Giao diện + concept đang áp dụng (null = Mặc định)
     themeId: active?.id ?? null,
@@ -55,6 +65,7 @@ export function resolveTheme(themes: ThemeRow[], concepts: ConceptSeason[], toda
     announcement: pick(over.announcement, base.announcement) || undefined,
     logo: { light: pick(over.logo?.light, base.logo?.light) || undefined, dark: pick(over.logo?.dark, base.logo?.dark) || undefined },
     hero,
+    collection,
   };
 }
 

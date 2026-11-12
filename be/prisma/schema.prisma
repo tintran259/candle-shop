@@ -30,6 +30,17 @@ model ShopSettings {
   updatedAt           DateTime @updatedAt
 }
 
+// Mạng xã hội của shop (Cài đặt › Mạng xã hội) — chân trang web hiện các mạng đang bật, theo thứ tự.
+// platform: facebook / instagram / tiktok / youtube / threads / zalo / shopee / other (be/src/settings/socials.ts); label trống = tên nền tảng
+model SocialLink {
+  id        String  @id
+  platform  String
+  label     String  @default("")
+  url       String
+  enabled   Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
 // Phương thức giao hiện khi tạo đơn (phí khách trả, số ngày giao)
 model ShippingOption {
   id        String  @id
@@ -535,6 +546,17 @@ model SiteTheme {
   publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// Lời nhắn khách gửi ở form "Gửi lời nhắn" trang chủ web (docs/pages/messages.md). email trống = khách không để lại
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String
+  email     String   @default("")
+  message   String
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model CraftConfig {

@@ -2,7 +2,7 @@
 // BO › Cài đặt › Giao diện web — BE đã chọn sẵn giao diện của concept đang trong mùa — và 3 mẫu nổi bật cho khối "Xưởng nến".
 // Trường trống / BE lỗi thì web dùng nội dung có sẵn (content/home.ts). Lưu đệm 60 giây như danh sách sản phẩm
 import { cache } from "react";
-import { aromaLabels, cloudinaryFit, formatPrice, isDataUrl, productUrl, sizeLabels, type ShopCategory, type ShopProduct } from "@/lib/shop";
+import { API_URL, aromaLabels, cloudinaryFit, formatPrice, isDataUrl, productUrl, sizeLabels, type ShopCategory, type ShopProduct } from "@/lib/shop";
 import { announcement as defaultAnnouncement, collection, hero as defaultHero } from "@/content/home";
 
 export type Focus = "left" | "center" | "right";
@@ -13,13 +13,13 @@ export type SiteTheme = {
   announcement?: string;
   logo: { light?: string; dark?: string };
   hero: { image?: string; focus?: Focus; eyebrow?: string; title?: string; text?: string; cta?: string; mark?: string };
+  // Khối Xưởng nến: chữ do BO sửa (mẫu chọn tay BE đã xếp sẵn vào featured)
+  collection?: { title?: string; heading?: string; note?: string; eyebrow?: string };
 };
 type HomeData = { theme: SiteTheme; featured: ShopProduct[]; categories: ShopCategory[] };
 
 // Tag lưu đệm của giao diện web: BE báo POST /api/revalidate?tag=site-theme khi đăng / gỡ giao diện → làm mới ngay (app/api/revalidate/route.ts)
 export const SITE_THEME_TAG = "site-theme";
-
-const API_URL = (process.env.API_URL || "http://localhost:4000/api").replace(/\/$/, "");
 
 // cache(): khung trang (thanh thông báo, logo) và trang chủ cùng đọc trong một lượt dựng — chỉ gọi một lần
 export const getHome = cache(async (): Promise<HomeData | null> => {
@@ -56,6 +56,12 @@ export function heroContent(t: SiteTheme["hero"] | undefined) {
   };
 }
 export type HeroContent = ReturnType<typeof heroContent>;
+
+// Chữ khối "Xưởng nến": BO để trống thì dùng nội dung có sẵn
+export function collectionText(t: SiteTheme["collection"] | undefined) {
+  return { title: t?.title || collection.title, heading: t?.heading || collection.heading, note: t?.note || collection.note, eyebrow: t?.eyebrow || collection.eyebrow };
+}
+export type CollectionText = ReturnType<typeof collectionText>;
 
 // Thẻ "Xưởng nến": đủ 3 mẫu từ BE thì dùng mẫu thật (bấm mở trang chi tiết), thiếu thì giữ 3 thẻ có sẵn
 export type FeaturedCard = { key: string; name: string; category: string; price: string; notes: string; details: string; href: string; photo?: { src: string; alt: string } };

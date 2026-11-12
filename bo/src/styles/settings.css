@@ -18,6 +18,12 @@
   gap: 12px;
   align-items: start;
 }
+.social-row {
+  display: grid;
+  grid-template-columns: 44px 140px minmax(0, 0.8fr) minmax(0, 1.6fr) 32px;
+  gap: 12px;
+  align-items: start;
+}
 .settings-preview {
   position: sticky;
   top: 16px;
@@ -73,5 +79,30 @@
   }
   .carrier-row .carrier-code {
     grid-area: code;
+  }
+  /* Mạng xã hội: công tắc + nền tảng + xóa, tên hiện, link */
+  .social-row {
+    grid-template-columns: 44px minmax(0, 1fr) 32px;
+    grid-template-areas:
+      "switch platform remove"
+      "label label label"
+      "url url url";
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1ece4;
+  }
+  .social-row .ship-switch {
+    grid-area: switch;
+  }
+  .social-platform {
+    grid-area: platform;
+  }
+  .social-label {
+    grid-area: label;
+  }
+  .social-url {
+    grid-area: url;
+  }
+  .social-row .ship-remove {
+    grid-area: remove;
   }
 }

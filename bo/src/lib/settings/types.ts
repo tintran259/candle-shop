@@ -1,3 +1,5 @@
+import type { Social } from "@/lib/settings/socials";
+
 // Cài đặt cửa hàng — các con số admin tự đổi được. Đơn lưu lại giá trị lúc tạo nên đổi cài đặt không ảnh hưởng đơn cũ.
 
 export type ShippingOption = {
@@ -34,6 +36,8 @@ export type ShopSettings = {
   shippingOptions: ShippingOption[];
   sender: Sender;
   carriers: Carrier[];
+  // Mạng xã hội hiện ở chân trang web (lib/settings/socials.ts)
+  socials: Social[];
   // Số cây xưởng làm được mỗi ngày, 0 = không giới hạn
   dailyCapacity: number;
   // Số ngày làm tối thiểu: ngày làm xong mặc định sớm nhất là hôm nay + số này
@@ -53,6 +57,7 @@ export const defaultSettings: ShopSettings = {
     { id: "express", name: "Nhanh", fee: 50_000, days: 1, enabled: true },
   ],
   sender: { name: "2510 Candle", phone: "", address: "" },
+  socials: [],
   // Link tra cứu: kiểm tra lại với đơn vị vận chuyển, đổi được ở Cài đặt
   carriers: [
     { id: "ghn", name: "Giao Hàng Nhanh", trackingUrl: "https://donhang.ghn.vn/?order_code={code}", requireCode: true, enabled: true },
