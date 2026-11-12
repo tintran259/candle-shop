@@ -28,10 +28,11 @@ export function Logo({ className, label }: { className?: string; label?: string 
   return <span role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true} className={cx("block bg-current", className)} style={LOGO_MASK} />;
 }
 
-// Logo tải lên ở BO › Giao diện web (src) hoặc logo mặt nạ có sẵn tô theo màu chữ. Đặt chiều rộng qua className
-export function BrandLogo({ src, className, label }: { src?: string; className?: string; label?: string }) {
+// Logo tải lên ở BO › Giao diện web (src) hoặc logo mặt nạ có sẵn tô theo màu chữ. Đặt chiều rộng qua className.
+// capHeight (mặc định): logo tải lên cao tối đa 64px cho vừa thanh điều hướng; chân trang tắt để logo tải lên to bằng logo có sẵn (theo chiều rộng)
+export function BrandLogo({ src, className, label, capHeight = true }: { src?: string; className?: string; label?: string; capHeight?: boolean }) {
   if (!src) return <Logo className={className} label={label} />;
-  return <Image src={cloudinaryFit(src, 600)} alt={label ?? ""} width={600} height={140} unoptimized className={cx("block h-auto max-h-16 object-contain object-left", className)} />;
+  return <Image src={cloudinaryFit(src, 600)} alt={label ?? ""} width={600} height={140} unoptimized className={cx("block h-auto object-contain object-left", capHeight && "max-h-16", className)} />;
 }
 
 // Liên kết chữ nhỏ + mũi tên ↗; rê chuột: gạch chân chạy ra, mũi tên nhích lên phải

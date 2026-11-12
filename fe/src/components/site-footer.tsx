@@ -17,7 +17,7 @@ export function SiteFooter({ logo, socials }: { logo?: string; socials: ShopSoci
         <div className="grid gap-12 md:grid-cols-[800fr_512fr] md:gap-0">
           <div className="md:pt-[23px]">
             <div data-reveal="clip" className="text-copper">
-              <BrandLogo src={logo} label="2510 Candle" className="w-[clamp(200px,20vw,290px)]" />
+              <BrandLogo src={logo} label="2510 Candle" capHeight={false} className="w-[clamp(200px,20vw,290px)]" />
             </div>
             <p data-reveal="fade" className="mt-5 pl-0.5 text-[12px] text-muted">
               {footer.tagline}

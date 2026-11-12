@@ -166,7 +166,8 @@ export const productsPage = {
   sort: { label: "Sắp xếp", featured: "Nổi bật", priceAsc: "Giá thấp đến cao", priceDesc: "Giá cao đến thấp" },
   count: (n: number) => `${n} mẫu nến`,
   range: (from: number, to: number, n: number) => `${from}–${to} / ${n} mẫu nến`,
-  pageSize: 9,
+  // 12 chia hết cho 3 cột (máy tính) và 2 cột (điện thoại) — hàng cuối không bao giờ lẻ
+  pageSize: 12,
   pagination: { label: "Phân trang", prev: "Trước", next: "Sau", page: (n: number) => `Trang ${n}` },
   empty: "Chưa có mẫu nến nào trong mục này.",
   results: (q: string) => `Kết quả cho “${q}”`,
