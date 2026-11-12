@@ -51,6 +51,7 @@ Bảng `ContactMessage` (`id`, `name`, `phone`, `email` — trống nếu không
 
 - BE: `be/test/messages.e2e-spec.ts` (bỏ khoảng trắng, email viết thường / không bắt buộc, dữ liệu sai 400, xem / đánh dấu / xóa, 401, 404, Xóa toàn bộ dữ liệu; chống spam: bẫy bot, gửi dưới 3 giây / thiếu `elapsed`, trùng nội dung 24 giờ kể cả SĐT viết khác, 3 lời nhắn / SĐT / 24 giờ khác IP vẫn tính, 5 lần / IP). App test bật `trust proxy` như `main.ts` để giả IP bằng `X-Forwarded-For`.
 - BO: `bo/e2e/messages.spec.ts` (huy hiệu menu, lọc, link Zalo, đánh dấu / chuyển về, xóa).
+- BO + BE thật: `bo/e2e-be/messages.spec.ts` (gửi qua API công khai → đánh dấu đã xử lý, chuyển về, xóa trên BO, BE lưu đúng, không báo lỗi — bắt lỗi "$ is not a function" khi kho BO áp danh sách BE trả về).
 
 ## Chưa có
 

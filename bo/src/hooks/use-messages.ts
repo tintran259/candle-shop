@@ -6,16 +6,24 @@ export type ContactMessage = { id: string; name: string; phone: string; email: s
 
 const store = createLocalStore<ContactMessage[]>("bo-messages-v1", [], undefined, () => api<ContactMessage[]>("GET", "/admin/messages"));
 
+// BE trả lại cả danh sách sau mỗi thao tác → thay cả kho bằng danh sách đó. sync cần request trả về một HÀM áp vào dữ liệu
+// (trả thẳng mảng thì sync gọi mảng như hàm → lỗi "$ is not a function")
 const setHandled = (id: string, handled: boolean) =>
   store.sync(
     store.get().map((m) => (m.id === id ? { ...m, handled } : m)),
-    () => api("PATCH", `/admin/messages/${id}`, { handled }),
+    async () => {
+      const list = await api<ContactMessage[]>("PATCH", `/admin/messages/${id}`, { handled });
+      return () => list;
+    },
   );
 
 const remove = (id: string) =>
   store.sync(
     store.get().filter((m) => m.id !== id),
-    () => api("DELETE", `/admin/messages/${id}`),
+    async () => {
+      const list = await api<ContactMessage[]>("DELETE", `/admin/messages/${id}`);
+      return () => list;
+    },
   );
 
 export function useMessages() {
