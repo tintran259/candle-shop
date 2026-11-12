@@ -143,7 +143,7 @@ BE và BO chạy trên [Render](https://render.com), cấu hình ở `render.yam
    | `DATABASE_URL` | Connection string Neon, bản `-pooler` (giống `be/.env`) |
    | `ADMIN_PIN_HASH` | Phần sau `ADMIN_PIN_HASH=` trong `be/.env` (hoặc chạy lại `pnpm auth:pin <6 số>`) |
    | `BO_URL` | `https://candle2510-bo.onrender.com,http://localhost:3001` (BO trên Render + BO chạy trên máy) |
-   | `FRONTEND_URL` | Địa chỉ web (fe), chưa có thì để `http://localhost:3000`. Đăng / gỡ / xóa giao diện web (và Xóa toàn bộ dữ liệu) thì BE gọi `{FRONTEND_URL}/api/revalidate?tag=site-theme` để web làm mới giao diện ngay (`common/web-revalidate.ts`, gộp các lần sát nhau, lỗi thì bỏ qua). Dữ liệu khác (sản phẩm, liên hệ) không báo, web tự làm mới sau 60 giây |
+   | `FRONTEND_URL` | Địa chỉ web (fe), chưa có thì để `http://localhost:3000`. Nhiều địa chỉ cách dấu phẩy; BE tự bỏ `/` cuối và đường dẫn (`common/origins.ts`) — log khởi động in `[CORS] Cho phép: …` để đối chiếu khi web báo lỗi CORS. Lệnh làm mới gửi tới **mọi** địa chỉ trong biến; web trả 401 thì log ghi "kiểm tra REVALIDATE_SECRET ở hai bên". Đăng / gỡ / xóa giao diện web (và Xóa toàn bộ dữ liệu) thì BE gọi `{FRONTEND_URL}/api/revalidate?tag=site-theme` để web làm mới giao diện ngay (`common/web-revalidate.ts`, gộp các lần sát nhau, lỗi thì bỏ qua). Dữ liệu khác (sản phẩm, liên hệ) không báo, web tự làm mới sau 60 giây |
    | `REVALIDATE_SECRET` | Chuỗi ngẫu nhiên, **cùng giá trị** đặt ở web (fe) — web chỉ nhận lệnh làm mới có mã này. Để trống khi chạy trên máy |
    | `JWT_SECRET` | Render tự sinh — không cần nhập |
 

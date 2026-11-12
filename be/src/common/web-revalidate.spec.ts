@@ -18,14 +18,14 @@ describe('WebRevalidate', () => {
     process.env = { ...env };
   });
 
-  it('gọi web một lần cho nhiều lần sát nhau, đúng tag + mã bí mật', async () => {
+  it('gộp nhiều lần sát nhau thành một lượt, gọi mọi địa chỉ web trong FRONTEND_URL (bỏ "/" cuối), đúng tag + mã bí mật', async () => {
     const w = new WebRevalidate();
     w.siteTheme();
     w.siteTheme();
     expect(fetchMock).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(600);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe('http://web.test/api/revalidate?tag=site-theme');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual(['http://web.test/api/revalidate?tag=site-theme', 'http://khac.test/api/revalidate?tag=site-theme']);
     expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST', headers: { 'x-revalidate-secret': 'bi-mat-thu' } });
   });
 
@@ -45,6 +45,7 @@ describe('WebRevalidate', () => {
     const w = new WebRevalidate();
     w.siteTheme();
     await vi.advanceTimersByTimeAsync(600);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // Cả hai địa chỉ đều được thử, lỗi không ném ra ngoài
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

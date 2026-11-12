@@ -1,10 +1,11 @@
 // Sentry phải khởi tạo trước mọi thứ khác
 import './instrument.js';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { parseOrigins } from './common/origins.js';
 import { rateLimit } from './common/rate-limit.js';
 import { SentryFilter } from './common/sentry.filter.js';
 import { AppModule } from './app.module.js';
@@ -22,11 +23,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   // Web (FRONTEND_URL) và Back Office (BO_URL) — mỗi biến có thể ghi nhiều địa chỉ, cách nhau dấu phẩy
   // Để trống cũng dùng giá trị mặc định (BO chạy dev ở cổng 3001, preview test 3011)
-  const origins = [process.env.FRONTEND_URL || 'http://localhost:3000', process.env.BO_URL || 'http://localhost:3001,http://localhost:3011']
-    .flatMap((s) => s.split(','))
-    .map((s) => s.trim())
-    .filter(Boolean);
+  // parseOrigins: bỏ "/" cuối, đường dẫn, khoảng trắng — ghi "https://abc.vercel.app/" vẫn khớp Origin của trình duyệt
+  const origins = [...parseOrigins(process.env.FRONTEND_URL || 'http://localhost:3000'), ...parseOrigins(process.env.BO_URL || 'http://localhost:3001,http://localhost:3011')];
   app.enableCors({ origin: origins, credentials: true });
+  // Không phải bí mật — xem ở log Render khi web / BO báo lỗi CORS
+  new Logger('CORS').log(`Cho phép: ${origins.join(', ')}`);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   // Lỗi 5xx báo Sentry (khi có SENTRY_DSN)
   app.useGlobalFilters(new SentryFilter(app.get(HttpAdapterHost).httpAdapter));
