@@ -36,7 +36,7 @@ export function BackToTop() {
       type="button"
       onClick={toTop}
       aria-label="Về đầu trang"
-      className="group invisible fixed right-4 bottom-4 z-40 grid size-12 place-items-center rounded-full bg-night/85 text-linen backdrop-blur transition-colors duration-300 hover:bg-wine md:right-8 md:bottom-8 md:size-14"
+      className="group invisible fixed right-[calc(1rem+var(--lock-gap,0px))] bottom-4 z-40 grid size-12 place-items-center rounded-full bg-night/85 text-linen backdrop-blur transition-colors duration-300 hover:bg-wine md:right-[calc(2rem+var(--lock-gap,0px))] md:bottom-8 md:size-14"
     >
       <svg aria-hidden viewBox="0 0 52 52" className="absolute inset-0 size-full -rotate-90">
         <circle cx="26" cy="26" r={R} fill="none" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" />

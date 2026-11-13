@@ -13,6 +13,7 @@ import { gsap, MOTION_OK, useGSAP } from "@/lib/gsap";
 import { searchProducts } from "@/lib/search";
 import { cloudinary, formatPrice, productUrl, type ShopData } from "@/lib/shop";
 import { Container, cx } from "@/components/ui/primitives";
+import { lockScroll } from "@/lib/scroll-lock";
 
 let cache: Promise<ShopData | null> | null = null;
 const load = () =>
@@ -40,10 +41,10 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
     let alive = true;
     load().then((d) => alive && setData(d));
     input.current?.focus();
-    document.documentElement.style.overflow = "hidden";
+    const unlock = lockScroll();
     return () => {
       alive = false;
-      document.documentElement.style.overflow = "";
+      unlock();
     };
   }, []);
 

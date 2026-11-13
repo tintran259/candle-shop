@@ -10,6 +10,7 @@ import type { Chrome } from "@/lib/home";
 import { gsap, MOTION_OK, MOTION_REDUCE, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { BrandLogo, cx } from "@/components/ui/primitives";
 import { SearchDialog } from "@/components/search/search-dialog";
+import { lockScroll } from "@/lib/scroll-lock";
 
 const SearchIcon = () => (
   <svg aria-hidden viewBox="0 0 24 24" className="size-[15px]">
@@ -87,9 +88,7 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
   );
 
   // Menu điện thoại: khóa cuộn trang phía sau (tới khi rèm kéo lên xong)
-  useEffect(() => {
-    document.documentElement.style.overflow = shown ? "hidden" : "";
-  }, [shown]);
+  useEffect(() => (shown ? lockScroll() : undefined), [shown]);
   useEffect(() => {
     if (!open) return;
     // Mở menu lúc thanh đang ẩn (vừa cuộn xuống): kéo thanh về để thấy nút Đóng
@@ -130,7 +129,7 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
   const tone = light ? "text-linen" : "text-ink";
   return (
     // header không nhận chuột (thanh trượt lên vẫn để lại khung trống); thanh và menu nhận lại
-    <header ref={root} className="pointer-events-none fixed inset-x-0 top-0 z-50">
+    <header ref={root} className="pointer-events-none fixed top-0 right-(--lock-gap,0px) left-0 z-50">
       <div ref={bar} className="pointer-events-auto">
         {chrome.announcement && <p className="bg-night px-5 py-[7px] text-center text-[10px] leading-[14px] tracking-[0.1em] text-[#f8f5ee]">{chrome.announcement}</p>}
         <div className={cx("transition-colors duration-500", solid && !shown && "bg-cream/92 backdrop-blur")}>
