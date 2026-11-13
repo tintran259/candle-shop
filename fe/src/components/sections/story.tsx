@@ -48,7 +48,7 @@ export function Story({ content: story }: { content: StoryContent }) {
             </div>
           </div>
         </div>
-        <div data-reveal="line" className="mt-16 h-[0.7px] bg-rule md:mt-[88px]" />
+        <div data-reveal="line" className="mt-16 h-[0.7px] bg-rule md:mt-[92px]" />
       </Container>
     </section>
   );

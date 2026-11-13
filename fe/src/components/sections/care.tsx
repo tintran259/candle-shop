@@ -1,5 +1,5 @@
 // Cách đốt nến (Figma 2:9): tiêu đề 2 dòng, liên kết nhỏ, 3 bước đánh số (số đỏ rượu vang, tiêu đề có chân, mô tả) ngăn bằng đường kẻ;
-// ảnh "hốc đá ngập nắng" bên phải; đường kẻ khép section
+// ảnh "hốc đá ngập nắng" bên phải; đường kẻ khép section. Khoảng cách theo Figma: mỗi bước cao 107px (tên 29 + 8 + mô tả 20 + 31, kẻ, 19)
 import { ArrowLink, Container, Photo } from "@/components/ui/primitives";
 import type { CareContent } from "@/lib/blocks";
 
@@ -17,19 +17,19 @@ export function Care({ content: care }: { content: CareContent }) {
                 </span>
               ))}
             </h2>
-            <div data-reveal="fade" className="mt-11 pl-[3px] md:mt-[46px]">
+            <div data-reveal="fade" className="mt-11 pl-[3px] md:mt-[38px]">
               <ArrowLink href={care.link.href} className="text-muted">
                 {care.link.label}
               </ArrowLink>
             </div>
 
-            <ol className="mt-14 max-w-[640px] md:mt-[66px]">
+            <ol className="mt-14 max-w-[640px] md:mt-[61px]">
               {care.steps.map((s, i) => (
                 <li key={i}>
-                  <div data-reveal="fade" className="grid grid-cols-[50px_1fr] pb-8 pl-0.5">
-                    <span className="pt-1.5 text-[10px] text-wine tabular-nums">{String(i + 1).padStart(2, "0")}</span>
+                  <div data-reveal="fade" className="grid grid-cols-[50px_1fr] pb-[31px] pl-0.5">
+                    <span className="pt-[3px] text-[10px] leading-3 text-wine tabular-nums">{String(i + 1).padStart(2, "0")}</span>
                     <div>
-                      <h3 className="display text-2xl text-ink">{s.title}</h3>
+                      <h3 className="display text-2xl leading-[29px] text-ink">{s.title}</h3>
                       <p className="mt-2 text-[12px] leading-5 text-muted">{s.text}</p>
                     </div>
                   </div>

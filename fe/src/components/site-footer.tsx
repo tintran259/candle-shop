@@ -1,5 +1,5 @@
 // Chân trang (Figma 2:12): tên thương hiệu, khẩu hiệu, cột liên kết + cột "Theo dõi" (mạng xã hội ở BO › Cài đặt, mở tab mới; chưa có thì ẩn) (trái); ảnh "nắng vàng trên đá travertine" (phải);
-// đường kẻ; bản quyền + liên kết pháp lý
+// đường kẻ; bản quyền + liên kết pháp lý. Cột liên kết rộng 262 / 274 / 205 như Figma (x 64 / 326 / 600 ở 1440)
 import { brand, footer } from "@/content/home";
 import { BrandLogo, Container, Photo } from "@/components/ui/primitives";
 import type { ShopSocial } from "@/lib/shop";
@@ -21,10 +21,10 @@ export function SiteFooter({ logo, socials, content }: { logo?: string; socials:
             <div data-reveal="clip" className="text-copper">
               <BrandLogo src={logo} label="2510 Candle" capHeight={false} className="w-[clamp(200px,20vw,290px)]" />
             </div>
-            <p data-reveal="fade" className="mt-5 pl-0.5 text-[12px] text-muted">
+            <p data-reveal="fade" className="mt-3 pl-0.5 text-[12px] text-muted">
               {content.tagline}
             </p>
-            <div className="mt-14 grid grid-cols-2 gap-y-10 sm:grid-cols-3 md:mt-[63px] md:max-w-[741px]">
+            <div className="mt-14 grid grid-cols-2 gap-y-10 sm:grid-cols-[262fr_274fr_205fr] md:mt-[59px] md:max-w-[741px]">
               {columns.map((c) => (
                 <nav key={c.title} aria-label={c.title} data-reveal="fade">
                   <p className="text-[9px] tracking-[0.13em] text-muted uppercase">{c.title}</p>

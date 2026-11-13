@@ -12,7 +12,7 @@ const SECONDS_PER_CARD = 7;
 
 function Grid({ cards }: { cards: FeaturedCard[] }) {
   return (
-    <ul className="mt-10 grid gap-12 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-8">
+    <ul className="mt-10 grid gap-12 sm:grid-cols-2 md:mt-[37px] md:grid-cols-3 md:gap-8">
       {cards.map((p, i) => (
         <li key={p.key}>
           <CollectionCard card={p} parallax={i === 1 ? 6 : 4} sizes="(min-width: 768px) 30vw, (min-width: 640px) 50vw, 100vw" />
@@ -70,7 +70,7 @@ export function Collection({ cards, text }: { cards: FeaturedCard[]; text: Colle
           </div>
         </div>
 
-        <p data-reveal="fade" className="eyebrow mt-12 md:mt-[37px]">
+        <p data-reveal="fade" className="eyebrow mt-12 md:mt-[32px]">
           {text.eyebrow}
         </p>
 
@@ -80,8 +80,8 @@ export function Collection({ cards, text }: { cards: FeaturedCard[]; text: Colle
       {marquee && <Marquee cards={cards} />}
 
       <Container>
-        {/* Cách thẻ một khoảng rõ (thẻ có giá + dòng mô tả nhỏ, link sát quá trông dính vào thẻ cuối) */}
-        <div data-reveal="fade" className="mt-12 flex justify-end md:mt-14">
+        {/* Lưới 3 thẻ: sát dưới hàng thẻ như Figma (y 827). Băng chuyền (không có trong Figma): cách thẻ một khoảng rõ, kẻo trông dính vào thẻ */}
+        <div data-reveal="fade" className={`mt-12 flex justify-end ${marquee ? "md:mt-14" : "md:mt-[14px]"}`}>
           <ArrowLink href={collection.more.href} className="text-wine uppercase">
             {collection.more.label}
           </ArrowLink>
