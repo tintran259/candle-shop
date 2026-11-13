@@ -3,10 +3,12 @@
 import { brand, footer } from "@/content/home";
 import { BrandLogo, Container, Photo } from "@/components/ui/primitives";
 import type { ShopSocial } from "@/lib/shop";
+import type { FooterContent } from "@/lib/blocks";
 
 const link = "relative inline-block py-1.5 text-[11px] leading-[14px] text-muted transition-colors duration-300 hover:text-wine";
 
-export function SiteFooter({ logo, socials }: { logo?: string; socials: ShopSocial[] }) {
+// content: ảnh + khẩu hiệu từ BO › Giao diện web (lib/blocks.ts), trống thì nội dung có sẵn
+export function SiteFooter({ logo, socials, content }: { logo?: string; socials: ShopSocial[]; content: FooterContent }) {
   const columns = [
     ...footer.columns.map((c) => ({ ...c, links: c.links.map((l) => ({ ...l, external: false })) })),
     ...(socials.length ? [{ title: footer.follow, links: socials.map((s) => ({ label: s.label, href: s.url, external: true })) }] : []),
@@ -20,7 +22,7 @@ export function SiteFooter({ logo, socials }: { logo?: string; socials: ShopSoci
               <BrandLogo src={logo} label="2510 Candle" capHeight={false} className="w-[clamp(200px,20vw,290px)]" />
             </div>
             <p data-reveal="fade" className="mt-5 pl-0.5 text-[12px] text-muted">
-              {footer.tagline}
+              {content.tagline}
             </p>
             <div className="mt-14 grid grid-cols-2 gap-y-10 sm:grid-cols-3 md:mt-[63px] md:max-w-[741px]">
               {columns.map((c) => (
@@ -39,7 +41,7 @@ export function SiteFooter({ logo, socials }: { logo?: string; socials: ShopSoci
               ))}
             </div>
           </div>
-          <Photo photo={footer.photo} sizes="(min-width: 768px) 36vw, 100vw" className="aspect-[512/338]" parallax={5} />
+          <Photo photo={content.photo} sizes="(min-width: 768px) 36vw, 100vw" className="aspect-[512/338]" parallax={5} />
         </div>
 
         <div data-reveal="line" className="mt-14 h-[0.7px] bg-rule md:mt-[26px]" />

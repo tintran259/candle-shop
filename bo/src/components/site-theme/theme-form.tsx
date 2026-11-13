@@ -1,7 +1,9 @@
 import { Col, Flex, Form, Input, Radio, Row, Switch } from "antd";
 import { FormSection } from "@/components/form/form-section";
+import { BlockFields } from "@/components/site-theme/block-fields";
 import { CollectionFields } from "@/components/site-theme/collection-fields";
 import { SingleImage } from "@/components/site-theme/single-image";
+import { CARE_STEPS, type BlocksTheme, type CareStep } from "@/lib/site-theme/blocks";
 import { focusLabels, LIMITS, webAssets, webDefaults, type BaseTheme, type Focus } from "@/lib/site-theme/types";
 
 type Values = {
@@ -21,7 +23,13 @@ type Values = {
   cNote?: string;
   cEyebrow?: string;
   productIds?: string[];
-};
+} & BlocksTheme;
+
+// Bước điền lẻ (vd chỉ bước 2) để lại chỗ trống trong mảng → lưu thành null, BE từ chối: luôn đủ 3 bước, bước trống là {}; cả 3 trống thì bỏ
+const careSteps = (steps?: CareStep[]) =>
+  steps?.some((s) => s?.title || s?.text)
+    ? Array.from({ length: CARE_STEPS }, (_, i) => ({ ...(steps[i]?.title && { title: steps[i].title }), ...(steps[i]?.text && { text: steps[i].text }) }))
+    : undefined;
 
 const toValues = (p: BaseTheme): Values => ({
   announcementOn: p.announcementOn ?? true,
@@ -34,6 +42,11 @@ const toValues = (p: BaseTheme): Values => ({
   cNote: p.collection?.note,
   cEyebrow: p.collection?.eyebrow,
   productIds: p.collection?.productIds ?? [],
+  // Các khối trang chủ: tên trường lồng, giữ nguyên dạng
+  story: p.story,
+  care: p.care,
+  contact: p.contact,
+  footer: p.footer,
 });
 const fromValues = (v: Values, isBase: boolean): BaseTheme => ({
   ...(isBase && { announcementOn: v.announcementOn }),
@@ -55,6 +68,10 @@ const fromValues = (v: Values, isBase: boolean): BaseTheme => ({
     eyebrow: v.cEyebrow || undefined,
     productIds: v.productIds?.length ? v.productIds : undefined,
   },
+  story: v.story,
+  care: v.care && { ...v.care, steps: careSteps(v.care.steps) },
+  contact: v.contact,
+  footer: v.footer,
 });
 
 type Props = {
@@ -154,6 +171,8 @@ export function ThemeForm({ part, isBase, fallback, onChange }: Props) {
         </FormSection>
 
         <CollectionFields isBase={isBase} fallback={fallback.collection} />
+
+        <BlockFields isBase={isBase} fallback={fallback} />
       </Flex>
     </Form>
   );

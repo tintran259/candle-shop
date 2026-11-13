@@ -37,7 +37,7 @@ test("Danh sách có sẵn Mặc định; sửa Mặc định, xem trước đ�
 
   // Chưa chọn ảnh: xem trước và ô ảnh dùng ảnh có sẵn của web
   await expect(preview(page).locator("section img").first()).toHaveAttribute("src", "/site-preview/hero-2510.jpg");
-  await expect(page.getByText("Ảnh có sẵn của web")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Hero" }).getByText("Ảnh có sẵn của web")).toBeVisible();
   // Ảnh hero nhỏ: cảnh báo nhưng vẫn nhận
   await page.getByRole("region", { name: "Hero" }).locator("input[type=file]").first().setInputFiles({ name: "hero.png", mimeType: "image/png", buffer: PNG });
   await expect(page.getByText(/nên dùng ảnh rộng từ 1600px/)).toBeVisible();
@@ -67,7 +67,7 @@ test("Thêm giao diện cho concept: gắn concept, Lưu nháp, Lưu và đăng 
   await expect(page.getByText("Chưa gắn concept — giao diện sẽ không lên web.")).toBeVisible();
   await expect(page.getByText("Để trống = dùng của Mặc định").first()).toBeVisible();
   // Ô ảnh để trống (không hiện ảnh gốc như Mặc định)
-  await expect(page.getByText("Dùng ảnh của Mặc định")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Hero" }).getByText("Dùng ảnh của Mặc định")).toBeVisible();
   await expect(page.getByRole("img", { name: "Ảnh hero" }).locator("img")).toHaveCount(0);
 
   // Gắn Noel (dữ liệu mẫu: không đặt ngày → luôn trong mùa)
@@ -82,7 +82,9 @@ test("Thêm giao diện cho concept: gắn concept, Lưu nháp, Lưu và đăng 
   await expect(page.getByText("Đã lưu nháp")).toBeVisible();
   await expect(page.getByText("Bản nháp chưa đăng lên web")).toBeVisible();
   const id = page.url().split("/").at(-1);
-  expect((await theme(page, id)).draft).toEqual({ conceptIds: ["noel"], logo: {}, hero: { mark: "Giáng sinh an lành" }, collection: {} });
+  // Chỉ lưu phần đã điền (khối khác rỗng)
+  expect((await theme(page, id)).draft).toMatchObject({ conceptIds: ["noel"], logo: {}, hero: { mark: "Giáng sinh an lành" }, collection: {} });
+  expect((await theme(page, id)).draft.care?.steps).toBeUndefined();
 
   // Nháp chưa đăng: web vẫn dùng Mặc định
   await page.getByRole("link", { name: "Về danh sách giao diện" }).click();
@@ -215,6 +217,57 @@ test("Xưởng nến: chọn mẫu theo thứ tự (mẫu tạm ẩn không ch�
   await page.getByRole("button", { name: "Thêm và sửa" }).click();
   await expect(page.getByText("Không chọn = dùng mẫu của Mặc định: Woman Secret, Beach Sunshine, Moon Morning, Citrus Bloom.")).toBeVisible();
   await expect(page.getByLabel("Câu dẫn Xưởng nến")).toHaveAttribute("placeholder", "Ba mẫu cho mùa đông");
+});
+
+test("Các khối trang chủ: sửa Câu chuyện / Nghệ thuật đốt nến / Gửi lời nhắn / chân trang, ẩn khối, xem trước đổi theo; giao diện concept kế thừa Mặc định", async ({ page, t }) => {
+  void t;
+  await page.goto("/settings/site-theme/default");
+  // Ô trống hiện chữ có sẵn của web làm gợi ý
+  await expect(page.getByLabel("Tên khối — story")).toHaveAttribute("placeholder", "Câu\nchuyện");
+
+  await page.getByLabel("Tên khối — story").fill("Chuyện\ncủa nến");
+  await expect(preview(page)).toContainText("Chuyện");
+  // Quá 2 dòng: báo lỗi ngay dưới ô
+  await page.getByLabel("Câu dẫn — story").fill("Một\nHai\nBa");
+  await expect(page.getByText("Tối đa 2 dòng, mỗi dòng 30 ký tự.")).toBeVisible();
+  await page.getByLabel("Câu dẫn — story").fill("Làm chậm.\nSống chậm.");
+
+  await page.getByLabel("Tên bước 2").fill("Đốt đủ hai giờ");
+  await expect(preview(page)).toContainText("Đốt đủ hai giờ");
+  await page.getByLabel("Câu dẫn — contact").fill("Đặt quà cho người thương?");
+  await expect(preview(page)).toContainText("Đặt quà cho người thương?");
+  await page.getByLabel("Khẩu hiệu — footer").fill("Ánh nến nhỏ, niềm vui lớn.");
+  await expect(preview(page)).toContainText("Ánh nến nhỏ, niềm vui lớn.");
+
+  // Ẩn khối Nghệ thuật đốt nến: xem trước không còn khối đó
+  await expect(preview(page)).toContainText("Cắt tỉa bấc");
+  await page.getByRole("switch", { name: "Hiện khối Nghệ thuật đốt nến" }).click();
+  await expect(preview(page)).not.toContainText("Cắt tỉa bấc");
+
+  await page.getByRole("button", { name: "Lưu và đăng lên web" }).click();
+  await expect(page.getByText(/Đã đăng giao diện lên web/)).toBeVisible();
+  const saved = (await theme(page, "default")).published;
+  expect(saved.story).toMatchObject({ title: "Chuyện\ncủa nến", heading: "Làm chậm.\nSống chậm." });
+  expect(saved.care).toMatchObject({ hidden: true });
+  expect(saved.care.steps).toHaveLength(3);
+  expect(saved.care.steps[1]).toEqual({ title: "Đốt đủ hai giờ" });
+  expect(saved.contact).toMatchObject({ heading: "Đặt quà cho người thương?" });
+  expect(saved.footer).toMatchObject({ tagline: "Ánh nến nhỏ, niềm vui lớn." });
+
+  // Giao diện concept: gợi ý lấy của Mặc định, khối Nghệ thuật đốt nến vẫn ẩn theo Mặc định cho tới khi bật lại
+  await page.goto("/settings/site-theme");
+  await page.getByRole("button", { name: "Thêm giao diện" }).click();
+  await page.getByLabel("Tên giao diện").fill("Noel");
+  await page.getByRole("button", { name: "Thêm và sửa" }).click();
+  await expect(page.getByLabel("Tên khối — story")).toHaveAttribute("placeholder", "Chuyện\ncủa nến");
+  await expect(page.getByRole("switch", { name: "Hiện khối Nghệ thuật đốt nến" })).not.toBeChecked();
+  await expect(preview(page)).not.toContainText("Cắt tỉa bấc");
+  await page.getByRole("switch", { name: "Hiện khối Nghệ thuật đốt nến" }).click();
+  await expect(preview(page)).toContainText("Đốt đủ hai giờ");
+  await page.getByRole("button", { name: "Lưu nháp" }).click();
+  await expect(page.getByText("Đã lưu nháp")).toBeVisible();
+  const id = page.url().split("/").at(-1);
+  expect((await theme(page, id)).draft.care).toMatchObject({ hidden: false });
 });
 
 test("Đường dẫn giao diện không tồn tại: báo không tìm thấy", async ({ page, t }) => {

@@ -2,6 +2,7 @@
 // BO › Cài đặt › Giao diện web — BE đã chọn sẵn giao diện của concept đang trong mùa — và 3 mẫu nổi bật cho khối "Xưởng nến".
 // Trường trống / BE lỗi thì web dùng nội dung có sẵn (content/home.ts). Lưu đệm 60 giây như danh sách sản phẩm
 import { cache } from "react";
+import { footerContent, type BlocksTheme, type FooterContent } from "@/lib/blocks";
 import { API_URL, aromaLabels, cloudinaryFit, formatPrice, isDataUrl, productUrl, sizeLabels, type ShopCategory, type ShopProduct } from "@/lib/shop";
 import { announcement as defaultAnnouncement, collection, hero as defaultHero } from "@/content/home";
 
@@ -15,7 +16,7 @@ export type SiteTheme = {
   hero: { image?: string; focus?: Focus; eyebrow?: string; title?: string; text?: string; cta?: string; mark?: string };
   // Khối Xưởng nến: chữ do BO sửa (mẫu chọn tay BE đã xếp sẵn vào featured)
   collection?: { title?: string; heading?: string; note?: string; eyebrow?: string };
-};
+} & BlocksTheme;
 type HomeData = { theme: SiteTheme; featured: ShopProduct[]; categories: ShopCategory[] };
 
 // Tag lưu đệm của giao diện web: BE báo POST /api/revalidate?tag=site-theme khi đăng / gỡ giao diện → làm mới ngay (app/api/revalidate/route.ts)
@@ -33,10 +34,11 @@ export const getHome = cache(async (): Promise<HomeData | null> => {
 });
 
 // Khung trang mọi trang: thanh thông báo + logo
-export type Chrome = { announcement: string | null; logo: { light?: string; dark?: string } };
+// Khung trang mọi trang: thanh thông báo + logo + chân trang (ảnh, khẩu hiệu)
+export type Chrome = { announcement: string | null; logo: { light?: string; dark?: string }; footer: FooterContent };
 export async function getChrome(): Promise<Chrome> {
   const t = (await getHome())?.theme;
-  return { announcement: t && !t.announcementOn ? null : t?.announcement || defaultAnnouncement, logo: t?.logo ?? {} };
+  return { announcement: t && !t.announcementOn ? null : t?.announcement || defaultAnnouncement, logo: t?.logo ?? {}, footer: footerContent(t?.footer) };
 }
 
 // Hero: phần BO để trống lấy nội dung có sẵn. Điểm lấy nét: ảnh có sẵn đặt 62% (chủ thể lệch phải), ảnh tải lên theo lựa chọn ở BO

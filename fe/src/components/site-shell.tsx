@@ -20,7 +20,7 @@ export async function SiteShell({ children, overHero = false }: { children: Reac
       <main id="main" tabIndex={-1} className="outline-none">
         {children}
       </main>
-      <SiteFooter logo={chrome.logo.dark} socials={contact?.socials ?? []} />
+      <SiteFooter logo={chrome.logo.dark} socials={contact?.socials ?? []} content={chrome.footer} />
       <BackToTop />
     </MotionRoot>
   );

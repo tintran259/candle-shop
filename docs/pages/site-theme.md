@@ -44,6 +44,22 @@
 
 **Để trống = giá trị dự phòng:** ở Mặc định là nội dung có sẵn của web (`fe/src/content/home.ts`, ô trống hiện sẵn chữ đó làm gợi ý); ở giao diện khác là giá trị **đã đăng** của Mặc định. Giao diện dịp lễ chỉ cần điền phần muốn khác (vd chỉ đổi ảnh hero + câu lớn). Nút hero vẫn dẫn tới khối "Xưởng nến".
 
+## Các khối trang chủ
+
+Dưới khối Xưởng nến trong form: **Câu chuyện**, **Nghệ thuật đốt nến**, **Gửi lời nhắn**, **Chân trang**. Cùng quy tắc như hero: ô trống ở Mặc định = nội dung có sẵn của web (hiện làm chữ gợi ý; ô ảnh hiện ảnh có sẵn), ở giao diện khác = của Mặc định (bản đã đăng). Chữ nhiều dòng: xuống dòng để ngắt.
+
+| Khối | Trường | Quy tắc |
+|---|---|---|
+| Câu chuyện | Hiện khối, Ảnh, Nhãn nhỏ, Dòng phụ, Tên khối, Câu dẫn, Đoạn văn, Chữ liên kết | Tên khối 2 dòng × 20 ký tự; Câu dẫn 2 dòng × 30; Đoạn văn tối đa 3 đoạn (mỗi dòng một đoạn) × 300; Nhãn 60, Dòng phụ 40, Liên kết 40 ký tự |
+| Nghệ thuật đốt nến | Hiện khối, Ảnh, Tên khối, Liên kết nhỏ, 3 bước (tên + mô tả) | Tên khối 2 dòng × 20; Liên kết 50; tên bước 40, mô tả 160 ký tự. Bước nào trống thì lấy bước đó của Mặc định / có sẵn |
+| Gửi lời nhắn | Hiện khối, Ảnh, Tên khối, Câu dẫn, Mô tả | Tên khối 2 dòng × 20; Câu dẫn 60; Mô tả 200 ký tự. Ẩn khối thì chân trang "Hỗ trợ › Liên hệ" (`/#contact`) không còn chỗ tới |
+| Chân trang | Ảnh, Khẩu hiệu | Khẩu hiệu 60 ký tự. Ở mọi trang |
+
+- **Hiện khối này** (công tắc): tắt = web không hiện khối trên trang chủ. Giao diện concept chưa bật / tắt thì theo Mặc định (công tắc hiện đúng trạng thái kế thừa); bật / tắt thì lưu riêng cho giao diện đó (vd Noel ẩn "Nghệ thuật đốt nến").
+- Ảnh tải lên Cloudinary khi Lưu như ảnh hero (thư mục `site`). Ảnh có sẵn của các khối chép sang `bo/public/site-preview/` (story, care, newsletter, footer).
+- **Xem trước trang chủ** vẽ đủ các khối (`components/site-theme/preview-blocks.tsx`), khối bị ẩn thì không vẽ; chân trang dùng ảnh + khẩu hiệu đang sửa.
+- Dữ liệu: `story`, `care` (`steps` luôn đủ 3 phần tử khi có bước nào được điền), `contact`, `footer` trong nội dung giao diện (`be/src/site-theme/blocks.ts`, ghép `mergeBlocks`; web `fe/src/lib/blocks.ts`).
+
 ## Bản nháp và đăng (riêng từng giao diện)
 
 | Thao tác | Kết quả |
@@ -66,7 +82,7 @@ Tính lúc web đọc (`GET /shop/home`, ngày giờ VN), không có tác vụ h
 
 Muốn giao diện Tết thắng Noel khi hai mùa chồng nhau: kéo Tết lên trên ở trang Concept.
 
-Web: thanh thông báo + logo ở **mọi trang**; hero + khối "Xưởng nến" ở trang chủ. Khối "Xưởng nến" hiện mẫu đang bán từ BE: mẫu chọn ở giao diện đang dùng (trống thì của Mặc định) theo thứ tự — mẫu đã tạm ẩn / hết mùa / danh mục ẩn thì bỏ. Còn từ 3 mẫu thì hiện hết (hơn 3: băng chuyền), dưới 3 thì bù mẫu nổi bật, rồi mẫu khác cho đủ 3; bấm mở trang chi tiết. BE có ít hơn 3 mẫu thì giữ 3 thẻ mẫu có sẵn. Chữ của khối theo giao diện như hero. BE lỗi / chưa cấu hình → web hiện nội dung có sẵn.
+Web: thanh thông báo + logo + chân trang (ảnh, khẩu hiệu) ở **mọi trang**; hero, "Xưởng nến", Câu chuyện, Nghệ thuật đốt nến, Gửi lời nhắn ở trang chủ. Khối "Xưởng nến" hiện mẫu đang bán từ BE: mẫu chọn ở giao diện đang dùng (trống thì của Mặc định) theo thứ tự — mẫu đã tạm ẩn / hết mùa / danh mục ẩn thì bỏ. Còn từ 3 mẫu thì hiện hết (hơn 3: băng chuyền), dưới 3 thì bù mẫu nổi bật, rồi mẫu khác cho đủ 3; bấm mở trang chi tiết. BE có ít hơn 3 mẫu thì giữ 3 thẻ mẫu có sẵn. Chữ của khối theo giao diện như hero. BE lỗi / chưa cấu hình → web hiện nội dung có sẵn.
 
 ## Dữ liệu cũ
 
@@ -78,8 +94,8 @@ Migration `20261112180000_site_theme_list` chuyển bản cũ (một JSON chung 
 
 ## Kiểm thử
 
-- BE: `be/src/site-theme/theme.spec.ts` (chọn giao diện theo mùa, ghép trường (cả chữ + mẫu Xưởng nến), một giao diện nhiều concept, bỏ qua bản chưa đăng; **lịch theo ngày**: trước / đúng ngày bắt đầu / ngày kết thúc / sau ngày kết thúc, khoảng trống giữa hai mùa của một giao diện, hai giao diện chồng mùa), `be/test/site-theme.e2e-spec.ts` (thêm / đổi tên / xóa, nháp / đăng / gỡ riêng từng giao diện, concept chỉ thuộc một giao diện, chặn dữ liệu sai, `/shop/home`; **giả đồng hồ**: đăng một lần, 23:59:59 giờ VN hôm trước vẫn Mặc định, 00:00 ngày bắt đầu tự đổi, 00:00 sau ngày kết thúc tự về Mặc định; **Xưởng nến**: quá 12 mẫu 400, chọn 4 mẫu thì trả đủ 4 theo thứ tự, bỏ mẫu không có, mẫu chọn đứng trước theo thứ tự rồi bù mẫu nổi bật, giao diện Noel chọn mẫu riêng, mẫu tạm ẩn bị bỏ qua).
-- BO: `bo/e2e/site-theme.spec.ts` (danh sách + Mặc định: sửa, xem trước, tiêu đề quá 2 dòng, ảnh nhỏ cảnh báo, đăng; thêm giao diện Noel: gắn concept, nháp chưa lên web, đăng → web đang dùng, concept bị khóa ở giao diện khác, gỡ khỏi web, xóa; nhiều concept chưa tới mùa: câu thời gian áp dụng từng khoảng, hỏi lại khi đăng, danh sách "Đang chờ" + cột thời gian, Mặc định "Đang sử dụng"; Xưởng nến: chọn mẫu theo thứ tự, mẫu tạm ẩn bị khóa, hơn 3 mẫu thì xem trước chạy băng chuyền, xem trước đổi theo, giao diện concept ghi mẫu của Mặc định; đường dẫn không tồn tại).
+- BE: `be/src/site-theme/theme.spec.ts` (chọn giao diện theo mùa, ghép trường (cả chữ + mẫu Xưởng nến), một giao diện nhiều concept, bỏ qua bản chưa đăng; **lịch theo ngày**: trước / đúng ngày bắt đầu / ngày kết thúc / sau ngày kết thúc, khoảng trống giữa hai mùa của một giao diện, hai giao diện chồng mùa), `be/test/site-theme.e2e-spec.ts` (thêm / đổi tên / xóa, nháp / đăng / gỡ riêng từng giao diện, concept chỉ thuộc một giao diện, chặn dữ liệu sai, `/shop/home`; **giả đồng hồ**: đăng một lần, 23:59:59 giờ VN hôm trước vẫn Mặc định, 00:00 ngày bắt đầu tự đổi, 00:00 sau ngày kết thúc tự về Mặc định; **Xưởng nến**: quá 12 mẫu 400, chọn 4 mẫu thì trả đủ 4 theo thứ tự, bỏ mẫu không có, mẫu chọn đứng trước theo thứ tự rồi bù mẫu nổi bật, giao diện Noel chọn mẫu riêng, mẫu tạm ẩn bị bỏ qua; **các khối trang chủ**: lưu / ghép lên Mặc định / ẩn khối, quá số dòng / ký tự / ảnh http → 400). Unit `blocks.spec.ts` (ghép từng trường + từng bước, `hidden: false` đè Mặc định, kiểm tra số dòng).
+- BO: `bo/e2e/site-theme.spec.ts` (danh sách + Mặc định: sửa, xem trước, tiêu đề quá 2 dòng, ảnh nhỏ cảnh báo, đăng; thêm giao diện Noel: gắn concept, nháp chưa lên web, đăng → web đang dùng, concept bị khóa ở giao diện khác, gỡ khỏi web, xóa; nhiều concept chưa tới mùa: câu thời gian áp dụng từng khoảng, hỏi lại khi đăng, danh sách "Đang chờ" + cột thời gian, Mặc định "Đang sử dụng"; Xưởng nến: chọn mẫu theo thứ tự, mẫu tạm ẩn bị khóa, hơn 3 mẫu thì xem trước chạy băng chuyền, xem trước đổi theo, giao diện concept ghi mẫu của Mặc định; các khối trang chủ: sửa, quá 2 dòng báo lỗi, ẩn khối, xem trước đổi theo, lưu đủ 3 bước, giao diện concept kế thừa gợi ý + công tắc; đường dẫn không tồn tại).
 
 ## Chưa có
 

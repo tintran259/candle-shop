@@ -1,9 +1,10 @@
 // Cách đốt nến (Figma 2:9): tiêu đề 2 dòng, liên kết nhỏ, 3 bước đánh số (số đỏ rượu vang, tiêu đề có chân, mô tả) ngăn bằng đường kẻ;
 // ảnh "hốc đá ngập nắng" bên phải; đường kẻ khép section
-import { care } from "@/content/home";
 import { ArrowLink, Container, Photo } from "@/components/ui/primitives";
+import type { CareContent } from "@/lib/blocks";
 
-export function Care() {
+// Chữ / ảnh từ BO › Giao diện web (lib/blocks.ts), trống thì nội dung có sẵn
+export function Care({ content: care }: { content: CareContent }) {
   return (
     <section id="care" aria-labelledby="care-title" className="pt-14 md:pt-[54px]">
       <Container>
@@ -24,7 +25,7 @@ export function Care() {
 
             <ol className="mt-14 max-w-[640px] md:mt-[66px]">
               {care.steps.map((s, i) => (
-                <li key={s.title}>
+                <li key={i}>
                   <div data-reveal="fade" className="grid grid-cols-[50px_1fr] pb-8 pl-0.5">
                     <span className="pt-1.5 text-[10px] text-wine tabular-nums">{String(i + 1).padStart(2, "0")}</span>
                     <div>

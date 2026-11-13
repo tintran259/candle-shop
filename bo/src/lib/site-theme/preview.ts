@@ -24,3 +24,20 @@ export function previewCards(
   if (cards.length < 3) return null;
   return cards.map((p) => ({ id: p.id, name: p.name, category: categories.find((c) => c.id === p.categoryId)?.name.vi ?? "", price: p.salePrice ?? p.price, image: p.images[0] }));
 }
+
+// Màu, font của trang chủ web (fe/src/app/globals.css) dùng trong khung xem trước
+export const C = {
+  cream: "#f5f2e9",
+  night: "#282720",
+  smoke: "#39372f",
+  linen: "#f5f2e9",
+  sand: "#e2d7bd",
+  mist: "#eee9de",
+  ink: "#312d28",
+  muted: "#615e54",
+  wine: "#650f21",
+  copper: "#876042",
+  rule: "#bbb4a4",
+};
+export const serif = "'Cormorant Garamond', 'Times New Roman', serif";
+export const sans = "Inter, system-ui, sans-serif";

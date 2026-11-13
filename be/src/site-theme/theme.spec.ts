@@ -30,6 +30,10 @@ describe('resolveTheme', () => {
       logo: { light: undefined, dark: undefined },
       hero: {},
       collection: {},
+      story: {},
+      care: {},
+      contact: {},
+      footer: {},
     });
   });
 

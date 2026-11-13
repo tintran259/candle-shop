@@ -2,6 +2,7 @@
 // Mỗi giao diện có bản nháp + bản đã đăng riêng. Web dùng: concept KHÔNG ẨN đầu tiên (theo thứ tự trang Concept) đang trong mùa mà có
 // giao diện ĐÃ ĐĂNG gắn với nó → ghép từng trường lên bản đã đăng của Mặc định (trường trống lấy của Mặc định; trống cả hai thì web dùng nội dung có sẵn)
 import { inSeason } from '../concepts/season.js';
+import { mergeBlocks, type BlocksTheme } from './blocks.js';
 
 export const DEFAULT_THEME = 'default';
 export const FOCUS = ['left', 'center', 'right'] as const;
@@ -22,7 +23,7 @@ export type HeroTheme = {
 // Khối "Xưởng nến" ở trang chủ: chữ của khối + tối đa 12 mẫu chọn tay (theo thứ tự; hơn 3 mẫu thì web chạy băng chuyền tự cuộn). Không chọn mẫu thì lấy mẫu của Mặc định, Mặc định cũng không thì BE tự lấy mẫu nổi bật
 export type CollectionTheme = { title?: string; heading?: string; note?: string; eyebrow?: string; productIds?: string[] };
 export const COLLECTION_MAX = 12;
-export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme; collection?: CollectionTheme };
+export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme; collection?: CollectionTheme } & BlocksTheme;
 // Nội dung một giao diện: announcementOn chỉ ở Mặc định, conceptIds chỉ ở giao diện khác (mỗi concept thuộc tối đa một giao diện)
 export type ThemeContent = ThemePart & { announcementOn?: boolean; conceptIds?: string[] };
 export type ThemeRow = { id: string; published: ThemeContent | null };
@@ -66,6 +67,8 @@ export function resolveTheme(themes: ThemeRow[], concepts: ConceptSeason[], toda
     logo: { light: pick(over.logo?.light, base.logo?.light) || undefined, dark: pick(over.logo?.dark, base.logo?.dark) || undefined },
     hero,
     collection,
+    // Câu chuyện, Nghệ thuật đốt nến, Gửi lời nhắn, chân trang (blocks.ts)
+    ...mergeBlocks(over, base),
   };
 }
 

@@ -2,30 +2,17 @@ import type { CSSProperties } from "react";
 import { useCategories } from "@/hooks/use-categories";
 import { useConcepts } from "@/hooks/use-concepts";
 import { useProducts } from "@/hooks/use-products";
+import { PreviewBlocks } from "@/components/site-theme/preview-blocks";
 import { imageUrl } from "@/lib/craft/image";
+import { blockDefaults } from "@/lib/site-theme/blocks";
 import { formatMoney } from "@/lib/format";
 import { outOfSeason } from "@/lib/products/concepts";
-import { PAGE, previewCards, type Device } from "@/lib/site-theme/preview";
+import { C, PAGE, previewCards, sans, serif, type Device } from "@/lib/site-theme/preview";
 import { focusPosition, webAssets, webDefaults, type BaseTheme } from "@/lib/site-theme/types";
 
 // Trang chủ web thu nhỏ để xem trước (kích thước px như web ở bề ngang PAGE.w, khung ngoài thu phóng bằng CSS zoom).
 // Thanh thông báo + điều hướng, hero, Xưởng nến theo giao diện đang sửa (mẫu chọn như BE, thiếu thì 3 thẻ có sẵn); phần còn lại là minh họa
 
-const C = {
-  cream: "#f5f2e9",
-  night: "#282720",
-  smoke: "#39372f",
-  linen: "#f5f2e9",
-  sand: "#e2d7bd",
-  mist: "#eee9de",
-  ink: "#312d28",
-  muted: "#615e54",
-  wine: "#650f21",
-  copper: "#876042",
-  rule: "#bbb4a4",
-};
-const serif = "'Cormorant Garamond', 'Times New Roman', serif";
-const sans = "Inter, system-ui, sans-serif";
 const ANNOUNCE_H = 28;
 
 // Logo: ảnh tải lên, không có thì logo có sẵn tô màu (như web: trắng trên hero, đồng trên nền kem)
@@ -210,10 +197,22 @@ export function PreviewPage({ theme, device }: { theme: BaseTheme; device: Devic
         {!real && <div style={{ marginTop: 24, fontSize: 11, color: C.muted, fontStyle: "italic" }}>Chưa đủ 3 mẫu đang bán — web hiện 3 thẻ có sẵn này.</div>}
       </section>
 
-      {/* Chân trang */}
+      {/* Câu chuyện, Nghệ thuật đốt nến, Gửi lời nhắn */}
+      <PreviewBlocks theme={theme} device={device} />
+
+      {/* Chân trang: logo, khẩu hiệu, ảnh (theo giao diện, trống thì có sẵn) */}
       <footer style={{ padding: `48px ${pad}px 32px`, borderTop: `1px solid ${C.rule}` }}>
-        <Logo src={theme.logo?.dark} color={C.copper} width={mobile ? 200 : 290} />
-        <div style={{ marginTop: 20, fontSize: 12 }}>Nến chăm chút. Nghi thức ấm áp.</div>
+        <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr" : "800fr 512fr", gap: 40, alignItems: "start" }}>
+          <div>
+            <Logo src={theme.logo?.dark} color={C.copper} width={mobile ? 200 : 290} />
+            <div style={{ marginTop: 20, fontSize: 12 }}>{theme.footer?.tagline || blockDefaults.footer.tagline}</div>
+          </div>
+          <img
+            src={theme.footer?.image ? imageUrl(theme.footer.image, 900, false) : blockDefaults.footer.image}
+            alt=""
+            style={{ width: "100%", aspectRatio: "512 / 338", objectFit: "cover", display: "block" }}
+          />
+        </div>
         <div style={{ marginTop: 48, paddingTop: 16, borderTop: `1px solid ${C.rule}`, fontSize: 10 }}>© 2026 2510 Candle</div>
       </footer>
     </div>

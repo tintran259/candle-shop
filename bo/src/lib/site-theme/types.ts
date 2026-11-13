@@ -2,13 +2,15 @@
 // Danh sách giao diện: "Mặc định" (luôn có) + giao diện gắn concept (dịp lễ). Mỗi giao diện có bản nháp + bản đã đăng riêng.
 // Trường để trống: giao diện concept lấy của Mặc định (bản đã đăng), Mặc định lấy nội dung có sẵn của web (webDefaults)
 import { seasonOf, type Concept } from "@/lib/products/concepts";
+import { mergeBlocks, type BlocksTheme } from "@/lib/site-theme/blocks";
 
 export type Focus = "left" | "center" | "right";
 export type HeroTheme = { image?: string; focus?: Focus; eyebrow?: string; title?: string; text?: string; cta?: string; mark?: string };
 // Khối "Xưởng nến": chữ + tối đa 12 mẫu chọn tay (theo thứ tự; hơn 3 mẫu thì web chạy băng chuyền tự cuộn). Giao diện concept không chọn mẫu thì dùng mẫu của Mặc định; không ai chọn thì web tự lấy mẫu nổi bật
 export type CollectionTheme = { title?: string; heading?: string; note?: string; eyebrow?: string; productIds?: string[] };
 export const COLLECTION_MAX = 12;
-export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme; collection?: CollectionTheme };
+// Câu chuyện, Nghệ thuật đốt nến, Gửi lời nhắn, chân trang: lib/site-theme/blocks.ts
+export type ThemePart = { announcement?: string; logo?: { light?: string; dark?: string }; hero?: HeroTheme; collection?: CollectionTheme } & BlocksTheme;
 // Phần form sửa (announcementOn chỉ ở Mặc định)
 export type BaseTheme = ThemePart & { announcementOn?: boolean };
 // Nội dung lưu: thêm concept áp dụng (chỉ giao diện khác Mặc định; mỗi concept thuộc tối đa một giao diện)
@@ -72,6 +74,7 @@ export function merged(base: ThemeContent, over?: ThemeContent): BaseTheme {
       ...Object.fromEntries((["title", "heading", "note", "eyebrow"] as const).map((k) => [k, pick(over?.collection?.[k], base.collection?.[k])])),
       productIds: over?.collection?.productIds?.length ? over.collection.productIds : base.collection?.productIds,
     },
+    ...mergeBlocks(over, base),
   };
 }
 

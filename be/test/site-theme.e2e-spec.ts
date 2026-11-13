@@ -184,3 +184,32 @@ it('Xưởng nến: chọn tối đa 12 mẫu theo giao diện (đủ 3 thì tr�
   expect(after[0]).toBe('Hai');
   expect(after.sort()).toEqual(['Ba', 'Hai', 'Mot']);
 });
+
+it('Các khối trang chủ: lưu Câu chuyện / Nghệ thuật đốt nến / Gửi lời nhắn / chân trang, giao diện concept ghép lên Mặc định (ẩn khối được); quá số dòng / ký tự → 400', async () => {
+  await t.post('/api/admin/concepts', { id: 'noel', name: { vi: 'Noel', en: '' } }).expect(201);
+  const blocks = {
+    story: { image: 'https://res.cloudinary.com/demo/image/upload/story.jpg', title: 'Câu\nchuyện', body: 'Đoạn một.\nĐoạn hai.' },
+    care: { title: 'Nghệ thuật\nđốt nến', steps: [{ title: 'Cắt bấc', text: 'Giữ bấc 0,5 cm.' }] },
+    contact: { heading: 'Cần tư vấn?' },
+    footer: { image: 'https://res.cloudinary.com/demo/image/upload/footer.jpg', tagline: 'Nến chăm chút.' },
+  };
+  await t.post(`${URL}/default/publish`, blocks).expect(200);
+  const theme = async () => (await t.anon().get('/api/shop/home').expect(200)).body.theme;
+  // Luôn đủ 3 bước (bước trống → web dùng nội dung có sẵn)
+  expect(await theme()).toMatchObject({ ...blocks, care: { ...blocks.care, steps: [blocks.care.steps[0], {}, {}] } });
+
+  await t.post(URL, { id: 'noel-theme', name: 'Noel' }).expect(201);
+  await t.post(`${URL}/noel-theme/publish`, { conceptIds: ['noel'], story: { title: 'Mùa\nlễ hội' }, contact: { hidden: true }, care: { steps: [{}, { title: 'Gói quà' }] } }).expect(200);
+  expect(await theme()).toMatchObject({
+    story: { image: blocks.story.image, title: 'Mùa\nlễ hội', body: blocks.story.body },
+    care: { title: 'Nghệ thuật\nđốt nến', steps: [{ title: 'Cắt bấc', text: 'Giữ bấc 0,5 cm.' }, { title: 'Gói quà' }, {}] },
+    contact: { hidden: true, heading: 'Cần tư vấn?' },
+    footer: blocks.footer,
+  });
+
+  const bad = async (body: object) => JSON.stringify((await t.post(`${URL}/default/publish`, body).expect(400)).body.message);
+  expect(await bad({ story: { title: 'Một\nHai\nBa' } })).toContain('Tên khối Câu chuyện tối đa 2 dòng, mỗi dòng 20 ký tự.');
+  expect(await bad({ contact: { text: 'x'.repeat(201) } })).toContain('Mô tả Gửi lời nhắn tối đa 200 ký tự.');
+  expect(await bad({ footer: { image: 'http://khong-an-toan/a.jpg' } })).toContain('Ảnh chân trang không hợp lệ.');
+  expect(await bad({ care: { steps: [{}, {}, {}, {}] } })).toContain('steps');
+});

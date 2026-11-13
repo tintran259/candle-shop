@@ -1,11 +1,12 @@
 // Gửi lời nhắn (bố cục Figma 2:11 "Nhận tin"): ảnh 590×600 bên trái; phải — tiêu đề lớn, câu dẫn, mô tả, form liên hệ gạch chân.
 // id="contact": chân trang "Hỗ trợ › Liên hệ" dẫn tới đây. Lời nhắn vào BO › Bán hàng › Liên hệ (docs/pages/messages.md)
-import { contact } from "@/content/home";
 import { Container, Photo } from "@/components/ui/primitives";
 import { ContactForm } from "@/components/sections/contact-form";
 import { API_URL } from "@/lib/shop";
+import type { ContactContent } from "@/lib/blocks";
 
-export function Contact() {
+// Chữ / ảnh từ BO › Giao diện web (lib/blocks.ts), trống thì nội dung có sẵn
+export function Contact({ content: contact }: { content: ContactContent }) {
   return (
     <section id="contact" aria-labelledby="contact-title" className="pt-4 pb-20 md:pt-2.5 md:pb-[70px]">
       <Container>

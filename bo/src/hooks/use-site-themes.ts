@@ -16,6 +16,11 @@ async function withUploadedImages(content: ThemeContent): Promise<ThemeContent> 
   const slots: { get: () => string | undefined; set: (v: string) => void }[] = [];
   if (next.hero?.image) slots.push({ get: () => next.hero!.image, set: (v) => (next.hero!.image = v) });
   for (const k of ["light", "dark"] as const) if (next.logo?.[k]) slots.push({ get: () => next.logo![k], set: (v) => (next.logo![k] = v) });
+  // Ảnh các khối trang chủ (Câu chuyện, Nghệ thuật đốt nến, Gửi lời nhắn, chân trang)
+  for (const k of ["story", "care", "contact", "footer"] as const) {
+    const block = next[k];
+    if (block?.image) slots.push({ get: () => block.image, set: (v) => (block.image = v) });
+  }
   const uploaded = await uploadImages(
     slots.map((s) => s.get()!),
     "site",

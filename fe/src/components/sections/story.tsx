@@ -1,9 +1,10 @@
 // Câu chuyện (Figma 2:8): trái — nhãn, "CRAFTING ATMOSPHERE", ảnh tĩnh vật 760×510; phải — "OUR ESSENCE" lớn,
 // tiêu đề phụ 2 dòng, 2 đoạn văn, liên kết; đường kẻ khép section
-import { story } from "@/content/home";
 import { ArrowLink, Container, Photo } from "@/components/ui/primitives";
+import type { StoryContent } from "@/lib/blocks";
 
-export function Story() {
+// Chữ / ảnh từ BO › Giao diện web (lib/blocks.ts), trống thì nội dung có sẵn
+export function Story({ content: story }: { content: StoryContent }) {
   return (
     <section id="story" aria-labelledby="story-title" className="pt-16 md:pt-[55px]">
       <Container>
