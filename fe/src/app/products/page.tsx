@@ -9,12 +9,16 @@ import { ProductBrowser } from "@/components/products/product-browser";
 import { productsPage } from "@/content/home";
 import { connection } from "next/server";
 import { getShopContact, getShopProducts, listable, zaloUrl } from "@/lib/shop";
+import { OG_BASE, OG_IMAGE } from "@/lib/site";
 
+const description = "Các mẫu nến thơm đổ tay theo đơn của 2510 Candle — chọn theo mùi hương, danh mục và giá.";
+// openGraph riêng thay hẳn phần chung của layout → trải lại OG_BASE + ảnh mặc định
 export const metadata: Metadata = {
   title: "Sản phẩm — 2510 Candle",
-  description: "Các mẫu nến thơm đổ tay theo đơn của 2510 Candle — chọn theo mùi hương, danh mục và giá.",
+  description,
   alternates: { canonical: "/products" },
-  openGraph: { title: "Sản phẩm — 2510 Candle", description: "Các mẫu nến thơm đổ tay theo đơn của 2510 Candle — chọn theo mùi hương, danh mục và giá.", url: "/products" },
+  openGraph: { ...OG_BASE, title: "Sản phẩm — 2510 Candle", description, url: "/products", images: [OG_IMAGE] },
+  twitter: { card: "summary_large_image", title: "Sản phẩm — 2510 Candle", description, images: [OG_IMAGE.url] },
 };
 
 export default async function ProductsPage() {

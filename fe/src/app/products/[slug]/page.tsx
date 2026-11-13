@@ -8,8 +8,9 @@ import { ArrowLink, Container } from "@/components/ui/primitives";
 import { ContactButton } from "@/components/products/contact-button";
 import { ProductCard } from "@/components/products/product-card";
 import { ProductGallery } from "@/components/products/product-gallery";
+import { productJsonLd, productMetadata } from "@/lib/product-seo";
 import { care, productDetail as t, productsPage } from "@/content/home";
-import { aromaLabels, formatDay, formatPrice, withoutDataImages, saleEndsOn, getShopContact, getShopProducts, productUrl, sizeLabels, suggestProducts, zaloUrl } from "@/lib/shop";
+import { aromaLabels, formatDay, formatPrice, withoutDataImages, saleEndsOn, getShopContact, getShopProducts, sizeLabels, suggestProducts, zaloUrl } from "@/lib/shop";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -21,11 +22,7 @@ async function load(slug: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { product } = await load((await params).slug);
-  if (!product) return { title: `${t.notFound.title} — 2510 Candle` };
-  const description = (product.description ?? product.scent ?? "").replace(/\s+/g, " ").slice(0, 160);
-  const image = product.images.find((s) => s.startsWith("https://"));
-  const url = productUrl(product);
-  return { title: `${product.name} — 2510 Candle`, description, alternates: { canonical: url }, openGraph: { title: product.name, description, url, images: image ? [image] : undefined } };
+  return product ? productMetadata(product) : { title: `${t.notFound.title} — 2510 Candle` };
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -46,16 +43,8 @@ export default async function ProductDetailPage({ params }: Props) {
     [t.specs.wax, p.waxType],
     [t.specs.burn, p.burnTime && t.burn(p.burnTime)],
   ].filter((r): r is [string, string] => !!r[1]);
-  // Dữ liệu có cấu trúc cho máy tìm kiếm (Google hiện giá, ảnh)
-  const ld = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: p.name,
-    description: p.description ?? p.scent,
-    image: p.images.filter((s) => s.startsWith("https://")),
-    category: category?.name,
-    offers: { "@type": "Offer", price: p.salePrice ?? p.price, priceCurrency: "VND", availability: "https://schema.org/MadeToOrder" },
-  };
+  // Dữ liệu có cấu trúc cho máy tìm kiếm (Google hiện giá, ảnh, breadcrumb) — lib/product-seo.ts
+  const ld = productJsonLd(p, category);
 
   return (
     <SiteShell>

@@ -1,25 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
-import { SITE_URL } from "@/lib/site";
+import { OG_BASE, OG_IMAGE, SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 
 const cormorant = Cormorant_Garamond({ subsets: ["latin", "vietnamese"], weight: ["400"], variable: "--font-cormorant", display: "swap" });
 const inter = Inter({ subsets: ["latin", "vietnamese"], weight: ["400"], variable: "--font-inter", display: "swap" });
 
-const description = "Nến thơm đổ tay theo đơn trong 2–3 ngày, dành cho những khoảnh khắc bạn muốn chậm lại.";
+const description = SITE_DESCRIPTION;
 // metadataBase: link ảnh chia sẻ (Zalo, Facebook) thành tuyệt đối theo SITE_URL. Ảnh chia sẻ mặc định = ảnh hero; trang chi tiết dùng ảnh mẫu nến
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "2510 Candle — Nến thơm thủ công",
   description,
-  openGraph: {
-    type: "website",
-    locale: "vi_VN",
-    siteName: "2510 Candle",
-    title: "2510 Candle — Nến thơm thủ công",
-    description,
-    images: [{ url: "/images/hero-2510-v2.jpg", alt: "Hũ nến 2510 Candle đang cháy trên khối đá" }],
-  },
+  openGraph: { ...OG_BASE, title: "2510 Candle — Nến thơm thủ công", description, images: [OG_IMAGE] },
+  twitter: { card: "summary_large_image", title: "2510 Candle — Nến thơm thủ công", description, images: [OG_IMAGE.url] },
   alternates: { canonical: "/" },
 };
 
