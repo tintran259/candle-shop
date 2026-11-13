@@ -4,10 +4,13 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { brand } from "@/content/home";
+import type { EffectKind } from "@/lib/blocks";
 import type { HeroContent } from "@/lib/home";
+import { HeroEffect } from "@/components/effects/hero-effect";
 import { gsap, MOTION_OK, MOTION_REDUCE, SplitText, useGSAP } from "@/lib/gsap";
 
-export function Hero({ content: hero }: { content: HeroContent }) {
+// effect: hiệu ứng theo giao diện (BO › Giao diện web: tuyết / hoa / tim), vẽ dưới lớp chữ, khách tắt được
+export function Hero({ content: hero, effect }: { content: HeroContent; effect?: EffectKind }) {
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -50,6 +53,7 @@ export function Hero({ content: hero }: { content: HeroContent }) {
       {/* Lớp tối như Figma (17%) + đậm thêm phía trái / đáy trên màn hẹp để chữ sáng luôn đọc được */}
       <div aria-hidden className="absolute inset-0 bg-[rgb(17_17_14/0.17)]" />
       <div aria-hidden className="absolute inset-0 bg-[linear-gradient(90deg,rgb(17_17_14/0.45),transparent_60%)] md:bg-[linear-gradient(90deg,rgb(17_17_14/0.25),transparent_45%)]" />
+      {effect && <HeroEffect kind={effect} />}
 
       <div className="relative mx-auto flex h-full max-w-[1440px] flex-col px-5 pt-[150px] md:px-10 md:pt-[30vh] xl:px-16 xl:pt-[304px]">
         <p data-intro="eyebrow" className="text-[11px] tracking-[0.16em] text-sand uppercase">

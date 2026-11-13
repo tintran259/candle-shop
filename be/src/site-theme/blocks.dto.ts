@@ -1,7 +1,7 @@
 // Kiểm tra dữ liệu các khối trang chủ (blocks.ts) — giới hạn ký tự; số dòng kiểm ở checkLines
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsBoolean, IsOptional, IsString, Matches, MaxLength, ValidateNested } from 'class-validator';
-import { CARE_STEPS } from './blocks.js';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, Matches, MaxLength, ValidateNested } from 'class-validator';
+import { CARE_STEPS, EFFECTS } from './blocks.js';
 
 // Ảnh: URL Cloudinary (https) hoặc data URL khi chưa cấu hình kho ảnh
 export const IMAGE = /^(https:\/\/|data:image\/)/;
@@ -54,4 +54,9 @@ export class ContactDto {
 export class FooterDto {
   @Image('chân trang') image?: string;
   @Text(60, 'Khẩu hiệu chân trang') tagline?: string;
+}
+
+export class EffectDto {
+  @IsOptional() @IsBoolean() enabled?: boolean;
+  @IsOptional() @IsIn(EFFECTS, { message: 'Hiệu ứng không hợp lệ.' }) kind?: (typeof EFFECTS)[number];
 }

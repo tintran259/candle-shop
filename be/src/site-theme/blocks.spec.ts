@@ -21,7 +21,7 @@ describe('mergeBlocks', () => {
     });
     expect(r.contact).toEqual({ hidden: true, heading: 'Đặt quà Noel?' });
     expect(r.footer).toEqual({ tagline: 'Nến chăm chút.' });
-    expect(mergeBlocks(undefined, undefined)).toEqual({ story: {}, care: {}, contact: {}, footer: {} });
+    expect(mergeBlocks(undefined, undefined)).toEqual({ story: {}, care: {}, contact: {}, footer: {}, effect: {} });
   });
 });
 
@@ -31,5 +31,10 @@ describe('checkLines', () => {
     expect(checkLines({ story: { title: 'Một\nHai\nBa' } })).toBe('Tên khối Câu chuyện tối đa 2 dòng, mỗi dòng 20 ký tự.');
     expect(checkLines({ contact: { title: 'Một dòng rất rất rất dài quá' } })).toBe('Tên khối Gửi lời nhắn tối đa 2 dòng, mỗi dòng 20 ký tự.');
     expect(checkLines({ story: { body: 'a\nb\nc\nd' } })).toBe('Đoạn văn Câu chuyện tối đa 3 dòng, mỗi dòng 300 ký tự.');
+  });
+
+  it('hiệu ứng: giao diện concept chọn kiểu riêng, tắt (enabled false) đè được Mặc định', () => {
+    expect(mergeBlocks({ effect: { kind: 'snow' } }, { effect: { enabled: true, kind: 'blossom' } }).effect).toEqual({ enabled: true, kind: 'snow' });
+    expect(mergeBlocks({ effect: { enabled: false } }, { effect: { enabled: true, kind: 'hearts' } }).effect).toEqual({ enabled: false, kind: 'hearts' });
   });
 });

@@ -7,7 +7,13 @@ export type StoryTheme = { hidden?: boolean; image?: string; eyebrow?: string; k
 export type CareTheme = { hidden?: boolean; image?: string; title?: string; link?: string; steps?: { title?: string; text?: string }[] };
 export type ContactTheme = { hidden?: boolean; image?: string; title?: string; heading?: string; text?: string };
 export type FooterTheme = { image?: string; tagline?: string };
-export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme };
+// Hiệu ứng trên hero theo dịp lễ (components/effects/): tuyết rơi (Noel), hoa mai / đào rơi (Tết), tim bay (Valentine)
+export type EffectKind = "snow" | "blossom" | "hearts";
+export type EffectTheme = { enabled?: boolean; kind?: EffectKind };
+export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme; effect?: EffectTheme };
+
+// Kiểu hiệu ứng đang bật (BO bật công tắc + chọn kiểu), không thì undefined
+export const effectKind = (t: EffectTheme | undefined) => (t?.enabled && t.kind ? t.kind : undefined);
 
 const lines = (text: string | undefined, fallback: string[]) => (text ? text.split("\n").filter((l) => l.trim()) : fallback);
 // Ảnh tải lên ở BO (Cloudinary, thu nhỏ theo khung) thay ảnh có sẵn, giữ chữ mô tả của ảnh có sẵn

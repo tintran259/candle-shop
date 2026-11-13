@@ -5,8 +5,12 @@ export type CareStep = { title?: string; text?: string };
 export type CareTheme = { hidden?: boolean; image?: string; title?: string; link?: string; steps?: CareStep[] };
 export type ContactTheme = { hidden?: boolean; image?: string; title?: string; heading?: string; text?: string };
 export type FooterTheme = { image?: string; tagline?: string };
-export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme };
-export type BlockKey = keyof BlocksTheme;
+// Hiệu ứng trên hero theo dịp lễ (be/src/site-theme/blocks.ts EFFECTS); enabled false = tắt (đè được Mặc định)
+export type EffectKind = "snow" | "blossom" | "hearts";
+export type EffectTheme = { enabled?: boolean; kind?: EffectKind };
+export const effectLabels: Record<EffectKind, string> = { snow: "Tuyết rơi — Noel", blossom: "Hoa mai, đào rơi — Tết", hearts: "Tim bay — Valentine" };
+export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme; effect?: EffectTheme };
+export type BlockKey = "story" | "care" | "contact" | "footer";
 
 export const CARE_STEPS = 3;
 
@@ -71,6 +75,7 @@ export function mergeBlocks(over: BlocksTheme | undefined, base: BlocksTheme | u
     care: { ...mergeFlat(careOver, careBase), ...(steps.some((s) => Object.keys(s).length) && { steps }) },
     contact: mergeFlat(over?.contact, base?.contact),
     footer: mergeFlat(over?.footer, base?.footer),
+    effect: mergeFlat(over?.effect, base?.effect),
   };
 }
 

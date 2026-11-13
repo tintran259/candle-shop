@@ -270,6 +270,37 @@ test("Các khối trang chủ: sửa Câu chuyện / Nghệ thuật đốt nến
   expect((await theme(page, id)).draft.care).toMatchObject({ hidden: false });
 });
 
+test("Hiệu ứng dịp lễ: bật mà chưa chọn kiểu thì nhắc, xem trước chạy hiệu ứng; giao diện concept theo Mặc định cho tới khi tắt riêng", async ({ page, t }) => {
+  void t;
+  await page.goto("/settings/site-theme/default");
+  await expect(page.getByRole("switch", { name: "Bật hiệu ứng" })).not.toBeChecked();
+  await expect(preview(page).locator("canvas")).toHaveCount(0);
+  await page.getByRole("switch", { name: "Bật hiệu ứng" }).click();
+  await expect(page.getByText("Chọn kiểu hiệu ứng — chưa chọn thì web không hiện hiệu ứng.")).toBeVisible();
+
+  await page.getByLabel("Kiểu hiệu ứng").click();
+  await page.getByTitle("Tuyết rơi — Noel").click();
+  await expect(preview(page).locator("canvas")).toHaveCount(1);
+  await page.getByRole("button", { name: "Lưu và đăng lên web" }).click();
+  await expect(page.getByText(/Đã đăng giao diện lên web/)).toBeVisible();
+  expect((await theme(page, "default")).published.effect).toEqual({ enabled: true, kind: "snow" });
+
+  await page.goto("/settings/site-theme");
+  await page.getByRole("button", { name: "Thêm giao diện" }).click();
+  await page.getByLabel("Tên giao diện").fill("Tết");
+  await page.getByRole("button", { name: "Thêm và sửa" }).click();
+  await expect(page.getByRole("switch", { name: "Bật hiệu ứng" })).toBeChecked();
+  await expect(page.getByText("Theo Mặc định: Tuyết rơi — Noel")).toBeVisible();
+  await page.getByLabel("Kiểu hiệu ứng").click();
+  await page.getByTitle("Hoa mai, đào rơi — Tết").click();
+  await page.getByRole("switch", { name: "Bật hiệu ứng" }).click();
+  await expect(preview(page).locator("canvas")).toHaveCount(0);
+  await page.getByRole("button", { name: "Lưu nháp" }).click();
+  await expect(page.getByText("Đã lưu nháp")).toBeVisible();
+  const id = page.url().split("/").at(-1);
+  expect((await theme(page, id)).draft.effect).toEqual({ enabled: false, kind: "blossom" });
+});
+
 test("Đường dẫn giao diện không tồn tại: báo không tìm thấy", async ({ page, t }) => {
   void t;
   await page.goto("/settings/site-theme/khong-co");

@@ -8,7 +8,7 @@ import { Care } from "@/components/sections/care";
 import { Reminder } from "@/components/sections/reminder";
 import { Contact } from "@/components/sections/contact";
 import { collectionText, featuredCards, getHome, heroContent } from "@/lib/home";
-import { careContent, contactContent, storyContent } from "@/lib/blocks";
+import { careContent, contactContent, effectKind, storyContent } from "@/lib/blocks";
 
 // Dựng lại tối đa mỗi 60 giây — BO đăng giao diện mới / concept vào mùa thì web đổi theo
 export const revalidate = 60;
@@ -21,7 +21,7 @@ export default async function HomePage() {
   const contact = contactContent(home?.theme.contact);
   return (
     <SiteShell overHero>
-      <Hero content={heroContent(home?.theme.hero)} />
+      <Hero content={heroContent(home?.theme.hero)} effect={effectKind(home?.theme.effect)} />
       <Promises />
       <Collection cards={featuredCards(home)} text={collectionText(home?.theme.collection)} />
       {!story.hidden && <Story content={story} />}

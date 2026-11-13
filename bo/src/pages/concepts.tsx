@@ -1,4 +1,4 @@
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { GiftOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { Button, Card, Flex, Popconfirm, Typography } from "antd";
 import { useState } from "react";
 import { TaxonomyModal } from "@/components/products/taxonomy-modal";
@@ -7,7 +7,8 @@ import { CategoriesSkeleton } from "@/components/skeletons";
 import { useConcepts } from "@/hooks/use-concepts";
 import { useProducts } from "@/hooks/use-products";
 import { REMOTE } from "@/lib/data-mode";
-import { conceptKind } from "@/lib/products/concepts";
+import { missingPresets } from "@/lib/products/concept-presets";
+import { conceptKind, rangeText } from "@/lib/products/concepts";
 import { useTitle } from "@/lib/use-title";
 
 // Concept (dịp lễ: Noel, Tết…) — phân loại thứ hai bên cạnh danh mục. Gắn vào sản phẩm ở drawer Sản phẩm (nhiều, không bắt buộc).
@@ -23,6 +24,8 @@ export function ConceptsPage() {
 
   const count = (id: string) => products.filter((p) => p.conceptIds?.includes(id)).length;
   const current = editing && editing !== "new" ? api.byId.get(editing) : undefined;
+  // Concept lễ thường có (Noel, Tết, Valentine) chưa tạo — tạo nhanh kèm thời gian bán gợi ý
+  const presets = missingPresets(api.items);
 
   return (
     <Flex vertical gap={16}>
@@ -39,6 +42,25 @@ export function ConceptsPage() {
           {!REMOTE && (
             <Popconfirm title="Khôi phục concept mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
               <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>
+            </Popconfirm>
+          )}
+          {presets.length > 0 && (
+            <Popconfirm
+              title="Tạo nhanh concept lễ"
+              description={
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {presets.map((c) => (
+                    <li key={c.id}>
+                      {c.name.vi}: {rangeText(c)}
+                    </li>
+                  ))}
+                </ul>
+              }
+              okText="Thêm"
+              cancelText="Hủy"
+              onConfirm={() => presets.forEach((c) => api.save(c))}
+            >
+              <Button icon={<GiftOutlined />}>Tạo nhanh concept lễ</Button>
             </Popconfirm>
           )}
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditing("new")}>

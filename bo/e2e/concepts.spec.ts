@@ -27,6 +27,23 @@ test("Concept: có mẫu Noel, Tết; thêm mới, chặn tên trùng, ẩn trê
   await expect.poll(async () => (await stored(page, "bo-concepts-v1"))?.find((c) => c.id === "valentine")).toMatchObject({ name: { vi: "Valentine", en: "Valentine" }, hidden: true });
 });
 
+test("Tạo nhanh concept lễ: chỉ thêm concept còn thiếu (Valentine) kèm thời gian bán gợi ý, xong thì ẩn nút", async ({ page, t }) => {
+  void t;
+  await page.goto("/concepts");
+  await expect(rows(page)).toHaveCount(2);
+  await page.getByRole("button", { name: "Tạo nhanh concept lễ" }).click();
+  await expect(page.locator(".ant-popover").getByText(/^Valentine: 01\/02 – 14\/02\/\d{4}$/)).toBeVisible();
+  await expect(page.locator(".ant-popover").getByText(/^Noel/)).toHaveCount(0);
+  await page.locator(".ant-popover").getByRole("button", { name: "Thêm" }).click();
+  await expect(rows(page)).toHaveCount(3);
+  await expect(rows(page).nth(2)).toContainText("Valentine");
+  await expect(page.getByRole("button", { name: "Tạo nhanh concept lễ" })).toHaveCount(0);
+  const saved = (await stored(page, "bo-concepts-v1"))?.find((c) => c.id === "valentine");
+  expect(saved).toMatchObject({ name: { vi: "Valentine", en: "Valentine's Day" }, color: "magenta" });
+  expect(saved.startsOn).toMatch(/^\d{4}-02-01$/);
+  expect(saved.endsOn).toMatch(/^\d{4}-02-14$/);
+});
+
 test("Gắn concept vào sản phẩm (nhiều), lọc theo concept; xóa concept thì sản phẩm chỉ rời khỏi concept", async ({ page, t }) => {
   void t;
   // Sửa sản phẩm: chọn Noel + Tết

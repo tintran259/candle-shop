@@ -34,6 +34,7 @@ describe('resolveTheme', () => {
       care: {},
       contact: {},
       footer: {},
+      effect: {},
     });
   });
 

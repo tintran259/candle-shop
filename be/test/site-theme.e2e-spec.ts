@@ -213,3 +213,15 @@ it('Các khối trang chủ: lưu Câu chuyện / Nghệ thuật đốt nến / 
   expect(await bad({ footer: { image: 'http://khong-an-toan/a.jpg' } })).toContain('Ảnh chân trang không hợp lệ.');
   expect(await bad({ care: { steps: [{}, {}, {}, {}] } })).toContain('steps');
 });
+
+it('Hiệu ứng hero: Mặc định tắt, giao diện Noel bật tuyết rơi; kiểu lạ → 400', async () => {
+  await t.post('/api/admin/concepts', { id: 'noel', name: { vi: 'Noel', en: '' } }).expect(201);
+  await t.post(`${URL}/default/publish`, { effect: { enabled: false, kind: 'blossom' } }).expect(200);
+  const effect = async () => (await t.anon().get('/api/shop/home').expect(200)).body.theme.effect;
+  expect(await effect()).toEqual({ enabled: false, kind: 'blossom' });
+  await t.post(URL, { id: 'noel-theme', name: 'Noel' }).expect(201);
+  await t.post(`${URL}/noel-theme/publish`, { conceptIds: ['noel'], effect: { enabled: true, kind: 'snow' } }).expect(200);
+  expect(await effect()).toEqual({ enabled: true, kind: 'snow' });
+  const res = await t.post(`${URL}/default/publish`, { effect: { kind: 'fireworks' } }).expect(400);
+  expect(JSON.stringify(res.body.message)).toContain('Hiệu ứng không hợp lệ.');
+});

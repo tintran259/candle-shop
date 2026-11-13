@@ -6,7 +6,10 @@ export type CareStep = { title?: string; text?: string };
 export type CareTheme = { hidden?: boolean; image?: string; title?: string; link?: string; steps?: CareStep[] };
 export type ContactTheme = { hidden?: boolean; image?: string; title?: string; heading?: string; text?: string };
 export type FooterTheme = { image?: string; tagline?: string };
-export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme };
+// Hiệu ứng trên hero theo dịp lễ: tuyết rơi (Noel), hoa mai / đào rơi (Tết), tim bay (Valentine). enabled false = tắt (đè được Mặc định)
+export const EFFECTS = ['snow', 'blossom', 'hearts'] as const;
+export type EffectTheme = { enabled?: boolean; kind?: (typeof EFFECTS)[number] };
+export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme; effect?: EffectTheme };
 
 export const CARE_STEPS = 3;
 // Giới hạn dòng: [số dòng tối đa, ký tự mỗi dòng] — vừa bố cục trang chủ
@@ -41,6 +44,7 @@ export function mergeBlocks(over: BlocksTheme | undefined, base: BlocksTheme | u
     care: { ...mergeFlat(careOver, careBase), ...(steps.some((s) => Object.keys(s).length) && { steps }) } as CareTheme,
     contact: mergeFlat(over?.contact, base?.contact),
     footer: mergeFlat(over?.footer, base?.footer),
+    effect: mergeFlat(over?.effect, base?.effect),
   };
 }
 

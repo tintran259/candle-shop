@@ -32,6 +32,18 @@ Giống trang Danh mục (dùng chung bảng và modal: `components/products/tax
 
 Mã concept tạo từ tên lúc thêm (`Giáng sinh` → `giang-sinh`) và **không đổi** khi sửa tên.
 
+## Tạo nhanh concept lễ
+
+Nút **Tạo nhanh concept lễ** (cạnh "Thêm concept", chỉ hiện khi còn thiếu) thêm Noel, Tết, Valentine kèm thời gian bán gợi ý của mùa sắp tới — bấm hiện danh sách sẽ thêm để xác nhận, sửa ngày lại được như concept thường (`bo/src/lib/products/concept-presets.ts`):
+
+| Concept | Thời gian bán gợi ý |
+|---|---|
+| Noel | 01/12 → 26/12 |
+| Tết | 30 ngày trước mùng 1 → mùng 7 (âm lịch, bảng ngày mùng 1 tới 2035) |
+| Valentine | 01/02 → 14/02 |
+
+Đang trong mùa thì lấy mùa này, hết mùa thì năm sau. Bỏ qua concept đã có (trùng id hoặc trùng tên, không phân biệt hoa thường). Hiệu ứng tuyết / hoa / tim trên web chọn ở giao diện gắn concept — [site-theme.md#hiệu-ứng-dịp-lễ](site-theme.md#hiệu-ứng-dịp-lễ). Test: `bo/e2e/concepts.spec.ts`, `bo/e2e/logic/concept-presets.spec.ts`.
+
 ## Thời gian
 
 Mỗi concept có **Thời gian bán** (từ ngày – đến ngày, chọn trong modal thêm / sửa), mỗi đầu để trống được; trống cả hai = mọi ngày. Ngày tính theo **giờ Việt Nam**, tính cả ngày bắt đầu và ngày kết thúc.

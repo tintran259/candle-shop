@@ -10,7 +10,7 @@ import { WebRevalidate } from '../common/web-revalidate.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { COLLECTION_MAX, DEFAULT_THEME, FOCUS, type ThemeContent } from './theme.js';
 
-import { CareDto, ContactDto, FooterDto, IMAGE, IMAGE_MAX, StoryDto } from './blocks.dto.js';
+import { CareDto, ContactDto, EffectDto, FooterDto, IMAGE, IMAGE_MAX, StoryDto } from './blocks.dto.js';
 import { checkLines } from './blocks.js';
 
 class LogoDto {
@@ -47,6 +47,7 @@ export class ThemeContentDto {
   @IsOptional() @ValidateNested() @Type(() => CareDto) care?: CareDto;
   @IsOptional() @ValidateNested() @Type(() => ContactDto) contact?: ContactDto;
   @IsOptional() @ValidateNested() @Type(() => FooterDto) footer?: FooterDto;
+  @IsOptional() @ValidateNested() @Type(() => EffectDto) effect?: EffectDto;
 }
 
 class CreateThemeDto {

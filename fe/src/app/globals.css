@@ -102,3 +102,19 @@ input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--color-ink);
   caret-color: var(--color-ink);
 }
+
+/* Trang trí Noel trên hero (components/effects/snow-corner.tsx): hiện dần sau khi hero mở xong */
+@keyframes snow-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.snow-in {
+  animation: snow-in 1.6s ease-out 1.4s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .snow-in {
+    animation: none;
+  }
+}

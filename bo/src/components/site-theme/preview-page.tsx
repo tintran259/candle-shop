@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { useCategories } from "@/hooks/use-categories";
 import { useConcepts } from "@/hooks/use-concepts";
 import { useProducts } from "@/hooks/use-products";
+import { PreviewEffect } from "@/components/site-theme/preview-effect";
 import { PreviewBlocks } from "@/components/site-theme/preview-blocks";
 import { imageUrl } from "@/lib/craft/image";
 import { blockDefaults } from "@/lib/site-theme/blocks";
@@ -126,6 +127,7 @@ export function PreviewPage({ theme, device }: { theme: BaseTheme; device: Devic
         />
         <div style={{ position: "absolute", inset: 0, background: "rgb(17 17 14 / 0.17)" }} />
         <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, rgb(17 17 14 / ${mobile ? 0.45 : 0.25}), transparent ${mobile ? 60 : 45}%)` }} />
+        {theme.effect?.enabled && theme.effect.kind && <PreviewEffect key={theme.effect.kind} kind={theme.effect.kind} mobile={mobile} />}
         <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", padding: `${mobile ? 150 : 270}px ${pad}px 0` }}>
           <div style={{ fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: C.sand }}>{hero.eyebrow || webDefaults.eyebrow}</div>
           <div style={{ fontFamily: serif, fontSize: mobile ? 40 : 54, lineHeight: 1.06, marginTop: 24 }}>

@@ -1,6 +1,7 @@
 import { Col, Flex, Form, Input, Radio, Row, Switch } from "antd";
 import { FormSection } from "@/components/form/form-section";
 import { BlockFields } from "@/components/site-theme/block-fields";
+import { EffectFields } from "@/components/site-theme/effect-fields";
 import { CollectionFields } from "@/components/site-theme/collection-fields";
 import { SingleImage } from "@/components/site-theme/single-image";
 import { CARE_STEPS, type BlocksTheme, type CareStep } from "@/lib/site-theme/blocks";
@@ -47,6 +48,7 @@ const toValues = (p: BaseTheme): Values => ({
   care: p.care,
   contact: p.contact,
   footer: p.footer,
+  effect: p.effect,
 });
 const fromValues = (v: Values, isBase: boolean): BaseTheme => ({
   ...(isBase && { announcementOn: v.announcementOn }),
@@ -72,6 +74,7 @@ const fromValues = (v: Values, isBase: boolean): BaseTheme => ({
   care: v.care && { ...v.care, steps: careSteps(v.care.steps) },
   contact: v.contact,
   footer: v.footer,
+  effect: v.effect,
 });
 
 type Props = {
@@ -169,6 +172,8 @@ export function ThemeForm({ part, isBase, fallback, onChange }: Props) {
             </Col>
           </Row>
         </FormSection>
+
+        <EffectFields isBase={isBase} fallback={fallback.effect} />
 
         <CollectionFields isBase={isBase} fallback={fallback.collection} />
 

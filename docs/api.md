@@ -1220,6 +1220,7 @@ Một giao diện:
 | `story` | Câu chuyện: `{ hidden?, image?, eyebrow?, kicker?, title?, heading?, body?, cta? }` — `title` 2 dòng × 20, `heading` 2 dòng × 30, `body` 3 dòng × 300 (mỗi dòng một đoạn); quá → 400 `Tên khối Câu chuyện tối đa 2 dòng, mỗi dòng 20 ký tự.`… |
 | `care` | Nghệ thuật đốt nến: `{ hidden?, image?, title?, link?, steps?: { title?, text? }[] }` — tối đa 3 bước, ghép theo vị trí |
 | `contact` | Gửi lời nhắn: `{ hidden?, image?, title?, heading?, text? }` — `text` ≤ 200 ký tự |
+| `effect` | Hiệu ứng hero: `{ enabled?, kind? }` — `kind` `snow` / `blossom` / `hearts`, khác → 400 `Hiệu ứng không hợp lệ.`; web chỉ hiện khi `enabled` và có `kind` |
 | `footer` | Chân trang: `{ image?, tagline? }` — `tagline` ≤ 60 ký tự. Ảnh các khối: `https://…` hoặc data URL |
 | `collection` | Khối Xưởng nến: `{ title?, heading?, note?, eyebrow?, productIds? }` — `title` 20, `heading` 60, `note` 60, `eyebrow` 40 ký tự; `productIds` tối đa 12 mã sản phẩm theo thứ tự (quá 12 → 400 `Chọn tối đa 12 mẫu cho Xưởng nến.`; mã không có / trùng tự bỏ khi lưu) |
 
@@ -1306,7 +1307,7 @@ Trang chủ web: giao diện đang dùng (BE chọn concept **đầu tiên theo 
 }
 ```
 
-Không có giao diện concept nào áp dụng: `themeId`, `conceptId` là `null` (dùng Mặc định). Chưa cấu hình gì: `announcementOn: true`, `logo: {}`, `hero: {}`, `collection: {}`, `story: {}`, `care: {}`, `contact: {}`, `footer: {}` — web dùng nội dung có sẵn. `care.steps` luôn đủ 3 phần tử khi có bước nào được điền. `categories`: danh mục của các mẫu trong `featured`.
+Không có giao diện concept nào áp dụng: `themeId`, `conceptId` là `null` (dùng Mặc định). Chưa cấu hình gì: `announcementOn: true`, `logo: {}`, `hero: {}`, `collection: {}`, `story: {}`, `care: {}`, `contact: {}`, `footer: {}`, `effect: {}` — web dùng nội dung có sẵn. `care.steps` luôn đủ 3 phần tử khi có bước nào được điền. `categories`: danh mục của các mẫu trong `featured`.
 
 ### `GET /shop/contact`
 
