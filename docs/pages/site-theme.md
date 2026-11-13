@@ -62,13 +62,13 @@ Dưới khối Xưởng nến trong form: **Câu chuyện**, **Nghệ thuật đ
 
 ## Hiệu ứng dịp lễ
 
-Khối **Hiệu ứng dịp lễ** (ngay dưới Hero): công tắc **Bật hiệu ứng** + **Kiểu hiệu ứng**: Tuyết rơi — Noel, Hoa mai, đào rơi — Tết, Tim bay — Valentine. Bật mà chưa có kiểu (của mình hoặc của Mặc định) thì nhắc ngay dưới ô — web không hiện gì.
+Khối **Hiệu ứng dịp lễ** (ngay dưới Hero): công tắc **Bật hiệu ứng** + **Kiểu hiệu ứng**: Tuyết rơi — Noel, Hoa mai, đào rơi — Tết, Hoa anh đào, mai, lì xì — Tết, Tim bay — Valentine. Bật mà chưa có kiểu (của mình hoặc của Mặc định) thì nhắc ngay dưới ô — web không hiện gì.
 
 - Giao diện concept chưa bật / tắt hoặc chưa chọn kiểu thì theo Mặc định (công tắc hiện trạng thái kế thừa, ô kiểu gợi ý "Theo Mặc định: …"); tắt riêng được (`enabled: false` đè Mặc định). Cách dùng thường gặp: Mặc định tắt, giao diện Noel bật tuyết → hết mùa Noel web tự về Mặc định, hiệu ứng tự tắt.
-- **Web** (`fe/src/components/effects/`): hạt vẽ bằng canvas chỉ trong hero, dưới lớp chữ, không chặn bấm; bắt đầu sau khi hero mở (1,2 giây), ít hạt (điện thoại một nửa), dừng khi hero ra khỏi màn hình / đổi tab, không chạy khi máy bật "giảm chuyển động". Tuyết có thêm lớp tuyết đọng dưới đáy hero (dày ở hai góc, mỏng ở giữa để không che câu lớn). Hoa mai vàng + đào hồng (bông và cánh rời, xoay); tim bay lên.
+- **Web** (`fe/src/components/effects/`): hạt vẽ bằng canvas chỉ trong hero, dưới lớp chữ, không chặn bấm; bắt đầu sau khi hero mở (1,2 giây), ít hạt (điện thoại một nửa), dừng khi hero ra khỏi màn hình / đổi tab, không chạy khi máy bật "giảm chuyển động". Tuyết có thêm lớp tuyết đọng dưới đáy hero (dày ở hai góc, mỏng ở giữa để không che câu lớn). Hoa mai vàng + đào hồng (bông và cánh rời, xoay); hoa anh đào hồng + mai vàng + phong bao lì xì (bao to hơn, ít hơn, lật qua lại như giấy); tim bay lên.
 - **Nút tròn ở góc phải hero** (trên dòng câu lớn) cho khách tắt / bật hiệu ứng; trình duyệt nhớ lựa chọn (`localStorage` khóa `2510-hieu-ung`), mặc định bật.
 - **Xem trước** chạy cùng hiệu ứng (`bo/src/components/site-theme/preview-effect.tsx`, bản sao của web — sửa thì sửa cả hai, kể cả `lib/site-theme/effect-sprites.ts`).
-- Dữ liệu: `effect: { enabled?, kind? }` trong nội dung giao diện (`kind`: `snow` / `blossom` / `hearts`).
+- Dữ liệu: `effect: { enabled?, kind? }` trong nội dung giao diện (`kind`: `snow` / `blossom` / `sakura` / `hearts`).
 
 ## Bản nháp và đăng (riêng từng giao diện)
 

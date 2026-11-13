@@ -7,7 +7,7 @@ import { Particles } from "./particles";
 import { SnowDrift } from "./snow-drift";
 
 const KEY = "2510-hieu-ung";
-const NAMES: Record<EffectKind, string> = { snow: "tuyết rơi", blossom: "hoa rơi", hearts: "tim bay" };
+const NAMES: Record<EffectKind, string> = { snow: "tuyết rơi", blossom: "hoa rơi", sakura: "hoa anh đào, mai, lì xì", hearts: "tim bay" };
 
 function Icon({ kind }: { kind: EffectKind }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.4, strokeLinecap: "round", strokeLinejoin: "round" } as const;
@@ -18,7 +18,7 @@ function Icon({ kind }: { kind: EffectKind }) {
         <path d="M9.5 4.5 12 7l2.5-2.5M9.5 19.5 12 17l2.5 2.5" />
       </g>
     );
-  if (kind === "blossom")
+  if (kind === "blossom" || kind === "sakura")
     return (
       <g {...common}>
         {[0, 72, 144, 216, 288].map((a) => (

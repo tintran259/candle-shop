@@ -222,6 +222,7 @@ it('Hiệu ứng hero: Mặc định tắt, giao diện Noel bật tuyết rơi;
   await t.post(URL, { id: 'noel-theme', name: 'Noel' }).expect(201);
   await t.post(`${URL}/noel-theme/publish`, { conceptIds: ['noel'], effect: { enabled: true, kind: 'snow' } }).expect(200);
   expect(await effect()).toEqual({ enabled: true, kind: 'snow' });
+  await t.post(`${URL}/default/publish`, { effect: { enabled: true, kind: 'sakura' } }).expect(200);
   const res = await t.post(`${URL}/default/publish`, { effect: { kind: 'fireworks' } }).expect(400);
   expect(JSON.stringify(res.body.message)).toContain('Hiệu ứng không hợp lệ.');
 });

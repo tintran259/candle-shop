@@ -8,7 +8,7 @@ export type CareTheme = { hidden?: boolean; image?: string; title?: string; link
 export type ContactTheme = { hidden?: boolean; image?: string; title?: string; heading?: string; text?: string };
 export type FooterTheme = { image?: string; tagline?: string };
 // Hiệu ứng trên hero theo dịp lễ (components/effects/): tuyết rơi (Noel), hoa mai / đào rơi (Tết), tim bay (Valentine)
-export type EffectKind = "snow" | "blossom" | "hearts";
+export type EffectKind = "snow" | "blossom" | "sakura" | "hearts";
 export type EffectTheme = { enabled?: boolean; kind?: EffectKind };
 export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme; effect?: EffectTheme };
 

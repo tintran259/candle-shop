@@ -6,9 +6,9 @@ export type CareTheme = { hidden?: boolean; image?: string; title?: string; link
 export type ContactTheme = { hidden?: boolean; image?: string; title?: string; heading?: string; text?: string };
 export type FooterTheme = { image?: string; tagline?: string };
 // Hiệu ứng trên hero theo dịp lễ (be/src/site-theme/blocks.ts EFFECTS); enabled false = tắt (đè được Mặc định)
-export type EffectKind = "snow" | "blossom" | "hearts";
+export type EffectKind = "snow" | "blossom" | "sakura" | "hearts";
 export type EffectTheme = { enabled?: boolean; kind?: EffectKind };
-export const effectLabels: Record<EffectKind, string> = { snow: "Tuyết rơi — Noel", blossom: "Hoa mai, đào rơi — Tết", hearts: "Tim bay — Valentine" };
+export const effectLabels: Record<EffectKind, string> = { snow: "Tuyết rơi — Noel", blossom: "Hoa mai, đào rơi — Tết", sakura: "Hoa anh đào, mai, lì xì — Tết", hearts: "Tim bay — Valentine" };
 export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme; effect?: EffectTheme };
 export type BlockKey = "story" | "care" | "contact" | "footer";
 

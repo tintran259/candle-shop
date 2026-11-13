@@ -6,8 +6,8 @@ export type CareStep = { title?: string; text?: string };
 export type CareTheme = { hidden?: boolean; image?: string; title?: string; link?: string; steps?: CareStep[] };
 export type ContactTheme = { hidden?: boolean; image?: string; title?: string; heading?: string; text?: string };
 export type FooterTheme = { image?: string; tagline?: string };
-// Hiệu ứng trên hero theo dịp lễ: tuyết rơi (Noel), hoa mai / đào rơi (Tết), tim bay (Valentine). enabled false = tắt (đè được Mặc định)
-export const EFFECTS = ['snow', 'blossom', 'hearts'] as const;
+// Hiệu ứng trên hero theo dịp lễ: tuyết rơi (Noel), hoa mai / đào rơi hoặc hoa anh đào + mai + lì xì (Tết), tim bay (Valentine). enabled false = tắt (đè được Mặc định)
+export const EFFECTS = ['snow', 'blossom', 'sakura', 'hearts'] as const;
 export type EffectTheme = { enabled?: boolean; kind?: (typeof EFFECTS)[number] };
 export type BlocksTheme = { story?: StoryTheme; care?: CareTheme; contact?: ContactTheme; footer?: FooterTheme; effect?: EffectTheme };
 
