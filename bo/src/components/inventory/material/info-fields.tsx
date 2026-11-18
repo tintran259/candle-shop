@@ -1,8 +1,9 @@
-import { BuildOutlined, ShoppingOutlined } from "@ant-design/icons";
 import { AutoComplete, Col, ColorPicker, Flex, Form, Input, InputNumber, Radio, Row, Segmented, Select, Typography } from "antd";
 import { FormSection } from "@/components/form/form-section";
-import { SourceOption } from "@/components/inventory/material/parts";
+import { ImageUpload } from "@/components/form/image-upload";
+import { SourceChoice } from "@/components/inventory/material/parts";
 import { unitNames } from "@/lib/craft/groups";
+import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
 import { units } from "@/lib/craft/types";
 import { categoryLabels, jarTypes, type Usage } from "@/lib/inventory/stock";
 import { materialCategories, type Material, type MaterialCategory } from "@/lib/inventory/types";
@@ -15,14 +16,7 @@ export function InfoFields({ material, materials, usage, category, hasSwatch }: 
   return (
     <FormSection title="Thông tin" description="Tên nội bộ của xưởng — khách không thấy (khách thấy tên lựa chọn trên trang Thủ công).">
       <Form.Item name="source" label="Nguồn">
-        <Segmented
-          block
-          className="source-choice"
-          options={[
-            { value: "bought", label: <SourceOption icon={<ShoppingOutlined />} title="Nguyên liệu" hint="Mua về từ nhà cung cấp" /> },
-            { value: "made", label: <SourceOption icon={<BuildOutlined />} title="Sản xuất" hint="Xưởng tự làm, trừ kho theo công thức" /> },
-          ]}
-        />
+        <SourceChoice />
       </Form.Item>
       <Row gutter={16}>
         <Col xs={24} sm={14}>
@@ -100,6 +94,17 @@ export function InfoFields({ material, materials, usage, category, hasSwatch }: 
           </Form.Item>
         </Flex>
       </Flex>
+    </FormSection>
+  );
+}
+
+// Ảnh nguyên liệu: để nhận diện trong Kho và để lựa chọn Thủ công dùng lại (nút "Dùng ảnh của nguyên liệu" chép sang)
+export function MaterialImages() {
+  return (
+    <FormSection title="Ảnh" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Lựa chọn Thủ công dùng nguyên liệu này có thể lấy lại ảnh — đổi ảnh ở Thủ công không đổi ảnh ở đây.`}>
+      <Form.Item name="images" noStyle>
+        <ImageUpload />
+      </Form.Item>
     </FormSection>
   );
 }

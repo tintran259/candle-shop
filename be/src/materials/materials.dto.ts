@@ -1,6 +1,6 @@
 // Dữ liệu gửi lên cho Kho nguyên liệu (docs/pages/inventory.md). Giống form drawer nguyên liệu của BO
 import { Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Max, MaxLength, Min, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 
 export const CATEGORIES = ['vessel', 'wax', 'fragrance', 'wick', 'dye', 'decor', 'packaging', 'other'] as const;
 export const UNITS = ['g', 'ml', 'pcs'] as const;
@@ -22,6 +22,8 @@ class MaterialFields {
   // Xưởng tự sản xuất: định mức cho 1 đơn vị. [] = nguyên liệu mua về
   @IsOptional() @ValidateNested({ each: true }) @Type(() => RecipeLineDto) recipe?: RecipeLineDto[];
   @IsOptional() @IsString() @MaxLength(30) swatch?: string;
+  // Ảnh đầu là ảnh chính: URL kho ảnh hoặc data URL (chưa cấu hình Cloudinary). [] = bỏ hết ảnh
+  @IsOptional() @ArrayMaxSize(10) @IsString({ each: true }) images?: string[];
   @IsOptional() @IsString() @MaxLength(500) note?: string;
 }
 

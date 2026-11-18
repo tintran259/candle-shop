@@ -26,6 +26,7 @@ Mỗi việc chỉ có một chỗ làm, để không nhầm giữa "sửa thôn
 | **Nguồn** (trong Thông tin) | **Nguyên liệu** (mua về) hoặc **Sản xuất**, đổi được | Như bên trái |
 | **Sản xuất từ** (khi chọn Sản xuất) | Công thức cho 1 đơn vị | Như bên trái |
 | **Thông tin** | Tên, mã, loại, đơn vị, màu | Như bên trái |
+| **Ảnh** | Tối đa 6 ảnh, ảnh đầu là ảnh chính | Như bên trái |
 | **Cài đặt tồn kho** / **Tồn kho** | Theo dõi tồn, ngưỡng sắp hết. Không có ô số tồn hay ô giá | Theo dõi tồn, **Tồn ban đầu** và **Tổng tiền đã trả** nằm cạnh nhau (luôn hiện), ngưỡng sắp hết |
 | Nút cuối drawer | **Lưu thông tin**: chỉ lưu thông tin và cài đặt, không đổi số tồn, không đổi giá | **Thêm vào kho** |
 
@@ -90,7 +91,8 @@ Không sửa, không xóa phiếu. Ghi sai thì ghi phiếu ngược lại.
 
 Thành phẩm xưởng tự làm từ nguyên liệu khác trong Kho, vd hũ gốm làm từ thạch cao và màu pha thạch cao.
 
-- **Nguồn:** drawer nguyên liệu có lựa chọn **Nguyên liệu** (mua về) hoặc **Sản xuất**. Chọn Sản xuất thì hiện phần **Sản xuất từ**: nguyên liệu và lượng cho 1 đơn vị, vd Hũ gốm 150ml = 350 g thạch cao + 2 ml màu. Ô chọn hiện số đang có của từng nguyên liệu. Không chọn được chính nó, hoặc thứ đang được làm từ nó.
+- **Ảnh nguyên liệu:** khối **Ảnh** dưới Thông tin (giống ô ảnh sản phẩm: chọn ảnh chỉ nén + xem trước, bấm Lưu mới tải lên kho ảnh). Lựa chọn Thủ công gắn nguyên liệu này có thể **dùng lại** ảnh (xem [Thủ công](craft.md)) — chỉ chép sang, sửa ảnh ở Thủ công không đổi ảnh nguyên liệu và ngược lại.
+- **Nguồn:** drawer nguyên liệu có hai thẻ chọn **Nguyên liệu** (mua về) hoặc **Sản xuất** (thẻ đang chọn viền + nền nhạt, nút tròn bên phải). Chọn Sản xuất thì hiện phần **Sản xuất từ**: nguyên liệu và lượng cho 1 đơn vị, vd Hũ gốm 150ml = 350 g thạch cao + 2 ml màu. Ô chọn hiện số đang có của từng nguyên liệu. Không chọn được chính nó, hoặc thứ đang được làm từ nó.
 - **Thêm thành phẩm mới:** thay cho Tồn ban đầu và Tổng tiền đã trả là **Số lượng sản xuất** (cũng là tồn ban đầu) và **Giá**. Hệ thống nhân định mức ra lượng cần, vd làm 20 hũ thì hiện "Thạch cao: trừ 7.000 g · còn 12.000".
 - **Bấm Thêm vào kho:** trừ từng nguyên liệu, mỗi nguyên liệu một phiếu Sản xuất "Làm Hũ gốm 150ml · 20 cái". Cộng thành phẩm bằng phiếu Sản xuất "Mẻ đầu tiên". Các phiếu chung một mã mẻ `SX-…`. Để số lượng 0 thì chỉ lưu công thức, làm sau.
 - **Mẻ sau:** thẻ tồn kho của thành phẩm có tab **Sản xuất**, dùng công thức đã lưu, có xem trước lượng trừ và giá bình quân mới.

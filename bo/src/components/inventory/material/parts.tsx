@@ -1,21 +1,32 @@
-import { Flex, Typography } from "antd";
+import { BuildOutlined, ShoppingOutlined } from "@ant-design/icons";
+import { Flex, Radio, Typography } from "antd";
 import type { CSSProperties, ReactNode } from "react";
 import { radius } from "@/theme";
 
-// Một lựa chọn Nguồn: icon, tên, một dòng mô tả
-export function SourceOption({ icon, title, hint }: { icon: ReactNode; title: string; hint: string }) {
+type Source = "bought" | "made";
+
+const sources: { value: Source; icon: ReactNode; title: string; hint: string }[] = [
+  { value: "bought", icon: <ShoppingOutlined />, title: "Nguyên liệu", hint: "Mua về từ nhà cung cấp" },
+  { value: "made", icon: <BuildOutlined />, title: "Sản xuất", hint: "Xưởng tự làm, trừ kho theo công thức" },
+];
+
+// Chọn Nguồn (drawer nguyên liệu): hai thẻ — ô icon, tên, mô tả, nút tròn bên phải; thẻ đang chọn viền + nền nhạt màu chính (styles/forms.css).
+// value / onChange do Form.Item gắn vào
+export function SourceChoice({ value, onChange }: { value?: Source; onChange?: (v: Source) => void }) {
   return (
-    <Flex align="center" gap={10} style={{ padding: "8px 4px", textAlign: "left" }}>
-      <span aria-hidden style={{ fontSize: 18, display: "flex" }}>
-        {icon}
-      </span>
-      <Flex vertical style={{ minWidth: 0, lineHeight: 1.35 }}>
-        <Typography.Text strong>{title}</Typography.Text>
-        <Typography.Text type="secondary" style={{ fontSize: 12, whiteSpace: "normal" }}>
-          {hint}
-        </Typography.Text>
-      </Flex>
-    </Flex>
+    <Radio.Group className="source-cards" value={value} onChange={(e) => onChange?.(e.target.value)}>
+      {sources.map((s) => (
+        <Radio key={s.value} value={s.value} className="source-card">
+          <span className="source-card-icon" aria-hidden>
+            {s.icon}
+          </span>
+          <span className="source-card-text">
+            <span className="source-card-title">{s.title}</span>
+            <span className="source-card-hint">{s.hint}</span>
+          </span>
+        </Radio>
+      ))}
+    </Radio.Group>
   );
 }
 

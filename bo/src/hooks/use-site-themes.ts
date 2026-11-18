@@ -11,19 +11,23 @@ const replaceAll = (saved: SiteTheme[]) => () => saved;
 const update = (id: string, change: (t: SiteTheme) => Partial<SiteTheme>) => store.get().map((t) => (t.id === id ? { ...t, ...change(t), updatedAt: new Date().toISOString() } : t));
 
 // Tải ảnh mới chọn (data URL) lên kho ảnh trước khi lưu; trả nội dung đã thay đường dẫn ảnh
-async function withUploadedImages(content: ThemeContent): Promise<ThemeContent> {
+// Tên ảnh trên Cloudinary: "giao-dien-tet-hero-…", "giao-dien-tet-logo-sang-…"
+async function withUploadedImages(id: string, content: ThemeContent): Promise<ThemeContent> {
   const next = structuredClone(compact(content));
-  const slots: { get: () => string | undefined; set: (v: string) => void }[] = [];
-  if (next.hero?.image) slots.push({ get: () => next.hero!.image, set: (v) => (next.hero!.image = v) });
-  for (const k of ["light", "dark"] as const) if (next.logo?.[k]) slots.push({ get: () => next.logo![k], set: (v) => (next.logo![k] = v) });
+  const theme = `Giao diện ${store.get().find((t) => t.id === id)?.name ?? id}`;
+  const slots: { label: string; get: () => string | undefined; set: (v: string) => void }[] = [];
+  if (next.hero?.image) slots.push({ label: "hero", get: () => next.hero!.image, set: (v) => (next.hero!.image = v) });
+  for (const k of ["light", "dark"] as const) if (next.logo?.[k]) slots.push({ label: k === "light" ? "logo sáng" : "logo tối", get: () => next.logo![k], set: (v) => (next.logo![k] = v) });
   // Ảnh các khối trang chủ (Câu chuyện, Nghệ thuật đốt nến, Gửi lời nhắn, chân trang)
+  const blockLabel = { story: "câu chuyện", care: "nghệ thuật đốt nến", contact: "lời nhắn", footer: "chân trang" } as const;
   for (const k of ["story", "care", "contact", "footer"] as const) {
     const block = next[k];
-    if (block?.image) slots.push({ get: () => block.image, set: (v) => (block.image = v) });
+    if (block?.image) slots.push({ label: blockLabel[k], get: () => block.image, set: (v) => (block.image = v) });
   }
   const uploaded = await uploadImages(
     slots.map((s) => s.get()!),
     "site",
+    slots.map((s) => `${theme} ${s.label}`),
   );
   slots.forEach((s, i) => s.set(uploaded[i]));
   return next;
@@ -59,7 +63,7 @@ const remove = (id: string) =>
   );
 
 const saveDraft = async (id: string, content: ThemeContent) => {
-  const draft = clean(id, await withUploadedImages(content));
+  const draft = clean(id, await withUploadedImages(id, content));
   store.sync(
     update(id, () => ({ draft })),
     async () => replaceAll(await api<SiteTheme[]>("PUT", `${PATH}/${id}/draft`, draft)),
@@ -67,7 +71,7 @@ const saveDraft = async (id: string, content: ThemeContent) => {
 };
 
 const publish = async (id: string, content: ThemeContent) => {
-  const published = clean(id, await withUploadedImages(content));
+  const published = clean(id, await withUploadedImages(id, content));
   store.sync(
     update(id, () => ({ published, draft: null, publishedAt: new Date().toISOString() })),
     async () => replaceAll(await api<SiteTheme[]>("POST", `${PATH}/${id}/publish`, published)),

@@ -27,6 +27,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Đánh giá | `/reviews` | Chưa có | Trang tạm, chưa làm |
 | Mã giảm giá | `/discounts` | [discounts.md](./pages/discounts.md) | Đã có |
 | Cài đặt | `/settings` | [settings.md](./pages/settings.md) | Đã có |
+| Kho ảnh | `/settings/media` | [media.md](./pages/media.md) | Đã có: mọi ảnh trên Cloudinary, lọc thư mục, tìm, ảnh đang dùng ở đâu, xóa ảnh không dùng |
 | Giao diện web | `/settings/site-theme` | [site-theme.md](./pages/site-theme.md) | Đã có: danh sách + chi tiết giao diện (thông báo, logo, hero), gắn concept; nháp / đăng riêng từng giao diện |
 
 ## Kiểm thử

@@ -1,15 +1,87 @@
-/* Lựa chọn Nguồn ở drawer nguyên liệu: hai dòng (tên + mô tả), cao theo nội dung */
-.source-choice .ant-segmented-item-label {
-  min-height: auto;
-  line-height: normal;
-  white-space: normal;
-  overflow: visible;
+/* Chọn Nguồn ở drawer nguyên liệu (SourceChoice): hai thẻ cạnh nhau, điện thoại hẹp thì xếp dọc */
+.source-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
 }
-.source-choice .ant-segmented-item-selected {
-  box-shadow: inset 0 0 0 1.5px var(--ant-color-primary);
+.source-cards .source-card {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--ant-color-border);
+  border-radius: 10px;
+  background: var(--ant-color-bg-container);
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
 }
-.source-choice .ant-segmented-item-selected .anticon {
-  color: var(--ant-color-primary);
+.source-cards .source-card::after {
+  display: none;
+}
+.source-cards .source-card:hover {
+  border-color: var(--ant-color-primary-hover);
+}
+.source-cards .source-card > span:last-child {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+.source-cards .source-card.ant-radio-wrapper-checked {
+  border-color: var(--ant-color-primary);
+  background: var(--ant-color-primary-bg);
+  box-shadow: 0 0 0 1px var(--ant-color-primary);
+}
+.source-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--ant-color-fill-tertiary);
+  color: var(--ant-color-text-secondary);
+  font-size: 18px;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.source-card.ant-radio-wrapper-checked .source-card-icon {
+  background: var(--ant-color-primary);
+  color: #fff;
+}
+.source-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.35;
+}
+.source-card-title {
+  font-weight: 600;
+  color: var(--ant-color-text);
+}
+.source-card-hint {
+  font-size: 12px;
+  color: var(--ant-color-text-secondary);
+}
+@media (max-width: 479px) {
+  .source-cards {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-cards .source-card,
+  .source-card-icon {
+    transition: none;
+  }
 }
 /* Nút chuyển trong khối nền xám (Mẻ đầu tiên, Ghi phiếu kho) cần nền đậm hơn khối để còn thấy */
 .sub-panel .ant-segmented {
@@ -38,4 +110,20 @@
 /* Form sản phẩm (drawer ~600px): thẻ chọn nguyên liệu 3 cột, tên không bị cắt */
 .product-craft .cfg-grid {
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+/* Drawer lựa chọn Thủ công: thanh "Dùng ảnh của nguyên liệu" phía trên ô ảnh */
+.material-images-bar {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px dashed var(--ant-color-border);
+  border-radius: 10px;
+  background: var(--ant-color-fill-quaternary);
+}
+.material-images-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--ant-color-border-secondary);
 }

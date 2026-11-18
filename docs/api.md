@@ -385,6 +385,7 @@ Kho là nơi duy nhất giữ số tồn. Với nguyên liệu có theo dõi t�
 | `jarType`, `capacity` | string?, number? | Chỉ hũ: loại hũ và dung tích (ml) |
 | `recipe` | `{ materialId, quantity }[]`? | Xưởng tự sản xuất: định mức cho 1 đơn vị. Không có = nguyên liệu mua về |
 | `swatch`, `note` | string? | Màu hiển thị, ghi chú |
+| `images` | string[]? | Ảnh nguyên liệu (URL kho ảnh hoặc data URL), ảnh đầu là ảnh chính. Không có = chưa có ảnh |
 | `updatedAt` | string | ISO |
 
 ### `GET /admin/materials`
@@ -410,6 +411,7 @@ Kho là nơi duy nhất giữ số tồn. Với nguyên liệu có theo dõi t�
 | `jarType`, `capacity` | | | Chỉ với `vessel`; có `jarType` thì bắt buộc `capacity` |
 | `recipe` | `{ materialId, quantity }[]` | | Thành phẩm sản xuất. Số lượng làm ghi bằng `POST /:id/produce`, không gửi `stock` |
 | `sku`, `swatch`, `note` | string | | ≤ 30, 30, 500 ký tự |
+| `images` | string[] | | Tối đa 10. Ảnh mới tải lên kho ảnh trước (`POST /admin/uploads/sign`, thư mục `craft`) |
 
 ```json
 { "name": "Sáp đậu nành", "category": "wax", "unit": "g", "tracked": true, "stock": 5000, "openingTotal": 300000, "lowStock": 500 }
@@ -436,7 +438,7 @@ Tạo nhiều nguyên liệu một lần (trang Thủ công bấm Lưu).
 
 Sửa thông tin và cài đặt (nút **Lưu thông tin**). **Không** đổi số tồn.
 
-Gửi trường cần đổi: `name`, `sku`, `category`, `unit`, `tracked`, `lowStock`, `jarType`, `capacity`, `recipe`, `swatch`, `note`. Gửi được `unitCost` chỉ khi không theo dõi tồn.
+Gửi trường cần đổi: `name`, `sku`, `category`, `unit`, `tracked`, `lowStock`, `jarType`, `capacity`, `recipe`, `swatch`, `images` (thay cả danh sách, `[]` = bỏ hết ảnh), `note`. Gửi được `unitCost` chỉ khi không theo dõi tồn.
 
 - `recipe: []` thì đổi về nguyên liệu mua về (số tồn giữ nguyên).
 - Chuỗi rỗng (`""`) thì xóa trường; `capacity: null` xóa dung tích.
@@ -1194,18 +1196,52 @@ Xóa mọi dữ liệu BO trong một giao dịch: đơn hàng (kèm khoản thu
 
 Ký phép tải một ảnh lên Cloudinary. BO dùng kết quả để `POST` file thẳng tới Cloudinary (multipart: `file`, `api_key`, `timestamp`, `folder`, `signature`), lưu `secure_url` Cloudinary trả về vào dữ liệu (ảnh sản phẩm, lựa chọn Thủ công…). Khóa bí mật không rời BE.
 
-**Gửi lên:** `{ "folder": "products" }` — `products` \| `craft` \| `orders` \| `misc` (mặc định `misc`).
+**Gửi lên:** `{ "folder": "products", "names": ["Nến Vanilla", "Nến Vanilla"] }` — `folder`: `products` \| `craft` \| `orders` \| `site` \| `misc` (mặc định `misc`). `names` (không bắt buộc, ≤ 20, mỗi tên ≤ 120 ký tự): tên có nghĩa cho từng ảnh — BO tự đặt theo nơi dùng ảnh (tên sản phẩm / nguyên liệu / lựa chọn, "Khiếu nại DH0123", "Giao diện Tết hero"), người dùng không nhập.
 
 **Trả về 200:**
 
 ```json
-{ "uploadUrl": "https://api.cloudinary.com/v1_1/<cloud>/image/upload", "apiKey": "1234567890", "timestamp": 1731200000, "folder": "candle2510/products", "signature": "<sha1>" }
+{
+  "uploadUrl": "https://api.cloudinary.com/v1_1/<cloud>/image/upload", "apiKey": "1234567890", "timestamp": 1731200000, "folder": "candle2510/products", "signature": "<sha1>",
+  "items": [{ "publicId": "nen-vanilla-20261118-151230", "signature": "<sha1>" }, { "publicId": "nen-vanilla-20261118-151230-2", "signature": "<sha1>" }]
+}
 ```
 
-Chữ ký = SHA-1 của `folder=…&timestamp=…` + API Secret (cách Cloudinary quy định); Cloudinary nhận trong khoảng 1 giờ.
+Chữ ký = SHA-1 của `folder=…&timestamp=…` + API Secret (cách Cloudinary quy định); Cloudinary nhận trong khoảng 1 giờ. Có `names` thì thêm `items` cùng thứ tự: **tên ảnh** (`public_id`) = tên bỏ dấu (≤ 60 ký tự, trống thì `anh`) + ngày giờ VN lúc ký, trùng trong lượt thì thêm `-2`, `-3`…; chữ ký riêng ký `folder=…&public_id=…&timestamp=…`. BO gửi thêm `public_id` khi tải ảnh đó.
 
 **Lỗi:** 400 `folder` không hợp lệ; 401 chưa đăng nhập; 503 `"Chưa cấu hình kho ảnh (Cloudinary)."` (thiếu biến `CLOUDINARY_*` — BO tự lưu ảnh tạm trong DB).
 
+
+## Kho ảnh
+
+Trang BO › Cài đặt › Kho ảnh ([pages/media.md](pages/media.md)). Chưa cấu hình `CLOUDINARY_*` thì 503 `"Chưa cấu hình kho ảnh (Cloudinary)."`; Cloudinary lỗi thì 502 `"Không đọc được kho ảnh: …"`.
+
+### `GET /admin/media`
+
+Mọi ảnh trong thư mục `candle2510/` trên Cloudinary, mới nhất trước, kèm nơi đang dùng trong DB.
+
+**Trả về 200:**
+
+```json
+[
+  {
+    "publicId": "candle2510/craft/sap-dau-nanh-20261118-151230", "name": "sap-dau-nanh-20261118-151230", "folder": "craft",
+    "url": "https://res.cloudinary.com/<cloud>/image/upload/v1/candle2510/craft/sap-dau-nanh-20261118-151230.webp",
+    "format": "webp", "bytes": 48213, "width": 800, "height": 800, "createdAt": "2026-11-18T08:12:30Z",
+    "usedIn": ["Nguyên liệu: Sáp đậu nành", "Thủ công › Sáp › Sáp đậu nành"]
+  }
+]
+```
+
+`folder`: `products` \| `craft` \| `orders` \| `site` \| `misc`. `usedIn` trống = ảnh không dùng. Nơi dùng: sản phẩm, nguyên liệu, lựa chọn Thủ công (đã lưu / nháp), ảnh món trong đơn, thanh toán, khiếu nại, hoàn tiền, sản phẩm hủy đơn, giao diện web (đã đăng / nháp), đơn nháp.
+
+### `POST /admin/media/delete`
+
+**Gửi lên:** `{ "publicIds": ["candle2510/products/anh-thua-20261117-090000"] }` (1–500).
+
+**Trả về 200:** `{ "deleted": ["candle2510/products/anh-thua-20261117-090000"] }`.
+
+**Lỗi:** 400 danh sách rỗng; 409 có ảnh đang được dùng — `"Ảnh đang được dùng, không xóa: <tên> (<nơi dùng>)."`, không xóa ảnh nào.
 
 ---
 

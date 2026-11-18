@@ -182,6 +182,8 @@ model Material {
   jarType   String?
   capacity  Int?
   swatch    String?
+  // Ảnh nguyên liệu (ảnh đầu là ảnh chính). Lựa chọn Thủ công chép sang khi muốn dùng lại — sửa ảnh lựa chọn không đổi ảnh này
+  images    String[]         @default([])
   note      String?
   updatedAt DateTime         @updatedAt
 

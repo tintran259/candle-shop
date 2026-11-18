@@ -58,6 +58,7 @@ const materialBody = (m: Omit<Material, "updatedAt">) => ({
   capacity: m.capacity ?? null,
   recipe: m.recipe ?? [],
   swatch: m.swatch ?? "",
+  images: m.images ?? [],
   note: m.note ?? "",
 });
 const createBody = (m: Omit<Material, "updatedAt">, openingTotal?: number) => ({

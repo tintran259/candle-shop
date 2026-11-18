@@ -3,7 +3,8 @@
 import { Body, Controller, HttpCode, Module, Post, ServiceUnavailableException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { createHash } from 'node:crypto';
-import { IsIn, IsOptional } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { slugify, uniqueSlug } from '../common/text.js';
 
 // Thư mục trên Cloudinary theo nơi dùng ảnh
 export const FOLDERS = ['products', 'craft', 'orders', 'site', 'misc'] as const;
@@ -11,6 +12,20 @@ const ROOT = 'candle2510';
 
 class SignDto {
   @IsOptional() @IsIn(FOLDERS) folder?: (typeof FOLDERS)[number];
+  // Tên có nghĩa cho từng ảnh, BO tự đặt theo nơi dùng (vd tên sản phẩm) → public_id "nen-vanilla-20261118-151230"
+  @IsOptional() @IsArray() @ArrayMaxSize(20) @IsString({ each: true }) @MaxLength(120, { each: true }) names?: string[];
+}
+
+// Tên ảnh trên Cloudinary: tên bỏ dấu (≤ 60 ký tự) + ngày giờ VN lúc tải; trùng trong cùng lượt thì thêm -2, -3…
+export function publicIds(names: string[], now = new Date()) {
+  const vn = new Date(now.getTime() + 7 * 3_600_000).toISOString();
+  const stamp = `${vn.slice(0, 10).replace(/-/g, '')}-${vn.slice(11, 19).replace(/:/g, '')}`;
+  const taken = new Set<string>();
+  return names.map((n) => {
+    const id = uniqueSlug(`${slugify(n).slice(0, 60).replace(/-+$/, '') || 'anh'}-${stamp}`, taken);
+    taken.add(id);
+    return id;
+  });
 }
 
 // Chữ ký Cloudinary: các tham số (trừ file, api_key) xếp theo tên, nối "a=1&b=2", thêm api_secret, băm SHA-1
@@ -28,7 +43,8 @@ export function signParams(params: Record<string, string | number>, secret: stri
 @ApiBearerAuth()
 @Controller('admin/uploads')
 export class UploadsController {
-  // Trả tham số để BO POST file tới uploadUrl (multipart: file, api_key, timestamp, folder, signature). Chữ ký dùng trong 1 giờ
+  // Trả tham số để BO POST file tới uploadUrl (multipart: file, api_key, timestamp, folder, signature). Chữ ký dùng trong 1 giờ.
+  // Có names: thêm items — mỗi ảnh một public_id có nghĩa + chữ ký riêng (gửi kèm public_id)
   @Post('sign')
   @HttpCode(200)
   sign(@Body() body: SignDto) {
@@ -44,6 +60,9 @@ export class UploadsController {
       timestamp,
       folder,
       signature: signParams({ folder, timestamp }, secret),
+      ...(body.names?.length && {
+        items: publicIds(body.names).map((publicId) => ({ publicId, signature: signParams({ folder, public_id: publicId, timestamp }, secret) })),
+      }),
     };
   }
 }

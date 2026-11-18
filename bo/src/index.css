@@ -11,6 +11,7 @@
 @import "./styles/login.css";
 @import "./styles/color-mix.css";
 @import "./styles/color-mix-chips.css";
+@import "./styles/media.css";
 
 /* Bảng có cột ghim (fixed) khi cuộn ngang: nền tiêu đề trong suốt (theme) làm chữ tiêu đề cột khác lộ qua ô ghim — ô tiêu đề ghim dùng nền như thẻ */
 .ant-table-thead > tr > th.ant-table-cell-fix-right,

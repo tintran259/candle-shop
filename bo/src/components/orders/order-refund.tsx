@@ -25,7 +25,7 @@ export function RefundModal({ open, order, api, onClose, overpaid: extra }: Prop
     setSaving(true);
     let images: string[];
     try {
-      images = await uploadImages(v.images, "orders");
+      images = await uploadImages(v.images, "orders", `Hoàn tiền ${order.code}`);
     } catch (e) {
       return message.error(uploadError(e));
     } finally {

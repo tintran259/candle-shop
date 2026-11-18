@@ -21,6 +21,7 @@ export const materialDto = (m: MaterialRow) => ({
   capacity: opt(m.capacity),
   ...(m.recipe.length && { recipe: m.recipe.map((r) => ({ materialId: r.componentId, quantity: r.quantity })) }),
   swatch: opt(m.swatch),
+  ...(m.images.length && { images: m.images }),
   note: opt(m.note),
   updatedAt: m.updatedAt.toISOString(),
 });

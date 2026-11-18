@@ -26,6 +26,7 @@ import { ShopModule } from './shop/shop.module.js';
 import { ConceptsModule } from './concepts/concepts.module.js';
 import { SiteThemeModule } from './site-theme/site-theme.module.js';
 import { ColorMixModule } from './color-mix/color-mix.module.js';
+import { MediaModule } from './media/media.module.js';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ColorMixModule } from './color-mix/color-mix.module.js';
     ConceptsModule,
     SiteThemeModule,
     ColorMixModule,
+    MediaModule,
   ],
   controllers: [AppController],
   // Gửi lại cùng Idempotency-Key thì trả kết quả lần đầu (BO tự gửi lại khi mất mạng)

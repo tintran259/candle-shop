@@ -49,6 +49,16 @@ describe('Kho nguyên liệu', () => {
     await t.post('/api/admin/materials/khong-co/movements', { type: 'out', amount: 1 }).expect(404);
   });
 
+  it('ảnh nguyên liệu: tạo kèm ảnh, sửa thay cả danh sách, [] bỏ hết; tối đa 10 ảnh', async () => {
+    const img = 'https://res.cloudinary.com/demo/image/upload/v1/craft/a.jpg';
+    const r = await t.post('/api/admin/materials', wax({ id: 'soy', images: [img] })).expect(201);
+    expect(r.body.images).toEqual([img]);
+    expect((await t.patch('/api/admin/materials/soy', { images: [img, img + '?2'] }).expect(200)).body.images).toEqual([img, img + '?2']);
+    expect((await t.patch('/api/admin/materials/soy', { name: 'Sáp' }).expect(200)).body.images).toHaveLength(2);
+    expect((await t.patch('/api/admin/materials/soy', { images: [] }).expect(200)).body.images).toBeUndefined();
+    await t.patch('/api/admin/materials/soy', { images: Array(11).fill(img) }).expect(400);
+  });
+
   it('sửa giá ghi phiếu giá mới / giá trước; không đổi thì không ghi. Sửa thông tin không đổi tồn, không đổi giá', async () => {
     await t.post('/api/admin/materials', wax({ id: 'soy' })).expect(201);
     const r = await t.put('/api/admin/materials/soy/cost', { unitCost: 59.8 }).expect(200);

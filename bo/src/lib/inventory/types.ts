@@ -28,6 +28,8 @@ export type Material = {
   // Xưởng tự sản xuất (vd hũ gốm): định mức nguyên liệu cho 1 đơn vị. Không có = nguyên liệu mua về
   recipe?: RecipeLine[];
   swatch?: string;
+  // Ảnh nguyên liệu, ảnh đầu là ảnh chính. Lựa chọn Thủ công có thể chép sang (bản sao — sửa ảnh lựa chọn không đổi ảnh này)
+  images?: string[];
   note?: string;
   updatedAt: string;
   // Chỉ có ở BO, không lưu vào Kho: nguyên liệu vừa tạo từ trang Thủ công, chờ bấm Lưu mới thật sự vào Kho

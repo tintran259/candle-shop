@@ -14,7 +14,7 @@ const seed = async (page, materials: unknown[]) => {
 const stored = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("bo-inventory-v2") ?? "null"));
 const drawer = (page) => page.locator(".ant-drawer-open");
 const card = (page) => drawer(page).getByRole("region", { name: "Tồn kho hiện tại" });
-const chooseMade = (page) => drawer(page).locator(".ant-form-item").filter({ hasText: "Nguồn" }).first().locator(".ant-segmented-item").filter({ hasText: "Sản xuất" }).click();
+const chooseMade = (page) => drawer(page).getByRole("radio", { name: /^Sản xuất/ }).check();
 
 // Danh sách lọc lại sau khi gõ có lúc làm cú bấm trượt khỏi option — thử lại tới khi ô hiện đúng lựa chọn.
 // Khớp đúng tên ("Thạch cao" không lấy nhầm "Màu pha thạch cao")
@@ -176,7 +176,7 @@ test("Chuyển nguyên liệu mua về sang Sản xuất; công thức không ch
 
   // Đổi lại thành nguyên liệu mua về thì bỏ công thức
   await page.goto("/inventory?material=hu-gom");
-  await drawer(page).locator(".ant-form-item").filter({ hasText: "Nguồn" }).first().locator(".ant-segmented-item").filter({ hasText: "Nguyên liệu" }).click();
+  await drawer(page).getByRole("radio", { name: /^Nguyên liệu/ }).check();
   await drawer(page).locator(".ant-drawer-footer").getByRole("button", { name: "Lưu thông tin" }).click();
   await expect(drawer(page)).toHaveCount(0);
   inv = await stored(page);

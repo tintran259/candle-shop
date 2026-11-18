@@ -8,6 +8,7 @@ import {
   FormatPainterOutlined,
   InboxOutlined,
   MailOutlined,
+  PictureOutlined,
   RollbackOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
@@ -58,6 +59,7 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { label: "Cài đặt", path: "/settings", icon: <SettingOutlined /> },
       { label: "Giao diện web", path: "/settings/site-theme", icon: <BgColorsOutlined />, sub: true },
+      { label: "Kho ảnh", path: "/settings/media", icon: <PictureOutlined />, sub: true },
     ],
   },
 ];

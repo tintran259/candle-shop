@@ -81,6 +81,7 @@ export function mapBackup(file: BackupFile) {
     jarType: str(m.jarType) ?? null,
     capacity: int(m.capacity) ?? null,
     swatch: str(m.swatch) ?? null,
+    images: Array.isArray(m.images) ? m.images.filter((x: unknown): x is string => typeof x === 'string') : [],
     note: str(m.note) ?? null,
     updatedAt: date(m.updatedAt) ?? now,
   }));

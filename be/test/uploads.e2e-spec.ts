@@ -28,4 +28,14 @@ it('chưa đăng nhập 401; chưa cấu hình 503; có cấu hình trả chữ 
   expect(r.body.signature).toBe(expected);
   expect((await t.post('/api/admin/uploads/sign', {}).expect(200)).body.folder).toBe('candle2510/misc');
   await t.post('/api/admin/uploads/sign', { folder: '../khac' }).expect(400);
+
+  // Tên có nghĩa: bỏ dấu + ngày giờ VN, trùng trong lượt thì -2; chữ ký gồm public_id
+  const n = await t.post('/api/admin/uploads/sign', { folder: 'craft', names: ['Sáp đậu nành', 'Sáp đậu nành', '!!!'] }).expect(200);
+  const ids = n.body.items.map((x: { publicId: string }) => x.publicId);
+  expect(ids[0]).toMatch(/^sap-dau-nanh-\d{8}-\d{6}$/);
+  expect(ids[1]).toBe(`${ids[0]}-2`);
+  expect(ids[2]).toMatch(/^anh-\d{8}-\d{6}$/);
+  const sig = createHash('sha1').update(`folder=candle2510/craft&public_id=${ids[0]}&timestamp=${n.body.timestamp}bi-mat-thu`).digest('hex');
+  expect(n.body.items[0].signature).toBe(sig);
+  expect(r.body).not.toHaveProperty('items');
 });

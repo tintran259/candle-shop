@@ -89,7 +89,7 @@ Shop nến thủ công "2510 Candle", làm theo đơn 2–3 ngày. Monorepo:
 Còn lại, theo thứ tự đề xuất:
 1. BE đã chạy trên Render (10/11/2026, DB Neon mới, chưa có dữ liệu). BO lên Render Static Site (`candle2510-bo`) — kiểm tra sau khi chủ dự án sync Blueprint và đặt `BO_URL`. Lỗi build / health thì đọc log Render họ gửi.
 2. Mang dữ liệu cũ sang DB mới nếu cần: file sao lưu BO + `pnpm db:import`.
-3. Kho ảnh Cloudinary: production (Render) đã có `CLOUDINARY_*` (12/11/2026). Máy dev chưa điền thì ảnh vẫn lưu data URL — web bỏ ảnh data URL khỏi danh sách / tìm kiếm / gợi ý (`listable` trong `fe/src/lib/shop.ts`). Chưa xóa ảnh trên Cloudinary khi gỡ ảnh.
+3. Kho ảnh Cloudinary: production (Render) đã có `CLOUDINARY_*` (12/11/2026). Máy dev chưa điền thì ảnh vẫn lưu data URL — web bỏ ảnh data URL khỏi danh sách / tìm kiếm / gợi ý (`listable` trong `fe/src/lib/shop.ts`). Gỡ ảnh không tự xóa trên Cloudinary — dọn ở BO › Cài đặt › Kho ảnh (`/settings/media`, BE `be/src/media/`: danh sách qua Search API, ảnh đang dùng ở đâu, chỉ xóa ảnh không dùng). Ảnh tải lên có tên có nghĩa (tên bỏ dấu + ngày giờ, BO tự đặt theo nơi dùng). Nguyên liệu Kho có ảnh riêng; lựa chọn Thủ công bấm "Dùng ảnh của nguyên liệu" để chép sang (bản sao riêng).
 4. E2E với BE thật đã có (`bo/e2e-be/`: luồng đơn, hủy hoàn Kho, Thủ công Lưu) — thêm dần khi đổi API (Kho nhập / sản xuất, sửa đơn, hoàn tiền).
 5. Web `fe`: trang chủ đã có (tiếng Việt, giá mẫu). Tiếp: ảnh sản phẩm thật, nối BE (đặt hàng của khách, đọc Cài đặt) — BE phải tự tính giá nến tự phối. Các comment trong BO còn nhắc `fe/…` (dữ liệu mẫu, đồng bộ cấu hình Thủ công sang web khi chạy localhost) là của bản cũ.
 

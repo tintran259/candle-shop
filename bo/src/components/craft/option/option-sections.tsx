@@ -1,4 +1,4 @@
-import { Checkbox, Col, ColorPicker, Flex, Form, Grid, Input, InputNumber, Radio, Row, Select, Typography, type FormRule } from "antd";
+import { Button, Checkbox, Col, ColorPicker, Flex, Form, Grid, Input, InputNumber, Popconfirm, Radio, Row, Select, Typography, type FormRule } from "antd";
 import { NEW_MATERIAL } from "@/components/craft/option-form";
 import { FormSection, SwitchField } from "@/components/form/form-section";
 import { ImageUpload } from "@/components/form/image-upload";
@@ -10,7 +10,7 @@ import { unitLabel } from "@/lib/craft/groups";
 import { lotPriceRequired } from "@/lib/inventory/stock";
 import { unitNames } from "@/lib/craft/groups";
 import type { Material } from "@/lib/inventory/types";
-import { MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
+import { imageUrl, MAX_FILE_MB, MAX_IMAGES } from "@/lib/craft/image";
 import { previewRoleMeta } from "@/lib/craft/steps";
 import { units, type OptionStep, type StepOption } from "@/lib/craft/types";
 
@@ -106,9 +106,12 @@ export function MaterialFields({ materials, materialId }: { materials: Material[
 }
 
 // Hình ảnh và màu hiển thị trên web
-export function ImageFields({ step, role, hasImage, hasSwatch }: { step: OptionStep; role?: string; hasImage: boolean; hasSwatch?: boolean }) {
+type ImageProps = { step: OptionStep; role?: string; images?: string[]; hasSwatch?: boolean; materialImages: string[]; onUseMaterial: () => void };
+export function ImageFields({ step, role, images = [], hasSwatch, materialImages, onUseMaterial }: ImageProps) {
+  const hasImage = images.length > 0;
   return (
     <FormSection title="Hình ảnh & màu" description={`Tối đa ${MAX_IMAGES} ảnh, mỗi ảnh ≤ ${MAX_FILE_MB}MB. Không có ảnh thì web dùng màu.`}>
+      {materialImages.length > 0 && <MaterialImagesBar images={images} materialImages={materialImages} onUse={onUseMaterial} />}
       <Form.Item name="images" noStyle>
         <ImageUpload />
       </Form.Item>
@@ -140,6 +143,35 @@ export function ImageFields({ step, role, hasImage, hasSwatch }: { step: OptionS
         </Flex>
       </Flex>
     </FormSection>
+  );
+}
+
+// Dùng lại ảnh của nguyên liệu đang gắn: chép sang (bản sao) — sau đó thêm / xóa / đổi ảnh ở đây không đổi ảnh trong Kho
+function MaterialImagesBar({ images, materialImages, onUse }: { images: string[]; materialImages: string[]; onUse: () => void }) {
+  const same = images.length === materialImages.length && images.every((x, i) => x === materialImages[i]);
+  const button = (
+    <Button size="small" disabled={same} onClick={images.length ? undefined : onUse}>
+      {same ? "Đang dùng ảnh nguyên liệu" : "Dùng ảnh của nguyên liệu"}
+    </Button>
+  );
+  return (
+    <Flex align="center" gap={12} wrap className="material-images-bar">
+      <Flex gap={4}>
+        {materialImages.slice(0, 4).map((src) => (
+          <img key={src} src={imageUrl(src, 36)} alt="" className="material-images-thumb" />
+        ))}
+      </Flex>
+      <Typography.Text type="secondary" style={{ fontSize: 13, flex: 1, minWidth: 160 }}>
+        Nguyên liệu có {materialImages.length} ảnh. Dùng lại rồi vẫn đổi được — không ảnh hưởng ảnh trong Kho.
+      </Typography.Text>
+      {images.length && !same ? (
+        <Popconfirm title="Thay ảnh hiện tại bằng ảnh của nguyên liệu?" okText="Thay ảnh" cancelText="Hủy" onConfirm={onUse}>
+          {button}
+        </Popconfirm>
+      ) : (
+        button
+      )}
+    </Flex>
   );
 }
 

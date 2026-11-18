@@ -61,7 +61,7 @@ export function ComplaintModal({ open, order, api, onClose }: Props) {
     setSaving(true);
     let images: string[], refundImages: string[];
     try {
-      [images, refundImages] = await Promise.all([uploadImages(v.images, "orders"), v.resolution === "refund" ? uploadImages(v.refundImages, "orders") : Promise.resolve(v.refundImages ?? [])]);
+      [images, refundImages] = await Promise.all([uploadImages(v.images, "orders", `Khiếu nại ${order.code}`), v.resolution === "refund" ? uploadImages(v.refundImages, "orders", `Hoàn tiền ${order.code}`) : Promise.resolve(v.refundImages ?? [])]);
     } catch (e) {
       return message.error(uploadError(e));
     } finally {

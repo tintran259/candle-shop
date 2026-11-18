@@ -7,7 +7,7 @@ import { BasicFields, ImageFields, LookFields, MaterialFields, RuleFields } from
 import { PriceFields } from "@/components/craft/option/price-fields";
 import { VesselFields } from "@/components/craft/option/vessel-fields";
 import { DrawerFormSkeleton } from "@/components/skeletons";
-import { uploadError, uploadImages } from "@/lib/craft/image";
+import { MAX_IMAGES, uploadError, uploadImages } from "@/lib/craft/image";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";
 import { lidCheck, optionCheck, vesselSizeChecks, type SizeCheck } from "@/lib/craft/pricing";
 import { stepAmounts, vesselStep } from "@/lib/craft/selection";
@@ -53,7 +53,7 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
   const [form] = Form.useForm<OptionFormValues>();
   const materialId = Form.useWatch("materialId", form);
   const hasSwatch = Form.useWatch("hasSwatch", form);
-  const hasImage = !!Form.useWatch("images", form)?.length;
+  const images = Form.useWatch("images", form) as string[] | undefined;
   const [dirty, setDirty] = useState(false);
   const price = Form.useWatch("price", form);
   const isVessel = step.kind === "vessel";
@@ -68,6 +68,11 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
   const map = useMemo(() => toMap(materials), [materials]);
   // Hũ: các cỡ theo loại hũ đang chọn (cỡ đã có + mã hũ cùng loại trong Kho)
   const rows = useMemo(() => (isVessel ? vesselRows(option as VesselOption | undefined, jarType, materials) : []), [isVessel, option, jarType, materials]);
+  // Ảnh của nguyên liệu đang gắn (hũ: gộp ảnh các cỡ) — chép sang lựa chọn khi bấm "Dùng ảnh của nguyên liệu"
+  const materialImages = useMemo(() => {
+    const ids = isVessel ? rows.map((r) => r.materialId) : [materialId];
+    return [...new Set(ids.flatMap((id) => (id && map.get(id)?.images) || []))].slice(0, MAX_IMAGES);
+  }, [isVessel, rows, materialId, map]);
   // Giá vốn tối thiểu theo giá và nguyên liệu đang nhập (chưa cần Áp dụng)
   const priceCheck = useMemo(() => {
     if (isVessel) return null;
@@ -130,7 +135,7 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
     setSaving(true);
     let values: OptionFormValues;
     try {
-      values = { ...raw, images: await uploadImages(raw.images, "craft") };
+      values = { ...raw, images: await uploadImages(raw.images, "craft", raw.nameVi) };
     } catch (e) {
       return message.error(uploadError(e));
     } finally {
@@ -258,7 +263,17 @@ export function OptionDrawer({ open, step, option, config, api, materials, prici
               setDirty={setDirty}
             />
 
-            <ImageFields step={step} role={role} hasImage={hasImage} hasSwatch={hasSwatch} />
+            <ImageFields
+              step={step}
+              role={role}
+              images={images}
+              hasSwatch={hasSwatch}
+              materialImages={materialImages}
+              onUseMaterial={() => {
+                form.setFieldValue("images", [...materialImages]);
+                setDirty(true);
+              }}
+            />
 
             {looks && <LookFields role={role!} looks={looks} />}
 

@@ -2,7 +2,7 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { App, Button, Drawer, Flex, Form, Grid, Input, Popconfirm, type FormRule } from "antd";
 import { useDeferredValue, useRef, useState } from "react";
 import { FormSection } from "@/components/form/form-section";
-import { InfoFields } from "@/components/inventory/material/info-fields";
+import { InfoFields, MaterialImages } from "@/components/inventory/material/info-fields";
 import { MaterialUsage } from "@/components/inventory/material/material-usage";
 import { StockCard } from "@/components/inventory/material/stock-card";
 import { StockFields } from "@/components/inventory/material/stock-fields";
@@ -10,6 +10,7 @@ import { RecipeField } from "@/components/products/recipe-field";
 import { DrawerFormSkeleton } from "@/components/skeletons";
 import type { InventoryApi } from "@/hooks/use-inventory";
 import { unitLabel } from "@/lib/craft/groups";
+import { uploadError, uploadImages } from "@/lib/craft/image";
 import { uniqueId } from "@/lib/craft/steps";
 import type { Unit } from "@/lib/craft/types";
 import { lotPreview, lotTotal, purchaseCost, purchaseFrom, purchaseUnits, unitPrice, type LotPrice, type Purchase } from "@/lib/costs";
@@ -42,6 +43,7 @@ type Values = {
   buy?: Purchase;
   hasSwatch: boolean;
   swatch?: string;
+  images?: string[];
   note?: string;
 };
 // unsaved: lựa chọn gắn trong bản nháp Thủ công, chưa Lưu lên web
@@ -89,6 +91,7 @@ export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClo
   const history = material ? api.movements.filter((mv) => mv.materialId === material.id).slice(0, 20) : [];
   // Phiếu kho gõ dở trong thẻ tồn: Lưu thông tin không ghi phiếu đó, đóng drawer thì mất
   const [pending, setPending] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const close = () => {
     if (!pending) return onClose();
@@ -101,8 +104,19 @@ export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClo
     });
   };
 
-  const finish = (v: Values) => {
+  const finish = async (v: Values) => {
     if (pending) return message.warning("Phiếu kho chưa ghi nhận — bấm Ghi nhận trong thẻ tồn kho, hoặc xóa số lượng.");
+    if (saving) return;
+    // Ảnh mới chọn tải lên kho ảnh trước (lỗi thì drawer giữ nguyên)
+    setSaving(true);
+    let images: string[];
+    try {
+      images = await uploadImages(v.images, "craft", v.name);
+    } catch (e) {
+      return message.error(uploadError(e));
+    } finally {
+      setSaving(false);
+    }
     const makes = v.source === "made";
     const lines = makes ? cleanRecipe(v.recipe) : [];
     // Thành phẩm sản xuất luôn theo dõi tồn (làm tới đâu cộng tới đó)
@@ -132,6 +146,7 @@ export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClo
       unitCost: !tracked && form.isFieldTouched("buy") ? purchaseCost(v.unit, v.buy) : material?.unitCost,
       recipe: lines.length ? lines : undefined,
       swatch: v.hasSwatch ? v.swatch : undefined,
+      images: images.length ? images : undefined,
       note: v.note?.trim() || undefined,
     };
     const openingTotal = !material && !makes && tracked && stock > 0 ? lotTotal(v.opening) : undefined;
@@ -180,7 +195,7 @@ export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClo
           <Button onClick={close} style={{ marginLeft: "auto" }}>
             Đóng
           </Button>
-          <Button type="primary" onClick={() => form.submit()}>
+          <Button type="primary" loading={saving} onClick={() => form.submit()}>
             {material ? "Lưu thông tin" : "Thêm vào kho"}
           </Button>
         </Flex>
@@ -212,6 +227,7 @@ export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClo
               buy: purchaseFrom(material?.unit ?? "pcs", material?.unitCost),
               hasSwatch: !!material?.swatch,
               swatch: material?.swatch ?? "#e8dccb",
+              images: material?.images ?? [],
               note: material?.note,
             }}
             onValuesChange={(changed: Partial<Values>) => {
@@ -236,6 +252,8 @@ export function MaterialDrawer({ open, material, usage, unsaved = [], api, onClo
           >
             <Flex vertical gap={16}>
               <InfoFields material={material} materials={api.materials} usage={usage} category={category} hasSwatch={hasSwatch} />
+
+              <MaterialImages />
 
               {made && (
                 <FormSection title="Sản xuất từ" description={`Lượng nguyên liệu cho 1 ${unitLabel[unit]}. Mỗi lần sản xuất trừ kho theo lượng này × số lượng làm.`}>

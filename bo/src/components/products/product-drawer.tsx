@@ -76,7 +76,7 @@ export function ProductDrawer({ open, product, prefill, source, api, onCreated, 
     }
     setSaving(true);
     try {
-      next = { ...next, images: await uploadImages(next.images, "products") };
+      next = { ...next, images: await uploadImages(next.images, "products", next.name) };
     } catch (e) {
       return message.error(uploadError(e));
     } finally {

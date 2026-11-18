@@ -52,6 +52,7 @@ const router = createBrowserRouter([
           { path: "settings", lazy: async () => ({ Component: (await import("@/pages/settings")).SettingsPage }) },
           { path: "settings/site-theme", lazy: async () => ({ Component: (await import("@/pages/site-themes")).SiteThemesPage }) },
           { path: "settings/site-theme/:id", lazy: async () => ({ Component: (await import("@/pages/site-theme")).SiteThemePage }) },
+          { path: "settings/media", lazy: async () => ({ Component: (await import("@/pages/media")).MediaPage }) },
           { path: "customers", lazy: async () => ({ Component: (await import("@/pages/customers")).CustomersPage }) },
           { path: ":section", element: <PlaceholderPage /> },
           { path: "*", element: <NotFoundPage /> },

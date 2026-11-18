@@ -91,7 +91,9 @@ Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 
 Ảnh (sản phẩm, lựa chọn Thủ công, ảnh khiếu nại, chứng từ hoàn tiền) lưu trên [Cloudinary](https://cloudinary.com); DB chỉ giữ URL `https://res.cloudinary.com/…`.
 
-**Cách chạy:** chọn ảnh thì BO chỉ nén trên trình duyệt (cạnh dài ≤ 800px, WebP) để xem trước — **chưa tải lên**. Bấm Lưu form (sản phẩm, Áp dụng lựa chọn Thủ công, Ghi nhận hoàn tiền / khiếu nại) thì BO mới xin chữ ký ở BE (`POST /api/admin/uploads/sign`, một chữ ký cho cả lượt) → tải **thẳng** các ảnh mới lên Cloudinary (không qua BE) → lưu URL (`uploadImages()` trong `bo/src/lib/craft/image.ts`). Đóng form không lưu thì không có ảnh nào lên Cloudinary; tải lỗi thì form giữ nguyên để lưu lại. Khóa bí mật chỉ nằm ở BE. Thư mục: `candle2510/products`, `candle2510/craft`, `candle2510/orders`.
+**Cách chạy:** chọn ảnh thì BO chỉ nén trên trình duyệt (cạnh dài ≤ 800px, WebP) để xem trước — **chưa tải lên**. Bấm Lưu form (sản phẩm, Áp dụng lựa chọn Thủ công, Ghi nhận hoàn tiền / khiếu nại) thì BO mới xin chữ ký ở BE (`POST /api/admin/uploads/sign`, một chữ ký cho cả lượt) → tải **thẳng** các ảnh mới lên Cloudinary (không qua BE) → lưu URL (`uploadImages()` trong `bo/src/lib/craft/image.ts`). Đóng form không lưu thì không có ảnh nào lên Cloudinary; tải lỗi thì form giữ nguyên để lưu lại. Khóa bí mật chỉ nằm ở BE. Thư mục: `candle2510/products`, `candle2510/craft` (lựa chọn Thủ công + nguyên liệu Kho), `candle2510/orders`, `candle2510/site` (Giao diện web).
+
+**Tên ảnh** tự đặt theo nơi dùng, không cần nhập: tên bỏ dấu + ngày giờ VN lúc tải, vd `candle2510/products/nen-vanilla-20261118-151230`, `candle2510/craft/sap-dau-nanh-…`, `candle2510/orders/khieu-nai-dh0123-…`, `candle2510/site/giao-dien-tet-hero-…`. Nhiều ảnh cùng lượt thì thêm `-2`, `-3`. Ảnh tải trước 18/11/2026 vẫn mang tên ngẫu nhiên.
 
 **Hiển thị:** BO chèn tham số vào URL (`f_auto,q_auto` + cỡ ô, gấp đôi cho màn hình nét) để Cloudinary trả ảnh đúng cỡ, định dạng tốt nhất (WebP / AVIF). Ảnh trong bảng, ô ảnh dùng ảnh thu nhỏ; bấm xem ảnh chứng từ thì mở ảnh gốc (`bo/src/lib/craft/image-url.ts`). Không cần cài SDK `@cloudinary/react`.
 
@@ -103,7 +105,7 @@ Request JSON tối đa 10 MB (ảnh đang gửi dạng data URL).
 
 **Chưa cấu hình** (thiếu một trong ba biến): BE trả 503, BO báo một lần "Chưa cấu hình kho ảnh" rồi lưu ảnh tạm trong DB (data URL) như trước. Ảnh đã lưu kiểu cũ vẫn hiển thị bình thường, không tự chuyển lên Cloudinary.
 
-**Chưa có:** xóa ảnh trên Cloudinary khi gỡ ảnh khỏi sản phẩm / xóa sản phẩm (ảnh cũ vẫn nằm trên Cloudinary).
+**Dọn ảnh:** gỡ ảnh khỏi sản phẩm / xóa sản phẩm không tự xóa ảnh trên Cloudinary. Ảnh không còn dùng ở đâu thì xóa ở BO › Cài đặt › **Kho ảnh** ([pages/media.md](pages/media.md)) — BE so với mọi URL ảnh trong DB, ảnh đang dùng không xóa được.
 
 ## BO dùng API
 

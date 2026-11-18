@@ -25,6 +25,7 @@
 - **Hũ tính theo từng cỡ:** hũ 150ml, 200ml, 250ml là các mã khác nhau, nắp cũng vậy. Xem mục Hũ và kích thước.
 - Ảnh được ưu tiên hơn màu khi hiển thị.
 - Tạo lựa chọn với nguyên liệu mới thì nguyên liệu ở trạng thái **Chờ lưu**, chỉ vào Kho khi bấm Lưu. Bỏ thay đổi thì không tạo.
+- **Dùng ảnh của nguyên liệu:** nguyên liệu đang gắn (hũ: các mã cỡ) có ảnh trong Kho thì khối **Hình ảnh & màu** hiện thanh ảnh nhỏ + nút **Dùng ảnh của nguyên liệu** — bấm thì chép ảnh sang lựa chọn (đang có ảnh thì hỏi trước khi thay). Đang trùng ảnh nguyên liệu thì nút ghi "Đang dùng ảnh nguyên liệu". Sau đó thêm / xóa / đổi ảnh ở lựa chọn không đổi ảnh trong Kho (hai danh sách riêng). Chưa xóa ảnh trên Cloudinary khi gỡ — sau này làm thì phải kiểm tra ảnh còn được nguyên liệu / lựa chọn khác dùng không.
 - **Drawer lựa chọn:** khối **Nguyên liệu trong kho** nằm ngay sau Thông tin cơ bản, trước **Giá & bán** (chọn nguyên liệu trước, giá vốn và gợi ý giá tính theo nguyên liệu đó). Bước Hũ giữ thứ tự cũ vì khối cỡ hũ có phụ thu theo giá hũ.
 - **Tạo nguyên liệu mới trong Kho:** nhập Tính theo (Cái / Gram / Mililít), **Tồn ban đầu** và **Tổng tiền đã trả** (hoặc tick **Không mất tiền**) giống thêm nguyên liệu ở Kho. Có tồn ban đầu thì bắt buộc ghi tiền, báo khi bấm lưu lựa chọn; ghi tiền mà tồn 0 thì báo "Nhập tồn ban đầu để chia ra giá mỗi đơn vị." Dưới ô tiền hiện giá mỗi đơn vị, vd 300.000 ₫ cho 100 cái "= 3.000 ₫/cái — giá nhập ban đầu". Bấm Lưu thì nguyên liệu vào Kho với giá nhập đó, phiếu "Tồn ban đầu" ghi tiền lô.
 

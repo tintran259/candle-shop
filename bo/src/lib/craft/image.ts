@@ -28,32 +28,38 @@ export async function prepareImage(file: File, maxSide = MAX_SIDE): Promise<stri
 
 const isPending = (src: string) => src.startsWith("data:");
 
-type Signed = { uploadUrl: string; apiKey: string; timestamp: number; folder: string; signature: string };
+// items: mỗi ảnh một tên có nghĩa (public_id) + chữ ký riêng — BE đặt từ names gửi lên
+type Signed = { uploadUrl: string; apiKey: string; timestamp: number; folder: string; signature: string; items?: { publicId: string; signature: string }[] };
 
 // Kho ảnh chưa cấu hình: chỉ báo một lần mỗi lần mở BO
 let warned = false;
 
 async function sendOne(dataUrl: string, signed: Signed, i: number) {
+  const item = signed.items?.[i];
   const form = new FormData();
-  form.append("file", await (await fetch(dataUrl)).blob(), `anh-${Date.now()}-${i}.webp`);
+  form.append("file", await (await fetch(dataUrl)).blob(), `${item?.publicId ?? `anh-${Date.now()}-${i}`}.webp`);
   form.append("api_key", signed.apiKey);
   form.append("timestamp", String(signed.timestamp));
   form.append("folder", signed.folder);
-  form.append("signature", signed.signature);
+  if (item) form.append("public_id", item.publicId);
+  form.append("signature", item?.signature ?? signed.signature);
   const res = await fetch(signed.uploadUrl, { method: "POST", body: form });
   const data = (await res.json().catch(() => ({}))) as { secure_url?: string; error?: { message?: string } };
   if (!res.ok || !data.secure_url) throw new Error(`Không tải được ảnh lên kho ảnh${data.error?.message ? `: ${data.error.message}` : ""}.`);
   return data.secure_url;
 }
 
-// Gọi khi bấm Lưu: tải các ảnh chưa tải (data URL) lên Cloudinary, giữ nguyên ảnh đã có URL. Lỗi thì ném — form giữ nguyên để lưu lại
-export async function uploadImages(images: string[] | undefined, folder: ImageFolder): Promise<string[]> {
+// Gọi khi bấm Lưu: tải các ảnh chưa tải (data URL) lên Cloudinary, giữ nguyên ảnh đã có URL. Lỗi thì ném — form giữ nguyên để lưu lại.
+// name: tên có nghĩa tự lấy từ nơi dùng ảnh (tên sản phẩm, nguyên liệu, mã đơn…) — một tên cho cả lượt hoặc từng ảnh một.
+// Trên Cloudinary ảnh tên "nen-vanilla-20261118-151230" thay vì chuỗi ngẫu nhiên; người dùng không phải nhập
+export async function uploadImages(images: string[] | undefined, folder: ImageFolder, name: string | string[]): Promise<string[]> {
   const list = images ?? [];
   if (!REMOTE || !list.some(isPending)) return list;
+  const pending = list.flatMap((src, i) => (isPending(src) ? [i] : []));
   let signed: Signed;
   try {
-    // Một chữ ký dùng cho cả lượt (cùng thư mục, cùng thời điểm)
-    signed = await api<Signed>("POST", "/admin/uploads/sign", { folder });
+    // Một lượt ký cho cả lượt (cùng thư mục, cùng thời điểm), mỗi ảnh một tên + chữ ký
+    signed = await api<Signed>("POST", "/admin/uploads/sign", { folder, names: pending.map((i) => (Array.isArray(name) ? name[i] : name) ?? "") });
   } catch (e) {
     if (e instanceof ApiError && e.status === 503) {
       if (!warned) notifyError("Chưa cấu hình kho ảnh (Cloudinary) — ảnh tạm lưu trong DB. Xem docs/backend.md#kho-ảnh-cloudinary.");
@@ -62,7 +68,7 @@ export async function uploadImages(images: string[] | undefined, folder: ImageFo
     }
     throw e;
   }
-  return Promise.all(list.map((src, i) => (isPending(src) ? sendOne(src, signed, i) : src)));
+  return Promise.all(list.map((src, i) => (isPending(src) ? sendOne(src, signed, pending.indexOf(i)) : src)));
 }
 
 // Thông báo lỗi khi Lưu mà tải ảnh không được
