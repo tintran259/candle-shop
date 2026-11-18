@@ -1,0 +1,75 @@
+/* Chọn màu được dùng (tab Pha màu): chip bật / tắt — bật: viền + nền nhạt màu chính, dấu ✓; tắt: xám, chấm mờ, chữ gạch */
+.color-mix-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.color-mix-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  /* Cao bằng ô nhập (theme.ts controlHeight 36) */
+  height: 36px;
+  max-width: 100%;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--ant-color-border);
+  border-radius: 999px;
+  background: var(--ant-color-bg-container);
+  color: var(--ant-color-text-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    color 0.15s;
+}
+.color-mix-chip:hover {
+  border-color: var(--ant-color-primary-hover);
+}
+.color-mix-chip:focus-visible {
+  outline: 2px solid var(--ant-color-primary);
+  outline-offset: 2px;
+}
+.color-mix-chip-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex: none;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+.color-mix-chip-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: line-through;
+  text-decoration-color: var(--ant-color-text-quaternary);
+}
+.color-mix-chip-check {
+  font-size: 12px;
+  display: none;
+}
+.color-mix-chip[aria-pressed="true"] {
+  border-color: var(--ant-color-primary);
+  background: var(--ant-color-primary-bg);
+  color: var(--ant-color-text);
+  font-weight: 500;
+}
+.color-mix-chip[aria-pressed="true"] .color-mix-chip-dot {
+  opacity: 1;
+}
+.color-mix-chip[aria-pressed="true"] .color-mix-chip-name {
+  text-decoration: none;
+}
+.color-mix-chip[aria-pressed="true"] .color-mix-chip-check {
+  display: inline-block;
+  color: var(--ant-color-primary);
+}
+@media (prefers-reduced-motion: reduce) {
+  .color-mix-chip,
+  .color-mix-chip-dot {
+    transition: none;
+  }
+}

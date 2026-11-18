@@ -1,4 +1,4 @@
-import { CopyOutlined, ExperimentOutlined } from "@ant-design/icons";
+import { CheckOutlined, CopyOutlined, ExperimentOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Card, Col, Flex, Form, Grid, InputNumber, Row, Select, Tag, Typography } from "antd";
 import { useDeferredValue, useMemo, useState } from "react";
 import { deltaELabel, normHex } from "@/lib/color-mix/color";
@@ -103,15 +103,19 @@ export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet
                 </Form.Item>
               </Col>
             </Row>
-            <Form.Item label={`Được dùng các ${term} (bấm để bật / tắt)`} style={{ marginBottom: 0 }}>
-              <Flex wrap gap={6}>
-                {set.pigments.map((p) => (
-                  <Tag.CheckableTag key={p.id} checked={!off.includes(p.id)} onChange={(on) => setOff((o) => (on ? o.filter((x) => x !== p.id) : [...o, p.id]))}>
-                    <span className="color-mix-dot" style={{ background: pigmentSwatch(p) }} />
-                    {p.name}
-                  </Tag.CheckableTag>
-                ))}
-              </Flex>
+            <Form.Item label={`Được dùng các ${term}`} extra={`Đang dùng ${allowed.length} / ${set.pigments.length} màu — bấm để bật / tắt.`} style={{ marginBottom: 0 }}>
+              <div className="color-mix-chips" role="group" aria-label={`Được dùng các ${term}`}>
+                {set.pigments.map((p) => {
+                  const on = !off.includes(p.id);
+                  return (
+                    <button key={p.id} type="button" className="color-mix-chip" aria-pressed={on} onClick={() => setOff((o) => (on ? [...o, p.id] : o.filter((x) => x !== p.id)))}>
+                      <span className="color-mix-chip-dot" style={{ background: pigmentSwatch(p) }} />
+                      <span className="color-mix-chip-name">{p.name}</span>
+                      <CheckOutlined className="color-mix-chip-check" aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
             </Form.Item>
           </Form>
         </Card>
