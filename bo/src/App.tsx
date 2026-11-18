@@ -39,6 +39,7 @@ const router = createBrowserRouter([
           // Tải code từng trang khi mở tới (tách bundle)
           { index: true, lazy: async () => ({ Component: (await import("@/pages/dashboard")).DashboardPage }) },
           { path: "craft", lazy: async () => ({ Component: (await import("@/pages/craft")).CraftPage }) },
+          { path: "color-mix", lazy: async () => ({ Component: (await import("@/pages/color-mix")).ColorMixPage }) },
           { path: "inventory", lazy: async () => ({ Component: (await import("@/pages/inventory")).InventoryPage }) },
           { path: "inventory/movements", lazy: async () => ({ Component: (await import("@/pages/stock-movements")).StockMovementsPage }) },
           { path: "orders", lazy: async () => ({ Component: (await import("@/pages/orders")).OrdersPage }) },

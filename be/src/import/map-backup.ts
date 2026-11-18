@@ -23,6 +23,7 @@ const KEYS = {
   craftPending: 'bo-craft-builder-v5-new-materials',
   orderDraft: 'bo-order-draft-v1',
   notifications: 'bo-notifications-read-v1',
+  colorMix: 'bo-color-mix-v1',
 } as const;
 
 const read = (file: BackupFile, key: string): J => {
@@ -261,6 +262,9 @@ export function mapBackup(file: BackupFile) {
   const draft = read(file, KEYS.orderDraft);
   const orderDraft = draft ? [{ id: 'current', values: draft.values ?? {}, savedAt: date(draft.savedAt) ?? now }] : [];
   const notificationsRead = ((read(file, KEYS.notifications) ?? []) as string[]).map((id) => ({ id }));
+  // Pha màu: lưu nguyên bản JSON của BO
+  const mix = read(file, KEYS.colorMix);
+  const colorMix = mix?.sets ? [{ id: 'current', data: mix }] : [];
 
   return {
     warnings,
@@ -290,6 +294,7 @@ export function mapBackup(file: BackupFile) {
       craft,
       orderDraft,
       notificationsRead,
+      colorMix,
     },
   };
 }

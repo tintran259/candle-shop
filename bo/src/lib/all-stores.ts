@@ -1,6 +1,7 @@
 // Nạp mọi hook có kho dữ liệu (createLocalStore) để chúng đăng ký vào registeredStores — dùng khi sao lưu
 import "@/hooks/use-cancelled-products";
 import "@/hooks/use-categories";
+import "@/hooks/use-color-mix";
 import "@/hooks/use-concepts";
 import "@/hooks/use-craft-config";
 import "@/hooks/use-customers";

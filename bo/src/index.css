@@ -9,6 +9,7 @@
 @import "./styles/print.css";
 @import "./styles/orders-list.css";
 @import "./styles/login.css";
+@import "./styles/color-mix.css";
 
 /* Bảng có cột ghim (fixed) khi cuộn ngang: nền tiêu đề trong suốt (theme) làm chữ tiêu đề cột khác lộ qua ô ghim — ô tiêu đề ghim dùng nền như thẻ */
 .ant-table-thead > tr > th.ant-table-cell-fix-right,

@@ -5,6 +5,7 @@ import {
   CommentOutlined,
   DashboardOutlined,
   ExperimentOutlined,
+  FormatPainterOutlined,
   InboxOutlined,
   MailOutlined,
   RollbackOutlined,
@@ -23,7 +24,7 @@ export type NavItem = { label: string; path: string; icon: ReactNode; badge?: "o
 
 export const navGroups: { label: string; items: NavItem[] }[] = [
   { label: "Tổng quan", items: [{ label: "Dashboard", path: "/", icon: <DashboardOutlined /> }] },
-  // Bán hàng: việc với khách. Sản phẩm: những gì hiện trên web. Xưởng: cấu hình nến tự phối và nguyên liệu
+  // Bán hàng: việc với khách. Sản phẩm: những gì hiện trên web. Xưởng: cấu hình nến tự phối, pha màu thạch cao và nguyên liệu
   {
     label: "Bán hàng",
     items: [
@@ -47,6 +48,7 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     label: "Xưởng",
     items: [
       { label: "Thủ công", path: "/craft", icon: <ExperimentOutlined /> },
+      { label: "Pha màu", path: "/color-mix", icon: <FormatPainterOutlined /> },
       { label: "Kho nguyên liệu", path: "/inventory", icon: <InboxOutlined />, badge: "inventory" },
       { label: "Phiếu kho", path: "/inventory/movements", icon: <SwapOutlined />, sub: true },
     ],

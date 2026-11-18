@@ -566,6 +566,14 @@ model CraftConfig {
   updatedAt        DateTime @updatedAt
 }
 
+// Pha màu (bột oxit / màu nước cho đế, hũ thạch cao): dữ liệu mẫu đổ thử + mẫu kiểm chứng, một bản JSON cho cả BO.
+// BO tự tính công thức từ dữ liệu này (docs/pages/color-mix.md), BE chỉ lưu
+model ColorMix {
+  id        String   @id @default("current")
+  data      Json
+  updatedAt DateTime @updatedAt
+}
+
 // Đơn đang tạo dở trong form Tạo đơn hàng (một bản cho cả BO)
 model OrderDraft {
   id      String   @id @default("current")

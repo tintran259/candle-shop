@@ -1160,6 +1160,22 @@ Trạng thái phụ của BO, lưu trên máy chủ thay vì từng trình duy�
 
 ---
 
+## Pha màu
+
+Dữ liệu trang Pha màu ([pages/color-mix.md](./pages/color-mix.md)): một bản JSON cho cả BO, BE lưu nguyên, không tính công thức.
+
+### `GET /admin/color-mix`
+
+**Trả về 200:** `{ "version": 1, "sets": { "oxide": { … }, "liquid": { … } } }`, hoặc rỗng khi chưa lưu lần nào (BO dùng dữ liệu minh họa).
+
+Mỗi bộ: `{ "demo": false, "base": "#F2EFE9", "pigments": [{ "id": "ox-red", "name": "Đỏ oxit", "samples": [{ "plaster": 50, "pigment": 0.5, "hex": "#D8958A" }] }], "checks": [{ "id": "chk-1", "name": "Mẫu 1", "plaster": 50, "grams": { "ox-red": 0.5 }, "hex": "" }] }`; bộ `liquid` thêm `waterContent` (% nước trong màu) và `dropGrams` (g / giọt).
+
+### `PUT /admin/color-mix`
+
+**Gửi lên:** `{ "data": { "version": 1, "sets": { … } } }`, thay cả bản. **Trả về 200:** bản đã lưu.
+
+**400:** thiếu `sets`, hoặc bộ `oxide` / `liquid` thiếu `base` (chuỗi), `pigments`, `checks` (mảng).
+
 ## Xóa toàn bộ dữ liệu
 
 ### `POST /admin/reset`

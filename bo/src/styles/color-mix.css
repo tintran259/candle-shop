@@ -1,0 +1,258 @@
+/* Trang Pha màu (pages/color-mix.tsx) */
+.color-mix-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  vertical-align: middle;
+  margin-right: 6px;
+  flex: none;
+}
+.color-mix-dot--lg {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  margin-right: 0;
+}
+.color-mix-swatch {
+  height: 120px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.color-mix-caption {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  text-align: center;
+}
+.color-mix-grams {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.color-mix-sub {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.color-mix-hex {
+  width: 104px;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.color-mix-strip {
+  display: flex;
+  height: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.color-mix-strip > div {
+  flex: 1;
+}
+.color-mix-steps {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+.color-mix-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 58vh;
+  border-radius: 6px;
+  cursor: crosshair;
+}
+
+/* Hộp Lấy màu từ ảnh (components/color-mix/image-picker.tsx) */
+.color-pick-drop.ant-upload-wrapper .ant-upload-drag {
+  border-radius: 12px;
+}
+.color-pick-drop .ant-upload-btn {
+  padding: 32px 16px !important;
+}
+.color-pick-drop-icon {
+  font-size: 36px;
+  color: var(--ant-color-primary, #1677ff);
+  margin-bottom: 12px;
+}
+.color-pick-drop-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.color-pick-toolbar {
+  margin-bottom: 12px;
+}
+.color-pick-radius {
+  flex: 1 1 320px;
+  max-width: 460px;
+}
+.color-pick-radius .ant-slider {
+  flex: 1;
+  margin: 0 4px;
+}
+.color-pick-radius-value {
+  min-width: 40px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.color-pick-stage {
+  justify-content: center;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+}
+.color-pick-tip {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(250, 173, 20, 0.08);
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.color-pick-tip .anticon {
+  margin-top: 3px;
+  color: #d48806;
+}
+.color-pick-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex: none;
+}
+.color-pick-swatch.is-empty {
+  background: repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0 / 12px 12px;
+}
+.color-pick-label {
+  font-size: 12px;
+  line-height: 1.2;
+}
+.color-pick-hex {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 15px;
+}
+
+/* Điện thoại: thẻ gọn hơn, tiêu đề thẻ xuống dòng thay vì cắt "…", mẫu đổ thử dạng khối */
+.color-mix-sample {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.03);
+}
+.color-mix-sample-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.color-mix-sample-field > span,
+.color-mix-sample-pct > span {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+}
+.color-mix-sample-pct {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  min-width: 64px;
+}
+.color-mix-sample-pct > b {
+  line-height: 32px;
+  font-variant-numeric: tabular-nums;
+}
+.color-mix-actions {
+  margin-top: 16px;
+}
+.color-mix-actions > .ant-btn {
+  flex: 1;
+}
+@media (max-width: 767px) {
+  .color-mix-page .ant-card-head-title {
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.35;
+    padding: 12px 0;
+  }
+  .color-mix-page .ant-card:not(.ant-card-small) > .ant-card-head {
+    padding: 0 16px;
+  }
+  .color-mix-page .ant-card:not(.ant-card-small) > .ant-card-body {
+    padding: 16px;
+  }
+  .color-mix-page .ant-card-small > .ant-card-body {
+    padding: 12px;
+  }
+  .color-mix-swatch {
+    height: 88px;
+  }
+}
+
+/* Hiệu chỉnh theo mẫu trắng trong hộp Lấy màu từ ảnh */
+.color-pick-calib {
+  margin-bottom: 12px;
+}
+.color-pick-calib-tag {
+  margin-inline-end: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.color-mix-canvas.is-white {
+  outline: 2px dashed #1677ff;
+  outline-offset: 2px;
+}
+
+/* Danh sách cần cân (components/color-mix/plan-list.tsx) */
+.color-mix-plan {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.color-mix-plan-row {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.color-mix-plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.color-mix-plan-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 2px;
+  row-gap: 2px;
+  font-weight: 500;
+  min-width: 0;
+}
+.color-mix-plan-meta {
+  flex-basis: 100%;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.5);
+}
+.color-mix-dot + span + .color-mix-plan-meta {
+  padding-left: 20px;
+}
+.color-mix-plan-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+}
+.color-mix-plan-note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.color-mix-plan-amount .color-mix-grams {
+  font-weight: 600;
+  line-height: 1.3;
+}
+.color-mix-plan-amount .color-mix-sub {
+  color: rgba(0, 0, 0, 0.5);
+}

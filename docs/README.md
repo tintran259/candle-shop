@@ -19,6 +19,7 @@ Bắt đầu từ [Workflow đơn hàng](./workflow.md).
 | Concept (dịp lễ) | `/concepts` | [concepts.md](./pages/concepts.md) | Đã có, web lọc theo concept |
 | Sản phẩm hủy đơn | `/cancelled-products` | [cancelled-products.md](./pages/cancelled-products.md) | Đã có |
 | Thủ công | `/craft` | [craft.md](./pages/craft.md) | Đã có |
+| Pha màu | `/color-mix` | [color-mix.md](./pages/color-mix.md) | Đã có: màu muốn có + gram bột → gram từng màu; bột oxit / màu nước, dữ liệu mẫu đổ thử, kiểm chứng |
 | Kho nguyên liệu | `/inventory` | [inventory.md](./pages/inventory.md) | Đã có |
 | Phiếu kho | `/inventory/movements` | [stock-movements.md](./pages/stock-movements.md) | Đã có |
 | Khách hàng | `/customers` | [customers.md](./pages/customers.md) | Đã có |

@@ -49,6 +49,7 @@ await prisma.$transaction(
     await tx.craftConfig.createMany({ data: data.craft });
     await tx.orderDraft.createMany({ data: data.orderDraft });
     await tx.notificationRead.createMany({ data: data.notificationsRead });
+    await tx.colorMix.createMany({ data: data.colorMix });
   },
   { timeout: 120_000 },
 );
