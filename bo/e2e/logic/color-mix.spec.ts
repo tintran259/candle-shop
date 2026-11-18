@@ -62,7 +62,7 @@ test("Màu sáng hơn mẫu trắng: báo không đạt được", () => {
   expect(lighterThanBase(oxide(), "#E3D3BC")).toBe(false);
 });
 
-test("Bột oxit: tổng bột vào khuôn giữ đúng như nhập (đã gồm màu), nước theo thạch cao thật", () => {
+test("Bột oxit: tổng bột vào khuôn giữ đúng như nhập (đã gồm màu), nước theo tổng bột", () => {
   const s = oxide();
   const sol = { percents: { "ox-red": 1, "ox-black": 0.02 }, hex: "#000000", deltaE: 0, curves: {} };
   const plan = planMix("oxide", s, sol, { plaster: 220, waterPer100: 70, precision: 0.01 });
@@ -74,7 +74,8 @@ test("Bột oxit: tổng bột vào khuôn giữ đúng như nhập (đã gồm 
   expect(red.premix).toBeUndefined();
   expect(red.drops).toBeUndefined();
   expect(plan.plaster + plan.colorSolids).toBeCloseTo(220, 1);
-  expect(plan.waterToAdd).toBeCloseTo(152.44, 1);
+  // Nước = tổng bột 220 g × 70%, không phải thạch cao 217,8 g × 70%
+  expect(plan.waterToAdd).toBeCloseTo(154, 1);
 });
 
 test("Pha loãng trước: ghi rõ gram màu + gram bột, cân hỗn hợp, trừ thạch cao nằm trong hỗn hợp", () => {
@@ -108,7 +109,7 @@ test("Màu nước: phần khô của màu tính vào tổng bột, trừ nướ
   expect(plan.lines[0].drops).toBeCloseTo(39.6, 1);
   expect(plan.waterInColor).toBeCloseTo(0.99, 2);
   expect(plan.plaster + plan.colorSolids).toBeCloseTo(100, 1);
-  expect(plan.waterToAdd).toBeCloseTo(69.31 - 0.99, 1);
+  expect(plan.waterToAdd).toBeCloseTo(70 - 0.99, 1);
 });
 
 test("Vượt mẫu đậm nhất đã đo thì đánh dấu", () => {

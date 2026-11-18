@@ -84,7 +84,7 @@ export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Nước (g / 100 g thạch cao)">
+                <Form.Item label="Nước (g / 100 g tổng bột)">
                   <InputNumber min={0} value={waterPer100} onChange={(v) => setWater(v ?? 0)} style={{ width: "100%" }} />
                 </Form.Item>
               </Col>
@@ -138,7 +138,7 @@ export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet
               <Alert
                 type="warning"
                 showIcon
-                title={`Đang pha ${waterPer100} g nước / 100 g thạch cao, khác lúc đổ mẫu (${sampleWater} g)`}
+                title={`Đang pha ${waterPer100} g nước / 100 g tổng bột, khác lúc đổ mẫu (${sampleWater} g)`}
                 description={`Màu khô sẽ ${waterPer100 > sampleWater ? "sáng" : "đậm"} hơn dự đoán. Pha đúng tỷ lệ lúc đổ mẫu, hoặc đổ lại mẫu ở tỷ lệ mới.`}
                 action={
                   <Button size="small" onClick={() => setWater(null)}>

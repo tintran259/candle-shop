@@ -1,6 +1,6 @@
 // Đổi công thức (% màu so với bột thạch cao) thành lượng cần cân cho một mẻ (docs/pages/color-mix.md#lượng-cần-cân).
 // - "Tổng bột cho khuôn" gồm cả màu: thạch cao = tổng ÷ (1 + Σ phần khô của màu) → tổng vào khuôn đúng như nhập, mực khuôn không đổi.
-// - Nước tính theo thạch cao thật (tỷ lệ nước / thạch cao giữ nguyên như mẫu đổ thử). Màu nước: trừ nước có sẵn trong màu.
+// - Nước tính theo tổng bột vào khuôn (220 g × 37% = 81,4 g), cùng chuẩn với lúc đổ mẫu. Màu nước: trừ nước có sẵn trong màu.
 // - Màu quá ít để cân chính xác (dưới 20 lần mức cân): pha loãng trước 1:9 (hoặc 1:99) với bột / nước, ghi rõ gram từng thứ.
 import { maxMeasured, type MixSolution } from "./model";
 import type { MixMode, MixSet } from "./types";
@@ -95,7 +95,7 @@ export function planMix(mode: MixMode, set: MixSet, solution: MixSolution, batch
     };
   });
   const colorSolids = lines.reduce((s, l) => s + l.rounded, 0) * (1 - waterShare);
-  const waterTotal = (plaster * batch.waterPer100) / 100;
+  const waterTotal = (batch.plaster * batch.waterPer100) / 100;
   const waterInPremix = mode === "liquid" ? carriedBase : 0;
   return {
     lines,

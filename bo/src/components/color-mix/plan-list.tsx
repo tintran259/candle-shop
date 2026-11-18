@@ -45,7 +45,7 @@ export function PlanList({ mode, plan, batch, swatchOf }: { mode: MixMode; plan:
       </Row>
       <Row name="Nước cần thêm" amount={formatGrams(plan.waterToAdd, pd)}>
         <Typography.Text type="secondary">
-          {batch.waterPer100} g / 100 g thạch cao = {formatGrams(plan.waterTotal, pd)}
+          {batch.waterPer100} g / 100 g tổng bột ({formatGrams(plan.total, pd)}) = {formatGrams(plan.waterTotal, pd)}
           {plan.waterInColor > 0 && `, đã trừ ${formatGrams(plan.waterInColor, pd)} nước có sẵn trong màu`}
           {plan.waterInPremix > 0 && ` và ${formatGrams(plan.waterInPremix, pd)} nước trong dung dịch pha loãng`}.
         </Typography.Text>

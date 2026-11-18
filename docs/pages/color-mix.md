@@ -23,7 +23,7 @@ Thông số riêng của màu nước (tab Dữ liệu mẫu): **nước có s�
 Tab `?tab=mix`. Nhập:
 
 - **Màu mục tiêu**: bảng chọn màu, mã hex, hoặc lấy từ ảnh (nút máy ảnh).
-- **Tổng bột cho khuôn (g)** — gồm cả màu (xem [Lượng cần cân](#lượng-cần-cân)), **nước (g / 100 g thạch cao)**, **độ chính xác của cân** (0,001 / 0,01 / 0,1 g; số gram làm tròn theo đây).
+- **Tổng bột cho khuôn (g)** — gồm cả màu (xem [Lượng cần cân](#lượng-cần-cân)), **nước (g / 100 g tổng bột)**, **độ chính xác của cân** (0,001 / 0,01 / 0,1 g; số gram làm tròn theo đây).
 - **Tổng màu tối đa (% thạch cao)**, mặc định 6. Dưới ô ghi ra gram: tối đa bao nhiêu g màu cho tổng bột khuôn đang nhập (thạch cao = tổng ÷ (1 + % × phần khô), màu = thạch cao × %; vd 220 g, 6% oxit → tối đa 12,5 g oxit).
 - **Màu được dùng**: bấm để bật / tắt từng màu cơ bản.
 
@@ -51,16 +51,16 @@ Nút **Sao chép** lấy công thức dạng chữ (đủ các bước pha loãn
 `bo/src/lib/color-mix/plan.ts`. % màu luôn tính **so với thạch cao** (như mẫu đổ thử: 50 g bột + 0,5 g màu = 1%).
 
 - **Tổng bột vào khuôn giữ đúng như nhập.** Thạch cao = tổng ÷ (1 + Σ % × phần khô của màu). Vd 220 g, 1,02% oxit → thạch cao 217,8 g + oxit 2,2 g = 220 g. Không cộng màu lên trên (220 + 5 = 225 g) — khuôn đầy hơn, tỷ lệ nước lệch.
-- **Nước theo thạch cao thật** (217,8 × 37% = 80,6 g), tỷ lệ nước / thạch cao giữ đúng như mẫu đổ thử.
+- **Nước theo tổng bột vào khuôn** (220 × 37% = 81,4 g — không lấy thạch cao 217,8 g × 37%), cùng chuẩn với lúc đổ mẫu.
 - **Pha loãng trước** khi lượng màu dưới 20 lần mức cân (cân thẳng sai quá 2,5%): X = 20 × mức cân, ít nhất 1 g (dưới 1 g + 9 g bột khó trộn đều; cân 0,1 g → 2 g; 0,01 / 0,001 g → 1 g). Trộn X g màu + 9X g bột (oxit) / nước (màu nước), cân lượng hỗn hợp = gram màu cần × 10. 1:9 vẫn dưới 20 lần mức cân thì 1:99 (X g + 99X g). 1:99 mà lượng cân vẫn dưới 20 lần mức cân thì cảnh báo **mẻ quá nhỏ cho cân** kèm sai số ước tính (± nửa mức cân ÷ lượng cân) — tăng mẻ hoặc dùng cân chính xác hơn. Lượng màu nhỏ hiện đủ 2 chữ số có nghĩa (0,0040 g). Phần thạch cao / nước nằm trong hỗn hợp được trừ khỏi thạch cao / nước cần cân. Phần hỗn hợp thừa cất dùng lần sau.
 - Màu nước: nước có sẵn trong màu + nước trong dung dịch pha loãng vượt tổng nước cần thì cảnh báo (hỗn hợp loãng hơn mẫu).
-- Ví dụ (cân 0,1 g, 220 g, vàng 0,267% + nâu 0,319%): trộn 2 g vàng + 18 g bột, cân 5,8 g; trộn 2 g nâu + 18 g bột, cân 7 g; thạch cao 207,2 g (218,7 − 11,5 nằm trong hai hỗn hợp); nước 80,9 g (37%).
+- Ví dụ (cân 0,1 g, 220 g, vàng 0,267% + nâu 0,319%): trộn 2 g vàng + 18 g bột, cân 5,8 g; trộn 2 g nâu + 18 g bột, cân 7 g; thạch cao 207,2 g (218,7 − 11,5 nằm trong hai hỗn hợp); nước 81,4 g (220 × 37%).
 
 ## Dữ liệu mẫu
 
 Tab `?tab=data`.
 
-- **Mẫu trắng**: bột + nước, không màu, đã khô. Kèm **nước khi đổ mẫu (g / 100 g thạch cao)** (`waterPer100`, mặc định 37 — 100 g bột thạch cao : 37 g nước; bản cũ chưa có cũng là 37; dữ liệu `version` 1 lưu sẵn 70 — mặc định trước đây — tự đổi thành 37). Ô nước ở tab Pha màu luôn theo số này, chỉ khác khi tự sửa: tỷ lệ nước dùng cho mẫu trắng và mọi mẫu đổ thử. Tab Pha màu lấy số này làm mặc định và cảnh báo khi pha khác (nhiều nước thì khô sáng hơn, ít nước thì đậm hơn), có nút "Dùng X g".
+- **Mẫu trắng**: bột + nước, không màu, đã khô. Kèm **nước khi đổ mẫu (g / 100 g tổng bột)** (`waterPer100`, mặc định 37 — 100 g tổng bột (thạch cao + màu) : 37 g nước; bản cũ chưa có cũng là 37; dữ liệu `version` 1 lưu sẵn 70 — mặc định trước đây — tự đổi thành 37). Ô nước ở tab Pha màu luôn theo số này, chỉ khác khi tự sửa: tỷ lệ nước dùng cho mẫu trắng và mọi mẫu đổ thử. Tab Pha màu lấy số này làm mặc định và cảnh báo khi pha khác (nhiều nước thì khô sáng hơn, ít nước thì đậm hơn), có nút "Dùng X g".
 - **Màu cơ bản**: tên + các mẫu đổ thử (**thạch cao** g — chưa gồm màu, màu g, màu khô đo được). Nồng độ = màu ÷ bột × 100. Thêm / xóa màu, thêm / xóa mẫu. Dải màu dưới tên: dự đoán từ 0% tới gấp đôi mẫu đậm nhất (nửa phải là ngoại suy).
 - Hướng dẫn thu dữ liệu ngay trên trang: cố định bột, tỷ lệ nước, thời gian khuấy; mỗi màu nên 2–3 nồng độ; đo khi khô hẳn; chụp chung một ảnh, ánh sáng ban ngày gián tiếp.
 

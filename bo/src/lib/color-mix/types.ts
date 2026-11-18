@@ -18,7 +18,7 @@ export type MixSet = {
   base: string;
   pigments: Pigment[];
   checks: MixCheck[];
-  // Tỷ lệ nước khi đổ các mẫu (g / 100 g thạch cao) — pha khác tỷ lệ này thì màu khô sáng / tối khác dự đoán. Bản cũ chưa có: 37 (100 g bột thạch cao : 37 g nước)
+  // Tỷ lệ nước khi đổ các mẫu (g / 100 g tổng bột) — pha khác tỷ lệ này thì màu khô sáng / tối khác dự đoán. Bản cũ chưa có: 37 (100 g tổng bột : 37 g nước)
   waterPer100?: number;
   // Chỉ màu nước: % nước có sẵn trong màu (trừ vào nước cần thêm) và khối lượng 1 giọt (g)
   waterContent?: number;

@@ -46,7 +46,7 @@ export const defaultColorMix = (): ColorMixData => ({ version: 2, sets: { oxide:
 export const defaultMixSet = (mode: "oxide" | "liquid") => (mode === "oxide" ? oxide() : liquid());
 
 // Bản lưu thiếu bộ nào thì bù bằng dữ liệu minh họa của bộ đó
-// Bản 1 lưu tỷ lệ nước 70 = mặc định cũ → đổi thành mặc định mới (37 g nước / 100 g thạch cao)
+// Bản 1 lưu tỷ lệ nước 70 = mặc định cũ → đổi thành mặc định mới (37 g nước / 100 g tổng bột)
 export function migrateColorMix(saved: { version?: number; sets?: Partial<Record<"oxide" | "liquid", MixSet>> } | null | undefined): ColorMixData {
   const base = defaultColorMix();
   if (!saved?.sets) return base;

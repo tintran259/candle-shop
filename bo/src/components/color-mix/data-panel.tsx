@@ -27,7 +27,7 @@ export function DataPanel({ mode, set, update }: { mode: MixMode; set: MixSet; u
               <ColorField label="Màu mẫu trắng" value={set.base} onChange={(hex) => update((s) => ({ ...s, base: hex }))} />
               <Form layout="vertical" component="div">
                 <Form.Item
-                  label="Nước khi đổ mẫu (g / 100 g thạch cao)"
+                  label="Nước khi đổ mẫu (g / 100 g tổng bột)"
                   tooltip="Mẫu trắng và mọi mẫu đổ thử dùng cùng tỷ lệ nước này. Tab Pha màu cảnh báo khi pha khác tỷ lệ — nhiều nước thì thạch cao khô sáng hơn, ít nước thì đậm hơn."
                   style={{ marginBottom: 0 }}
                 >
