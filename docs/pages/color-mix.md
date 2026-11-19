@@ -84,6 +84,7 @@ Dữ liệu ban đầu là **số minh họa** (`demo: true`), trang hiện cả
 `?mode=combo` (`lib/color-mix/combo.ts`): bột oxit và màu nước trong **cùng một mẻ**. Không có tab Dữ liệu mẫu (`?tab=data` tự về Pha màu) — ghép hai bộ lúc chạy:
 
 - Mỗi màu giữ đường cong đo ở bộ của nó, so với mẫu trắng của bộ đó; hỗn hợp tính trên mẫu trắng của bộ oxit (K/S cộng dồn như trong một bộ).
+- Ngoài công thức trộn, tìm thêm công thức **chỉ oxit** và **chỉ màu nước**, mỗi cái tính trên mẫu trắng của bộ đó (`solveView` trong `lib/color-mix/advise.ts`, bộ con `partOf`), lấy cái điểm tốt nhất; công thức trộn chỉ được giữ khi thật sự dùng cả hai loại. Nhờ vậy Kết hợp chỉ dùng màu nước ra **trùng tab Màu nước** (cùng giới hạn) dù mẫu trắng hai bộ nhập lệch nhau (trước 19/11/2026 lệch ~0,5 ΔE, vd #E3D3BC: đỏ 0,088 / vàng 0,297 ở Màu nước, 0,09 / 0,29 ở Kết hợp).
 - Tỷ lệ nước theo bộ oxit; nước có sẵn trong màu, thể tích giọt theo bộ màu nước.
 - Hai giới hạn riêng: **Oxit tối đa (%)** và **Màu nước tối đa (ml / 100 g)**, mỗi ô ghi lượng tối đa cho khuôn (`solveMix(..., limits)`).
 - Chip màu chia hai nhóm Bột oxit / Màu nước. Công thức: oxit g (pha loãng với bột), màu nước ml + giọt (pha loãng với nước); thạch cao trừ phần khô của cả hai, nước trừ nước có sẵn trong màu nước.

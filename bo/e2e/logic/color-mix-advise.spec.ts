@@ -39,3 +39,20 @@ test("Đề xuất: lệch dưới 1 ΔE coi như ngang → chọn cách ít mà
   expect(optionNote(dark.options[0], dark.best, dark.options)).toBe("Không pha được màu này (lệch rõ).");
   expect(optionNote(dark.best, dark.best, dark.options)).toContain("Có màu vượt mẫu đã đo");
 });
+
+test("Kết hợp: công thức chỉ một loại màu tính trên mẫu trắng của loại đó — trùng tab của loại đó dù hai mẫu trắng lệch nhau", () => {
+  const d = defaultColorMix();
+  const lq = { ...d.sets.liquid, base: "#EFEBE3" };
+  const combo = comboSet({ ...d, sets: { oxide: d.sets.oxide, liquid: lq } });
+  const onlyLiquid = combo.pigments.filter((p) => p.kind === "liquid").map((p) => p.id);
+  for (const goal of ["#E3D3BC", "#E8C9C0"]) {
+    const a = solveView("liquid", lq, {}, goal);
+    const b = solveView("combo", combo, {}, goal, onlyLiquid);
+    expect(b.percents, goal).toEqual(a.percents);
+    expect(b.hex, goal).toBe(a.hex);
+  }
+  // Được dùng cả hai loại: vẫn chọn công thức trộn khi trộn mới tới gần (màu đậm)
+  const dark = solveView("combo", combo, {}, "#3A3330");
+  const kinds = new Set(Object.keys(dark.percents).map((id) => combo.pigments.find((p) => p.id === id)?.kind));
+  expect(kinds.size).toBe(2);
+});
