@@ -4,6 +4,9 @@ import { useState } from "react";
 import { normHex } from "@/lib/color-mix/color";
 import { ImagePicker } from "./image-picker";
 
+// Màn cảm ứng: chạm lần đầu chỉ mở tooltip, phải chạm lần hai mới bấm được nút → chỉ dùng tooltip khi có chuột (rê được)
+const CAN_HOVER = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
 // Ô nhập màu: bảng chọn màu + mã hex + lấy màu từ ảnh chụp. Trống được (vd mẫu kiểm chứng chưa đo) khi allowEmpty.
 // whiteRef: màu mẫu trắng đã lưu — hộp lấy màu từ ảnh cho hiệu chỉnh theo mẫu trắng chụp cùng ảnh (ô của chính mẫu trắng thì không truyền)
 export function ColorField({ value, onChange, allowEmpty, label, whiteRef }: { value: string; onChange: (hex: string) => void; allowEmpty?: boolean; label: string; whiteRef?: string }) {
@@ -20,6 +23,7 @@ export function ColorField({ value, onChange, allowEmpty, label, whiteRef }: { v
     if (h) onChange(h);
     else setText(value);
   };
+  const camera = <Button icon={<CameraOutlined />} aria-label={`${label}: lấy màu từ ảnh`} onClick={() => setPicking(true)} />;
 
   return (
     <Space.Compact>
@@ -37,9 +41,7 @@ export function ColorField({ value, onChange, allowEmpty, label, whiteRef }: { v
         onBlur={commit}
         onPressEnter={commit}
       />
-      <Tooltip title="Lấy màu từ ảnh">
-        <Button icon={<CameraOutlined />} aria-label={`${label}: lấy màu từ ảnh`} onClick={() => setPicking(true)} />
-      </Tooltip>
+      {CAN_HOVER ? <Tooltip title="Lấy màu từ ảnh">{camera}</Tooltip> : camera}
       <ImagePicker open={picking} onClose={() => setPicking(false)} onPick={onChange} whiteRef={whiteRef} />
     </Space.Compact>
   );

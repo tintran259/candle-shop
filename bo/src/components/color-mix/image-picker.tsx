@@ -100,24 +100,50 @@ export function ImagePicker({ open, onClose, onPick, whiteRef }: { open: boolean
     ctx.setLineDash([]);
   };
 
-  const sample = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const cv = canvasRef.current;
+  // Màu trung bình (RGB tuyến tính) trong vòng tròn tâm (x, y) bán kính r
+  const average = (x: number, y: number, r: number): Rgb | null => {
     const data = pixels.current;
-    if (!cv || !data) return;
-    const rect = cv.getBoundingClientRect();
-    const x = Math.round(((e.clientX - rect.left) * cv.width) / rect.width);
-    const y = Math.round(((e.clientY - rect.top) * cv.height) / rect.height);
+    if (!data) return null;
     const sum = [0, 0, 0];
     let n = 0;
-    for (let yy = y - radius; yy <= y + radius; yy++)
-      for (let xx = x - radius; xx <= x + radius; xx++) {
-        if (xx < 0 || yy < 0 || xx >= cv.width || yy >= cv.height || (xx - x) ** 2 + (yy - y) ** 2 > radius * radius) continue;
-        const i = (yy * cv.width + xx) * 4;
+    for (let yy = y - r; yy <= y + r; yy++)
+      for (let xx = x - r; xx <= x + r; xx++) {
+        if (xx < 0 || yy < 0 || xx >= data.width || yy >= data.height || (xx - x) ** 2 + (yy - y) ** 2 > r * r) continue;
+        const i = (yy * data.width + xx) * 4;
         for (let c = 0; c < 3; c++) sum[c] += toLinear(data.data[i + c] / 255);
         n++;
       }
-    if (!n) return;
-    const avg = sum.map((v) => v / n) as Rgb;
+    return n ? (sum.map((v) => v / n) as Rgb) : null;
+  };
+
+  // Đổi cỡ vùng sau khi đã bấm: giữ điểm đã chọn, vẽ lại vòng theo cỡ mới và tính lại màu (mẫu màu; mẫu trắng nếu có)
+  const changeRadius = (r: number) => {
+    setRadius(r);
+    const s = marks.current.sample;
+    if (s) {
+      marks.current.sample = { ...s, r };
+      const avg = average(s.x, s.y, r);
+      if (avg) setRaw(avg);
+    }
+    const t = marks.current.white;
+    if (t) {
+      const avg = average(t.x, t.y, r);
+      if (avg && !whiteRefTooDark(avg)) {
+        marks.current.white = { ...t, r };
+        setWhite(avg);
+      }
+    }
+    drawMarks();
+  };
+
+  const sample = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const cv = canvasRef.current;
+    if (!cv || !pixels.current) return;
+    const rect = cv.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) * cv.width) / rect.width);
+    const y = Math.round(((e.clientY - rect.top) * cv.height) / rect.height);
+    const avg = average(x, y, radius);
+    if (!avg) return;
     if (target === "white") {
       if (whiteRefTooDark(avg)) {
         setWhiteError(true);
@@ -208,7 +234,7 @@ export function ImagePicker({ open, onClose, onPick, whiteRef }: { open: boolean
         <Flex wrap align="center" justify="space-between" gap={12} className="color-pick-toolbar">
           <Flex align="center" gap={12} className="color-pick-radius">
             <Typography.Text type="secondary">Vùng lấy trung bình</Typography.Text>
-            <Slider min={1} max={40} value={radius} onChange={setRadius} aria-label="Bán kính vùng lấy trung bình" tooltip={{ formatter: (v) => `${v}px` }} />
+            <Slider min={1} max={40} value={radius} onChange={changeRadius} aria-label="Bán kính vùng lấy trung bình" tooltip={{ formatter: (v) => `${v}px` }} />
             <Typography.Text className="color-pick-radius-value">{radius}px</Typography.Text>
           </Flex>
           <Upload {...pickProps}>
