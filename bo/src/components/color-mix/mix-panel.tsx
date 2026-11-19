@@ -1,37 +1,56 @@
-import { CheckOutlined, CopyOutlined, ExperimentOutlined } from "@ant-design/icons";
+import { CopyOutlined, ExperimentOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Card, Col, Flex, Form, Grid, InputNumber, Row, Select, Tag, Typography } from "antd";
 import { useDeferredValue, useMemo, useState } from "react";
 import { deltaELabel, normHex } from "@/lib/color-mix/color";
-import { lighterThanBase, modelAccuracy, pigmentSwatch, solveMix } from "@/lib/color-mix/model";
+import { lighterThanBase, modelAccuracy, pigmentSwatch, solveMixCached, type MixLimit } from "@/lib/color-mix/model";
 import { formatGrams, formatPercent, planMix, planText } from "@/lib/color-mix/plan";
-import { DEFAULT_WATER, type MixCheck, type MixMode, type MixSet } from "@/lib/color-mix/types";
+import { DEFAULT_PREFS, DEFAULT_WATER, type MixCheck, type MixPrefs, type MixSet, type MixView } from "@/lib/color-mix/types";
 import { ColorField } from "./color-field";
+import { PigmentChips } from "./pigment-chips";
 import { PlanList } from "./plan-list";
 
-// Tab Pha màu: nhập màu muốn có + số gram bột → số gram từng màu, nước cần thêm (docs/pages/color-mix.md#pha-màu)
-export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet; onAddCheck: (check: MixCheck) => void }) {
+// Tab Pha màu: nhập màu muốn có + số gram bột → số gram từng màu, nước cần thêm (docs/pages/color-mix.md#pha-màu).
+// Kết hợp: dùng màu của cả hai bộ, giới hạn tổng riêng cho oxit và màu nước
+// Nước, độ chính xác cân, tổng màu tối đa lưu theo từng loại (prefs, xuống DB); màu mục tiêu, tổng bột, màu bật chỉ nằm trên trang
+export function MixPanel({ mode, set, onAddCheck, prefs, onPrefs }: { mode: MixView; set: MixSet; onAddCheck: (check: MixCheck) => void; prefs: MixPrefs; onPrefs: (patch: MixPrefs) => void }) {
   const { message } = App.useApp();
   const mobile = Grid.useBreakpoint().md === false;
   const [target, setTarget] = useState("#E3D3BC");
   const [plaster, setPlaster] = useState(220);
   // Mặc định đúng tỷ lệ nước khi đổ mẫu (tab Dữ liệu mẫu)
   const sampleWater = set.waterPer100 ?? DEFAULT_WATER;
-  const [waterEdit, setWater] = useState<number | null>(null);
-  const waterPer100 = waterEdit ?? sampleWater;
-  const [precision, setPrecision] = useState(0.01);
-  const [maxTotal, setMaxTotal] = useState(6);
+  const waterPer100 = prefs.water ?? sampleWater;
+  const setWater = (v: number | null) => onPrefs({ water: v ?? undefined });
+  const precision = prefs.precision ?? DEFAULT_PREFS.precision;
+  const setPrecision = (v: number) => onPrefs({ precision: v });
+  const maxTotal = prefs.maxTotal ?? DEFAULT_PREFS.maxTotal;
+  const setMaxTotal = (v: number) => onPrefs({ maxTotal: v });
+  // Kết hợp: maxTotal là giới hạn oxit, maxLiquid là giới hạn màu nước
+  const maxLiquid = prefs.maxLiquid ?? DEFAULT_PREFS.maxLiquid;
+  const setMaxLiquid = (v: number) => onPrefs({ maxLiquid: v });
+  const combo = mode === "combo";
   // Màu tắt (không dùng) — màu mới thêm mặc định được dùng
   const [off, setOff] = useState<string[]>([]);
   const goal = useDeferredValue(normHex(target) ?? "#FFFFFF");
-  const term = mode === "oxide" ? "màu oxit" : "màu nước";
+  const term = mode === "oxide" ? "màu oxit" : mode === "liquid" ? "màu nước" : "màu";
 
   const allowed = useMemo(() => set.pigments.map((p) => p.id).filter((id) => !off.includes(id)), [set.pigments, off]);
-  const solution = useMemo(() => solveMix(set, goal, allowed, Math.max(0.1, maxTotal)), [set, goal, allowed, maxTotal]);
+  const solution = useMemo(() => {
+    if (!combo) return solveMixCached(set, goal, allowed, Math.max(0.1, maxTotal));
+    const ids = (kind: string) => set.pigments.filter((p) => p.kind === kind).map((p) => p.id);
+    const limits: MixLimit[] = [
+      { ids: ids("oxide"), max: Math.max(0, maxTotal) },
+      { ids: ids("liquid"), max: Math.max(0, maxLiquid) },
+    ];
+    return solveMixCached(set, goal, allowed, Math.max(0.1, maxTotal + maxLiquid), limits);
+  }, [set, goal, allowed, maxTotal, maxLiquid, combo]);
   const batch = { plaster, waterPer100, precision };
   const plan = planMix(mode, set, solution, batch);
-  // Gram màu tối đa khi dùng hết maxTotal %: thạch cao = tổng ÷ (1 + % × phần khô), màu = thạch cao × %
-  const dry = mode === "liquid" ? 1 - (set.waterContent ?? 0) / 100 : 1;
-  const maxGrams = ((plaster / (1 + (maxTotal / 100) * dry)) * maxTotal) / 100;
+  // Gram màu tối đa khi dùng hết giới hạn: thạch cao = tổng ÷ (1 + Σ % × phần khô), màu = thạch cao × %
+  const liquidDry = 1 - (set.waterContent ?? 0) / 100;
+  const maxPlaster = plaster / (1 + (combo ? maxTotal + maxLiquid * liquidDry : maxTotal * (mode === "liquid" ? liquidDry : 1)) / 100);
+  const maxGrams = (pct: number) => (maxPlaster * pct) / 100;
+  const hasLiquid = plan.lines.some((l) => l.kind === "liquid");
   const accuracy = useMemo(() => modelAccuracy(set), [set]);
   const label = deltaELabel(solution.deltaE);
   const swatchOf = (id: string) => pigmentSwatch(set.pigments.find((p) => p.id === id)!);
@@ -84,38 +103,51 @@ export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Nước (g / 100 g tổng bột)">
+                <Form.Item label="Nước (ml / 100 g tổng bột)">
                   <InputNumber min={0} value={waterPer100} onChange={(v) => setWater(v ?? 0)} style={{ width: "100%" }} />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              {/* Kết hợp: hai ô giới hạn đứng cùng hàng, độ chính xác của cân xuống cuối */}
+              <Col span={12} order={combo ? 1 : undefined}>
                 <Form.Item label="Độ chính xác của cân">
                   <Select value={precision} onChange={setPrecision} options={[0.001, 0.01, 0.1].map((v) => ({ value: v, label: `${v.toLocaleString("vi-VN")} g` }))} />
                 </Form.Item>
               </Col>
-              <Col span={12}>
-                <Form.Item
-                  label={`Tổng ${term} tối đa (% thạch cao)`}
-                  extra={`= tối đa ${formatGrams(maxGrams, 1)} ${term} cho khuôn ${formatGrams(plaster, 0)}`}
-                  tooltip={`Giới hạn tổng ${term} khi tìm công thức. Màu cần đậm hơn mức này thì trang chọn màu gần nhất có thể.`}
-                >
-                  <InputNumber min={0.1} step={0.5} value={maxTotal} onChange={(v) => setMaxTotal(v ?? 6)} style={{ width: "100%" }} />
-                </Form.Item>
-              </Col>
+              {combo ? (
+                <>
+                  <Col span={12}>
+                    <LimitField
+                      label="Oxit tối đa (%)"
+                      tooltip="% so với thạch cao. Màu cần đậm hơn mức này thì trang chọn màu gần nhất có thể."
+                      extra={`≤ ${formatGrams(maxGrams(maxTotal), 1)}`}
+                      value={maxTotal}
+                      onChange={setMaxTotal}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <LimitField
+                      label="Màu nước tối đa (ml / 100 g)"
+                      tooltip="% so với thạch cao. Màu cần đậm hơn mức này thì trang chọn màu gần nhất có thể."
+                      extra={`≤ ${formatGrams(maxGrams(maxLiquid), 1, "ml")}`}
+                      value={maxLiquid}
+                      onChange={setMaxLiquid}
+                    />
+                  </Col>
+                </>
+              ) : (
+                <Col span={12}>
+                  <LimitField
+                    label={mode === "liquid" ? "Tổng màu nước tối đa (ml / 100 g thạch cao)" : `Tổng ${term} tối đa (% thạch cao)`}
+                    extra={`= tối đa ${formatGrams(maxGrams(maxTotal), 1, mode === "liquid" ? "ml" : "g")} ${term} cho khuôn ${formatGrams(plaster, 0)}`}
+                    tooltip={`Giới hạn tổng ${term} khi tìm công thức. Màu cần đậm hơn mức này thì trang chọn màu gần nhất có thể.`}
+                    value={maxTotal}
+                    onChange={setMaxTotal}
+                  />
+                </Col>
+              )}
             </Row>
             <Form.Item label={`Được dùng các ${term}`} extra={`Đang dùng ${allowed.length} / ${set.pigments.length} màu — bấm để bật / tắt.`} style={{ marginBottom: 0 }}>
-              <div className="color-mix-chips" role="group" aria-label={`Được dùng các ${term}`}>
-                {set.pigments.map((p) => {
-                  const on = !off.includes(p.id);
-                  return (
-                    <button key={p.id} type="button" className="color-mix-chip" aria-pressed={on} onClick={() => setOff((o) => (on ? [...o, p.id] : o.filter((x) => x !== p.id)))}>
-                      <span className="color-mix-chip-dot" style={{ background: pigmentSwatch(p) }} />
-                      <span className="color-mix-chip-name">{p.name}</span>
-                      <CheckOutlined className="color-mix-chip-check" aria-hidden />
-                    </button>
-                  );
-                })}
-              </div>
+              <PigmentChips label={`Được dùng các ${term}`} grouped={combo} pigments={set.pigments} off={off} onToggle={(id, on) => setOff((o) => (on ? o.filter((x) => x !== id) : [...o, id]))} />
             </Form.Item>
           </Form>
         </Card>
@@ -132,17 +164,17 @@ export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet
             </Typography.Text>
             <Tag color={label.color}>{label.text}</Tag>
           </Flex>
-          <PlanList mode={mode} plan={plan} batch={batch} swatchOf={swatchOf} />
+          <PlanList plan={plan} batch={batch} swatchOf={swatchOf} />
           <Flex vertical gap={8} style={{ marginTop: 12 }}>
             {waterPer100 !== sampleWater && (
               <Alert
                 type="warning"
                 showIcon
-                title={`Đang pha ${waterPer100} g nước / 100 g tổng bột, khác lúc đổ mẫu (${sampleWater} g)`}
+                title={`Đang pha ${waterPer100} ml nước / 100 g tổng bột, khác lúc đổ mẫu (${sampleWater} ml)`}
                 description={`Màu khô sẽ ${waterPer100 > sampleWater ? "sáng" : "đậm"} hơn dự đoán. Pha đúng tỷ lệ lúc đổ mẫu, hoặc đổ lại mẫu ở tỷ lệ mới.`}
                 action={
                   <Button size="small" onClick={() => setWater(null)}>
-                    Dùng {sampleWater} g
+                    Dùng {sampleWater} ml
                   </Button>
                 }
               />
@@ -153,7 +185,13 @@ export function MixPanel({ mode, set, onAddCheck }: { mode: MixMode; set: MixSet
             )}
             {plan.totalPercent > 8 && <Alert type="error" showIcon title={`Tổng ${term} ${formatPercent(plan.totalPercent)} khá cao, có thể làm thạch cao yếu hoặc ninh kết bất thường.`} />}
             {plan.totalPercent > 5 && plan.totalPercent <= 8 && <Alert type="warning" showIcon title={`Tổng ${term} ${formatPercent(plan.totalPercent)}, nên đổ thử mẫu nhỏ để kiểm tra độ cứng.`} />}
-            {mode === "liquid" && plan.lines.length > 0 && <Alert type="info" showIcon title="Trộn màu nước vào nước trước rồi mới đổ bột, để màu phân tán đều." />}
+            {hasLiquid && !combo && <Alert type="info" showIcon title="Trộn màu nước vào nước trước rồi mới đổ bột, để màu phân tán đều." />}
+            {combo && hasLiquid && plan.lines.some((l) => l.kind === "oxide") && (
+              <Alert type="info" showIcon title="Oxit trộn đều vào bột thạch cao khô, màu nước khuấy vào nước trước — rồi mới đổ bột vào nước." />
+            )}
+            {combo && !accuracy && (
+              <Alert type="info" showIcon title="Dự đoán ghép từ hai bộ đo riêng (chưa có mẫu trộn chung) nên kém chắc hơn. Đổ thử rồi bấm “Lưu làm mẫu kiểm chứng” để biết lệch bao nhiêu." />
+            )}
             {accuracy && <Alert type="info" showIcon title={`Trên ${accuracy.count} mẫu kiểm chứng, dự đoán lệch trung bình ΔE ${accuracy.mean.toFixed(1)} so với màu thật.`} />}
           </Flex>
           {mobile && actions}
@@ -171,5 +209,13 @@ function Swatch({ hex, caption }: { hex: string; caption: string }) {
         {caption}
       </Typography.Text>
     </div>
+  );
+}
+
+function LimitField({ label, extra, tooltip, value, onChange }: { label: string; extra: string; tooltip?: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <Form.Item label={label} extra={extra} tooltip={tooltip}>
+      <InputNumber min={0} step={0.5} value={value} onChange={(v) => onChange(v ?? 6)} style={{ width: "100%" }} />
+    </Form.Item>
   );
 }

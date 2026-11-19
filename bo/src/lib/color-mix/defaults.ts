@@ -42,12 +42,11 @@ const liquid = (): MixSet => ({
   checks: [],
 });
 
-export const defaultColorMix = (): ColorMixData => ({ version: 2, sets: { oxide: oxide(), liquid: liquid() } });
-export const defaultMixSet = (mode: "oxide" | "liquid") => (mode === "oxide" ? oxide() : liquid());
+export const defaultColorMix = (): ColorMixData => ({ version: 2, sets: { oxide: oxide(), liquid: liquid() }, comboChecks: [] });
 
 // Bản lưu thiếu bộ nào thì bù bằng dữ liệu minh họa của bộ đó
-// Bản 1 lưu tỷ lệ nước 70 = mặc định cũ → đổi thành mặc định mới (37 g nước / 100 g tổng bột)
-export function migrateColorMix(saved: { version?: number; sets?: Partial<Record<"oxide" | "liquid", MixSet>> } | null | undefined): ColorMixData {
+// Bản 1 lưu tỷ lệ nước 70 = mặc định cũ → đổi thành mặc định mới (37 ml nước / 100 g tổng bột)
+export function migrateColorMix(saved: { version?: number; sets?: Partial<Record<"oxide" | "liquid", MixSet>>; comboChecks?: unknown; prefs?: unknown } | null | undefined): ColorMixData {
   const base = defaultColorMix();
   if (!saved?.sets) return base;
   const old = (saved.version ?? 1) < 2;
@@ -56,5 +55,7 @@ export function migrateColorMix(saved: { version?: number; sets?: Partial<Record
     const water = old && s.waterPer100 === 70 ? DEFAULT_WATER : s.waterPer100;
     return { ...d, ...s, waterPer100: water ?? DEFAULT_WATER, checks: s.checks ?? [] };
   };
-  return { version: 2, sets: { oxide: fix(saved.sets.oxide, base.sets.oxide), liquid: fix(saved.sets.liquid, base.sets.liquid) } };
+  const comboChecks = Array.isArray(saved.comboChecks) ? (saved.comboChecks as ColorMixData["comboChecks"]) : [];
+  const prefs = saved.prefs && typeof saved.prefs === "object" ? (saved.prefs as ColorMixData["prefs"]) : {};
+  return { version: 2, sets: { oxide: fix(saved.sets.oxide, base.sets.oxide), liquid: fix(saved.sets.liquid, base.sets.liquid) }, comboChecks, prefs };
 }

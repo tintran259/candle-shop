@@ -21,8 +21,9 @@ export type Curves = Record<string, CurvePoint[]>;
 const baseKs = (set: MixSet) => hexToLinear(set.base).map(ks) as Rgb;
 
 // Điểm đo của một màu, theo nồng độ tăng dần; mẫu trùng nồng độ thì lấy trung bình
+// Màu của bộ Kết hợp so với mẫu trắng của chính bộ chứa nó (p.base)
 export function buildCurve(set: MixSet, p: Pigment): CurvePoint[] {
-  const b = baseKs(set);
+  const b = p.base ? (hexToLinear(p.base).map(ks) as Rgb) : baseKs(set);
   const groups = new Map<number, Rgb[]>();
   for (const s of p.samples) {
     if (!(s.plaster > 0 && s.pigment > 0 && isHex(s.hex))) continue;
@@ -70,11 +71,17 @@ export const pigmentSwatch = (p: Pigment) => normHex(p.samples.find((s) => isHex
 
 export type MixSolution = { percents: MixPercents; hex: string; deltaE: number; curves: Curves };
 
-// Tìm % từng màu (trong các màu được phép) cho màu gần target nhất, tổng không quá maxTotal %.
+// Giới hạn tổng % riêng cho một nhóm màu (Kết hợp: oxit tối đa x%, màu nước tối đa y%)
+export type MixLimit = { ids: string[]; max: number };
+
+// Tìm % từng màu (trong các màu được phép) cho màu gần target nhất, tổng không quá maxTotal % (và từng nhóm không quá giới hạn của nhóm).
 // Tìm theo từng tọa độ, bước giảm dần, từ nhiều điểm xuất phát. Phạt nhẹ tổng lượng màu và số màu dùng — cùng độ giống thì ưu tiên công thức gọn
-export function solveMix(set: MixSet, target: string, allowed: string[], maxTotal: number): MixSolution {
+export function solveMix(set: MixSet, target: string, allowed: string[], maxTotal: number, limits: MixLimit[] = []): MixSolution {
   const curves = buildCurves(set);
   const ids = allowed.filter((id) => curves[id]?.length);
+  const groups = limits.map((g) => ({ idx: ids.flatMap((id, j) => (g.ids.includes(id) ? [j] : [])), max: g.max }));
+  const fits = (c: number[]) => c.reduce((a, x) => a + x, 0) <= maxTotal + 1e-9 && groups.every((g) => g.idx.reduce((a, j) => a + c[j], 0) <= g.max + 1e-9);
+  const cap = (j: number) => Math.min(maxTotal, ...groups.filter((g) => g.idx.includes(j)).map((g) => g.max));
   const goal: Lab = hexToLab(target);
   const b = baseKs(set);
   const n = ids.length;
@@ -92,12 +99,13 @@ export function solveMix(set: MixSet, target: string, allowed: string[], maxTota
   for (let j = 0; j < n; j++)
     for (const v of [0.2, 1, 3]) {
       const s = Array(n).fill(0);
-      s[j] = Math.min(v, maxTotal);
+      s[j] = Math.min(v, cap(j));
       starts.push(s);
     }
   let best: number[] = Array(n).fill(0);
   let bestScore = Infinity;
   for (const start of starts) {
+    if (!fits(start)) continue;
     let c = [...start];
     let f = score(c);
     let step = 1;
@@ -107,7 +115,7 @@ export function solveMix(set: MixSet, target: string, allowed: string[], maxTota
         for (const s of [step, -step]) {
           const next = [...c];
           next[j] = Math.max(0, next[j] + s);
-          if (next.reduce((a, x) => a + x, 0) > maxTotal + 1e-9) continue;
+          if (!fits(next)) continue;
           const g = score(next);
           if (g < f - 1e-9) {
             c = next;
@@ -129,6 +137,20 @@ export function solveMix(set: MixSet, target: string, allowed: string[], maxTota
   });
   const hex = predictHex(set, percents, curves);
   return { percents, hex, deltaE: deltaE(goal, hexToLab(hex)), curves };
+}
+
+// Nhớ kết quả theo bộ dữ liệu (cùng đối tượng set = dữ liệu chưa đổi) + thông số: đổi loại / chuyển tab rồi quay lại không tính lại (~20–40 ms mỗi lần)
+const solved = new WeakMap<MixSet, Map<string, MixSolution>>();
+export function solveMixCached(set: MixSet, target: string, allowed: string[], maxTotal: number, limits: MixLimit[] = []): MixSolution {
+  const key = JSON.stringify([target, allowed, maxTotal, limits]);
+  let map = solved.get(set);
+  if (!map) solved.set(set, (map = new Map()));
+  const hit = map.get(key);
+  if (hit) return hit;
+  const result = solveMix(set, target, allowed, maxTotal, limits);
+  if (map.size >= 50) map.delete(map.keys().next().value!);
+  map.set(key, result);
+  return result;
 }
 
 // Màu mục tiêu sáng hơn mẫu trắng: màu chỉ làm tối đi, không đạt được nếu không có bột trắng

@@ -1,6 +1,8 @@
 // Pha màu: dự đoán màu từ mẫu đổ thử, tìm công thức, đổi ra gram / nước / giọt (docs/pages/color-mix.md)
 import { expect, test } from "@playwright/test";
 import { deltaEHex, hexToLinear, linearToHex, normHex, whiteBalance, whiteRefTooDark } from "@/lib/color-mix/color";
+import { comboSet } from "@/lib/color-mix/combo";
+import { missingLadder, withLadder } from "@/lib/color-mix/ladder";
 import { defaultColorMix, migrateColorMix } from "@/lib/color-mix/defaults";
 import { buildCurve, checkResult, lighterThanBase, modelAccuracy, predictHex, solveMix } from "@/lib/color-mix/model";
 import { planMix, premixText } from "@/lib/color-mix/plan";
@@ -88,10 +90,14 @@ test("Pha loãng trước: ghi rõ gram màu + gram bột, cân hỗn hợp, tr�
   expect(black.premix!.weigh).toBeCloseTo(0.44);
   expect(black.rounded).toBeCloseTo(0.044);
   expect(plan.plaster - plan.plasterToWeigh).toBeCloseTo(0.396);
-  expect(premixText("oxide", black, 2)).toBe("Trộn 1,00 g Đen oxit + 9,00 g bột thạch cao cho thật đều, rồi cân 0,44 g hỗn hợp này (phần thừa cất dùng lần sau).");
+  expect(premixText(black, 2)).toBe("Cân 0,44 g lọ A Đen oxit. Lọ A (10%) = 1,00 g Đen oxit + 9,00 g bột thạch cao — trộn thật đều, phần thừa cất dùng lần sau.");
   // Rất ít (cân 0,1 g, cần 0,15 g): 1:9 vẫn dưới 2 g → 1:99
   const tiny = planMix("oxide", s, { ...sol, percents: { "ox-red": 0.15 } }, { plaster: 100, waterPer100: 70, precision: 0.1 }).lines[0];
-  expect(tiny.premix).toMatchObject({ factor: 100, stockPigment: 2, stockBase: 198 });
+  // Lọ B pha từ lọ A (2 g lọ A + 18 g bột), không trộn 2 g màu + 198 g bột
+  expect(tiny.premix).toMatchObject({ factor: 100, stockPigment: 2, stockBase: 18 });
+  expect(premixText(tiny, 1)).toBe(
+    "Cân 15,0 g lọ B Đỏ oxit. Lọ A (10%) = 2,0 g Đỏ oxit + 18,0 g bột thạch cao; Lọ B (1%) = 2,0 g lọ A + 18,0 g bột thạch cao — trộn thật đều, phần thừa cất dùng lần sau.",
+  );
   expect(tiny.premix!.weigh).toBeCloseTo(15);
   expect(tiny.premix!.tooSmall).toBe(false);
   // Mẻ quá nhỏ: 1:99 vẫn chỉ cân 1 g trên cân 0,1 g → báo, sai khoảng ±5%
@@ -169,4 +175,56 @@ test("Màu nước: nước trong màu vượt tổng nước cần thì báo", 
   const plan = planMix("liquid", s, { percents: { "lq-red": 20 }, hex: "#000000", deltaE: 0, curves: {} }, { plaster: 100, waterPer100: 5, precision: 0.01 });
   expect(plan.waterToAdd).toBe(0);
   expect(plan.waterExcess).toBeGreaterThan(0);
+});
+
+test("Kết hợp: dùng màu của cả hai bộ, giới hạn oxit / màu nước riêng, màu nước tính ml", () => {
+  const data = defaultColorMix();
+  data.comboChecks = [{ id: "c", name: "C", plaster: 50, grams: { "ox-red": 0.5 }, hex: "" }];
+  const s = comboSet(data);
+  expect(s.pigments.filter((p) => p.kind === "oxide").length).toBe(data.sets.oxide.pigments.length);
+  expect(s.pigments.filter((p) => p.kind === "liquid").length).toBe(data.sets.liquid.pigments.length);
+  expect(s.checks).toHaveLength(1);
+  // Mỗi màu vẫn đúng màu mẫu đổ thử của bộ chứa nó
+  const lqRed = data.sets.liquid.pigments.find((p) => p.id === "lq-red")!;
+  expect(deltaEHex(predictHex(s, { "lq-red": 1 }), lqRed.samples[0].hex)).toBeLessThan(1);
+  // Giới hạn riêng: oxit 0% → chỉ được dùng màu nước
+  const oxIds = s.pigments.filter((p) => p.kind === "oxide").map((p) => p.id);
+  const lqIds = s.pigments.filter((p) => p.kind === "liquid").map((p) => p.id);
+  const sol = solveMix(s, "#C9A07A", ids(s), 6, [
+    { ids: oxIds, max: 0 },
+    { ids: lqIds, max: 6 },
+  ]);
+  expect(Object.keys(sol.percents).every((id) => lqIds.includes(id))).toBe(true);
+  // Mẻ trộn: oxit g, màu nước ml + giọt, nước trừ phần có sẵn trong màu nước
+  const plan = planMix("combo", s, { percents: { "ox-red": 1, "lq-yellow": 2 }, hex: "#000000", deltaE: 0, curves: {} }, { plaster: 100, waterPer100: 37, precision: 0.01 });
+  const [ox, lq] = plan.lines;
+  expect(ox.kind).toBe("oxide");
+  expect(lq.kind).toBe("liquid");
+  expect(lq.drops).toBeCloseTo(lq.grams / 0.05, 5);
+  expect(ox.drops).toBeUndefined();
+  expect(plan.plaster + plan.colorSolids).toBeCloseTo(100, 1);
+  expect(plan.waterInColor).toBeCloseTo(lq.rounded * 0.5, 5);
+  expect(premixText({ ...lq, premix: { factor: 10, stockPigment: 1, stockBase: 9, weigh: 0.44, carried: 0.396, tooSmall: false, errorPercent: 1 } }, 2)).toBe(
+    "Lấy 0,44 ml lọ A Vàng. Lọ A (10%) = 1,00 ml Vàng + 9,00 ml nước — trộn thật đều, phần thừa cất dùng lần sau.",
+  );
+});
+
+test("Thông số tab Pha màu (nước, cân, tổng màu tối đa) giữ qua bản lưu, bản cũ chưa có thì rỗng", () => {
+  const prefs = { oxide: { water: 40, precision: 0.1, maxTotal: 4 }, combo: { maxLiquid: 3 } };
+  expect(migrateColorMix({ version: 2, sets: { oxide: oxide(), liquid: liquid() }, prefs }).prefs).toEqual(prefs);
+  expect(migrateColorMix({ version: 2, sets: { oxide: oxide(), liquid: liquid() } }).prefs).toEqual({});
+});
+
+test("Thang chuẩn: thêm nồng độ còn thiếu trên 50 g, bỏ qua nồng độ đã có, xếp tăng dần", () => {
+  const red = oxide().pigments.find((p) => p.id === "ox-red")!; // đã có 1% và 2% (mẫu 50 g)
+  expect(missingLadder(red)).toEqual([0.1, 0.25, 0.5]);
+  const next = withLadder(red);
+  expect(next.samples.map((s) => (s.pigment / s.plaster) * 100)).toEqual([0.1, 0.25, 0.5, 1, 2]);
+  expect(next.samples[0]).toEqual({ plaster: 50, pigment: 0.05, hex: "" });
+  expect(withLadder(next)).toBe(next);
+  // Dòng chưa có màu không làm đổi dự đoán
+  const s = oxide();
+  const before = predictHex(s, { "ox-red": 0.3 });
+  s.pigments = s.pigments.map(withLadder);
+  expect(predictHex(s, { "ox-red": 0.3 })).toBe(before);
 });

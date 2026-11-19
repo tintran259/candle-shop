@@ -3,11 +3,14 @@ import { Alert, Button, Card, Flex, Input, InputNumber, Table, Tag, Typography }
 import { useMemo } from "react";
 import { deltaELabel } from "@/lib/color-mix/color";
 import { buildCurves, checkResult, modelAccuracy, pigmentSwatch } from "@/lib/color-mix/model";
-import type { MixCheck, MixSet } from "@/lib/color-mix/types";
+import { unitOf } from "@/lib/color-mix/plan";
+import type { MixCheck, MixSet, MixView, Pigment } from "@/lib/color-mix/types";
 import { ColorField } from "./color-field";
 
 // Tab Kiểm chứng: pha theo công thức rồi nhập màu thật → biết mô hình lệch bao nhiêu (docs/pages/color-mix.md#kiểm-chứng)
-export function CheckPanel({ set, update }: { set: MixSet; update: (fn: (s: MixSet) => MixSet) => void }) {
+// Màu nước nhập ml (Kết hợp: theo loại của từng màu)
+export function CheckPanel({ mode, set, update }: { mode: MixView; set: MixSet; update: (fn: (s: MixSet) => MixSet) => void }) {
+  const unit = (kind: Pigment["kind"]) => unitOf(kind ?? (mode === "liquid" ? "liquid" : "oxide"));
   const curves = useMemo(() => buildCurves(set), [set]);
   const accuracy = useMemo(() => modelAccuracy(set), [set]);
   const patch = (id: string, p: Partial<MixCheck>) => update((s) => ({ ...s, checks: s.checks.map((c) => (c.id === id ? { ...c, ...p } : c)) }));
@@ -55,12 +58,12 @@ export function CheckPanel({ set, update }: { set: MixSet; update: (fn: (s: MixS
             title: (
               <Flex align="center" gap={4}>
                 <span className="color-mix-dot" style={{ background: pigmentSwatch(p) }} />
-                {p.name} (g)
+                {p.name} ({unit(p.kind)})
               </Flex>
             ),
             render: (_: unknown, c: MixCheck) => (
               <InputNumber
-                aria-label={`${p.name} (g)`}
+                aria-label={`${p.name} (${unit(p.kind)})`}
                 min={0}
                 step={0.01}
                 value={c.grams[p.id]}

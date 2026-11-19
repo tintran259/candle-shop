@@ -1,14 +1,16 @@
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, OrderedListOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Flex, Grid, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
 import { useMemo } from "react";
 import { buildCurve, maxMeasured, pigmentSwatch, predictHex } from "@/lib/color-mix/model";
-import { formatPercent } from "@/lib/color-mix/plan";
-import type { MixSample, MixSet, Pigment } from "@/lib/color-mix/types";
+import { missingLadder, withLadder } from "@/lib/color-mix/ladder";
+import { formatRate, unitOf } from "@/lib/color-mix/plan";
+import type { MixMode, MixSample, MixSet, Pigment } from "@/lib/color-mix/types";
 import { ColorField } from "./color-field";
 
-// Một màu cơ bản và các mẫu đổ thử của nó. Dải màu: dự đoán từ 0 tới gấp đôi mẫu đậm nhất (nửa phải là ngoại suy)
-export function PigmentCard({ set, pigment, onChange, onRemove }: { set: MixSet; pigment: Pigment; onChange: (p: Pigment) => void; onRemove: () => void }) {
+// Một màu cơ bản và các mẫu đổ thử của nó. Dải màu: dự đoán từ 0 tới gấp đôi mẫu đậm nhất (nửa phải là ngoại suy). Màu nước nhập ml
+export function PigmentCard({ mode, set, pigment, onChange, onRemove }: { mode: MixMode; set: MixSet; pigment: Pigment; onChange: (p: Pigment, touch?: boolean) => void; onRemove: () => void }) {
   const mobile = Grid.useBreakpoint().md === false;
+  const colorLabel = `Màu (${unitOf(mode)})`;
   const strip = useMemo(() => {
     const max = maxMeasured(buildCurve(set, pigment));
     if (!max) return null;
@@ -18,10 +20,10 @@ export function PigmentCard({ set, pigment, onChange, onRemove }: { set: MixSet;
 
   const setSample = (i: number, patch: Partial<MixSample>) => onChange({ ...pigment, samples: pigment.samples.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
   const removeSample = (i: number) => onChange({ ...pigment, samples: pigment.samples.filter((_, j) => j !== i) });
-  const concentration = (s: MixSample) => (s.plaster > 0 ? formatPercent((s.pigment / s.plaster) * 100) : "—");
+  const concentration = (s: MixSample) => (s.plaster > 0 ? formatRate((s.pigment / s.plaster) * 100, mode) : "—");
   const plasterInput = (s: MixSample, i: number) => <InputNumber aria-label="Thạch cao (g)" min={0} value={s.plaster} onChange={(v) => setSample(i, { plaster: v ?? 0 })} style={{ width: "100%" }} />;
   const pigmentInput = (s: MixSample, i: number) => (
-    <InputNumber aria-label="Màu (g)" min={0} step={0.1} value={s.pigment} onChange={(v) => setSample(i, { pigment: v ?? 0 })} style={{ width: "100%" }} />
+    <InputNumber aria-label={colorLabel} min={0} step={0.1} value={s.pigment} onChange={(v) => setSample(i, { pigment: v ?? 0 })} style={{ width: "100%" }} />
   );
   const colorInput = (s: MixSample, i: number) => <ColorField label="Màu khô đo được" allowEmpty whiteRef={set.base} value={s.hex} onChange={(hex) => setSample(i, { hex })} />;
   const removeButton = (i: number) => <Button type="text" danger aria-label="Xóa mẫu" icon={<DeleteOutlined />} onClick={() => removeSample(i)} />;
@@ -56,7 +58,7 @@ export function PigmentCard({ set, pigment, onChange, onRemove }: { set: MixSet;
             ))}
           </div>
           <Typography.Text type="secondary" className="color-mix-caption" style={{ textAlign: "left", marginBottom: 8 }}>
-            Dự đoán từ 0% đến {formatPercent(strip.max * 2)}. Nửa phải là ngoại suy, vượt mẫu đậm nhất đã đo.
+            Dự đoán từ 0 đến {formatRate(strip.max * 2, mode)}. Nửa phải là ngoại suy, vượt mẫu đậm nhất đã đo.
           </Typography.Text>
         </>
       )}
@@ -72,7 +74,7 @@ export function PigmentCard({ set, pigment, onChange, onRemove }: { set: MixSet;
                   {plasterInput(s, i)}
                 </label>
                 <label className="color-mix-sample-field">
-                  <span>Màu (g)</span>
+                  <span>{colorLabel}</span>
                   {pigmentInput(s, i)}
                 </label>
                 <div className="color-mix-sample-pct">
@@ -100,16 +102,23 @@ export function PigmentCard({ set, pigment, onChange, onRemove }: { set: MixSet;
           locale={{ emptyText: "Chưa có mẫu" }}
           columns={[
             { title: "Thạch cao (g)", width: 110, render: (_, s) => plasterInput(s, s.i) },
-            { title: "Màu (g)", width: 110, render: (_, s) => pigmentInput(s, s.i) },
+            { title: colorLabel, width: 110, render: (_, s) => pigmentInput(s, s.i) },
             { title: "Nồng độ", align: "right", width: 90, render: (_, s) => concentration(s) },
             { title: "Màu khô đo được", render: (_, s) => colorInput(s, s.i) },
             { title: "", align: "right", render: (_, s) => removeButton(s.i) },
           ]}
         />
       )}
-      <Button icon={<PlusOutlined />} onClick={addSample} block={mobile} style={{ marginTop: 8 }}>
-        Thêm mẫu nồng độ khác
-      </Button>
+      <Flex gap={8} wrap vertical={mobile} style={{ marginTop: 8 }}>
+        <Button icon={<PlusOutlined />} onClick={addSample} block={mobile}>
+          Thêm mẫu nồng độ khác
+        </Button>
+        {missingLadder(pigment).length > 0 && (
+          <Button icon={<OrderedListOutlined />} onClick={() => onChange(withLadder(pigment), false)} block={mobile}>
+            Thêm thang chuẩn ({missingLadder(pigment).length} mẫu)
+          </Button>
+        )}
+      </Flex>
     </Card>
   );
 }
