@@ -41,4 +41,6 @@ export type ColorMixData = { version: 2; sets: Record<MixMode, MixSet>; comboChe
 // % màu so với khối lượng bột, theo id màu
 export type MixPercents = Record<string, number>;
 
+export const MIX_VIEWS = ["oxide", "liquid", "combo"] as const;
+
 export const MODE_LABEL: Record<MixView, string> = { oxide: "Bột oxit", liquid: "Màu nước", combo: "Kết hợp" };

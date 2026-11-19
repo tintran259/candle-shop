@@ -74,8 +74,12 @@ export type MixSolution = { percents: MixPercents; hex: string; deltaE: number; 
 // Giới hạn tổng % riêng cho một nhóm màu (Kết hợp: oxit tối đa x%, màu nước tối đa y%)
 export type MixLimit = { ids: string[]; max: number };
 
+// Điểm phạt khi tìm công thức (cùng đơn vị ΔE): mỗi % màu, mỗi màu dùng thêm, mỗi % vượt mẫu đậm nhất đã đo.
+// Cùng độ giống thì chọn công thức ít màu, gọn; vượt mẫu đã đo chỉ là ngoại suy (thật thường đậm lên chậm hơn) — chỉ dùng khi đáng
+export const PENALTY = { total: 0.05, count: 0.12, beyond: 0.5 };
+
 // Tìm % từng màu (trong các màu được phép) cho màu gần target nhất, tổng không quá maxTotal % (và từng nhóm không quá giới hạn của nhóm).
-// Tìm theo từng tọa độ, bước giảm dần, từ nhiều điểm xuất phát. Phạt nhẹ tổng lượng màu và số màu dùng — cùng độ giống thì ưu tiên công thức gọn
+// Tìm theo từng tọa độ, bước giảm dần, từ nhiều điểm xuất phát; xong thử bỏ từng màu rồi tìm lại — bỏ được mà điểm tốt hơn thì bỏ
 export function solveMix(set: MixSet, target: string, allowed: string[], maxTotal: number, limits: MixLimit[] = []): MixSolution {
   const curves = buildCurves(set);
   const ids = allowed.filter((id) => curves[id]?.length);
@@ -85,33 +89,31 @@ export function solveMix(set: MixSet, target: string, allowed: string[], maxTota
   const goal: Lab = hexToLab(target);
   const b = baseKs(set);
   const n = ids.length;
+  const measured = ids.map((id) => maxMeasured(curves[id]));
   const score = (c: number[]) => {
     const k = [...b];
+    let total = 0;
+    let count = 0;
+    let beyond = 0;
     for (let j = 0; j < n; j++) {
       if (c[j] <= 0) continue;
       const d = evalCurve(curves[ids[j]], c[j]);
       for (let i = 0; i < 3; i++) k[i] += d[i];
+      total += c[j];
+      if (c[j] > 0.004) count++;
+      beyond += Math.max(0, c[j] - measured[j]);
     }
-    const total = c.reduce((s, x) => s + x, 0);
-    return deltaE(goal, linearToLab(k.map(reflect))) + 0.01 * total + 0.12 * c.filter((x) => x > 0.004).length;
+    return deltaE(goal, linearToLab(k.map(reflect))) + PENALTY.total * total + PENALTY.count * count + PENALTY.beyond * beyond;
   };
-  const starts: number[][] = [Array(n).fill(0), Array(n).fill(Math.min(0.2, maxTotal / Math.max(n, 1)))];
-  for (let j = 0; j < n; j++)
-    for (const v of [0.2, 1, 3]) {
-      const s = Array(n).fill(0);
-      s[j] = Math.min(v, cap(j));
-      starts.push(s);
-    }
-  let best: number[] = Array(n).fill(0);
-  let bestScore = Infinity;
-  for (const start of starts) {
-    if (!fits(start)) continue;
+  // fixed: các màu giữ ở 0 (đã bỏ)
+  const descend = (start: number[], fixed: Set<number> = new Set()) => {
     let c = [...start];
     let f = score(c);
     let step = 1;
     while (step > 0.0005) {
       let improved = false;
-      for (let j = 0; j < n; j++)
+      for (let j = 0; j < n; j++) {
+        if (fixed.has(j)) continue;
         for (const s of [step, -step]) {
           const next = [...c];
           next[j] = Math.max(0, next[j] + s);
@@ -123,16 +125,46 @@ export function solveMix(set: MixSet, target: string, allowed: string[], maxTota
             improved = true;
           }
         }
+      }
       if (!improved) step /= 2;
     }
-    if (f < bestScore) {
-      bestScore = f;
-      best = c;
+    return { c, f };
+  };
+  const starts: number[][] = [Array(n).fill(0), Array(n).fill(Math.min(0.2, maxTotal / Math.max(n, 1)))];
+  for (let j = 0; j < n; j++)
+    for (const v of [0.2, 1, 3]) {
+      const s = Array(n).fill(0);
+      s[j] = Math.min(v, cap(j));
+      starts.push(s);
+    }
+  let best = { c: Array(n).fill(0) as number[], f: Infinity };
+  for (const start of starts) {
+    if (!fits(start)) continue;
+    const r = descend(start);
+    if (r.f < best.f) best = r;
+  }
+  // Thử bỏ từng màu đang dùng (lặp tới khi không bỏ được nữa)
+  const dropped = new Set<number>();
+  for (let more = true; more;) {
+    more = false;
+    for (let j = 0; j < n; j++) {
+      if (best.c[j] <= 0 || dropped.has(j)) continue;
+      const without = new Set([...dropped, j]);
+      const r = descend(
+        best.c.map((x, i) => (i === j ? 0 : x)),
+        without,
+      );
+      if (r.f < best.f - 1e-9) {
+        best = r;
+        dropped.add(j);
+        more = true;
+      }
     }
   }
   const percents: MixPercents = {};
   ids.forEach((id, j) => {
-    const v = Math.round(best[j] * 1000) / 1000;
+    // Làm tròn xuống: tổng không vượt giới hạn
+    const v = Math.floor(best.c[j] * 1000 + 1e-6) / 1000;
     if (v >= 0.01) percents[id] = v;
   });
   const hex = predictHex(set, percents, curves);

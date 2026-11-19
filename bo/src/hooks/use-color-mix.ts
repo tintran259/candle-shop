@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { api, ApiError } from "@/lib/api";
 import { comboSet } from "@/lib/color-mix/combo";
 import { defaultColorMix, migrateColorMix } from "@/lib/color-mix/defaults";
-import type { ColorMixData, MixPrefs, MixSet, MixView } from "@/lib/color-mix/types";
+import type { ColorMixData, MixCheck, MixPrefs, MixSet, MixView } from "@/lib/color-mix/types";
 import { createLocalStore, useLocalStore } from "@/lib/local-store";
 import { notifyError } from "@/lib/notify";
 import { enqueue } from "@/lib/write-queue";
@@ -48,14 +48,23 @@ const save = (data: ColorMixData) => {
   if (store.online) push();
 };
 
-// Kết hợp: bộ ghép từ hai bộ (lib/color-mix/combo.ts), chỉ ghi lại mẫu kiểm chứng của nó (comboChecks)
+// Bộ Kết hợp chỉ ghép lại khi hai bộ hoặc mẫu kiểm chứng kết hợp đổi (lưu thông số Pha màu thì không) — dùng chung một đối tượng cho mọi nơi
+// nên giữ được kết quả đã tính (solveMixCached nhớ theo đối tượng bộ)
+let comboMemo: { oxide: MixSet; liquid: MixSet; checks?: MixCheck[]; set: MixSet } | undefined;
+function comboOf(data: ColorMixData) {
+  const { oxide, liquid } = data.sets;
+  if (comboMemo?.oxide !== oxide || comboMemo.liquid !== liquid || comboMemo.checks !== data.comboChecks)
+    comboMemo = { oxide, liquid, checks: data.comboChecks, set: comboSet({ version: 2, sets: { oxide, liquid }, comboChecks: data.comboChecks }) };
+  return comboMemo.set;
+}
+
+// Kết hợp: bộ ghép từ hai bộ (lib/color-mix/combo.ts), chỉ ghi lại mẫu kiểm chứng của nó (comboChecks).
+// sets: cả ba bộ (khung "Nên pha bằng gì?" so ba cách)
 export function useColorMix(view: MixView) {
   const { data, loading } = useLocalStore(store);
-  // Bộ Kết hợp chỉ ghép lại khi hai bộ hoặc mẫu kiểm chứng kết hợp đổi (lưu thông số Pha màu thì không) — giữ được kết quả đã tính (solveMixCached)
-  const { oxide, liquid } = data.sets;
-  const { comboChecks } = data;
-  const combo = useMemo(() => comboSet({ version: 2, sets: { oxide, liquid }, comboChecks }), [oxide, liquid, comboChecks]);
-  const set = view === "combo" ? combo : data.sets[view];
+  const combo = comboOf(data);
+  const sets = useMemo(() => ({ oxide: data.sets.oxide, liquid: data.sets.liquid, combo }), [data.sets.oxide, data.sets.liquid, combo]);
+  const set = sets[view];
   return useMemo(() => {
     // touch = sửa dữ liệu mẫu (mẫu trắng, màu cơ bản, thông số màu nước) → bỏ nhãn "dữ liệu minh họa". Mẫu kiểm chứng không tính
     const update = (fn: (s: MixSet) => MixSet, touch = true) => {
@@ -71,6 +80,6 @@ export function useColorMix(view: MixView) {
       for (const k of Object.keys(next) as (keyof MixPrefs)[]) if (next[k] === undefined) delete next[k];
       save({ ...current, prefs: { ...current.prefs, [view]: next } });
     };
-    return { set, data, loading, update, prefs: data.prefs?.[view] ?? {}, savePrefs };
-  }, [set, data, loading, view]);
+    return { set, sets, data, loading, update, prefs: data.prefs?.[view] ?? {}, savePrefs };
+  }, [set, sets, data, loading, view]);
 }

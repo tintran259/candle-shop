@@ -31,6 +31,8 @@ Tab `?tab=mix`. Nhập:
 - **Tổng màu tối đa (% thạch cao)**, mặc định 6. Dưới ô ghi ra gram: tối đa bao nhiêu g màu cho tổng bột khuôn đang nhập (thạch cao = tổng ÷ (1 + % × phần khô), màu = thạch cao × %; vd 220 g, 6% oxit → tối đa 12,5 g oxit).
 - **Màu được dùng**: bấm để bật / tắt từng màu cơ bản.
 
+Màu mục tiêu và tổng bột **dùng chung ba loại** (giữ ở trang): đổi loại vẫn giữ màu đang chọn. Xem thêm [Cách đề xuất](#cách-đề-xuất).
+
 Kết quả: màu muốn có cạnh màu dự đoán sau khi khô, **độ lệch ΔE** (CIEDE2000), danh sách cần cân (`plan-list.tsx`): từng màu, bột thạch cao, nước — tên bên trái, số gram lớn bên phải, hướng dẫn chi tiết bên dưới (dễ đọc trên điện thoại).
 
 | ΔE | Nhãn |
@@ -99,9 +101,13 @@ Tab `?tab=check`. Mỗi dòng: tên, thạch cao (g), gram từng màu, màu th�
 1. K/S(R) = (1 − R)² ÷ 2R. Mẫu trắng cho K/S nền.
 2. Mỗi màu cơ bản: mỗi mẫu đổ thử cho một điểm (nồng độ c%, ΔK/S = K/S mẫu − K/S nền). Mẫu trùng nồng độ lấy trung bình. Giữa các điểm nội suy tuyến tính (đi qua 0); vượt điểm cuối thì ngoại suy tỷ lệ theo điểm cuối.
 3. Hỗn hợp: K/S = K/S nền + Σ ΔK/S từng màu → đổi lại thành màu.
-4. Tìm công thức: tìm theo từng tọa độ (bước 1% giảm dần tới 0,0005%) từ nhiều điểm xuất phát, cực tiểu ΔE + 0,01 × tổng % + 0,12 × số màu dùng (cùng độ giống thì ưu tiên ít màu, ít lượng). Tổng không vượt giới hạn. Màu dưới 0,01% bị bỏ.
+4. Tìm công thức: tìm theo từng tọa độ (bước 1% giảm dần tới 0,0005%) từ nhiều điểm xuất phát, cực tiểu **ΔE + 0,05 × tổng % + 0,12 × số màu dùng + 0,5 × % vượt mẫu đậm nhất đã đo** (`PENALTY`; cùng độ giống thì ưu tiên ít màu, ít lượng; ngoại suy chỉ dùng khi đổi được ≥ 0,5 ΔE mỗi %). Xong thì **thử bỏ từng màu** đang dùng rồi tìm lại — điểm tốt hơn thì bỏ (tránh kẹt ở công thức nhiều màu mà lệch hơn, vd đen #2B2B2B: 3 màu ΔE 12 → chỉ đen oxit ΔE 9). Tổng không vượt giới hạn (% làm tròn xuống 0,001). Màu dưới 0,01% bị bỏ.
 
-Gram, nước, giọt: `bo/src/lib/color-mix/plan.ts`. Test: `bo/e2e/logic/color-mix.spec.ts`.
+### Cách đề xuất
+
+`bo/src/lib/color-mix/advise.ts`. Với màu muốn có, trang tìm công thức ở cả ba loại (đủ màu, theo giới hạn đã lưu của từng loại) và gắn nhãn **Đề xuất** lên nút loại tốt nhất (điện thoại: dưới tên loại). Rê chuột lên nút: ΔE và lý do. Điểm = max(0, ΔE − 1) (lệch dưới 1 mắt khó thấy → coi như ngang) + cùng phạt như lúc tìm công thức + 0,5 nếu là Kết hợp (pha hai kiểu, dự đoán ghép hai bộ). Vd kem #E8DCC8: màu nước ΔE 0 với 3 màu, oxit ΔE 0,5 với 2 màu → đề xuất oxit; nâu đen #3A3330 chỉ Kết hợp tới gần (ΔE 2,7) → đề xuất Kết hợp.
+
+Gram, nước, giọt: `bo/src/lib/color-mix/plan.ts`. Test: `bo/e2e/logic/color-mix.spec.ts`, `bo/e2e/logic/color-mix-advise.spec.ts`.
 
 ## Lưu dữ liệu
 

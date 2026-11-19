@@ -2,7 +2,8 @@ import { CopyOutlined, ExperimentOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Card, Col, Flex, Form, Grid, InputNumber, Row, Select, Tag, Typography } from "antd";
 import { useDeferredValue, useMemo, useState } from "react";
 import { deltaELabel, normHex } from "@/lib/color-mix/color";
-import { lighterThanBase, modelAccuracy, pigmentSwatch, solveMixCached, type MixLimit } from "@/lib/color-mix/model";
+import { solveView } from "@/lib/color-mix/advise";
+import { lighterThanBase, modelAccuracy, pigmentSwatch } from "@/lib/color-mix/model";
 import { formatGrams, formatPercent, planMix, planText } from "@/lib/color-mix/plan";
 import { DEFAULT_PREFS, DEFAULT_WATER, type MixCheck, type MixPrefs, type MixSet, type MixView } from "@/lib/color-mix/types";
 import { ColorField } from "./color-field";
@@ -11,12 +12,21 @@ import { PlanList } from "./plan-list";
 
 // Tab Pha màu: nhập màu muốn có + số gram bột → số gram từng màu, nước cần thêm (docs/pages/color-mix.md#pha-màu).
 // Kết hợp: dùng màu của cả hai bộ, giới hạn tổng riêng cho oxit và màu nước
-// Nước, độ chính xác cân, tổng màu tối đa lưu theo từng loại (prefs, xuống DB); màu mục tiêu, tổng bột, màu bật chỉ nằm trên trang
-export function MixPanel({ mode, set, onAddCheck, prefs, onPrefs }: { mode: MixView; set: MixSet; onAddCheck: (check: MixCheck) => void; prefs: MixPrefs; onPrefs: (patch: MixPrefs) => void }) {
+// Nước, độ chính xác cân, tổng màu tối đa lưu theo từng loại (prefs, xuống DB); màu bật chỉ nằm trên trang.
+// Màu muốn có, tổng bột dùng chung ba loại (shared, giữ ở trang — trang so ba cách, đánh dấu "Đề xuất" trên nút loại)
+export type MixShared = { target: string; setTarget: (v: string) => void; plaster: number; setPlaster: (v: number) => void };
+type Props = {
+  mode: MixView;
+  set: MixSet;
+  shared: MixShared;
+  onAddCheck: (check: MixCheck) => void;
+  prefs: MixPrefs;
+  onPrefs: (patch: MixPrefs) => void;
+};
+export function MixPanel({ mode, set, shared, onAddCheck, prefs, onPrefs }: Props) {
   const { message } = App.useApp();
   const mobile = Grid.useBreakpoint().md === false;
-  const [target, setTarget] = useState("#E3D3BC");
-  const [plaster, setPlaster] = useState(220);
+  const { target, setTarget, plaster, setPlaster } = shared;
   // Mặc định đúng tỷ lệ nước khi đổ mẫu (tab Dữ liệu mẫu)
   const sampleWater = set.waterPer100 ?? DEFAULT_WATER;
   const waterPer100 = prefs.water ?? sampleWater;
@@ -35,15 +45,7 @@ export function MixPanel({ mode, set, onAddCheck, prefs, onPrefs }: { mode: MixV
   const term = mode === "oxide" ? "màu oxit" : mode === "liquid" ? "màu nước" : "màu";
 
   const allowed = useMemo(() => set.pigments.map((p) => p.id).filter((id) => !off.includes(id)), [set.pigments, off]);
-  const solution = useMemo(() => {
-    if (!combo) return solveMixCached(set, goal, allowed, Math.max(0.1, maxTotal));
-    const ids = (kind: string) => set.pigments.filter((p) => p.kind === kind).map((p) => p.id);
-    const limits: MixLimit[] = [
-      { ids: ids("oxide"), max: Math.max(0, maxTotal) },
-      { ids: ids("liquid"), max: Math.max(0, maxLiquid) },
-    ];
-    return solveMixCached(set, goal, allowed, Math.max(0.1, maxTotal + maxLiquid), limits);
-  }, [set, goal, allowed, maxTotal, maxLiquid, combo]);
+  const solution = useMemo(() => solveView(mode, set, { maxTotal, maxLiquid }, goal, allowed), [mode, set, goal, allowed, maxTotal, maxLiquid]);
   const batch = { plaster, waterPer100, precision };
   const plan = planMix(mode, set, solution, batch);
   // Gram màu tối đa khi dùng hết giới hạn: thạch cao = tổng ÷ (1 + Σ % × phần khô), màu = thạch cao × %
