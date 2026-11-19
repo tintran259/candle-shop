@@ -228,3 +228,40 @@ test("Thang chuẩn: thêm nồng độ còn thiếu trên 50 g, bỏ qua nồng
   s.pigments = s.pigments.map(withLadder);
   expect(predictHex(s, { "ox-red": 0.3 })).toBe(before);
 });
+
+// Từ đậm tới nhạt, cả 3 loại và 2 loại cân: tổng bột giữ 220 g, nước tổng (thêm + trong màu + trong lọ) = 37 ml / 100 g tổng bột,
+// tổng màu không vượt giới hạn, lượng màu thật lệch lý thuyết ≤ nửa mức cân (qua lọ: ÷ 10 / ÷ 100), lọ A khi < 20 × mức cân, lọ B khi lọ A vẫn < 20 × mức cân
+test("Công thức từ màu đậm tới màu nhạt: tổng bột, nước, giới hạn màu, làm tròn, chọn lọ pha loãng", () => {
+  const targets = ["#4A4643", "#6E5446", "#8E8B87", "#B97A62", "#C8A98E", "#C9CFBF", "#D9D6D0", "#E3D3BC", "#E8C9C0", "#EFE8DC"];
+  const d = defaultColorMix();
+  const combo = comboSet(d);
+  const kindIds = (kind: string) => combo.pigments.filter((p) => p.kind === kind).map((p) => p.id);
+  const cases = [
+    ["oxide", d.sets.oxide, 0.1],
+    ["oxide", d.sets.oxide, 0.01],
+    ["liquid", d.sets.liquid, 0.1],
+    ["combo", combo, 0.1],
+  ] as const;
+  for (const [view, s, precision] of cases)
+    for (const hex of targets) {
+      const limits =
+        view === "combo"
+          ? [
+              { ids: kindIds("oxide"), max: 6 },
+              { ids: kindIds("liquid"), max: 6 },
+            ]
+          : [];
+      const sol = solveMix(s, hex, ids(s), view === "combo" ? 12 : 6, limits);
+      const plan = planMix(view, s, sol, { plaster: 220, waterPer100: 37, precision });
+      const at = `${view} ${precision} ${hex}`;
+      expect(plan.plaster + plan.colorSolids, at).toBeCloseTo(220, 0);
+      if (!plan.waterExcess) expect(plan.waterToAdd + plan.waterInColor + plan.waterInPremix, at).toBeCloseTo(81.4, 5);
+      if (view !== "combo") expect(plan.totalPercent, at).toBeLessThanOrEqual(6 + 1e-6);
+      for (const l of plan.lines) {
+        expect(Math.abs(l.rounded - l.grams), `${at} ${l.name}`).toBeLessThanOrEqual((l.premix ? precision / l.premix.factor : precision) / 2 + 1e-9);
+        if (l.grams >= precision * 20) expect(l.premix, `${at} ${l.name}`).toBeUndefined();
+        else expect(l.premix?.factor, `${at} ${l.name}`).toBe(l.grams * 10 >= precision * 20 ? 10 : 100);
+      }
+      expect(plan.plasterToWeigh, at).toBeCloseTo(plan.plaster - plan.lines.reduce((a, l) => a + (l.premix && l.kind === "oxide" ? l.premix.carried : 0), 0), 5);
+    }
+});
