@@ -87,3 +87,10 @@ services:
       - path: /*
         name: X-Frame-Options
         value: DENY
+      # PWA (docs/pwa.md): Render trả .webmanifest dạng binary/octet-stream — đặt đúng kiểu, không cache lâu để đổi tên / icon có hiệu lực
+      - path: /manifest.webmanifest
+        name: Content-Type
+        value: application/manifest+json
+      - path: /manifest.webmanifest
+        name: Cache-Control
+        value: no-cache
