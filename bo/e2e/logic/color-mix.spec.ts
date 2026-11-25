@@ -157,17 +157,26 @@ test("Hiệu chỉnh theo mẫu trắng chụp cùng ảnh: bỏ được ánh �
   expect(whiteRefTooDark(shot(whiteTrue))).toBe(false);
 });
 
-test("Dữ liệu cũ chưa có tỷ lệ nước khi đổ mẫu thì mặc định 37", () => {
+test("Dữ liệu cũ chưa có tỷ lệ nước khi đổ mẫu thì mặc định 35; mặc định cũ (70, 37) tự đổi thành 35", () => {
   const old: Partial<MixSet> = oxide();
   delete old.waterPer100;
   const d = migrateColorMix({ version: 1, sets: { oxide: { ...old, demo: false }, liquid: liquid() } } as never);
-  expect(d.sets.oxide.waterPer100).toBe(37);
+  expect(d.sets.oxide.waterPer100).toBe(35);
   expect(d.sets.oxide.demo).toBe(false);
-  // Bản 1 lưu sẵn 70 (mặc định cũ) → 37; bản 2 người dùng tự chọn 70 thì giữ
+  // Bản 1 lưu sẵn 70 (mặc định cũ) → 35; bản 2 người dùng tự chọn 70 thì giữ
   const v1 = migrateColorMix({ version: 1, sets: { oxide: { ...oxide(), waterPer100: 70 }, liquid: { ...liquid(), waterPer100: 45 } } });
-  expect(v1.sets.oxide.waterPer100).toBe(37);
+  expect(v1.sets.oxide.waterPer100).toBe(35);
   expect(v1.sets.liquid.waterPer100).toBe(45);
   expect(migrateColorMix({ version: 2, sets: { oxide: { ...oxide(), waterPer100: 70 } } }).sets.oxide.waterPer100).toBe(70);
+  // Bản 2 còn 37 (mặc định trước 25/11/2026) → 35, kể cả ô nước tab Pha màu; số khác giữ. Bản 3 tự chọn 37 thì giữ
+  const v2 = migrateColorMix({
+    version: 2,
+    sets: { oxide: { ...oxide(), waterPer100: 37 }, liquid: { ...liquid(), waterPer100: 40 } },
+    prefs: { oxide: { water: 37, precision: 0.1 }, liquid: { water: 42 } },
+  });
+  expect([v2.version, v2.sets.oxide.waterPer100, v2.sets.liquid.waterPer100]).toEqual([3, 35, 40]);
+  expect(v2.prefs).toEqual({ oxide: { precision: 0.1 }, liquid: { water: 42 } });
+  expect(migrateColorMix({ version: 3, sets: { oxide: { ...oxide(), waterPer100: 37 } } }).sets.oxide.waterPer100).toBe(37);
 });
 
 test("Màu nước: nước trong màu vượt tổng nước cần thì báo", () => {

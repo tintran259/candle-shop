@@ -54,7 +54,7 @@ let comboMemo: { oxide: MixSet; liquid: MixSet; checks?: MixCheck[]; set: MixSet
 function comboOf(data: ColorMixData) {
   const { oxide, liquid } = data.sets;
   if (comboMemo?.oxide !== oxide || comboMemo.liquid !== liquid || comboMemo.checks !== data.comboChecks)
-    comboMemo = { oxide, liquid, checks: data.comboChecks, set: comboSet({ version: 2, sets: { oxide, liquid }, comboChecks: data.comboChecks }) };
+    comboMemo = { oxide, liquid, checks: data.comboChecks, set: comboSet({ version: 3, sets: { oxide, liquid }, comboChecks: data.comboChecks }) };
   return comboMemo.set;
 }
 

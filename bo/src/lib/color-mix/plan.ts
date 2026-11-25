@@ -1,6 +1,6 @@
 // Đổi công thức (% màu so với bột thạch cao) thành lượng cần cân cho một mẻ (docs/pages/color-mix.md#lượng-cần-cân).
 // - "Tổng bột cho khuôn" gồm cả màu: thạch cao = tổng ÷ (1 + Σ phần khô của màu) → tổng vào khuôn đúng như nhập, mực khuôn không đổi.
-// - Nước tính theo tổng bột vào khuôn (220 g × 37% = 81,4 g), cùng chuẩn với lúc đổ mẫu. Màu nước: trừ nước có sẵn trong màu.
+// - Nước tính theo tổng bột vào khuôn (220 g × 35% = 77 ml), cùng chuẩn với lúc đổ mẫu. Màu nước: trừ nước có sẵn trong màu.
 // - Kết hợp: mỗi dòng theo loại của màu đó (oxit pha loãng với bột, màu nước pha loãng với nước và quy ra giọt).
 // - Màu quá ít để cân chính xác (dưới 20 lần mức cân): pha loãng trước 1:9 (hoặc 1:99) với bột / nước, ghi rõ gram từng thứ.
 import { maxMeasured, type MixSolution } from "./model";

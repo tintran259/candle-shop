@@ -1,5 +1,5 @@
 // Dữ liệu minh họa cho trang Pha màu — chưa phải màu đo thật, trang hiện cảnh báo tới khi chủ shop sửa (demo = false)
-import { DEFAULT_WATER, type ColorMixData, type MixSet } from "./types";
+import { DEFAULT_WATER, type ColorMixData, type MixPrefs, type MixSet } from "./types";
 
 // Mỗi màu hai mẫu: 50 g bột + 0,5 g màu, 50 g bột + 1 g màu
 const pigment = (id: string, name: string, light: string, dark: string) => ({
@@ -42,20 +42,24 @@ const liquid = (): MixSet => ({
   checks: [],
 });
 
-export const defaultColorMix = (): ColorMixData => ({ version: 2, sets: { oxide: oxide(), liquid: liquid() }, comboChecks: [] });
+export const defaultColorMix = (): ColorMixData => ({ version: 3, sets: { oxide: oxide(), liquid: liquid() }, comboChecks: [] });
 
 // Bản lưu thiếu bộ nào thì bù bằng dữ liệu minh họa của bộ đó
-// Bản 1 lưu tỷ lệ nước 70 = mặc định cũ → đổi thành mặc định mới (37 ml nước / 100 g tổng bột)
+// Tỷ lệ nước còn là mặc định cũ thì đổi thành mặc định mới (35 ml nước / 100 g tổng bột): bản 1 lưu 70, bản 1–2 lưu 37.
+// Ô nước ở tab Pha màu (prefs.water) còn 37 thì bỏ — theo tỷ lệ lúc đổ mẫu
 export function migrateColorMix(saved: { version?: number; sets?: Partial<Record<"oxide" | "liquid", MixSet>>; comboChecks?: unknown; prefs?: unknown } | null | undefined): ColorMixData {
   const base = defaultColorMix();
   if (!saved?.sets) return base;
-  const old = (saved.version ?? 1) < 2;
+  const version = saved.version ?? 1;
+  const oldDefault = (w: number | undefined) => (version < 2 && w === 70) || (version < 3 && w === 37);
   const fix = (s: MixSet | undefined, d: MixSet): MixSet => {
     if (!(s && typeof s.base === "string" && Array.isArray(s.pigments))) return d;
-    const water = old && s.waterPer100 === 70 ? DEFAULT_WATER : s.waterPer100;
+    const water = oldDefault(s.waterPer100) ? DEFAULT_WATER : s.waterPer100;
     return { ...d, ...s, waterPer100: water ?? DEFAULT_WATER, checks: s.checks ?? [] };
   };
   const comboChecks = Array.isArray(saved.comboChecks) ? (saved.comboChecks as ColorMixData["comboChecks"]) : [];
-  const prefs = saved.prefs && typeof saved.prefs === "object" ? (saved.prefs as ColorMixData["prefs"]) : {};
-  return { version: 2, sets: { oxide: fix(saved.sets.oxide, base.sets.oxide), liquid: fix(saved.sets.liquid, base.sets.liquid) }, comboChecks, prefs };
+  const prefs: NonNullable<ColorMixData["prefs"]> = saved.prefs && typeof saved.prefs === "object" ? { ...(saved.prefs as ColorMixData["prefs"]) } : {};
+  for (const [view, p] of Object.entries(prefs) as [keyof typeof prefs, MixPrefs][])
+    if (p && oldDefault(p.water)) prefs[view] = { ...p, water: undefined };
+  return { version: 3, sets: { oxide: fix(saved.sets.oxide, base.sets.oxide), liquid: fix(saved.sets.liquid, base.sets.liquid) }, comboChecks, prefs };
 }
