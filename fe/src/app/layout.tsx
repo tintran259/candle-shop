@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   openGraph: { ...OG_BASE, title: "2510 Candle — Nến thơm thủ công", description, images: [OG_IMAGE] },
   twitter: { card: "summary_large_image", title: "2510 Candle — Nến thơm thủ công", description, images: [OG_IMAGE.url] },
   alternates: { canonical: "/" },
+  // Thêm vào màn hình chính trên iPhone: mở toàn màn hình, tên dưới icon (manifest: app/manifest.ts)
+  appleWebApp: { capable: true, title: "2510 Candle", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = { themeColor: "#282720" };

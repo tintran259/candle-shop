@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "2510 Back Office",
+  "short_name": "2510 BO",
+  "description": "Quản lý đơn, kho, sản phẩm của 2510 Candle",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#6b5242",
+  "theme_color": "#6b5242",
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

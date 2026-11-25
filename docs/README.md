@@ -49,6 +49,10 @@ Test E2E bằng Playwright ở `bo/e2e/`, chạy `pnpm test:e2e` trong `bo`. Đ�
 
 Yêu cầu dữ liệu đơn hàng cho BE nằm ở [orders.md](./pages/orders.md#việc-của-be).
 
+## Ứng dụng trên điện thoại
+
+[pwa.md](./pwa.md): thêm BO và web vào màn hình chính (icon, mở toàn màn hình), cách làm trên iPhone / Android.
+
 ## Giới hạn hiện tại
 
 - **Dữ liệu trên máy chủ:** BO đọc / ghi qua BE (Postgres trên Neon), máy nào đăng nhập cũng thấy cùng dữ liệu ([backend.md](./backend.md#bo-dùng-api)). Chưa đưa lên mạng (giai đoạn 5). Sao lưu bằng file ở [Cài đặt › Sao lưu dữ liệu](./pages/settings.md#sao-lưu-dữ-liệu), khôi phục bằng `pnpm db:import` ở BE.
