@@ -1,5 +1,6 @@
 import { StopOutlined } from "@ant-design/icons";
-import { Avatar, Tag, Tooltip } from "antd";
+import { Avatar, Tag } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { segmentMeta, type Segment } from "@/lib/customers/stats";
 import type { Customer } from "@/lib/customers/types";
 import { initials } from "@/lib/format";

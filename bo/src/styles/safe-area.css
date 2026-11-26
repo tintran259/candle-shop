@@ -1,0 +1,25 @@
+/* iPhone (viewport-fit=cover ở index.html): chừa vạch Home ở đáy, tai thỏ khi xoay ngang. Máy khác env() = 0 nên không đổi gì.
+   Thanh dính đáy riêng (vd .save-bar ở craft.css) tự cộng env(safe-area-inset-bottom) */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+/* Cuối trang: nội dung cuối không nằm dưới vạch Home */
+.app-content {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+}
+/* Drawer: chân drawer (nút Lưu / Hủy), hoặc thân drawer khi không có chân */
+.ant-drawer-footer {
+  padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+}
+.ant-drawer-body:last-child {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Màn cảm ứng: nút nhỏ dưới ảnh (đặt ảnh chính / xem / xóa — components/form/image-upload.tsx) to hơn cho dễ chạm */
+@media (pointer: coarse) {
+  .image-actions .ant-btn {
+    width: 36px;
+    height: 36px;
+  }
+}

@@ -1,6 +1,7 @@
 /* Style chung của BO, chia theo khu vực — thứ tự import giữ thứ tự ưu tiên */
 @import "./styles/base.css";
 @import "./styles/layout.css";
+@import "./styles/layout-header.css";
 @import "./styles/craft.css";
 @import "./styles/order-lines.css";
 @import "./styles/settings.css";
@@ -9,6 +10,7 @@
 @import "./styles/print.css";
 @import "./styles/orders-list.css";
 @import "./styles/login.css";
+@import "./styles/safe-area.css";
 @import "./styles/color-mix.css";
 @import "./styles/color-mix-chips.css";
 @import "./styles/color-mix-nav.css";

@@ -1,5 +1,6 @@
 import { StarFilled, WarningOutlined } from "@ant-design/icons";
-import { Avatar, Flex, Tag, Tooltip, Typography } from "antd";
+import { Avatar, Flex, Tag, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { belowCost, depositLoss } from "@/lib/craft/pricing";
 import type { ProductReview } from "@/lib/products/pricing";
 import { discountPercent } from "@/lib/products/labels";
@@ -54,7 +55,13 @@ export function PriceFlag({ check }: { check?: ProductReview }) {
 
 export function ProductThumb({ product, size = 48 }: { product: Pick<Product, "images" | "status">; size?: number }) {
   return (
-    <Avatar shape="square" size={size} src={imageUrl(product.images[0], size)} alt="" style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight, opacity: product.status === "hidden" ? 0.55 : 1 }} />
+    <Avatar
+      shape="square"
+      size={size}
+      src={imageUrl(product.images[0], size)}
+      alt=""
+      style={{ borderRadius: 12, flexShrink: 0, background: brand.emberLight, opacity: product.status === "hidden" ? 0.55 : 1 }}
+    />
   );
 }
 

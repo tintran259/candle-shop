@@ -13,8 +13,10 @@
   font: inherit;
   cursor: pointer;
 }
-.step-row:hover {
-  background: rgba(181, 101, 46, 0.06);
+@media (hover: hover) {
+  .step-row:hover {
+    background: rgba(181, 101, 46, 0.06);
+  }
 }
 .step-row:focus-visible {
   outline: 2px solid #b5652e;
@@ -54,8 +56,10 @@
   cursor: pointer;
   transition: border-color 0.2s ease-out;
 }
-.kind-card:hover:not(:disabled) {
-  border-color: #e8b48a;
+@media (hover: hover) {
+  .kind-card:hover:not(:disabled) {
+    border-color: #e8b48a;
+  }
 }
 .kind-card:disabled {
   cursor: not-allowed;
@@ -199,7 +203,8 @@
 /* Thanh "thay đổi chưa lưu" dính đáy trang Thủ công */
 .save-bar {
   position: sticky;
-  bottom: 16px;
+  /* iPhone: nổi trên vạch Home (env = 0 trên máy khác) */
+  bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 20;
   display: flex;
   align-items: center;
@@ -210,6 +215,28 @@
   border-radius: 16px;
   background: #fffaf5;
   box-shadow: 0 8px 24px rgba(60, 35, 15, 0.12);
+}
+.save-bar-actions {
+  flex-shrink: 0;
+}
+/* Điện thoại: hai nút phụ chia đôi hàng, "Lưu thay đổi" cả hàng bên dưới (ba nút một hàng thì tràn khỏi màn hình) */
+@media (max-width: 575px) {
+  .save-bar {
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    padding: 12px;
+    gap: 10px;
+  }
+  .save-bar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .save-bar-actions .ant-btn {
+    min-height: 40px;
+  }
+  .save-bar-actions .save-bar-save {
+    grid-column: 1 / -1;
+  }
 }
 .save-bar-dot {
   display: inline-block;
@@ -240,8 +267,10 @@
   color: inherit;
   cursor: pointer;
 }
-button.change-row:hover {
-  background: #fbf1e8;
+@media (hover: hover) {
+  button.change-row:hover {
+    background: #fbf1e8;
+  }
 }
 button.change-row:focus-visible {
   outline: 2px solid #b5652e;

@@ -38,7 +38,8 @@ export function ConceptsPage() {
             Bộ sưu tập theo dịp lễ (Noel, Tết…). Một sản phẩm có thể thuộc nhiều concept — chọn ở drawer Sản phẩm. Kéo thả để sắp xếp thứ tự trong bộ lọc của web.
           </Typography.Text>
         </div>
-        <Flex gap={8}>
+        {/* Điện thoại: nút xuống dòng thay vì tràn khỏi màn hình */}
+        <Flex gap={8} wrap>
           {!REMOTE && (
             <Popconfirm title="Khôi phục concept mẫu?" description="Các thay đổi trên trình duyệt này sẽ mất." okText="Khôi phục" cancelText="Hủy" onConfirm={api.reset}>
               <Button icon={<ReloadOutlined />}>Dữ liệu mẫu</Button>

@@ -1,5 +1,6 @@
 import { ExpandOutlined, ZoomInOutlined, ZoomOutOutlined } from "@ant-design/icons";
-import { Button, Flex, Modal, Segmented, Tooltip, Typography } from "antd";
+import { Button, Flex, Modal, Segmented, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { useLayoutEffect, useRef, useState } from "react";
 import { PreviewHeader, PreviewPage } from "@/components/site-theme/preview-page";
 import { PAGE, type Device } from "@/lib/site-theme/preview";

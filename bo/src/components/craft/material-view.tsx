@@ -1,4 +1,5 @@
-import { Avatar, Badge, Flex, Tag, Tooltip, Typography } from "antd";
+import { Avatar, Badge, Flex, Tag, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { Link } from "react-router";
 import { sizeLabel, unitLabel } from "@/lib/craft/groups";
 import type { StepOption, VesselOption } from "@/lib/craft/types";

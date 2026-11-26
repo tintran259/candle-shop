@@ -1,5 +1,6 @@
 import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import { Avatar, Badge, Button, Flex, Grid, Layout, Menu, Tag, Tooltip, Typography, type MenuProps } from "antd";
+import { Avatar, Badge, Button, Flex, Grid, Layout, Menu, Tag, Typography, type MenuProps } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { useState } from "react";
 import { Link, Navigate, Outlet, useLocation, useNavigate, useNavigation } from "react-router";
 import { GlobalSearch } from "@/components/header/global-search";
@@ -169,7 +170,9 @@ export function AppLayout() {
           </Flex>
         </Header>
 
-        <Content style={{ padding: mobile ? GAP : `${GAP}px ${GAP * 1.5}px ${GAP * 1.5}px` }}>{nextPath && nextPath !== pathname ? <RouteSkeleton pathname={nextPath} /> : <Outlet />}</Content>
+        <Content className="app-content" style={{ padding: mobile ? GAP : `${GAP}px ${GAP * 1.5}px ${GAP * 1.5}px` }}>
+          {nextPath && nextPath !== pathname ? <RouteSkeleton pathname={nextPath} /> : <Outlet />}
+        </Content>
       </Layout>
     </Layout>
   );

@@ -24,8 +24,10 @@
     background-color 0.15s,
     color 0.15s;
 }
-.color-mix-chip:hover {
-  border-color: var(--ant-color-primary-hover);
+@media (hover: hover) {
+  .color-mix-chip:hover {
+    border-color: var(--ant-color-primary-hover);
+  }
 }
 .color-mix-chip:focus-visible {
   outline: 2px solid var(--ant-color-primary);

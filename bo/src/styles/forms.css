@@ -22,8 +22,10 @@
 .source-cards .source-card::after {
   display: none;
 }
-.source-cards .source-card:hover {
-  border-color: var(--ant-color-primary-hover);
+@media (hover: hover) {
+  .source-cards .source-card:hover {
+    border-color: var(--ant-color-primary-hover);
+  }
 }
 .source-cards .source-card > span:last-child {
   display: flex;

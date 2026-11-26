@@ -70,8 +70,10 @@
   border-radius: 12px;
   transition: background-color 0.2s ease-out;
 }
-.list-row:hover {
-  background: #fbf1e8;
+@media (hover: hover) {
+  .list-row:hover {
+    background: #fbf1e8;
+  }
 }
 
 /* Ô trong thẻ "Cần nhập thêm" — cả ô là một nút */
@@ -84,11 +86,15 @@
   background: #f6f6f3;
   font: inherit;
   cursor: pointer;
-  transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
+  transition:
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out;
 }
-.restock-tile:hover {
-  background: #fbf1e8;
-  border-color: #f3dcc7;
+@media (hover: hover) {
+  .restock-tile:hover {
+    background: #fbf1e8;
+    border-color: #f3dcc7;
+  }
 }
 .restock-tile:focus-visible {
   outline: 2px solid #b5652e;
@@ -97,8 +103,10 @@
 .restock-tile-arrow {
   transition: transform 0.2s ease-out;
 }
-.restock-tile:hover .restock-tile-arrow {
-  transform: translateX(2px);
+@media (hover: hover) {
+  .restock-tile:hover .restock-tile-arrow {
+    transform: translateX(2px);
+  }
 }
 
 /* Ô ảnh trong drawer: bấm để xem lớn; ảnh chính có viền màu nhấn */
@@ -137,8 +145,10 @@
 .product-cover img {
   transition: transform 0.3s ease-out;
 }
-.product-cover:hover img {
-  transform: scale(1.03);
+@media (hover: hover) {
+  .product-cover:hover img {
+    transform: scale(1.03);
+  }
 }
 .product-cover:focus-visible {
   outline: 2px solid #b5652e;
@@ -149,8 +159,10 @@
 .more-link .anticon {
   transition: transform 0.2s ease-out;
 }
-.more-link:hover .anticon {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .more-link:hover .anticon {
+    transform: translateX(3px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -162,137 +174,5 @@
   }
   .skel-bar {
     animation: none;
-  }
-}
-
-/* Ô tìm kiếm trên header — trông như input, bấm mở bảng tìm nhanh */
-.search-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 300px;
-  height: 36px;
-  padding: 0 6px 0 14px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: #fff;
-  color: #6b6b6b;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  transition: border-color 0.2s ease-out;
-}
-.search-trigger:hover {
-  border-color: #e8b48a;
-}
-.search-trigger:focus-visible {
-  outline: 2px solid #b5652e;
-  outline-offset: 2px;
-}
-.kbd {
-  display: inline-block;
-  min-width: 22px;
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: #f6f6f3;
-  border: 1px solid #ebebe6;
-  color: #454545;
-  font: 500 11px/18px Inter, sans-serif;
-  text-align: center;
-}
-.search-hints {
-  color: #6b6b6b;
-  font-size: 12px;
-}
-.search-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 8px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-.search-row[aria-selected="true"] {
-  background: #fbf1e8;
-}
-.search-row-enter {
-  color: #7a3f17;
-  visibility: hidden;
-}
-.search-row[aria-selected="true"] .search-row-enter {
-  visibility: visible;
-}
-.search-mark {
-  padding: 0;
-  background: #f6dcc5;
-  color: inherit;
-  border-radius: 2px;
-}
-
-/* Dòng bấm được trong danh sách (vd đơn hàng trong hồ sơ khách) */
-.list-row-button {
-  /* Dùng cho cả <button> và <a>: thẻ <a> mặc định content-box → padding cộng thêm làm dòng tràn khỏi thẻ */
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
-  padding: 10px 12px;
-  /* Nền hover tràn ra lề trong thẻ, chữ vẫn thẳng hàng tiêu đề */
-  margin: 0 -12px;
-  width: calc(100% + 24px);
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-  transition: background-color 0.15s ease-out;
-}
-.list-row-button:hover {
-  background: #fbf1e8;
-}
-.list-row-button:focus-visible {
-  outline: 2px solid #b5652e;
-  outline-offset: -2px;
-}
-
-/* Dòng thông báo: chưa đọc có nền nhạt + chấm */
-.notif-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 8px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-  transition: background-color 0.15s ease-out;
-}
-.notif-row.is-unread {
-  background: #fcf8f4;
-}
-.notif-row:hover {
-  background: #fbf1e8;
-}
-.notif-row:focus-visible {
-  outline: 2px solid #b5652e;
-  outline-offset: -2px;
-}
-.notif-dot {
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  margin-top: 6px;
-  border-radius: 50%;
-  background: #b5652e;
-}
-
-/* Màn hình cảm ứng không có bàn phím — ẩn gợi ý phím tắt */
-@media (hover: none) {
-  .search-hints {
-    display: none !important;
   }
 }

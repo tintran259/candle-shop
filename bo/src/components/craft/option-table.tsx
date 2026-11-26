@@ -1,5 +1,6 @@
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Flex, Switch, Table, Tag, Tooltip, Typography, type TableProps } from "antd";
+import { Button, Flex, Switch, Table, Tag, Typography, type TableProps } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { useMemo } from "react";
 import { CostCheck } from "@/components/craft/margin";
 import { MaterialAvatar, OptionStock, VesselStock } from "@/components/craft/material-view";

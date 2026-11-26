@@ -1,5 +1,6 @@
 import { DeleteOutlined, EditOutlined, EyeInvisibleOutlined, EyeOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
-import { Button, Flex, Popconfirm, Switch, Table, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Button, Flex, Popconfirm, Switch, Table, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { memo, useState } from "react";
 import { CategoryTag } from "@/components/products/category-tag";
 import { ConceptTags } from "@/components/products/concept-select";

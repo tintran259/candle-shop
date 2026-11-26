@@ -1,5 +1,6 @@
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { App, Button, Flex, Popconfirm, Switch, Table, Tag, Tooltip, Typography, type TableProps } from "antd";
+import { App, Button, Flex, Popconfirm, Switch, Table, Tag, Typography, type TableProps } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import type { HTMLAttributes } from "react";
 import { Link } from "react-router";
 import { DragHandle, SortableHandle, SortableList } from "@/components/sortable";

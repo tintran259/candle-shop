@@ -1,5 +1,6 @@
 import { WarningOutlined } from "@ant-design/icons";
-import { Button, Flex, Tooltip, Typography } from "antd";
+import { Button, Flex, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { belowCost, lowMargin, type PriceCheck } from "@/lib/craft/pricing";

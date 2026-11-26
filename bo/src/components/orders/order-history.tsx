@@ -14,7 +14,8 @@ import {
   WalletOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { Flex, Tooltip, Typography } from "antd";
+import { Flex, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
 import { FormSection } from "@/components/form/form-section";

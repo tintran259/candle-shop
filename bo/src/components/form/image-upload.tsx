@@ -1,5 +1,6 @@
 import { DeleteOutlined, EyeOutlined, LoadingOutlined, PlusOutlined, StarFilled, StarOutlined } from "@ant-design/icons";
-import { App, Button, Flex, Image, Tooltip, Upload } from "antd";
+import { App, Button, Flex, Image, Upload } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { useEffect, useRef, useState } from "react";
 import { imageUrl, MAX_FILE_MB, MAX_IMAGES, prepareImage } from "@/lib/craft/image";
 import { brand } from "@/theme";
@@ -79,7 +80,7 @@ export function ImageUpload({ value = [], onChange }: { value?: string[]; onChan
                 </span>
               )}
             </button>
-            <Flex justify="space-between" style={{ background: "#f6f6f3", borderRadius: 10, padding: 2 }}>
+            <Flex justify="space-between" className="image-actions" style={{ background: "#f6f6f3", borderRadius: 10, padding: 2 }}>
               <Tooltip title={i === 0 ? "Đang là ảnh chính" : "Đặt làm ảnh chính"}>
                 <Button
                   type="text"

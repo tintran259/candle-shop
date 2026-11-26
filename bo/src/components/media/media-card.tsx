@@ -1,4 +1,5 @@
-import { Checkbox, Image, Tag, Tooltip, Typography } from "antd";
+import { Checkbox, Image, Tag, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { imageUrl } from "@/lib/craft/image";
 import { formatBytes, type MediaImage } from "@/lib/media";
 

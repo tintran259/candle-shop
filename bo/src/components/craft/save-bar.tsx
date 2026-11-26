@@ -48,7 +48,7 @@ export function SaveBar({ changes, reordered, newMaterials, errors, warnings, on
           </Tag>
         ) : null}
       </Flex>
-      <Flex gap={8} wrap style={{ flexShrink: 0 }}>
+      <Flex gap={8} wrap className="save-bar-actions">
         <Button onClick={onDetails}>Xem thay đổi</Button>
         <Popconfirm
           title="Bỏ mọi thay đổi chưa lưu?"
@@ -60,7 +60,7 @@ export function SaveBar({ changes, reordered, newMaterials, errors, warnings, on
         >
           <Button>Bỏ thay đổi</Button>
         </Popconfirm>
-        <Button type="primary" onClick={onSave}>
+        <Button type="primary" className="save-bar-save" onClick={onSave}>
           Lưu thay đổi
         </Button>
       </Flex>

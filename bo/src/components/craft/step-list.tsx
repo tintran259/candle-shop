@@ -1,5 +1,6 @@
 import { EyeInvisibleOutlined, PlusOutlined, WarningFilled } from "@ant-design/icons";
-import { Button, Card, Flex, Tooltip, Typography } from "antd";
+import { Button, Card, Flex, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import { StepIconView } from "@/components/craft/step-icon";
 import { DragHandle, SortableHandle, SortableList } from "@/components/sortable";
 import type { CraftConfigApi } from "@/hooks/use-craft-config";

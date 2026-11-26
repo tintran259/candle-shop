@@ -47,8 +47,10 @@
     border-color 0.15s ease-out,
     background-color 0.15s ease-out;
 }
-.cfg-option:hover:not(:disabled) {
-  border-color: #c98a5a;
+@media (hover: hover) {
+  .cfg-option:hover:not(:disabled) {
+    border-color: #c98a5a;
+  }
 }
 .cfg-option:focus-visible {
   outline: 2px solid #b5652e;

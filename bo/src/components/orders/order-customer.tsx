@@ -1,5 +1,6 @@
 import { CarOutlined, CopyOutlined, EditOutlined, EnvironmentOutlined, ExportOutlined, MailOutlined, MessageOutlined, PhoneOutlined, RightOutlined } from "@ant-design/icons";
-import { App, Avatar, Button, Divider, Flex, Tag, Tooltip, Typography } from "antd";
+import { App, Avatar, Button, Divider, Flex, Tag, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { Link } from "react-router";

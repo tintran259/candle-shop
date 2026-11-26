@@ -1,5 +1,6 @@
 import { PlusOutlined, RightOutlined } from "@ant-design/icons";
-import { Button, Flex, Table, Tag, Tooltip, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Button, Flex, Table, Tag, Typography, type TablePaginationConfig, type TableProps } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import dayjs from "dayjs";
 import { memo } from "react";
 import { MaterialAvatar, MaterialStock } from "@/components/craft/material-view";

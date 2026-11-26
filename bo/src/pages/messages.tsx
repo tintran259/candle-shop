@@ -1,5 +1,6 @@
 import { CheckOutlined, DeleteOutlined, MessageOutlined, UndoOutlined } from "@ant-design/icons";
-import { App, Button, Card, Empty, Flex, Popconfirm, Segmented, Table, Tag, Tooltip, Typography } from "antd";
+import { App, Button, Card, Empty, Flex, Popconfirm, Segmented, Table, Tag, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { CategoriesSkeleton } from "@/components/skeletons";

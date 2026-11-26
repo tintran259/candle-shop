@@ -1,4 +1,5 @@
-import { App, Button, Divider, Flex, Image, Input, Tag, Tooltip, Typography } from "antd";
+import { App, Button, Divider, Flex, Image, Input, Tag, Typography } from "antd";
+import { Tooltip } from "@/components/tooltip";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { useState } from "react";

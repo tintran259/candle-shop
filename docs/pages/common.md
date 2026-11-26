@@ -58,3 +58,14 @@ Cách chạy và độ phủ chung ở [testing.md](../testing.md).
 - `drawers`: mở drawer theo đường dẫn, Back đóng drawer, giữ trang khi mở và đóng, link sai báo không tìm thấy, nguyên liệu mở ở Kho.
 - `chunk-reload`: lỗi tải code trang thì tự tải lại một lần, vẫn lỗi thì báo lỗi tiếng Việt và giữ menu.
 - `layout-width`: nội dung và khung tải chạy hết chiều rộng, không tràn ngang.
+
+## Trên điện thoại (cảm ứng)
+
+Cập nhật 26/11/2026:
+
+- **Tooltip** dùng chung `bo/src/components/tooltip.tsx` (eslint chặn import `Tooltip` thẳng từ `antd`). Máy có chuột: rê chuột hiện như cũ. Máy cảm ứng: tooltip bọc **nút / link** không hiện — chạm **một lần** là bấm (trước đây iPhone coi lần chạm đầu là "rê chuột", phải chạm 2 lần, vd nút ảnh chính / xem / xóa ảnh, Sao chép SĐT, Nhắn Zalo). Nút đang khóa và chữ / nhãn / biểu tượng thông tin thì **chạm để xem**.
+- Hiệu ứng rê chuột trong CSS (`:hover`) chỉ áp dụng khi máy có chuột (`@media (hover: hover)`), không "dính" sau khi chạm.
+- **Vạch Home iPhone:** `viewport-fit=cover` + `env(safe-area-inset-*)` (`bo/src/styles/safe-area.css`): cuối trang, chân drawer (nút Lưu / Hủy), drawer không có chân, thanh "thay đổi chưa lưu" ở Thủ công đều chừa khoảng dưới, không dính vạch Home. Máy không có vạch Home thì không đổi gì.
+- **Thanh "thay đổi chưa lưu"** (Thủ công): điện thoại xếp "Xem thay đổi" + "Bỏ thay đổi" chia đôi hàng, "Lưu thay đổi" cả hàng bên dưới (trước đây ba nút một hàng tràn khỏi màn hình).
+- Nút nhỏ dưới ảnh (ảnh chính / xem / xóa) trên màn cảm ứng to 36 × 36 px cho dễ chạm.
+- Rà khổ 390 px (17 trang): không trang nào tràn ngang; Concept trước đây tràn hàng nút đầu trang — nay xuống dòng.
