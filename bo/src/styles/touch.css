@@ -19,3 +19,23 @@
     height: 36px;
   }
 }
+
+/* Mở dialog / drawer / xem ảnh / menu điện thoại: khóa cả html (lib/scroll-lock.ts) — antd chỉ khóa body, iPhone vẫn cuộn trang dưới */
+html.scroll-locked,
+html.scroll-locked body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Danh sách thả xuống, lịch, dialog, drawer: cuộn tới cuối thì dừng, không cuộn lan sang trang phía dưới */
+.ant-select-dropdown,
+.ant-select-dropdown-list-holder,
+.ant-dropdown-menu,
+.ant-cascader-menu,
+.ant-picker-dropdown,
+.ant-popover-inner,
+.ant-modal-wrap,
+.ant-drawer-body,
+.ant-image-preview {
+  overscroll-behavior: contain;
+}

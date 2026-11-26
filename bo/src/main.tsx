@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "@/App";
 import "@/index.css";
 import { initMonitoring } from "@/lib/monitoring";
+import { initScrollLock } from "@/lib/scroll-lock";
 
 // Lịch, tên thứ/tháng của DatePicker theo tiếng Việt
 dayjs.locale("vi");
@@ -13,6 +14,8 @@ dayjs.locale("vi");
 dayjs.extend(relativeTime);
 // Sentry (chỉ khi có VITE_SENTRY_DSN)
 initMonitoring();
+// Mở dialog / drawer: khóa cả trang dưới trên iPhone
+initScrollLock();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

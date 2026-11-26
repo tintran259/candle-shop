@@ -12,6 +12,7 @@ import { useStorefrontSync } from "@/hooks/use-storefront-sync";
 import { useOrders } from "@/hooks/use-orders";
 import { findNavItem, navGroups, type NavItem } from "@/layouts/nav";
 import { logout, useSession } from "@/lib/auth";
+import { lockPage } from "@/lib/scroll-lock";
 import { brand, radius } from "@/theme";
 
 const { Sider, Header, Content } = Layout;
@@ -50,13 +51,12 @@ export function AppLayout() {
   const siderRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!(mobile && open)) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockPage();
     siderRef.current?.querySelector(".ant-menu-item-selected")?.scrollIntoView({ block: "center" });
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      unlock();
       window.removeEventListener("keydown", onKey);
     };
   }, [mobile, open]);
