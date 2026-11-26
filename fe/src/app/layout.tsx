@@ -21,12 +21,18 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#282720" };
 
+// Đánh dấu có JS (CSS ẩn sẵn phần tử có hiệu ứng) + cách người dùng đang thao tác: bấm Tab → data-kbd (hiện vòng focus, globals.css),
+// chạm / bấm chuột → bỏ. Trước đây vòng focus hiện cả khi chạm (vd đóng ô tìm kiếm, focus trả về nút → viền trắng quanh nút / logo)
+const KBD_SCRIPT = `document.documentElement.classList.add('js');
+addEventListener('keydown',function(e){if(e.key==='Tab')document.documentElement.dataset.kbd='1'},true);
+addEventListener('pointerdown',function(){delete document.documentElement.dataset.kbd},true);`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" className={`${cormorant.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         {/* Đánh dấu có JS trước khi vẽ trang — CSS ẩn sẵn phần tử có hiệu ứng, tránh nháy */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <script dangerouslySetInnerHTML={{ __html: KBD_SCRIPT }} />
       </head>
       <body>{children}</body>
     </html>

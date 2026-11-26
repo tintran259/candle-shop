@@ -12,8 +12,8 @@ import { BrandLogo, cx } from "@/components/ui/primitives";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { lockScroll } from "@/lib/scroll-lock";
 
-const SearchIcon = () => (
-  <svg aria-hidden viewBox="0 0 24 24" className="size-[15px]">
+const SearchIcon = ({ className = "size-[15px]" }: { className?: string }) => (
+  <svg aria-hidden viewBox="0 0 24 24" className={className}>
     <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
     <path d="m15.5 15.5 5 5" stroke="currentColor" strokeWidth="1.4" />
   </svg>
@@ -161,7 +161,7 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
                 aria-haspopup="dialog"
                 aria-keyshortcuts="Control+K Meta+K"
                 onClick={(e) => openSearch(e.currentTarget)}
-                className={cx(navLink, "flex items-center gap-2.5 max-md:hidden", tone)}
+                className={cx(navLink, "flex items-center gap-2.5 before:absolute before:-inset-x-3 before:-inset-y-2 before:content-[''] max-md:hidden", tone)}
               >
                 <SearchIcon />
                 {nav.search}
@@ -173,9 +173,9 @@ export function SiteHeader({ overHero = false, chrome }: { overHero?: boolean; c
                 aria-label={nav.search}
                 aria-haspopup="dialog"
                 onClick={(e) => openSearch(e.currentTarget)}
-                className={cx("grid size-11 place-items-center md:hidden", tone)}
+                className={cx("-mr-1 grid size-11 place-items-center md:hidden", tone)}
               >
-                <SearchIcon />
+                <SearchIcon className="size-5" />
               </button>
               <button type="button" data-intro="nav" aria-expanded={open} aria-controls="mobile-menu" onClick={toggleMenu} className={cx(navLink, "-mr-3 px-3 py-3 md:hidden", tone)}>
                 {open ? "Đóng" : "Menu"}

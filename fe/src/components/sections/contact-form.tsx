@@ -122,7 +122,8 @@ export function ContactForm({ endpoint }: { endpoint: string | null }) {
     setState("failed");
   };
 
-  const input = "peer w-full bg-transparent pb-4 text-[12px] tracking-[0.04em] text-ink outline-none placeholder:text-muted focus-visible:outline-none";
+  // Điện thoại 16px: iPhone tự phóng to trang khi chạm ô nhập chữ < 16px. Từ md về 12px như thiết kế
+  const input = "peer w-full bg-transparent pb-4 text-[16px] md:text-[12px] tracking-[0.04em] text-ink outline-none placeholder:text-muted focus-visible:outline-none";
   const describedBy = (f: Field) => (errors[f] ? `contact-${f}-error` : undefined);
 
   if (sent) return <Thanks name={sent.name} phone={sent.phone} onAgain={() => (setSent(null), setReopened(true))} />;

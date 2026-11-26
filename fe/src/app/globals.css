@@ -46,12 +46,22 @@ body {
   color: var(--color-cream);
 }
 
-/* Vòng focus bàn phím cho nút / liên kết — để trong layer base để class tiện ích (vd ô email: focus-visible:outline-none) đè được */
+/* Vòng focus cho nút / liên kết — chỉ khi đang dùng bàn phím (html[data-kbd], gắn khi bấm Tab — app/layout.tsx).
+   Chạm / bấm chuột không hiện viền (trình duyệt vẫn coi focus trả về bằng code là focus-visible → viền trắng quanh logo / nút tìm kiếm).
+   Để trong layer base để class tiện ích (vd ô email: focus-visible:outline-none) đè được */
 @layer base {
   :focus-visible {
+    outline: none;
+  }
+  html[data-kbd] :focus-visible {
     outline: 1px solid currentColor;
     outline-offset: 4px;
   }
+}
+
+/* Điện thoại: bỏ khối xám / sáng nhấp nháy khi chạm link, nút (trình duyệt tự vẽ) */
+html {
+  -webkit-tap-highlight-color: transparent;
 }
 
 @layer components {
