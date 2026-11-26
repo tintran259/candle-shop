@@ -1,5 +1,5 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Col, Empty, Flex, Form, InputNumber, Row, Typography } from "antd";
+import { Button, Col, Empty, Flex, Form, Grid, InputNumber, Row, Typography } from "antd";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { CostCheck, SuggestButton } from "@/components/craft/margin";
@@ -141,10 +141,12 @@ function ExtraPriceCheck({ name, materials }: { name: number; materials: Materia
 function ExtraRow({ name, materials, onRemove }: { name: number; materials: Material[]; onRemove: () => void }) {
   const materialId = Form.useWatch(["build", "extras", name, "materialId"]) as string | undefined;
   const unit = materials.find((m) => m.id === materialId)?.unit;
+  // Điện thoại: ô nguyên liệu cả hàng, lượng + giá + xóa hàng dưới (một hàng thì ô nguyên liệu bị ép còn ~30px)
+  const narrow = Grid.useBreakpoint().sm === false;
   return (
     <>
-      <Row gutter={8} wrap={false} align="top">
-        <Col flex="auto" style={{ minWidth: 0 }}>
+      <Row gutter={8} wrap={narrow} align="top">
+        <Col flex={narrow ? "0 0 100%" : "auto"} style={{ minWidth: 0 }}>
           <Form.Item
             name={[name, "materialId"]}
             rules={[
@@ -165,7 +167,7 @@ function ExtraRow({ name, materials, onRemove }: { name: number; materials: Mate
             <MaterialSelect materials={materials} allowNone={false} placeholder="Chọn nguyên liệu trong Kho" ariaLabel={`Phụ kiện dòng ${name + 1}`} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
-        <Col flex="112px">
+        <Col flex={narrow ? "1 1 0" : "112px"} style={{ minWidth: 0 }}>
           <Form.Item
             name={[name, "quantity"]}
             rules={[
@@ -181,7 +183,7 @@ function ExtraRow({ name, materials, onRemove }: { name: number; materials: Mate
             <InputNumber min={0} precision={1} suffix={unit && unitLabel[unit]} placeholder="Lượng" aria-label={`Lượng phụ kiện dòng ${name + 1}`} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
-        <Col flex="140px">
+        <Col flex={narrow ? "1 1 0" : "140px"} style={{ minWidth: 0 }}>
           <Form.Item name={[name, "price"]} style={{ marginBottom: 12 }}>
             <InputNumber<number>
               min={0}

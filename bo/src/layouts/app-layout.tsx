@@ -1,7 +1,7 @@
 import { LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { Avatar, Badge, Button, Flex, Grid, Layout, Menu, Tag, Typography, type MenuProps } from "antd";
 import { Tooltip } from "@/components/tooltip";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, Outlet, useLocation, useNavigate, useNavigation } from "react-router";
 import { GlobalSearch } from "@/components/header/global-search";
 import { NotificationBell } from "@/components/header/notification-bell";
@@ -46,6 +46,20 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
   const siderCollapsed = mobile ? !open : collapsed;
+  // Điện thoại mở menu: khóa cuộn trang phía sau, cuộn menu tới mục đang mở (mở lại không còn ở vị trí cuộn cũ)
+  const siderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!(mobile && open)) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    siderRef.current?.querySelector(".ant-menu-item-selected")?.scrollIntoView({ block: "center" });
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobile, open]);
   const compact = !mobile && collapsed;
   const current = findNavItem(pathname);
   // Đơn cần xử lý: chờ thanh toán, đã thanh toán nhưng xưởng chưa nhận làm, hoặc giao lỗi chờ quyết định
@@ -70,7 +84,8 @@ export function AppLayout() {
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider
-        className="app-sider"
+        ref={siderRef}
+        className={`app-sider${mobile ? " is-mobile" : ""}`}
         width={256}
         collapsedWidth={mobile ? 0 : 80}
         collapsed={siderCollapsed}
@@ -80,7 +95,6 @@ export function AppLayout() {
           top: GAP,
           left: mobile ? GAP : undefined,
           margin: mobile ? 0 : `${GAP}px 0 ${GAP}px ${GAP}px`,
-          height: `calc(100vh - ${GAP * 2}px)`,
           borderRadius: radius.card,
           // Chỉ phần menu cuộn; logo và khối tài khoản đứng yên
           overflow: "hidden",

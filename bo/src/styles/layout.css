@@ -1,4 +1,10 @@
-/* Sidebar dạng thẻ nổi: nội dung xếp dọc để khối tài khoản nằm dưới đáy */
+/* Sidebar dạng thẻ nổi: nội dung xếp dọc để khối tài khoản nằm dưới đáy.
+   Chiều cao theo phần màn hình nhìn thấy (dvh — 100vh trên iPhone cao hơn màn hình, đẩy khối tài khoản xuống dưới thanh Safari / vạch Home),
+   chừa vạch Home (env = 0 trên máy khác). 100vh cho trình duyệt cũ chưa có dvh */
+.app-sider {
+  height: calc(100vh - 32px);
+  height: calc(100dvh - 32px - env(safe-area-inset-bottom));
+}
 .app-sider .ant-layout-sider-children {
   display: flex;
   flex-direction: column;

@@ -15,11 +15,3 @@ body {
 .ant-drawer-body:last-child {
   padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
 }
-
-/* Màn cảm ứng: nút nhỏ dưới ảnh (đặt ảnh chính / xem / xóa — components/form/image-upload.tsx) to hơn cho dễ chạm */
-@media (pointer: coarse) {
-  .image-actions .ant-btn {
-    width: 36px;
-    height: 36px;
-  }
-}

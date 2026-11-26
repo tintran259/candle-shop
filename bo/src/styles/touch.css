@@ -1,0 +1,21 @@
+/* Màn cảm ứng (điện thoại, máy tính bảng) — docs/pages/common.md#trên-điện-thoại-cảm-ứng */
+
+/* iPhone tự phóng to trang khi chạm ô nhập có chữ < 16px (antd mặc định 14px) → layout lệch, nút chân drawer bị cắt.
+   Chữ trong ô nhập 16px trên màn cảm ứng. Không dùng maximum-scale=1 (chặn cả phóng to bằng hai ngón trên Android) */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  .ant-select,
+  .ant-input-number-input,
+  .ant-picker-input > input {
+    font-size: 16px !important;
+  }
+}
+
+/* Nút nhỏ dưới ảnh (đặt ảnh chính / xem / xóa — components/form/image-upload.tsx) to hơn cho dễ chạm */
+@media (pointer: coarse) {
+  .image-actions .ant-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
